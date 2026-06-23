@@ -1,0 +1,1869 @@
+{
+  "enHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "heading": "Moaddi Platform | E-commerce platform",
+      "features": [
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "24/7 Support",
+          "icon": {
+            "url": "images/hero/2.png"
+          },
+          "title": "24/7 Support"
+        },
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "free and fast shipping",
+          "icon": {
+            "url": "images/hero/3.png"
+          },
+          "title": "Free and fast shipping"
+        },
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "Refund within 48 hours\n",
+          "icon": {
+            "url": "images/hero/1.png"
+          },
+          "title": "Refund within 48 hours\n"
+        }
+      ],
+      "description": "Lorem ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "Shop now",
+        "page": {
+          "__typename": "Page",
+          "url": "/products"
+        }
+      },
+      "background": {
+        "url": "/uploads/hero_bg_c3e3dcb124.webp"
+      },
+      "foreground": {
+        "url": "/uploads/hero_30f549460c.webp"
+      },
+      "order": 1
+    },
+    {
+      "id": "Shops",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "shops",
+      "order": 2
+    },
+    {
+      "id": "Offers",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "offers",
+      "order": 3
+    },
+    {
+      "id": "Products",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "products",
+      "order": 4
+    },
+    {
+      "id": "Gallery",
+      "__typename": "ComponentComponentsGallery",
+      "items": [
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "We offer home delivery services. With just a few clicks directly from your mobile phone, your order from a trusted local supermarket will be delivered to your home or office in no time, depending on your location.",
+          "title": "Free and fast delivery",
+          "background": {
+            "url": "images/gallery/1.webp"
+          }
+        },
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "We have absolute confidence in providing you with the best and highest quality products; that's why we are proud to offer you a 2-day money back guarantee.",
+          "title": "Refund within 48 hours",
+          "background": {
+            "url": "images/gallery/2.webp"
+          }
+        },
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "As part of our commitment to providing the best services 24/7 to all our valued customers, we are pleased to receive your requests throughout the day.",
+          "title": "Customer service is available",
+          "background": {
+            "url": "images/gallery/3.webp"
+          }
+        }
+      ],
+      "order": 5
+    },
+    {
+      "id": "Service",
+      "__typename": "ComponentComponentsService",
+      "heading": "Moaddi Platform | E-commerce platform",
+      "serviceDescription": "Moaddi Platform | E-commerce platform",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "Login",
+        "page": {
+          "__typename": "Page",
+          "url": "/signin"
+        }
+      },
+      "services": [
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        }
+      ],
+      "order": 6
+    }
+  ],
+  "enSite": {
+    "name": "Anthony",
+    "description": "null"
+  },
+  "enSeo": {
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
+    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]",
+    "shareImage": {
+      "src": "/uploads/images_93c95c497c.jpeg"
+    }
+  },
+  "enHeaderLinks": [
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Vera Runolfsdottir",
+      "url": "Gerardo-Kuvalis",
+      "type": 1,
+      "icon": {
+        "url": "images/header/1.svg"
+      },
+      "article": {
+        "__typename": "Article",
+        "slug": "home"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Manuel Harris",
+      "url": "Dana-Kerluke",
+      "type": 1,
+      "icon": {
+        "url": "images/header/2.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Harriet Dach",
+      "url": "Wilma-Jast",
+      "type": 1,
+      "icon": {
+        "url": "images/header/3.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Allen Gleichner",
+      "url": "Eleanor-King-I",
+      "type": 1,
+      "icon": {
+        "url": "images/header/4.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Joe Erdman",
+      "url": "Anna-Wolf-MD",
+      "type": 1,
+      "icon": {
+        "url": "images/header/5.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Nina Thiel",
+      "url": "Rodolfo-Bechtelar",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Rudy Herzog",
+      "url": "Dr--Carmen-Halvorson",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Pamela Olson DVM",
+      "url": "Geneva-McLaughlin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Sally Bogisich",
+      "url": "Nichole-Gutkowski-Ritchie",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Trevor Grady",
+      "url": "Kayla-Rippin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Ruby Dietrich",
+      "url": "Ellis-Brekke",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "James Hettinger",
+      "url": "Darryl-Harber-MD",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Horace Streich PhD",
+      "url": "Amos-Wintheiser",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Belinda Donnelly",
+      "url": "Gladys-Donnelly",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Ryan Lubowitz",
+      "url": "Dora-Haag",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Toni Hilpert",
+      "url": "Tomas-Gottlieb",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Shari Pouros DDS",
+      "url": "Carolyn-Schmitt",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Ramona Klocko",
+      "url": "Gerald-Rempel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Henrietta O'Hara",
+      "url": "Sergio-Rosenbaum",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Erik Pfannerstill V",
+      "url": "Cecil-Luettgen",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Brendan Schinner",
+      "url": "Tommie-Kozey",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Mrs. Leigh Bechtelar",
+      "url": "Beverly-Ryan",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Dr. Clifford Raynor",
+      "url": "Bert-Reichel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Eva Olson DDS",
+      "url": "Edwin-Effertz",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Lonnie Stiedemann DVM",
+      "url": "Violet-Doyle",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Alfred Schmidt-O'Keefe",
+      "url": "Evelyn-Ziemann",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Marie Lesch",
+      "url": "Bruce-Boyle",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Marvin Reynolds",
+      "url": "Byron-Cole",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Tammy Boehm MD",
+      "url": "Loren-Schmidt-Buckridge",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Nelson Marvin",
+      "title": "Ms. Casey Cummings",
+      "url": "Pamela-Bergstrom-Jr-",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Nelson Marvin",
+      "title": "Mabel Bradtke DDS",
+      "url": "Dr--Joshua-Steuber",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Carole Bogan",
+      "url": "Marie-Larkin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Chris Bogan",
+      "url": "Mr--Harvey-Hammes",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Joshua Moen III",
+      "url": "Angel-Walter",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ian Douglas-Hoeger",
+      "url": "Veronica-Torp",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ms. Gladys Labadie",
+      "url": "Kyle-Becker",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Dr. Tabitha Wiegand",
+      "url": "Bobbie-Yost",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Caleb Lindgren",
+      "url": "Mrs--Winifred-Schaefer",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ralph McCullough Sr.",
+      "url": "Terence-Rath",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Cory Willms",
+      "url": "Marcella-Kassulke",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Terrance Zboncak V",
+      "url": "Kayla-Thompson",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Mr. Andres Cassin",
+      "url": "Vincent-Lehner",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Tommie Abbott",
+      "url": "Malcolm-Mohr",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Joyce Auer",
+      "url": "Darin-Huel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Edward Brekke",
+      "url": "Allison-Schneider",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Dr. Colin Streich",
+      "url": "Sammy-Bashirian",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Enrique Jones",
+      "url": "Jamie-Rohan",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "George Casper",
+      "url": "Duane-Fisher-DDS",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Mr. Nick Jones",
+      "url": "Jimmy-Nikolaus",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Jenny Luettgen",
+      "url": "Wendell-Gleichner-V",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Sophie Hegmann V",
+      "url": "Olivia-Schuppe",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Jerome Funk",
+      "url": "Felix-Nolan",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Simple Link",
+      "subCategory": null,
+      "title": "Simple Link",
+      "url": "/a",
+      "type": 3,
+      "icon": null,
+      "article": null
+    }
+  ],
+  "enFooterBody": "",
+  "enFooterLinks": [
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Louis Hammes",
+      "url": "real",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-5"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Vickie Hintz",
+      "url": "Brendan-Padberg",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Adrienne Cremin",
+      "url": "Louise-Pacocha",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Clay Hartmann",
+      "url": "Virgil-Schuppe",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Margarita Prohaska",
+      "url": "Earl-Donnelly-III",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Emilio Labadie",
+      "url": "Marta-Stroman",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Jennifer Satterfield",
+      "url": "Tamara-Dooley",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Andrea Bayer",
+      "url": "Jo-Altenwerth",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Kristine Padberg",
+      "url": "Doyle-Beahan",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Guadalupe Gottlieb",
+      "url": "Doug-Hilpert",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Antonia Morissette",
+      "url": "Melinda-Jast-I",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Ms. Juanita Greenholt",
+      "url": "Emilio-Pfannerstill",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Freda Boehm",
+      "url": "Roberta-Considine",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-5"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Ida Herman",
+      "url": "Bonnie-Leuschke",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Ms. Katie Cummerata-Rippin",
+      "url": "Dr--Caroline-Hane",
+      "article": null
+    }
+  ],
+  "arHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "heading": "منصه معدي | للمتاجره الالكترونيه",
+      "description": "منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك  منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك ",
+      "features": [
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "دعم على مدار الساعة طوال أيام الأسبوع",
+          "icon": {
+            "url": "images/hero/2.png"
+          },
+          "title": "24/7 دعم"
+        },
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "شحن مجاني وسريع",
+          "icon": {
+            "url": "images/hero/3.png"
+          },
+          "title": "شحن مجاني وسريع"
+        },
+        {
+          "__typename": "ComponentSharedFeature",
+          "description": "استرداد الأموال خلال 48 ساعة",
+          "icon": {
+            "url": "images/hero/1.png"
+          },
+          "title": "استرداد الأموال خلال 48 ساعة"
+        }
+      ],
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "تسوق الان",
+        "page": {
+          "__typename": "Page",
+          "url": "/appointment"
+        }
+      },
+      "background": {
+        "url": "/uploads/hero_bg_c3e3dcb124.webp"
+      },
+      "foreground": {
+        "url": "/uploads/hero_30f549460c.webp"
+      },
+      "order": 1
+    },
+    {
+      "id": "Shops",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "shops"
+    },
+    {
+      "id": "Offers",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "offers"
+    },
+    {
+      "id": "Products",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "products"
+    },
+    {
+      "id": "Service",
+      "__typename": "ComponentComponentsService",
+      "header": [
+        {
+          "type": "heading",
+          "level": 6,
+          "children": [
+            {
+              "bold": true,
+              "text": "Our Services",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Dr. Michelle Grosleib and Dr. James Grosleib provide superior cosmetic and restorative dental services including:",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "serviceDescription": [
+        {
+          "type": "heading",
+          "level": 6,
+          "children": [
+            {
+              "bold": true,
+              "text": "Family-oriented care in Valley Village",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "The team at Valley Village Dental is dedicated to offering the highest quality dental care in the greater Los Angeles area, and part of our commitment to our patients includes getting to know you! We value your time and provide comprehensive and educational care that addresses your individual needs.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Visiting the dentist can be a nerve-wracking experience, but at Valley Village Dental we go the extra mile to ensure your comfort from the moment you arrive. We combine state-of-the-art dentistry along with a family-focused atmosphere to offer you a gentle and comfortable visit. Our team takes the time to listen to your concerns and we discuss the treatments that best meet your overall health and financial priorities.",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Our office is located in Valley Village and we welcome patients from the greater Los Angeles area. To experience compassionate and exceptional care, call us today at ",
+              "type": "text"
+            },
+            {
+              "url": "tel:1-818-763-8999",
+              "type": "link",
+              "children": [
+                {
+                  "text": "818-763-8999",
+                  "type": "text"
+                }
+              ]
+            },
+            {
+              "text": ".",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "سجل دخول",
+        "page": {
+          "__typename": "Page",
+          "url": "/signin"
+        }
+      },
+      "services": [
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        }
+      ]
+    },
+    {
+      "id": "Gallery",
+      "__typename": "ComponentComponentsGallery",
+      "items": [
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "Our team provides complete dental services including fillings, bonding, bridges, crowns, dentures, digital x-rays, implants, fluoride treatments, mouthguards, and more.",
+          "title": "General Dentistry",
+          "background": {
+            "url": "/uploads/3_70b6ead129.webp"
+          },
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        },
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "After hours dental emergencies can be stressful, but Drs. Michelle and James Grosleib are here to help care for all of your time-sensitive dental needs.",
+          "title": "Emergency Services",
+          "background": {
+            "url": "/uploads/1_59d09c8f1f.webp"
+          },
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        },
+        {
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "At Valley Village Dental we combine years of expertise, up to date equipment and training, and a family-centered atmosphere to provide you with the highest level of care.",
+          "title": "Why Choose Us?",
+          "background": {
+            "url": "/uploads/2_45eb12a58d.webp"
+          },
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "arSite": {
+    "name": "Anthony",
+    "description": "null"
+  },
+  "arSeo": {
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
+    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]",
+    "shareImage": {
+      "url": "/uploads/images_93c95c497c.jpeg"
+    }
+  },
+  "arHeaderLinks": [
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Vera Runolfsdottir",
+      "url": "Gerardo-Kuvalis",
+      "type": 1,
+      "icon": {
+        "url": "images/header/1.svg"
+      },
+      "article": {
+        "__typename": "Article",
+        "slug": "home"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Manuel Harris",
+      "url": "Dana-Kerluke",
+      "type": 1,
+      "icon": {
+        "url": "images/header/2.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Harriet Dach",
+      "url": "Wilma-Jast",
+      "type": 1,
+      "icon": {
+        "url": "images/header/3.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Allen Gleichner",
+      "url": "Eleanor-King-I",
+      "type": 1,
+      "icon": {
+        "url": "images/header/4.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Joe Erdman",
+      "url": "Anna-Wolf-MD",
+      "type": 1,
+      "icon": {
+        "url": "images/header/5.svg"
+      },
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Jessie Cormier",
+      "title": "Nina Thiel",
+      "url": "Rodolfo-Bechtelar",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Rudy Herzog",
+      "url": "Dr--Carmen-Halvorson",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Pamela Olson DVM",
+      "url": "Geneva-McLaughlin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Sally Bogisich",
+      "url": "Nichole-Gutkowski-Ritchie",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Trevor Grady",
+      "url": "Kayla-Rippin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Ruby Dietrich",
+      "url": "Ellis-Brekke",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "James Hettinger",
+      "url": "Darryl-Harber-MD",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Horace Streich PhD",
+      "url": "Amos-Wintheiser",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Mrs. Nicole Quitzon",
+      "subCategory": "Marcos Ankunding",
+      "title": "Belinda Donnelly",
+      "url": "Gladys-Donnelly",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Ryan Lubowitz",
+      "url": "Dora-Haag",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Toni Hilpert",
+      "url": "Tomas-Gottlieb",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Shari Pouros DDS",
+      "url": "Carolyn-Schmitt",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Ramona Klocko",
+      "url": "Gerald-Rempel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Henrietta O'Hara",
+      "url": "Sergio-Rosenbaum",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Henry Schimmel-Schumm",
+      "title": "Erik Pfannerstill V",
+      "url": "Cecil-Luettgen",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Brendan Schinner",
+      "url": "Tommie-Kozey",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Mrs. Leigh Bechtelar",
+      "url": "Beverly-Ryan",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Dr. Clifford Raynor",
+      "url": "Bert-Reichel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Eva Olson DDS",
+      "url": "Edwin-Effertz",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Teri Ullrich",
+      "title": "Lonnie Stiedemann DVM",
+      "url": "Violet-Doyle",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Alfred Schmidt-O'Keefe",
+      "url": "Evelyn-Ziemann",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Marie Lesch",
+      "url": "Bruce-Boyle",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Marvin Reynolds",
+      "url": "Byron-Cole",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Kurt Fay",
+      "title": "Tammy Boehm MD",
+      "url": "Loren-Schmidt-Buckridge",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Nelson Marvin",
+      "title": "Ms. Casey Cummings",
+      "url": "Pamela-Bergstrom-Jr-",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Kristi Cassin",
+      "subCategory": "Nelson Marvin",
+      "title": "Mabel Bradtke DDS",
+      "url": "Dr--Joshua-Steuber",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Carole Bogan",
+      "url": "Marie-Larkin",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Chris Bogan",
+      "url": "Mr--Harvey-Hammes",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Joshua Moen III",
+      "url": "Angel-Walter",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ian Douglas-Hoeger",
+      "url": "Veronica-Torp",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ms. Gladys Labadie",
+      "url": "Kyle-Becker",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Dr. Tabitha Wiegand",
+      "url": "Bobbie-Yost",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Caleb Lindgren",
+      "url": "Mrs--Winifred-Schaefer",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Sue Wilkinson",
+      "title": "Ralph McCullough Sr.",
+      "url": "Terence-Rath",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Cory Willms",
+      "url": "Marcella-Kassulke",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Terrance Zboncak V",
+      "url": "Kayla-Thompson",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Mr. Andres Cassin",
+      "url": "Vincent-Lehner",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Tommie Abbott",
+      "url": "Malcolm-Mohr",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Joyce Auer",
+      "url": "Darin-Huel",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Edward Brekke",
+      "url": "Allison-Schneider",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Dr. Colin Streich",
+      "url": "Sammy-Bashirian",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Vicki Schoen DDS",
+      "title": "Enrique Jones",
+      "url": "Jamie-Rohan",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "George Casper",
+      "url": "Duane-Fisher-DDS",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Mr. Nick Jones",
+      "url": "Jimmy-Nikolaus",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Jenny Luettgen",
+      "url": "Wendell-Gleichner-V",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Sophie Hegmann V",
+      "url": "Olivia-Schuppe",
+      "type": 1,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Jimmie Kiehn",
+      "subCategory": "Jaime Schowalter",
+      "title": "Jerome Funk",
+      "url": "Felix-Nolan",
+      "type": 2,
+      "icon": null,
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Simple Link",
+      "subCategory": null,
+      "title": "Simple Link",
+      "url": "/a",
+      "type": 3,
+      "icon": null,
+      "article": null
+    }
+  ],
+  "arFooterBody": "",
+  "arFooterLinks": [
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Louis Hammes",
+      "url": "real",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-5"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Vickie Hintz",
+      "url": "Brendan-Padberg",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Adrienne Cremin",
+      "url": "Louise-Pacocha",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Clay Hartmann",
+      "url": "Virgil-Schuppe",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Margarita Prohaska",
+      "url": "Earl-Donnelly-III",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Emilio Labadie",
+      "url": "Marta-Stroman",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Jennifer Satterfield",
+      "url": "Tamara-Dooley",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Andrea Bayer",
+      "url": "Jo-Altenwerth",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Kristine Padberg",
+      "url": "Doyle-Beahan",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Guadalupe Gottlieb",
+      "url": "Doug-Hilpert",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-3"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Antonia Morissette",
+      "url": "Melinda-Jast-I",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Ms. Juanita Greenholt",
+      "url": "Emilio-Pfannerstill",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Company",
+      "title": "Freda Boehm",
+      "url": "Roberta-Considine",
+      "article": {
+        "__typename": "Article",
+        "slug": "cosmetic-dentistry-5"
+      }
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Explore",
+      "title": "Ida Herman",
+      "url": "Bonnie-Leuschke",
+      "article": null
+    },
+    {
+      "__typename": "ComponentFooterLinks",
+      "category": "Support",
+      "title": "Ms. Katie Cummerata-Rippin",
+      "url": "Dr--Caroline-Hane",
+      "article": null
+    }
+  ],
+  "site": {
+    "favicon": {
+      "src": "logo.png"
+    },
+    "logo": {
+      "src": "logo.png"
+    },
+    "socialMedia": [
+      {
+        "id": "facebook",
+        "platform": "facebook",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "instagram",
+        "platform": "instagram",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "tiktok",
+        "platform": "tiktok",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "youtube",
+        "platform": "youtube",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "linkedin",
+        "platform": "linkedin",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "twitter",
+        "platform": "twitter",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "snapchat",
+        "platform": "snapchat",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      }
+    ]
+  }
+}

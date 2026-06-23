@@ -1,0 +1,114 @@
+{
+  "AppBar": {
+    "title": "الرئيسيه",
+    "description": "مرحبا بكم في الصفحة الرئيسية"
+  },
+  "Home": {
+    "specialOffers": "العروض الخاصة",
+    "showMore": "عرض المزيد",
+    "specialProducts": "منتجات خاصة",
+    "specialCategories": "التصنيفات المميزة",
+    "specialShops": "المتاجر ",
+    "products": "منتجات"
+  },
+  "showMore": "تظهر المزيد",
+  "Auth": {
+    "and": "و",
+    "or": "أو",
+    "agree": "من خلال النقر على المتابعة ، أنت توافق على",
+    "terms": "شروط الخدمة",
+    "signUp": "إنشاء حساب",
+    "signIn": "تسجيل الدخول",
+    "privacy": "سياسة الخصوصية",
+    "phone": "رقم الهاتف",
+    "password": "كلمة المرور",
+    "rePassword": "تأكيد كلمة المرور",
+    "passwordsDoesNotMatch": "لا تتطابق كلمات المرور",
+    "accountHasBeenRegisteredSuccessfully": "تم تسجيل الحساب بنجاح!",
+    "youHaveSuccessfullyLoggedIn": "تم تسجيل الدخول بنجاح",
+    "invalidPhoneNumber": "رقم هاتف غير صالح",
+    "staff": "طاقم عمل",
+    "otp": "OTP"
+  },
+  "SignIn": {
+    "input": "أدخل رقمك لتسجيل الدخول"
+  },
+  "SignUp": {
+    "input": "أدخل رقمك أدناه لإنشاء حسابك",
+    "create": "إنشاء حساب",
+    "name": "الاسم"
+  },
+  "QR": {
+    "scanMachine": "مسح رمز QR",
+    "scanMachineFromImage": "مسح من الصورة",
+    "invalidImage": "صورة غير صالحة",
+    "invalidImageTypeOrSize": "نوع صورة غير صالح أو حجم",
+    "invalidQrCode": "QR-Code غير صالح",
+    "machineDetected": "تم اكتشاف اﻵلة",
+    "machineIsNotActive": "الجهاز غير نشط!",
+    "machineIsOffline": "الجهاز غير متصل!",
+    "machineNotFound": "آلة لم يتم العثور عليها!",
+    "supportedTypesJpgJpegPngMaxSize_5mb": "الأنواع المدعومة: JPG ، JPEG ، PNG. الحد الأقصى الحجم: 5 ميجابايت"
+  },
+  "available": "متاح",
+  "BoxGrid": {
+    "allBoxesOpened": "تم فتح جميع الصناديق",
+    "showInvoiceHistory": "عرض سجل الفواتير",
+    "opened": "مفتوح",
+    "open": "فتح",
+    "waitingForApprove": "في انتظار الموافقة",
+    "readyToOpen": "جاهز للفتح",
+    "openedCount": "تم فتحه",
+    "remaining": "المتبقي",
+    "missingPurchaseContext": "تعذر فتح الصندوق: بيانات الشراء غير متوفرة. حدّث الصفحة وحاول مرة أخرى.",
+    "invalidBoxSlot": "تعذر تحديد الخانة المراد فتحها. حدّث الصفحة أو تواصل مع الدعم."
+  },
+  "PurchaseNotice": {
+    "dismiss": "ذكّرني لاحقًا",
+    "kind": {
+      "awaiting_payment": {
+        "title": "طلب بانتظار الدفع",
+        "body": "لديك طلب غير مدفوع ({price} {currency}). أكمل الدفع قبل مغادرة منطقة الآلة.",
+        "cta": "الذهاب إلى الدفع",
+        "fab": "طلب غير مدفوع"
+      },
+      "ready_to_collect": {
+        "title": "تم الدفع — استلم مشترياتك",
+        "body": "لديك {count} عنصر/عناصر جاهزة للاستلام من الآلة.",
+        "cta": "فتح الخزائن",
+        "fab": "استلام الطلب"
+      },
+      "payment_rejected": {
+        "title": "لم يكتمل الدفع",
+        "body": "محاولة الدفع الأخيرة لم تنجح. يمكنك المحاولة مرة أخرى من صفحة الدفع أو بدء طلب جديد.",
+        "cta": "إعادة المحاولة",
+        "fab": "مشكلة في الدفع"
+      }
+    }
+  },
+  "Checkout": {
+    "payment": "الدفع",
+    "purchases": "المشتريات",
+    "paymentConfirming": "جاري تأكيد الدفع…",
+    "paymentConfirmFailed": "تعذر تأكيد الدفع مع الخادم بعد. إذا تم خصم المبلغ، يرجى التواصل مع الدعم.",
+    "paymentMissingPurchase": "تعذر تحديد عملية الشراء المرتبطة بهذا الدفع. عد إلى الدفع وحاول مرة أخرى.",
+    "paymentUnknownStatus": "حالة دفع غير متوقعة: {status}",
+    "paymentFailedDefault": "لم يكتمل الدفع.",
+    "successTitle": "تم الدفع بنجاح",
+    "successDescription": "شكرًا لك. تمت عملية الدفع بنجاح. يمكنك استلام مشترياتك من الآلة.",
+    "successCtaMachine": "الذهاب إلى الآلة",
+    "successCtaHome": "الرئيسية",
+    "failureTitle": "فشل الدفع",
+    "failureCtaRetry": "العودة إلى الدفع",
+    "payNow": "ادفع",
+    "loadingPaymentForm": "جاري تحميل نموذج الدفع…",
+    "stripeNotConfigured": "لم يُضبط دفع سترايب (مفتاح عام مفقود).",
+    "paymentProviderUnset": "هذه الآلة لا تحتوي على طريقة دفع بالبطاقة. يرجى التواصل مع المشغّل.",
+    "stripeInitFailed": "تعذر بدء دفع سترايب."
+  },
+  "otp": {
+    "activateAccount": "تنشيط الحساب",
+    "input": "أدخل الرمز الذي أرسلناه إلى حساب WhatsApp الخاص بك"
+  }
+, "small change to hit the redeploy on vercel": ""
+}

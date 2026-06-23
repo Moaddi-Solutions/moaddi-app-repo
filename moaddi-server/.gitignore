@@ -1,0 +1,19 @@
+# dependencies
+/node_modules
+# User uploads / local images (not versioned)
+/images/
+/public/6days.mp4
+/public/vv.mp4
+/public/debug.apk
+/public/s12.apk
+.env
+*.env
+env/
+
+.env
+ca-cert.pem
+ca-key.pem
+
+/whatsapp/
+.wwebjs_auth
+.wwebjs_cache

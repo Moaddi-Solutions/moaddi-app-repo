@@ -1,0 +1,147 @@
+/withdrawals:
+  post:
+    tags: [Withdrawals]
+    summary: Request a withdrawal
+    description: |
+      Vendors create for themselves; admins may pass `vendorId` in the body to create for a vendor.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/WithdrawalCreateBody"
+    responses:
+      "201":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Withdrawal"
+      "400":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+  get:
+    tags: [Withdrawals]
+    summary: List withdrawals
+    description: |
+      Vendors see their own. Admins may filter with `vendorId` and `status` (e.g. Pending, Approved, Paid).
+    parameters:
+      - in: query
+        name: vendorId
+        schema: { type: string }
+        description: Admin only
+      - in: query
+        name: status
+        schema: { type: string }
+      - in: query
+        name: offset
+        schema: { type: integer }
+      - in: query
+        name: limit
+        schema: { type: integer }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/WithdrawalListResult"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+
+/withdrawals/{withdrawalId}:
+  get:
+    tags: [Withdrawals]
+    summary: Get one withdrawal
+    parameters:
+      - in: path
+        name: withdrawalId
+        required: true
+        schema: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Withdrawal"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Vendor accessing another vendor's withdrawal
+      "404":
+        description: Not found
+
+/withdrawals/{withdrawalId}/approve:
+  put:
+    tags: [Withdrawals]
+    summary: Approve a withdrawal
+    description: Admin / SuperAdmin only
+    parameters:
+      - in: path
+        name: withdrawalId
+        required: true
+        schema: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Withdrawal"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+
+/withdrawals/{withdrawalId}/reject:
+  put:
+    tags: [Withdrawals]
+    summary: Reject a withdrawal
+    description: Admin / SuperAdmin. Optional body `reason` or `rejectionReason`.
+    parameters:
+      - in: path
+        name: withdrawalId
+        required: true
+        schema: { type: string }
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason: { type: string }
+              rejectionReason: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Withdrawal"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+
+/withdrawals/{withdrawalId}/markpaid:
+  put:
+    tags: [Withdrawals]
+    summary: Mark withdrawal as paid (payout sent)
+    description: Admin / SuperAdmin only
+    parameters:
+      - in: path
+        name: withdrawalId
+        required: true
+        schema: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Withdrawal"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden

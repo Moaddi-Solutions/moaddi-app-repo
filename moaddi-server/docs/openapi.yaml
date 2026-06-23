@@ -1,0 +1,110 @@
+openapi: "3.0.3"
+info:
+  title: Moaddi Server - Payment API
+  version: "1.0.0"
+  description: |
+    Payment-related APIs: purchases, **Stripe**, **My Fatoora**, **Moyasar** (mobile SDK),
+    vendor **wallets** and **transactions**, and **withdrawals** (payout flow).
+
+    **Auth / login** – customer **signup**, **OTP verification**, and **sign-in** (JWT) are
+    documented under tag **Authentication**.
+
+    **Authentication** – protected routes use a Bearer JWT in `Authorization`.
+    Inbound webhooks use provider verification (**Stripe-Signature**, **My Fatoorah-Signature**,
+    Moyasar **`secret_token`** in JSON body), not JWT.
+
+    **Moyasar env (server):** `MOYASAR_PUBLISHABLE_KEY`, `MOYASAR_SECRET_KEY`, `MOYASAR_WEBHOOK_SECRET`,
+    optional `MOYASAR_DEFAULT_CURRENCY`. Use **matching** publishable/secret pairs from the same Moyasar mode (test vs live).
+
+servers:
+  - url: /api/v1
+    description: Default API prefix
+
+components:
+  securitySchemes:
+    $ref: "./components/securitySchemes.yaml"
+  schemas:
+    $ref: "./components/schemas.yaml"
+
+security:
+  - bearerAuth: []
+
+paths:
+  /users/signup:
+    $ref: "./paths/users.auth.yaml#/~1users~1signup"
+  /users/otp:
+    $ref: "./paths/users.auth.yaml#/~1users~1otp"
+  /users/signin:
+    $ref: "./paths/users.auth.yaml#/~1users~1signin"
+  /purchases:
+    $ref: "./paths/purchases.core.yaml#/~1purchases"
+  /purchases/customerHistory/{customerId}:
+    $ref: "./paths/purchases.core.yaml#/~1purchases~1customerHistory~1{customerId}"
+  /purchases/allpendingrequests:
+    $ref: "./paths/purchases.core.yaml#/~1purchases~1allpendingrequests"
+  /purchases/reset/{customerId}:
+    $ref: "./paths/purchases.core.yaml#/~1purchases~1reset~1{customerId}"
+  /purchases/complete:
+    $ref: "./paths/purchases.myfatoora.yaml#/~1purchases~1complete"
+  /purchases/invoice/{invoiceId}:
+    $ref: "./paths/purchases.myfatoora.yaml#/~1purchases~1invoice~1{invoiceId}"
+  /purchases/invoiceData/{invoiceId}:
+    $ref: "./paths/purchases.myfatoora.yaml#/~1purchases~1invoiceData~1{invoiceId}"
+  /purchases/create-payment-intent:
+    $ref: "./paths/purchases.stripe.yaml#/~1purchases~1create-payment-intent"
+  /purchases/stripeIsPaymentDone:
+    $ref: "./paths/purchases.stripe.yaml#/~1purchases~1stripeIsPaymentDone"
+  /purchases/moyasar-checkout:
+    $ref: "./paths/purchases.moyasar.yaml#/~1purchases~1moyasar-checkout"
+  /purchases/moyasarIsPaymentDone:
+    $ref: "./paths/purchases.moyasar.yaml#/~1purchases~1moyasarIsPaymentDone"
+  /purchases/webhook:
+    $ref: "./paths/purchases.stripe.yaml#/~1purchases~1webhook"
+  /purchases/webhook/moyasar:
+    $ref: "./paths/purchases.moyasar.yaml#/~1purchases~1webhook~1moyasar"
+  /purchases/webhook/myfatoora:
+    $ref: "./paths/purchases.webhook.myfatoora.yaml#/~1purchases~1webhook~1myfatoora"
+  /purchases/{purchaseId}:
+    $ref: "./paths/purchases.crud.yaml#/~1purchases~1{purchaseId}"
+  /wallets/me:
+    $ref: "./paths/wallets.transactions.yaml#/~1wallets~1me"
+  /wallets:
+    $ref: "./paths/wallets.transactions.yaml#/~1wallets"
+  /wallets/{walletId}:
+    $ref: "./paths/wallets.transactions.yaml#/~1wallets~1{walletId}"
+  /transactions:
+    $ref: "./paths/wallets.transactions.yaml#/~1transactions"
+  /transactions/{transactionId}:
+    $ref: "./paths/wallets.transactions.yaml#/~1transactions~1{transactionId}"
+  /withdrawals:
+    $ref: "./paths/withdrawals.paths.yaml#/~1withdrawals"
+  /withdrawals/{withdrawalId}:
+    $ref: "./paths/withdrawals.paths.yaml#/~1withdrawals~1{withdrawalId}"
+  /withdrawals/{withdrawalId}/approve:
+    $ref: "./paths/withdrawals.paths.yaml#/~1withdrawals~1{withdrawalId}~1approve"
+  /withdrawals/{withdrawalId}/reject:
+    $ref: "./paths/withdrawals.paths.yaml#/~1withdrawals~1{withdrawalId}~1reject"
+  /withdrawals/{withdrawalId}/markpaid:
+    $ref: "./paths/withdrawals.paths.yaml#/~1withdrawals~1{withdrawalId}~1markpaid"
+
+tags:
+  - name: Authentication
+    description: Customer signup, OTP verification, and JWT sign-in
+  - name: Purchases
+    description: Purchase creation used in payment flows
+  - name: Purchases – My Fatoora
+    description: My Fatoora payment provider endpoints
+  - name: Purchases – Stripe
+    description: Stripe payment provider endpoints
+  - name: Purchases – Moyasar
+    description: Moyasar payment provider endpoints (React Native SDK + server prep)
+  - name: Webhooks – Moyasar
+    description: Inbound Moyasar webhooks (no JWT)
+  - name: Wallets
+    description: Vendor balance rows (admin + vendor)
+  - name: Transactions
+    description: Credit/debit ledger for wallets
+  - name: Withdrawals
+    description: Payout requests and admin workflow
+  - name: Webhooks – My Fatoora
+    description: Inbound IPN (no JWT)

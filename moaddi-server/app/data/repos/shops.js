@@ -1,0 +1,273 @@
+const moment = require("moment");
+const shortId = require("shortid");
+const config = require("../../../config");
+const Shops = require("../models/shops");
+const Users = require("../models/users");
+const {
+  flattenProductForPreferredCurrency,
+} = require("./product-pricing");
+
+/*
+ * Create new shop.
+ */
+let create = async (shop, image) => {
+  shop = new Shops(shop);
+  if (image) shop.image = image.path;
+  shop._id = "shop_" + shortId.generate();
+  shop.created = moment().utc().add(config.timeDifference, "hours");
+  shop.updated = moment().utc().add(config.timeDifference, "hours");
+  shop = await shop.save();
+  return shop;
+};
+
+/*
+ * Get all shops.
+ */
+let get = async (skip = 0, limit = 1000) => {
+  const total = await Shops.countDocuments({ isDeleted: false });
+  let shops = await Shops.find({ isDeleted: false })
+    .sort({ created: -1 })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  for (let i = 0; i < shops.length; i++) {
+    shops[i] = shops[i].toJSON();
+  }
+
+  return { data: shops, total };
+  // return shops
+};
+
+/*
+ * Get all getActive.
+ */
+let getActive = async (skip = 0, limit = 1000, filter, preferredCurrency) => {
+  try {
+    const pipeline = [
+      {
+        $match: { isActive: true, isDeleted: false },
+      },
+      {
+        $lookup: {
+          from: "machines",
+          foreignField: "shopId",
+
+          localField: "_id",
+          as: "machines",
+        },
+      },
+      {
+        $lookup: {
+          from: "boxes",
+          foreignField: "machineId",
+
+          localField: "machines._id",
+          as: "boxes",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          foreignField: "_id",
+
+          localField: "boxes.productId",
+          as: "products",
+        },
+      },
+      { $sort: { created: -1 } },
+      { $match: { ...filter } },
+      { $skip: parseInt(skip) },
+      { $limit: parseInt(limit) },
+    ];
+
+    let shops = await Shops.aggregate(pipeline).exec();
+    if (!shops.length) {
+      return { data: [], total: 0 };
+    }
+
+    shops = shops.map((shop) => ({
+      ...shop,
+      products: Array.isArray(shop.products)
+        ? shop.products.map((p) => flattenProductForPreferredCurrency(p, preferredCurrency))
+        : shop.products,
+    }));
+
+    return { data: shops, total: shops.length, preferredCurrency };
+  } catch (error) {
+    console.error("Error fetching Shops:", error);
+    throw error;
+  }
+};
+
+/*
+ * Get shop by shopId.
+ */
+let getById = async (shopId, preferredCurrency) => {
+  try {
+    const pipeline = [
+      {
+        $match: { _id: shopId, isDeleted: false },
+      },
+      // {
+      //     $addFields: { "_id": shopId }
+      // },
+      // {
+      //     $lookup: {
+      //         from: "users",
+      //         foreignField: "shopId",
+
+      //         localField: "_id",
+      //         as: "vendors"
+      //     }
+      // },
+      // {
+      //     $project: {
+      //         "vendors.password": 0,
+      //     }
+      // },
+      {
+        $lookup: {
+          from: "machines",
+          foreignField: "shopId",
+
+          localField: "_id",
+          as: "machines",
+        },
+      },
+      {
+        $lookup: {
+          from: "boxes",
+          foreignField: "machineId",
+
+          localField: "machines._id",
+          as: "boxes",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          foreignField: "_id",
+
+          localField: "boxes.productId",
+          as: "products",
+        },
+      },
+
+      {
+        $sort: { created: -1 },
+      },
+    ];
+
+    let shop = await Shops.aggregate(pipeline).exec();
+    shop = shop[0];
+    if (!shop || shop.isDeleted) {
+      return Promise.reject({
+        message: "Shop not found.",
+        statusCode: 404,
+      });
+    }
+
+    shop = {
+      ...shop,
+      products: Array.isArray(shop.products)
+        ? shop.products.map((p) => flattenProductForPreferredCurrency(p, preferredCurrency))
+        : shop.products,
+    };
+    return shop;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+/*
+ * Get shop by shopId.
+ */
+let getByVendor = async (vendorId) => {
+  const user = await Users.findOne({ _id: vendorId });
+  if (!user) return { error: 404, data: [] };
+  if (user.role == "Admin")
+    return {
+      data: await Shops.find({ isDeleted: false }),
+      total: 100,
+    };
+
+  try {
+    const pipeline = [
+      {
+        $match: { _id: user._id },
+      },
+      {
+        $lookup: {
+          from: "machines",
+          foreignField: "vendorId",
+          localField: "_id",
+          as: "machines",
+        },
+      },
+      {
+        $lookup: {
+          from: "shops",
+          foreignField: "_id",
+          localField: "machines.shopId",
+          as: "shops",
+          pipeline: [{ $match: { isDeleted: false } }],
+        },
+      },
+      {
+        $sort: { created: -1 },
+      },
+    ];
+    let vendor = await Users.aggregate(pipeline).exec();
+    let shops = vendor[0].shops;
+
+    return { data: shops, total: 100 };
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+/*
+ * Update shop by id.
+ */
+let update = async (machineId, properties, image) => {
+  let shop = await Shops.findOne({ _id: machineId });
+
+  // Return error if shop not found.
+  if (!shop || shop.isDeleted) {
+    return Promise.reject({
+      message: "Shop not found.",
+      statusCode: 404,
+    });
+  }
+
+  // Update all properties.
+  for (let property in properties) {
+    shop[property] = properties[property];
+  }
+  if (image) shop.image = image.path;
+
+  shop.updated = moment().utc().add(config.timeDifference, "hours");
+
+  shop = await shop.save();
+  shop = shop.toJSON();
+  return shop;
+};
+
+/*
+ * Delete shop by id.
+ */
+let remove = async (machineId) => {
+  let shop = update(machineId, { isDeleted: true });
+  return shop;
+};
+
+module.exports = {
+  create,
+  get,
+  getById,
+  update,
+  remove,
+  getActive,
+  getByVendor,
+};

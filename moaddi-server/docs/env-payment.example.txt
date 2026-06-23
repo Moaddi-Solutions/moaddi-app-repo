@@ -1,0 +1,37 @@
+# ZATCA QR on server-side invoice payload (getInvoice) — can match NEXT_PUBLIC_* in Next if you share one .env
+SELLER_NAME=
+SELLER_VAT_NUMBER=
+
+# MyFatoorah (server)
+MYFATORA_API_ENDPOINT=https://apitest.myfatoorah.com
+MYFATORA_API_TOKEN=
+
+# Webhook V2 — set in MyFatoorah portal; sign PAYMENT_STATUS_CHANGED events
+MYFATORA_WEBHOOK_SECRET=
+
+# Stripe
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_DEFAULT_CURRENCY=sar
+
+# Moyasar (React Native / mobile SDK — secret + webhook on server; publishable key on device or optional below)
+# Must match: pk_test_ with sk_test_, or pk_live_ with sk_live_ (mixed mode breaks the payment form).
+MOYASAR_PUBLISHABLE_KEY=
+MOYASAR_SECRET_KEY=
+# Moyasar dashboard webhook endpoint secret — must match JSON field secret_token on POST /purchases/webhook/moyasar
+MOYASAR_WEBHOOK_SECRET=
+# Default SAR; amount minor units follow Moyasar rules (SAR ×100, KWD ×1000, JPY integer)
+MOYASAR_DEFAULT_CURRENCY=SAR
+# Override API host for sandbox if Moyasar provides a different base URL
+# MOYASAR_API_BASE_URL=https://api.moyasar.com/v1
+# MOYASAR_PAYMENT_DESCRIPTION=Moaddi order
+# MOYASAR_ZERO_DECIMAL=1
+
+# Optional: log payment orchestrator (server)
+# PAYMENT_DEBUG=1
+
+# Optional: HTTP request line logging (app.js); not set in production
+# REQUEST_LOG=1
+
+# Next.js (browser) — publishable key for Stripe.js / Payment Element only; keep secret key server-side
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...

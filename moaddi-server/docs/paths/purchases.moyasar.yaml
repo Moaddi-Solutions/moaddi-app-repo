@@ -1,0 +1,156 @@
+/purchases/moyasar-checkout:
+  post:
+    tags: [Purchases – Moyasar]
+    summary: Prepare Moyasar checkout (React Native SDK)
+    description: |
+      **Flow**
+      1. Create a purchase (`POST /purchases`) — status `PaymentDoneRequest`.
+      2. Call this endpoint with a **Customer** JWT and `purchaseId`.
+      3. Use the JSON response to build `PaymentConfig` in
+         [react-native-moyasar-sdk](https://docs.moyasar.com/sdk/react-native/basic-integration):
+         `givenId`, `amount`, `currency`, `description`, `publishableApiKey` (if present),
+         and **merge** `metadata` into `PaymentConfig.metadata` (required for webhooks).
+      4. After the SDK reports success, call `POST /purchases/moyasarIsPaymentDone` with `{ "_id": "<purchaseId>" }`
+         once the server webhook has marked the purchase paid (or retry briefly).
+
+      Server reads **`MOYASAR_PUBLISHABLE_KEY`** / **`MOYASAR_SECRET_KEY`** / currency defaults from environment.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/MoyasarCheckoutBody"
+    responses:
+      "200":
+        description: Fields for the mobile SDK + bookkeeping on the purchase (`paymentProvider=moyasar`, `moyasarGivenId`).
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/MoyasarCheckoutResponse"
+      "400":
+        description: Invalid purchase, currency, or wrong provider (e.g. already Stripe / My Fatoora).
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Purchase does not belong to the authenticated user
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "409":
+        description: Purchase is not open for payment
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/purchases/moyasarIsPaymentDone:
+  post:
+    tags: [Purchases – Moyasar]
+    summary: Finalise Moyasar client notifications after payment
+    description: |
+      Idempotent: first successful call emits Socket/Telegram fan-out like Stripe’s `stripeIsPaymentDone`.
+      Requires the purchase to already be **`PaymentDone`** (typically set by **`POST /purchases/webhook/moyasar`**).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [_id]
+            properties:
+              _id:
+                type: string
+                example: "purchase_Ab3Xyz"
+    responses:
+      "200":
+        description: Same shape as Stripe finalise — machine/boxes payload for the client.
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/PaymentNotifyResponse"
+      "400":
+        description: Not a Moyasar purchase
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Purchase does not belong to the authenticated user
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "409":
+        description: Payment not confirmed yet, or notification already sent — retry if appropriate
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/purchases/webhook/moyasar:
+  post:
+    tags: [Webhooks – Moyasar]
+    summary: Moyasar webhook receiver
+    description: |
+      Called by **Moyasar** only. Configure URL in the Moyasar dashboard:
+      `{your-public-origin}/api/v1/purchases/webhook/moyasar`.
+
+      **Authentication:** JSON body field **`secret_token`** must equal **`MOYASAR_WEBHOOK_SECRET`**
+      (the secret you defined for this webhook endpoint in the dashboard).
+
+      **Processing:** On event type **`payment_paid`**, the server optionally refetches the payment with
+      **`MOYASAR_SECRET_KEY`**, then marks the purchase **`PaymentDone`** and credits vendors.
+
+      No JWT — `security` is empty here.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Moyasar webhook envelope (see Moyasar webhook reference).
+            required: [type, secret_token, data]
+            properties:
+              type:
+                type: string
+                example: "payment_paid"
+              secret_token:
+                type: string
+                description: Must match MOYASAR_WEBHOOK_SECRET
+              data:
+                type: object
+                description: Payment resource (must include id, amount, currency, status, metadata).
+    responses:
+      "200":
+        description: Accepted (or ignored for non-payment_paid events)
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                received:
+                  type: boolean
+                  example: true
+                ignored:
+                  type: boolean
+                  example: false
+      "401":
+        description: Invalid secret_token
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "502":
+        description: Could not verify payment with Moyasar API
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"

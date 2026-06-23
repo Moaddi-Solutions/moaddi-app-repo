@@ -2,10 +2,9 @@
 # Each project (moaddi-next, moaddi-server, vending_app) has its own git repo.
 # This file covers root-level files and shared patterns across the workspace.
 
-# ─── Nested project repos (each has its own git history — not tracked by root) ─
-/moaddi-next/
-/moaddi-server/
-/vending_app/
+# ─── Nested project .git only (keep project files; skip each repo's metadata) ─
+**/.git/
+**/.git.local/
 
 # ─── Dependencies ───────────────────────────────────────────────────────────
 node_modules/

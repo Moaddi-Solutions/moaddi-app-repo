@@ -1,0 +1,624 @@
+{
+  "enHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "heading": "Moaddi  | E-commerce platform",
+      "description": "Lorem 8 ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "Shop now",
+        "page": {
+          "__typename": "Page",
+          "url": "/products"
+        }
+      },
+      "order": 1,
+      "isActive": true,
+      "features": [
+        {
+          "icon": {
+            "src": "1751973824487_2.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "24/7 Support",
+          "title": "24/7 Support"
+        },
+        {
+          "icon": {
+            "src": "1751973824488_3.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "free and fast shipping",
+          "title": "Free and fast shipping"
+        },
+        {
+          "icon": {
+            "src": "1752151293229_1.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "Refund within 48 hours\n",
+          "title": "Refund within 48 hours\n"
+        }
+      ],
+      "background": {
+        "src": "1751974797564_banner1.webp"
+      }
+    },
+    {
+      "id": "Shops",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "shops",
+      "order": 2
+    },
+    {
+      "id": "Offers",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "offers",
+      "order": 3
+    },
+    {
+      "id": "Products",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "products",
+      "order": 4
+    },
+    {
+      "id": "Gallery",
+      "__typename": "ComponentComponentsGallery",
+      "order": 5,
+      "items": [
+        {
+          "background": {
+            "src": "1752152519294_3.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "We offer home delivery services. With just a few clicks directly from your mobile phone, your order from a trusted local supermarket will be delivered to your home or office in no time, depending on your location.",
+          "title": "Free and fast delivery"
+        },
+        {
+          "background": {
+            "src": "1752152519294_1.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "We have absolute confidence in providing you with the best and highest quality products; that's why we are proud to offer you a 2-day money back guarantee.",
+          "title": "Refund within 48 hours"
+        },
+        {
+          "background": {
+            "src": "1752152519294_2.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "As part of our commitment to providing the best services 24/7 to all our valued customers, we are pleased to receive your requests throughout the day.",
+          "title": "Customer service is available"
+        }
+      ]
+    },
+    {
+      "id": "Service",
+      "__typename": "ComponentComponentsService",
+      "header": [
+        {
+          "type": "heading",
+          "level": 6,
+          "children": [
+            {
+              "bold": true,
+              "text": "Our Services",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Dr. Michelle Grosleib and Dr. James Grosleib provide superior cosmetic and restorative dental services including:",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "serviceDescription": "Family-oriented care in Valley Village |\n\nThe team at Valley Village Dental is dedicated to offering the highest quality dental care in the greater Los Angeles area, and part of our commitment to our patients includes getting to know you! We value your time and provide comprehensive and educational care that addresses your individual needs.\n\n\nVisiting the dentist can be a nerve-wracking experience, but at Valley Village Dental we go the extra mile to ensure your comfort from the moment you arrive. We combine state-of-the-art dentistry along with a family-focused atmosphere to offer you a gentle and comfortable visit. Our team takes the time to listen to your concerns and we discuss the treatments that best meet your overall health and financial priorities.\n\n\nOur office is located in Valley Village and we welcome patients from the greater Los Angeles area. To experience compassionate and exceptional care, call us today at 818-763-8999.",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "Login",
+        "page": {
+          "__typename": "Page",
+          "url": "/signin"
+        }
+      },
+      "services": [
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        }
+      ],
+      "order": 6,
+      "heading": "Our Services | Dr. Michelle Grosleib and Dr. James Grosleib provide superior cosmetic and restorative dental services including:"
+    }
+  ],
+  "enSite": {
+    "id": "fortis",
+    "name": "Moaddi",
+    "description": "vending machines platform"
+  },
+  "enSeo": {
+    "shareImage": {
+      "src": "1752170007047_logo-(2)2.png"
+    },
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Vending Machines Platform",
+    "metaTitle": "Moaddi"
+  },
+  "enHeaderLinks": [
+    {
+      "category": "vendor features",
+      "subCategory": "",
+      "title": "",
+      "url": "about-us-en",
+      "type": 1,
+      "id": "6"
+    },
+    {
+      "category": "shared",
+      "type": 3,
+      "url": "about-us-en",
+      "id": "FDpsB85"
+    }
+  ],
+  "enFooterBody": {
+    "body": "E-commerce platfor | Lorem 8 ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
+    "title": "Copyright 2025 © Dr. Moaddi - All Rights Reserved",
+    "bottomLinks": [
+      {
+        "title": "Privacy Policy",
+        "url": "/privacy-policy"
+      },
+      {
+        "title": "Terms and conditions",
+        "url": "terms-and-conditions"
+      },
+      {
+        "title": "Contact Us",
+        "url": "/contact-us"
+      }
+    ],
+    "links": []
+  },
+  "enPages": [
+    {
+      "body": "<p></p><p>At <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>, your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you visit or use our website. By accessing or using <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, you agree to the terms of this Privacy Policy.</p><h2>1. Information We Collect</h2><p>We may collect the following types of information:</p><ul><li><p><strong>Personal Information</strong>: such as your name, email address, phone number, or any details you provide when contacting us or filling out forms.</p></li><li><p><strong>Non-Personal Information</strong>: including browser type, device information, IP address, and usage data through cookies and analytics tools.</p></li></ul><h2>2. How We Use Your Information</h2><p>We use the information we collect to:</p><ul><li><p>Provide, operate, and maintain our website.</p></li><li><p>Improve user experience and personalize content.</p></li><li><p>Communicate with you, respond to inquiries, and provide customer support.</p></li><li><p>Send updates, newsletters, or marketing communications (if you have opted in).</p></li><li><p>Ensure website security and prevent fraudulent activity.</p></li></ul><h2>3. Sharing of Information</h2><p>We do not sell, trade, or rent your personal information to third parties. We may share information only in the following cases:</p><ul><li><p>With trusted service providers who assist us in operating our website or services.</p></li><li><p>If required by law, regulation, or legal process.</p></li><li><p>To protect the rights, property, or safety of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, our users, or others.</p></li></ul><h2>4. Cookies and Tracking Technologies</h2><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> uses cookies and similar technologies to enhance user experience, analyze traffic, and understand user behavior. You can manage or disable cookies in your browser settings.</p><h2>5. Data Security</h2><p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p><h2>6. Your Rights</h2><p>Depending on your location, you may have the right to:</p><ul><li><p>Access the personal information we hold about you.</p></li><li><p>Request correction or deletion of your data.</p></li><li><p>Opt out of receiving marketing communications.</p></li><li><p>Withdraw consent where processing is based on consent.</p></li></ul><h2>7. Third-Party Links</h2><p>Our website may contain links to external websites. We are not responsible for the privacy practices or content of third-party sites.</p><h2>8. Changes to This Policy</h2><p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with the updated effective date.</p><h2>9. Contact Us</h2><p>If you have any questions about this Privacy Policy, please contact us at:</p><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a><br>Email: info@moaddi-app.com</p>",
+      "id": "privacy-policy"
+    },
+    {
+      "body": "<p>Welcome to <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>.<br>By accessing or using our website and services, you agree to comply with the following Terms and Conditions. Please read them carefully before using the site.</p><h6>1. Acceptance of Terms</h6><ul><li><p>By using this website, you agree to these Terms and Conditions.</p></li><li><p>If you do not agree, please discontinue using the site.</p></li></ul><h6>2. Business Activity</h6><ul><li><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> provides e-commerce services for vending machines and related products.</p></li></ul><h6>3. Accounts</h6><ul><li><p>When registering, you must provide accurate and complete information.</p></li><li><p>You are responsible for maintaining the confidentiality of your login credentials and any unauthorized use of your account.</p></li></ul><h6>4. Orders and Payment</h6><ul><li><p>All orders are subject to confirmation and product availability.</p></li><li><p>Payments must be made through the payment methods available on the site.</p></li><li><p>We reserve the right to refuse or cancel any order in case of error or unavailability.</p></li></ul><h6>5. Shipping and Delivery</h6><ul><li><p>Orders are shipped to the address provided during checkout.</p></li><li><p>Estimated delivery times are approximate and may vary depending on the shipping provider.</p></li></ul><h6>6. Returns and Exchanges</h6><ul><li><p>Returns or exchanges are subject to our \"Return Policy.\"</p></li><li><p>Products must be unused and in their original condition.</p></li></ul><h6>7. Intellectual Property Rights</h6><ul><li><p>All content (text, images, logos, design) is the property of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> and may not be used without prior written consent.</p></li></ul><h6>8. Limitation of Liability</h6><ul><li><p>We are not liable for any direct or indirect damages resulting from the use of our products or website.</p></li><li><p>We are not responsible for third-party failures (such as shipping or payment providers).</p></li></ul><h6>9. Modifications</h6><ul><li><p>We reserve the right to update or modify these Terms at any time.</p></li><li><p>Continued use of the website after changes implies acceptance of the revised Terms.</p></li></ul><h6>10. Governing Law</h6><ul><li><p>These Terms are governed by the laws of Saudi Arabia (or the relevant jurisdiction where your business operates).</p></li></ul><h6>11. Contact Us</h6><p>For inquiries regarding these Terms and Conditions:<br>📧 <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"mailto:support@moaddi-app.com\"><strong>support@moaddi-app.com</strong></a></p>",
+      "id": "terms-and-conditions"
+    }
+  ],
+  "arHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "heading": "منصه معدي | للبيع الذاتي",
+      "description": "منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك  منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك ",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "تسوق الان",
+        "page": {
+          "__typename": "Page",
+          "url": "/shops"
+        }
+      },
+      "order": 1,
+      "features": [
+        {
+          "icon": {
+            "src": "1752154498748_2.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "دعم على مدار الساعة طوال أيام الأسبوع",
+          "title": "24/7 دعم"
+        },
+        {
+          "icon": {
+            "src": "1752154498749_3.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "شحن مجاني وسريع",
+          "title": "شحن مجاني وسريع"
+        },
+        {
+          "icon": {
+            "src": "1752154498749_1.png"
+          },
+          "__typename": "ComponentSharedFeature",
+          "description": "استرداد الأموال خلال 48 ساعة",
+          "title": "استرداد الأموال خلال 48 ساعة"
+        }
+      ],
+      "background": {
+        "src": "1752154498751_banner1.webp"
+      }
+    },
+    {
+      "id": "Shops",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "shops"
+    },
+    {
+      "id": "Offers",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "offers"
+    },
+    {
+      "id": "Products",
+      "__typename": "ComponentComponentsDynamicBlock",
+      "name": "products"
+    },
+    {
+      "id": "Service",
+      "order": 6,
+      "__typename": "ComponentComponentsService",
+      "header": [
+        {
+          "type": "heading",
+          "level": 6,
+          "children": [
+            {
+              "bold": true,
+              "text": "Our Services",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "text": "Dr. Michelle Grosleib and Dr. James Grosleib provide superior cosmetic and restorative dental services including:",
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "serviceDescription": "نص | نص طويل",
+      "button": {
+        "__typename": "ComponentSharedButton",
+        "title": "سجل دخول",
+        "page": {
+          "__typename": "Page",
+          "url": "/signin"
+        }
+      },
+      "services": [
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "BPA Free Dental Fillings",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Teeth Cleaning",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        },
+        {
+          "__typename": "ComponentSharedButton",
+          "title": "Extractions",
+          "page": {
+            "__typename": "Page",
+            "url": "/appointment"
+          }
+        }
+      ],
+      "heading": "نص | نص طويل"
+    },
+    {
+      "id": "Gallery",
+      "order": 5,
+      "__typename": "ComponentComponentsGallery",
+      "items": [
+        {
+          "background": {
+            "src": "1752154635701_2.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "24/7 دعم",
+          "title": "24/7 دعم",
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        },
+        {
+          "background": {
+            "src": "1752154635702_3.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "شحن مجاني وسريع",
+          "title": "شحن مجاني وسريع",
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        },
+        {
+          "background": {
+            "src": "1752154635702_1.png"
+          },
+          "__typename": "ComponentSharedGalleryItems",
+          "description": "استرداد الأموال خلال 48 ساعة",
+          "title": "استرداد الأموال خلال 48 ساعة",
+          "button": {
+            "__typename": "ComponentSharedButton",
+            "title": "Find out more",
+            "page": {
+              "__typename": "Page",
+              "url": "/appointment"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "arSite": {
+    "id": "fortis",
+    "name": "معدي",
+    "description": "null"
+  },
+  "arSeo": {
+    "shareImage": {
+      "src": "1752169991767_logo-(2)2.png"
+    },
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
+    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]"
+  },
+  "arHeaderLinks": [
+    {
+      "category": "مقالات",
+      "subCategory": "تجار",
+      "title": "كيف تصبح تاجر",
+      "url": "about-us-ar22222s",
+      "type": 1,
+      "url2": "about-us-ar22222sss",
+      "id": "1"
+    },
+    {
+      "id": "2",
+      "category": "مقالات",
+      "subCategory": "تجار",
+      "title": "لماذا تصبح تاجر",
+      "url": "why-become-a-vendor",
+      "type": 1
+    },
+    {
+      "id": "3",
+      "category": "مقالات",
+      "subCategory": "تجار",
+      "title": "كيف تصبح تاجر",
+      "url": "how-to-become-a-vendor",
+      "type": 1
+    },
+    {
+      "id": "4",
+      "category": "مقالات",
+      "subCategory": "عميل",
+      "title": "كيف تصبح عميل",
+      "url": "how-to-become-a-client",
+      "type": 1
+    },
+    {
+      "id": "5",
+      "category": "مقالات",
+      "subCategory": "عميل",
+      "title": "لماذا تصبح عميل",
+      "url": "why-become-a-client",
+      "type": 1
+    },
+    {
+      "category": "مميزات التجار",
+      "url": "http://localhost:3000/admin#/arHeaderLinks/6",
+      "type": 3,
+      "id": "6"
+    }
+  ],
+  "arFooterBody": {
+    "body": "E-commerce platform | Lorem 8 ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
+    "title": "Copyright 2025 © منصه معدي جميع الحقوق محفوظه",
+    "bottomLinks": [
+      {
+        "title": "سياسه الخصوصيه",
+        "url": "/privacy-policy"
+      },
+      {
+        "title": "الشروط و الأحكام",
+        "url": "terms-and-conditions"
+      },
+      {
+        "title": "اتصل بنا",
+        "url": "/contact-us"
+      }
+    ],
+    "links": []
+  },
+  "arPages": [
+    {
+      "body": "<p>في موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>، خصوصيتك تهمنا. توضح سياسة الخصوصية هذه كيفية جمعنا لمعلوماتك الشخصية واستخدامها والإفصاح عنها وحمايتها عند زيارتك لموقعنا الإلكتروني أو استخدامه. بالوصول إلى موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> أو استخدامه، فإنك توافق على بنود سياسة الخصوصية هذه.</p><p>1. المعلومات التي نجمعها</p><p>قد نجمع الأنواع التالية من المعلومات:</p><p>المعلومات الشخصية: مثل اسمك، وعنوان بريدك الإلكتروني، ورقم هاتفك، أو أي تفاصيل أخرى تقدمها عند التواصل معنا أو ملء النماذج.</p><p>المعلومات غير الشخصية: بما في ذلك نوع المتصفح، ومعلومات الجهاز، وعنوان IP، وبيانات الاستخدام من خلال ملفات تعريف الارتباط وأدوات التحليل.</p><p>2. كيف نستخدم معلوماتك</p><p>نستخدم المعلومات التي نجمعها للأغراض التالية:</p><p>توفير موقعنا الإلكتروني وتشغيله وصيانته.</p><p>تحسين تجربة المستخدم وتخصيص المحتوى.</p><p>التواصل معك، والرد على استفساراتك، وتقديم دعم العملاء.</p><p>إرسال التحديثات والنشرات الإخبارية والرسائل التسويقية (إذا كنت قد اشتركت في قائمتنا البريدية).</p><p>ضمان أمن الموقع الإلكتروني ومنع الأنشطة الاحتيالية.</p><p>٣. مشاركة المعلومات</p><p>لا نبيع معلوماتك الشخصية أو نتاجر بها أو نؤجرها لأطراف ثالثة. قد نشارك المعلومات فقط في الحالات التالية:</p><p>مع مزودي الخدمات الموثوق بهم الذين يساعدوننا في تشغيل موقعنا الإلكتروني أو خدماتنا.</p><p>إذا اقتضى القانون أو اللوائح أو الإجراءات القانونية ذلك.</p><p>لحماية حقوق وممتلكات وسلامة موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> ومستخدميه وغيرهم.</p><p>٤. ملفات تعريف الارتباط وتقنيات التتبع</p><p>يستخدم موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> ملفات تعريف الارتباط والتقنيات المشابهة لتحسين تجربة المستخدم، وتحليل حركة المرور، وفهم سلوك المستخدم. يمكنك إدارة ملفات تعريف الارتباط أو تعطيلها في إعدادات متصفحك.</p><p>٥. أمن البيانات</p><p>نطبق تدابير تقنية وتنظيمية مناسبة لحماية بياناتك الشخصية من الوصول غير المصرح به أو التعديل أو الإفصاح أو الإتلاف.</p><p>٦. حقوقك</p><p>بحسب موقعك، قد يحق لك ما يلي:</p><p>الوصول إلى معلوماتك الشخصية التي نحتفظ بها.</p><p>طلب تصحيح بياناتك أو حذفها.</p><p>إلغاء الاشتراك في تلقي الرسائل التسويقية.</p><p>سحب الموافقة في حال كان المعالجة مبنية عليها.</p><p>٧. روابط الجهات الخارجية</p><p>قد يحتوي موقعنا الإلكتروني على روابط لمواقع خارجية. نحن غير مسؤولين عن ممارسات الخصوصية أو محتوى مواقع الجهات الخارجية.</p><p>٨. التغييرات في هذه السياسة</p><p>قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سيتم نشر أي تغييرات على هذه الصفحة مع تاريخ سريانها المُحدَّث.</p><p>٩. تواصل معنا</p><p>إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه، يُرجى التواصل معنا عبر:</p><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a></p><p>البريد الإلكتروني: <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"mailto:info@moaddi-app.com\">info@moaddi-app.com</a></p>",
+      "id": "privacy-policy"
+    },
+    {
+      "body": "<p>مرحبًا بك في موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>.<br>باستخدامك للموقع أو قيامك بعملية شراء، فإنك توافق على الالتزام بشروط وأحكام الاستخدام الموضحة أدناه. يرجى قراءتها بعناية قبل استخدام الموقع.</p><h6>1. القبول بالشروط</h6><ul><li><p>دخولك أو استخدامك للموقع يعني موافقتك على هذه الشروط.</p></li><li><p>في حال عدم الموافقة، يرجى التوقف عن استخدام الموقع.</p></li></ul><h6>2. النشاط التجاري</h6><ul><li><p>يقدم موقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> خدمات التجارة الإلكترونية الخاصة بمكائن البيع الذاتي ومنتجات مرتبطة بها.</p></li></ul><h6>3. الحسابات</h6><ul><li><p>عند التسجيل، يجب تقديم معلومات دقيقة وكاملة.</p></li><li><p>أنت مسؤول عن الحفاظ على سرية بيانات تسجيل الدخول، وأي استخدام غير مصرح به يقع على عاتقك.</p></li></ul><h6>4. الطلبات والدفع</h6><ul><li><p>جميع الطلبات خاضعة للتأكيد والتوافر.</p></li><li><p>الدفع يتم عبر الوسائل المتاحة في الموقع.</p></li><li><p>يحق للموقع رفض أو إلغاء أي طلب في حال حدوث خطأ أو عدم توافر المنتج.</p></li></ul><h6>5. الشحن والتسليم</h6><ul><li><p>يتم شحن الطلبات وفقًا للعنوان المحدد أثناء عملية الشراء.</p></li><li><p>المواعيد المقدرة للتسليم هي تقريبية وقد تختلف بناءً على شركات الشحن.</p></li></ul><h6>6. سياسة الإرجاع والاستبدال</h6><ul><li><p>تخضع عمليات الإرجاع أو الاستبدال للشروط الموضحة في صفحة \"سياسة الإرجاع\".</p></li><li><p>يجب أن تكون المنتجات في حالتها الأصلية وغير مستخدمة.</p></li></ul><h6>7. حقوق الملكية الفكرية</h6><ul><li><p>جميع حقوق المحتوى (النصوص، الصور، الشعارات، التصميم) محفوظة لموقع <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> ولا يجوز استخدامها دون إذن مسبق.</p></li></ul><h6>8. حدود المسؤولية</h6><ul><li><p>الموقع غير مسؤول عن أي أضرار مباشرة أو غير مباشرة تنشأ عن استخدام المنتجات أو الموقع.</p></li><li><p>لا نتحمل المسؤولية عن أعطال ناتجة عن أطراف خارجية (مثل شركات الشحن أو الدفع).</p></li></ul><h6>9. التعديلات</h6><ul><li><p>يحق للموقع تعديل هذه الشروط في أي وقت.</p></li><li><p>استمرارك في استخدام الموقع بعد التعديل يعتبر موافقة على الشروط الجديدة.</p></li></ul><h6>10. القانون المعمول به</h6><ul><li><p>تخضع هذه الشروط لقوانين <strong>المملكة العربية السعودية</strong> (يمكن تعديل الدولة حسب مقر عملك).</p></li></ul><h6>11. التواصل</h6><p>للاستفسارات المتعلقة بالشروط والأحكام:<br>📧 <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"mailto:support@moaddi-app.com\"><strong>support@moaddi-app.com</strong></a></p>",
+      "id": "terms-and-conditions"
+    }
+  ],
+  "site": {
+    "logo": {
+      "src": "1765624663680_WhatsApp-Image-2025-12-04-at-10.46.04-AM.jpeg"
+    },
+    "favicon": {
+      "src": "1765624663679_WhatsApp-Image-2025-11-04-at-1.16.34-PM.jpeg"
+    },
+    "id": "fortis",
+    "socialMedia": [
+      {
+        "id": "facebook",
+        "platform": "facebook",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "instagram",
+        "platform": "instagram",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "tiktok",
+        "platform": "tiktok",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "youtube",
+        "platform": "youtube",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "linkedin",
+        "platform": "linkedin",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "twitter",
+        "platform": "twitter",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      },
+      {
+        "id": "snapchat",
+        "platform": "snapchat",
+        "__typename": "ComponentSharedSocialMedia",
+        "url": "/"
+      }
+    ]
+  },
+  "docs": [
+    {
+      "id": "Kaisijin 12",
+      "body": "<h3 dir=\"ltr\" data-pm-slice=\"0 0 []\">The machine has one MAC, 12 lock</h3><hr><h3 dir=\"ltr\">Content</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>vending machine hardware body</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>Bluetooth mini program body (expo)</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">vending machine management background system. (back-end)</p>  </li></ol><hr><h3 dir=\"ltr\">Plan</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\">The terminal user scans the QR code (Bluetooth MAC address)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Automatically jumps to the docking APP purchase interface</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Connect to the BLE Bluetoothof the hardware</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Handshake protocol (app send a string codes to machine)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">unlocking, power acquisition, charging Settings</p>  </li></ol><hr><h3 dir=\"ltr\">Instructions</h3><h3 dir=\"ltr\">[← Send] Unlocking instruction: (10 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 7th byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0×00 (0) is invalid</p></li>      <li dir=\"ltr\">        <p dir=\"ltr\">          0x01(1) to 0x0c (12) indicates that 1 to 12 locks are opened        </p>      </li>      <li dir=\"ltr\">        <p dir=\"ltr\">0×0d (13) all of 12 locks open for testing</p>      </li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock status feedback: (14 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">    after change of the lock status the device takes the initiative to report  </summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">  [← Send] Device Information or Lock Status Information: (4 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 2nd byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (Queries device information)</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf1: (Queries the lock status)</p></li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Device Info returns: (8 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">Only first 4 bytes are important</summary>  <div class=\"details-content\">    <ol>      <li dir=\"ltr\"><p dir=\"ltr\">Head</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Version</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Battery operated or not</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Percentage of battery</p></li>    </ol>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock Status returns: (14 bytes)</h3><details opendetails=\"false\">  <summary></summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">Charging related additions: (3 bytes)</h3><p></p>"
+    },
+    {
+      "id": "Yunxian Bluetooth",
+      "body": "<h3>blue-tooth name is YX + id</h3><p>Every box need a new password</p><p>The password is valid only for 20 seconds</p><hr><h3>Plan</h3><ol><li><p>The terminal user scans the QR code (Bluetooth MAC address)</p></li><li><p>Automatically jumps to the docking APP purchase interface</p></li><li><p>Connect to the BLE Bluetoothof the hardware</p></li><li><p>ask for password</p></li><li><p>unlocking</p></li></ol>"
+    },
+    {
+      "id": "Kaisijin 24",
+      "body": "<h3 dir=\"ltr\" data-pm-slice=\"0 0 []\">The machine has one MAC, 12 lock</h3><hr><h3 dir=\"ltr\">Content</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>vending machine hardware body</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>Bluetooth mini program body (expo)</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">vending machine management background system. (back-end)</p>  </li></ol><hr><h3 dir=\"ltr\">Plan</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\">The terminal user scans the QR code (Bluetooth MAC address)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Automatically jumps to the docking APP purchase interface</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Connect to the BLE Bluetoothof the hardware</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Handshake protocol (app send a string codes to machine)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">unlocking, power acquisition, charging Settings</p>  </li></ol><hr><h3 dir=\"ltr\">Instructions</h3><h3 dir=\"ltr\">[← Send] Unlocking instruction: (10 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 7th byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0×00 (0) is invalid</p></li>      <li dir=\"ltr\">        <p dir=\"ltr\">          0x01(1) to 0x0c (12) indicates that 1 to 12 locks are opened        </p>      </li>      <li dir=\"ltr\">        <p dir=\"ltr\">0×0d (13) all of 12 locks open for testing</p>      </li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock status feedback: (14 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">    after change of the lock status the device takes the initiative to report  </summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">  [← Send] Device Information or Lock Status Information: (4 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 2nd byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (Queries device information)</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf1: (Queries the lock status)</p></li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Device Info returns: (8 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">Only first 4 bytes are important</summary>  <div class=\"details-content\">    <ol>      <li dir=\"ltr\"><p dir=\"ltr\">Head</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Version</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Battery operated or not</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Percentage of battery</p></li>    </ol>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock Status returns: (14 bytes)</h3><details opendetails=\"false\">  <summary></summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">Charging related additions: (3 bytes)</h3><p></p>"
+    }
+  ]
+}

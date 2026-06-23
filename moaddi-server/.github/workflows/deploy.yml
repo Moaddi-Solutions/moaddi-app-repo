@@ -1,0 +1,80 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          # Non-interactive SSH uses a minimal PATH. We load nvm, add every
+          # Node version bin dir, npm's global bin, then fall back to node + pm2 package CLI.
+          script: |
+            set -e
+            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+            NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+            fi
+            if [ -d "$NVM_DIR/versions/node" ]; then
+              for d in "$NVM_DIR"/versions/node/*/bin; do
+                if [ -d "$d" ]; then
+                  PATH="$d:$PATH"
+                fi
+              done
+              export PATH
+            fi
+            if command -v npm >/dev/null 2>&1; then
+              _npm_prefix="$(npm config get prefix 2>/dev/null || true)"
+              if [ -n "$_npm_prefix" ] && [ -d "$_npm_prefix/bin" ]; then
+                PATH="$_npm_prefix/bin:$PATH"
+                export PATH
+              fi
+            fi
+            cd "${{ secrets.SERVER_PATH }}"
+            # Untracked files (e.g. uploads under images/) block git pull if the branch tracks the same path — remove only those.
+            git fetch origin production
+            REMOTE_SHA=$(git rev-parse FETCH_HEAD)
+            git ls-tree -r --name-only "$REMOTE_SHA" | while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              if [ -f "$f" ] && ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+                echo "Removing untracked file that would block deploy: $f"
+                rm -f "$f"
+              fi
+            done
+            git merge --no-edit FETCH_HEAD
+            # --ignore-scripts: prepare runs "husky", which is not installed with --omit=dev
+            if [ -f package-lock.json ]; then
+              npm ci --omit=dev --ignore-scripts
+            else
+              npm install --omit=dev --ignore-scripts
+            fi
+            _pm2_bin="${{ secrets.PM2_BIN }}"
+            if [ -z "$_pm2_bin" ]; then
+              if command -v pm2 >/dev/null 2>&1; then
+                _pm2_bin="$(command -v pm2)"
+              elif [ -x /usr/local/bin/pm2 ]; then
+                _pm2_bin="/usr/local/bin/pm2"
+              elif command -v node >/dev/null 2>&1 && [ -f "$(npm root -g)/pm2/bin/pm2" ]; then
+                _pm2_bin="node $(npm root -g)/pm2/bin/pm2"
+              else
+                echo "pm2 not found. On server run: which pm2" >&2
+                echo "Add GitHub secret PM2_BIN with that full path." >&2
+                exit 127
+              fi
+            fi
+            # Reload if already running; otherwise start fresh from ecosystem config
+            if $_pm2_bin describe Server >/dev/null 2>&1; then
+              $_pm2_bin reload Server --update-env
+            else
+              $_pm2_bin start ecosystem.config.js --env production
+            fi
+            $_pm2_bin save

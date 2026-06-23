@@ -1,0 +1,122 @@
+/purchases/create-payment-intent:
+  post:
+    tags: [Purchases – Stripe]
+    summary: Create a Stripe PaymentIntent
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/StripePaymentIntentBody"
+    responses:
+      "200":
+        description: PaymentIntent created
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/StripePaymentIntentResponse"
+      "400":
+        description: Bad request (invalid purchase or currency, wrong provider, etc.)
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Purchase does not belong to the authenticated user
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "409":
+        description: Purchase is not in a state that allows creating a new intent
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/purchases/stripeIsPaymentDone:
+  post:
+    tags: [Purchases – Stripe]
+    summary: Finalise a Stripe payment after webhook
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [_id]
+            properties:
+              _id:
+                type: string
+                example: "purchase_Ab3Xyz"
+    responses:
+      "200":
+        description: Notification payload (idempotent; duplicate calls do not re-send socket)
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/PaymentNotifyResponse"
+      "400":
+        description: Not a Stripe purchase
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "404":
+        description: Purchase not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Purchase does not belong to the authenticated user
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "409":
+        description: Payment not confirmed by Stripe yet, or transient conflict; retry
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/purchases/webhook:
+  post:
+    tags: [Purchases – Stripe]
+    summary: Stripe webhook receiver
+    description: Called by Stripe servers only
+    security: []
+    parameters:
+      - in: header
+        name: Stripe-Signature
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+    responses:
+      "200":
+        description: Event received and processed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                received:
+                  type: boolean
+                  example: true
+      "400":
+        description: Signature verification failed
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"

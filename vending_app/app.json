@@ -1,0 +1,101 @@
+{
+  "expo": {
+    "name": "Moaddi",
+    "slug": "moaddi-app",
+    "version": "4.1.1",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon-new.jpg",
+    "scheme": "moaddi",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon-new.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.moaddi",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "We use Bluetooth to connect to vending locks.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "2"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon-new.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.moaddi",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon-new.jpg"
+    },
+    "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": [
+            "peripheral",
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "Connecting to the vending machine requires Bluetooth access, which allows $(PRODUCT_NAME) to send commands and process your purchase."
+        }
+      ],
+      "expo-localization",
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "$(PRODUCT_NAME) use your camera to scan the QR codes on our vending machines to facilitate your purchase.",
+          "microphonePermission": "$(PRODUCT_NAME) use your camera to scan the QR codes on our vending machines to facilitate your purchase.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": [],
+          "enableGooglePay": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "29c1e61d-c811-47d8-92e1-2b1ea0327f83"
+      }
+    },
+    "runtimeVersion": "4.1.1",
+    "owner": "mrsawy"
+  }
+}

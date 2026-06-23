@@ -1,0 +1,29 @@
+# dependencies & build
+node_modules
+.next
+out
+
+# git / IDE
+.git
+.github
+.vscode
+.notes
+
+# env — keep .env.production when CI writes it for docker build; drop local-only files
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+
+# misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+coverage
+.vercel
+*.tsbuildinfo
+.kuma

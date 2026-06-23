@@ -1,0 +1,113 @@
+{
+  "AppBar": {
+    "title": "Home",
+    "description": "Welcome to the home page"
+  },
+  "Home": {
+    "specialOffers": "Special Offers",
+    "showMore": "Show more",
+    "specialProducts": "Special Products",
+    "specialCategories": "Featured Categories",
+    "specialShops": "Shops",
+    "products": "Products"
+  },
+  "showMore": "Show more",
+  "Auth": {
+    "and": "and",
+    "agree": "By clicking continue, you agree to our",
+    "terms": "Terms of Service",
+    "or": "or",
+    "signUp": "Sign up",
+    "signIn": "Sign In",
+    "phone": "Phone",
+    "privacy": "Privacy Policy",
+    "password": "Password",
+    "rePassword": "Password confirmation",
+    "passwordsDoesNotMatch": "Passwords does not match",
+    "accountHasBeenRegisteredSuccessfully": "Account has been Registered Successfully!",
+    "youHaveSuccessfullyLoggedIn": "You have successfully logged in",
+    "invalidPhoneNumber": "Invalid Phone number",
+    "staff": "Staff",
+    "otp": "OTP"
+  },
+  "SignIn": {
+    "input": "Enter your number to login"
+  },
+  "SignUp": {
+    "input": "Enter your phone below to create your account",
+    "create": "Create an account",
+    "name": "Name"
+  },
+  "QR": {
+    "scanMachine": "Scan Machine qr code",
+    "scanMachineFromImage": "Scan from image",
+    "machineNotFound": "Machine Not Found!",
+    "machineIsOffline": "Machine Is Offline!",
+    "machineIsNotActive": "Machine Is Not Active!",
+    "machineDetected": "Machine Detected!",
+    "invalidQrCode": "Invalid QR-Code",
+    "invalidImage": "Invalid Image",
+    "invalidImageTypeOrSize": "Invalid Image type or size",
+    "supportedTypesJpgJpegPngMaxSize_5mb": "Supported types: jpg, jpeg, png. Max size: 5MB"
+  },
+  "available": "Available",
+  "BoxGrid": {
+    "allBoxesOpened": "All boxes are opened",
+    "showInvoiceHistory": "Show invoice history",
+    "opened": "Opened",
+    "open": "Open",
+    "waitingForApprove": "Waiting for approve",
+    "readyToOpen": "Ready to open",
+    "openedCount": "Opened",
+    "remaining": "Remaining",
+    "missingPurchaseContext": "Could not open the box: purchase data is missing. Refresh the page and try again.",
+    "invalidBoxSlot": "Could not determine which slot to open. Refresh the page or contact support."
+  },
+  "PurchaseNotice": {
+    "dismiss": "Remind me later",
+    "kind": {
+      "awaiting_payment": {
+        "title": "Order waiting for payment",
+        "body": "You have an unpaid order ({price} {currency}). Complete payment before leaving the machine area.",
+        "cta": "Go to checkout",
+        "fab": "Unpaid order"
+      },
+      "ready_to_collect": {
+        "title": "Payment received — collect your items",
+        "body": "You have {count} item(s) ready to pick up from the machine.",
+        "cta": "Open lockers",
+        "fab": "Collect order"
+      },
+      "payment_rejected": {
+        "title": "Payment was not completed",
+        "body": "Your last payment attempt did not go through. You can try again from checkout or start a new order.",
+        "cta": "Try payment again",
+        "fab": "Payment issue"
+      }
+    }
+  },
+  "Checkout": {
+    "payment": "Payment",
+    "purchases": "Purchases",
+    "paymentConfirming": "Confirming your payment…",
+    "paymentConfirmFailed": "We could not confirm your payment with the server yet. If you were charged, please contact support.",
+    "paymentMissingPurchase": "We could not determine which purchase this payment belongs to. Return to checkout and try again.",
+    "paymentUnknownStatus": "Unexpected payment status: {status}",
+    "paymentFailedDefault": "Payment was not completed.",
+    "successTitle": "Payment successful",
+    "successDescription": "Thank you. Your payment went through. You can collect your items from the machine.",
+    "successCtaMachine": "Go to machine",
+    "successCtaHome": "Home",
+    "failureTitle": "Payment failed",
+    "failureCtaRetry": "Back to checkout",
+    "payNow": "Pay",
+    "loadingPaymentForm": "Loading payment form…",
+    "stripeNotConfigured": "Stripe checkout is not configured (missing publishable key).",
+    "paymentProviderUnset": "This machine has no card payment method configured. Please contact the operator.",
+    "stripeInitFailed": "Could not start Stripe checkout."
+  },
+  "otp": {
+    "activateAccount": "Activate account",
+    "input": "Enter the code that we sent to your whatsapp account"
+  }
+}

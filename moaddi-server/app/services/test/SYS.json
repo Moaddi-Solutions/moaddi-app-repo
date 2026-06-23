@@ -1,0 +1,6 @@
+
+{
+    "topic": "$SYS/new/clients",
+    "#topic": "$SYS/disconnect/clients",
+    "message": "device-machine_D8132A006674"
+}

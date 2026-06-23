@@ -1,0 +1,15 @@
+{
+  "machineId": "machine_3333",
+  "type": "LOCKER",
+  "value": "0",
+  "boxes": ["all"],
+
+  "draft": {
+    "purchaseId": "purchase_n2Cxo81un",
+    "machineId": "machine_D8132A006674",
+    "type": "LOCKER",
+    "type1": "IR",
+    "value": 1,
+    "boxes": ["all"]
+  }
+}

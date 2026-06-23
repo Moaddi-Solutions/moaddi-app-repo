@@ -1,0 +1,68 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare .env.production for Next.js build
+        env:
+          NEXT_PRODUCTION_ENV: ${{ secrets.NEXT_PRODUCTION_ENV }}
+        run: |
+          if [ -z "$NEXT_PRODUCTION_ENV" ]; then
+            echo "Set repository secret NEXT_PRODUCTION_ENV (multiline production env, same keys as .env)." >&2
+            exit 1
+          fi
+          printf '%s\n' "$NEXT_PRODUCTION_ENV" > .env.production
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_IMAGE }}:production
+            ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy on server (docker pull & run)
+        uses: appleboy/ssh-action@v1
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE }}
+          DOCKER_CONTAINER_NAME: ${{ secrets.DOCKER_CONTAINER_NAME }}
+          DOCKER_HOST_PORT: ${{ secrets.DOCKER_HOST_PORT }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          envs: DOCKER_IMAGE,DOCKER_CONTAINER_NAME,DOCKER_HOST_PORT
+          script: |
+            set -euo pipefail
+            IMAGE="${DOCKER_IMAGE:?Set DOCKER_IMAGE secret (e.g. youruser/moaddi-next)}"
+            CONTAINER="${DOCKER_CONTAINER_NAME:-moaddi-next}"
+            HOST_PORT="${DOCKER_HOST_PORT:-3002}"
+            docker pull "$IMAGE:production"
+            docker stop "$CONTAINER" 2>/dev/null || true
+            docker rm "$CONTAINER" 2>/dev/null || true
+            docker run -d \
+              --name "$CONTAINER" \
+              --restart unless-stopped \
+              -p "${HOST_PORT}:3000" \
+              "$IMAGE:production"

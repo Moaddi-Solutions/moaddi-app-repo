@@ -1,0 +1,78 @@
+/purchases/complete:
+  post:
+    tags: [Purchases – My Fatoora]
+    summary: Complete or reject a My Fatoora payment
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/PaymentCompleteBody"
+    responses:
+      "200":
+        description: Payment completed or rejected
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/PaymentNotifyResponse"
+      "400":
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+
+/purchases/invoice/{invoiceId}:
+  get:
+    tags: [Purchases – My Fatoora]
+    summary: Get purchase by My Fatoora invoiceId
+    parameters:
+      - in: path
+        name: invoiceId
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Purchase with enriched boxes
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "../components/schemas.yaml#/Purchase"
+                - type: object
+                  properties:
+                    boxes:
+                      type: array
+                      items:
+                        type: object
+      "404":
+        description: Purchase not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+
+/purchases/invoiceData/{invoiceId}:
+  get:
+    tags: [Purchases – My Fatoora]
+    summary: Full invoice data including ZATCA QR code
+    parameters:
+      - in: path
+        name: invoiceId
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Invoice data with QR code
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/InvoiceData"
+      "401":
+        description: Unauthorized

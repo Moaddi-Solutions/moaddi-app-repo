@@ -1,0 +1,152 @@
+/wallets/me:
+  get:
+    tags: [Wallets]
+    summary: Current vendor wallet
+    description: |
+      Returns the wallet for the authenticated vendor and optional `currency` (default SAR).
+    parameters:
+      - in: query
+        name: currency
+        schema:
+          type: string
+          default: SAR
+    responses:
+      "200":
+        description: Wallet document or a message when no row exists yet
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "../components/schemas.yaml#/Wallet"
+                - type: object
+                  properties:
+                    data:
+                      nullable: true
+                    message:
+                      type: string
+      "401":
+        description: Unauthorized
+      "403":
+        description: Not a vendor
+
+/wallets:
+  get:
+    tags: [Wallets]
+    summary: List wallets (admin)
+    description: |
+      Admins and super-admins. Optional `vendorId`, `currency`, `isActive`, `offset`/`skip`, `limit` (capped at 1000).
+    parameters:
+      - in: query
+        name: vendorId
+        schema: { type: string }
+      - in: query
+        name: currency
+        schema: { type: string }
+      - in: query
+        name: isActive
+        schema: { type: boolean }
+      - in: query
+        name: offset
+        schema: { type: integer }
+      - in: query
+        name: limit
+        schema: { type: integer, default: 100, maximum: 1000 }
+    responses:
+      "200":
+        description: Paginated wallets
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/WalletListResult"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Not admin
+
+/wallets/{walletId}:
+  get:
+    tags: [Wallets]
+    summary: Get a wallet by id
+    description: Vendor may only load their own wallet; admins may load any.
+    parameters:
+      - in: path
+        name: walletId
+        required: true
+        schema: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Wallet"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Vendor accessing another vendor's wallet
+      "404":
+        description: Not found
+
+/transactions:
+  get:
+    tags: [Transactions]
+    summary: List wallet transactions
+    description: |
+      Vendors see their own rows only. Admins may filter with `vendorId` and more.
+      Optional query params include `kind`, `type`, `walletId`, `purchaseId`, pagination.
+    parameters:
+      - in: query
+        name: vendorId
+        schema: { type: string }
+        description: Admin only
+      - in: query
+        name: kind
+        schema: { type: string }
+        example: purchase
+      - in: query
+        name: type
+        schema: { type: string }
+        example: CREDIT
+      - in: query
+        name: walletId
+        schema: { type: string }
+      - in: query
+        name: purchaseId
+        schema: { type: string }
+      - in: query
+        name: offset
+        schema: { type: integer }
+      - in: query
+        name: limit
+        schema: { type: integer }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/TransactionListResult"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+
+/transactions/{transactionId}:
+  get:
+    tags: [Transactions]
+    summary: Get a single transaction
+    parameters:
+      - in: path
+        name: transactionId
+        required: true
+        schema: { type: string }
+    responses:
+      "200":
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Transaction"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+      "404":
+        description: Not found

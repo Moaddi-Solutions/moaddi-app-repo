@@ -1,0 +1,26 @@
+{
+    "data": [
+        {
+            "verified_name": "Vindig Machine",
+            "code_verification_status": "VERIFIED",
+            "display_phone_number": "+966 50 579 1342",
+            "quality_rating": "UNKNOWN",
+            "platform_type": "NOT_APPLICABLE",
+            "throughput": {
+                "level": "NOT_APPLICABLE"
+            },
+            "id": "758307277374453"
+        }
+    ],
+    "paging": {
+        "cursors": {
+            "before": "QVFIU3FOMEtXR3pTWlJwUE5CTk1ON1RwS2hMdEdrdkRfaUhvZAE5ndlQxcklOQ1lrUTYtenlwRXMyT3U0LXFUY0ZAUbVkZD",
+            "after": "QVFIU3FOMEtXR3pTWlJwUE5CTk1ON1RwS2hMdEdrdkRfaUhvZAE5ndlQxcklOQ1lrUTYtenlwRXMyT3U0LXFUY0ZAUbVkZD"
+        }
+    }
+}
+
+// [purchases] create           -> [box] isActive: false
+// [purchases] update           -> [box] isActive: false|true
+// [purchases] remove           -> [box] isActive: true
+// [purchases] paymentComplete  -> [box] productId: null

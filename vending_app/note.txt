@@ -1,0 +1,29 @@
+docker run -it --rm -v ~/expo:/app react-native-expo bash
+EXPO_TOKEN="XeMz6ERWVfEOTE8-MB9x5deYuOYrGUPgu0StsM16" eas build --platform android --profile development --local
+
+cd apks
+java -jar bundletool.jar build-apks --bundle=v1.aab --output=v1.apks
+
+
+
+
+docker run -it --rm -v ~/expo:/app -v ~/server/public:/public react-native-expo bash entrypoint.sh "build-p" "v5"
+
+
+
+git update-index --assume-unchanged services/blu/blu-2/signals.ts                                                     [14:31:13]
+git update-index --assume-unchanged services/blu/blu-3/signals.ts                                                     [14:31:32]
+git update-index --assume-unchanged services/blu/blu-4/signals.ts 
+
+
+
+
+
+
+
+* Tasks
+green icon
+update progress
+random boxes
+
+staff QR

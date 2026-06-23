@@ -1,0 +1,457 @@
+PurchaseItem:
+  type: object
+  required: [productId, boxId, boxStatus]
+  properties:
+    machineId:
+      type: string
+      example: "machine_abc123"
+    productId:
+      type: string
+      example: "product_xyz789"
+    boxId:
+      type: string
+      example: "box_001"
+    boxStatus:
+      type: boolean
+      description: Whether the box should open (true = open)
+      example: true
+
+PurchaseStatus:
+  type: string
+  enum: [PaymentDoneRequest, PaymentDone, PaymentRejected, Processing, Completed]
+  example: PaymentDoneRequest
+
+PaymentProvider:
+  type: string
+  enum: [myfatoora, stripe, moyasar]
+  example: stripe
+
+Purchase:
+  type: object
+  properties:
+    _id:
+      type: string
+      example: "purchase_Ab3Xyz"
+    customerId:
+      type: string
+      example: "user_123"
+    machineId:
+      type: string
+      example: "machine_abc123"
+    items:
+      type: array
+      items:
+        $ref: "#/PurchaseItem"
+    price:
+      type: number
+      example: 29.99
+    status:
+      $ref: "#/PurchaseStatus"
+    invoiceId:
+      type: string
+      description: My Fatoora invoice ID, Stripe PaymentIntent id, or Moyasar payment id
+      example: "pi_3NxABC_secret_XYZ"
+    paymentProvider:
+      $ref: "#/PaymentProvider"
+    created:
+      type: string
+      format: date-time
+    updated:
+      type: string
+      format: date-time
+
+PurchaseCreateBody:
+  type: object
+  required: [items]
+  description: |
+    For a normal (Customer) caller, `customerId` is taken from the JWT — do not
+    send it to place an order for someone else. Admins may send `customerId` to
+    create a purchase on behalf of another user.
+  properties:
+    customerId:
+      type: string
+      description: Admin-only. Ignored for Customer tokens (server uses JWT `sub`).
+      example: "user_123"
+    machineId:
+      type: string
+      example: "machine_abc123"
+    paymentProvider:
+      $ref: "#/PaymentProvider"
+    items:
+      type: array
+      items:
+        $ref: "#/PurchaseItem"
+
+PurchaseCreateResponse:
+  type: object
+  properties:
+    _id:
+      type: string
+    customerId:
+      type: string
+    customerName:
+      type: string
+    machineId:
+      type: string
+    machineName:
+      type: string
+    price:
+      type: number
+    status:
+      $ref: "#/PurchaseStatus"
+
+PaymentCompleteBody:
+  type: object
+  required: [_id]
+  description: |
+    Idempotently completes a My Fatoorah purchase. Purchase is loaded from `_id`
+    and customer identity is validated via JWT. Optional `customerId` matches the
+    same contract for clients that still send it. Allowed roles: **Customer**
+    (own purchase), **Admin**, **Vendor** (machine-scoped).
+  properties:
+    _id:
+      type: string
+      example: "purchase_Ab3Xyz"
+    customerId:
+      type: string
+      example: "user_123"
+    status:
+      $ref: "#/PurchaseStatus"
+    invoiceId:
+      type: string
+      example: "4567890"
+
+PurchaseUpdateItemsBody:
+  type: object
+  required: [items]
+  properties:
+    items:
+      type: array
+      items:
+        $ref: "#/PurchaseItem"
+
+Wallet:
+  type: object
+  properties:
+    _id: { type: string, example: "wallet_abc" }
+    vendorId: { type: string }
+    currency: { type: string, example: "SAR" }
+    balance: { type: string, description: "Decimal string (Decimal128 JSON)" }
+    isActive: { type: boolean }
+    created: { type: string, format: date-time }
+    updated: { type: string, format: date-time }
+
+WalletListResult:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/Wallet"
+    total: { type: integer }
+
+Transaction:
+  type: object
+  properties:
+    _id: { type: string }
+    walletId: { type: string }
+    vendorId: { type: string }
+    type: { type: string, enum: [CREDIT, DEBIT] }
+    kind: { type: string, enum: [purchase, withdrawal, adjustment] }
+    amount: { type: string }
+    currency: { type: string }
+    balanceAfter: { type: string }
+    purchaseId: { type: string, nullable: true }
+    withdrawalId: { type: string, nullable: true }
+    description: { type: string }
+    created: { type: string, format: date-time }
+
+TransactionListResult:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/Transaction"
+    total: { type: integer }
+
+BankDetails:
+  type: object
+  required: [accountHolder, iban, bankName]
+  properties:
+    accountHolder: { type: string }
+    iban: { type: string }
+    bankName: { type: string }
+    swift: { type: string }
+
+Withdrawal:
+  type: object
+  properties:
+    _id: { type: string }
+    vendorId: { type: string }
+    walletId: { type: string }
+    amount: { type: string }
+    currency: { type: string }
+    status: { type: string, enum: [Pending, Approved, Rejected, Paid] }
+    bankDetails: { $ref: "#/BankDetails" }
+    requestedAt: { type: string, format: date-time }
+    decidedBy: { type: string, nullable: true }
+    decidedAt: { type: string, format: date-time, nullable: true }
+    rejectionReason: { type: string, nullable: true }
+    transactionId: { type: string, nullable: true }
+    paidAt: { type: string, format: date-time, nullable: true }
+
+WithdrawalCreateBody:
+  type: object
+  required: [amount, bankDetails]
+  properties:
+    amount: { type: number }
+    currency: { type: string, default: "SAR" }
+    bankDetails: { $ref: "#/BankDetails" }
+    vendorId: { type: string, description: "Admin only — create on behalf" }
+
+WithdrawalListResult:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: "#/Withdrawal"
+    total: { type: integer }
+
+PaymentNotifyResponse:
+  type: object
+  properties:
+    _id:
+      type: string
+    customerId:
+      type: string
+    machineId:
+      type: string
+    machine:
+      type: object
+    boxes:
+      type: array
+      items:
+        type: object
+    status:
+      $ref: "#/PurchaseStatus"
+
+StripePaymentIntentBody:
+  type: object
+  required: [purchaseId]
+  properties:
+    purchaseId:
+      type: string
+      example: "purchase_Ab3Xyz"
+    currency:
+      type: string
+      description: |
+        Optional 3-letter ISO 4217 code. Amount is always derived server-side
+        from `purchase.price` (never from the client).
+      example: "sar"
+
+StripePaymentIntentResponse:
+  type: object
+  properties:
+    clientSecret:
+      type: string
+      example: "pi_3NxABC_secret_XYZ"
+    paymentIntentId:
+      type: string
+      description: Stripe PaymentIntent id (also stored in DB as `invoiceId`)
+      example: "pi_1ABCxyz"
+
+MoyasarCheckoutBody:
+  type: object
+  required: [purchaseId]
+  description: |
+    Starts a Moyasar checkout for an existing purchase in `PaymentDoneRequest`.
+    **Amount** and **metadata** (including `purchase_id`, `given_id`) are computed server-side.
+    The mobile app passes the response into `react-native-moyasar-sdk` `PaymentConfig`
+    (`givenId`, `amount`, `currency`, `description`, `metadata`, `publishableApiKey` if returned).
+  properties:
+    purchaseId:
+      type: string
+      example: "purchase_Ab3Xyz"
+    currency:
+      type: string
+      description: Optional ISO 4217 code (default `MOYASAR_DEFAULT_CURRENCY`, e.g. SAR).
+      example: "SAR"
+
+MoyasarCheckoutResponse:
+  type: object
+  properties:
+    givenId:
+      type: string
+      format: uuid
+      description: Pass as `PaymentConfig.givenId` (Moyasar idempotency).
+    amount:
+      type: integer
+      description: Amount in smallest currency units (e.g. halalas for SAR).
+      example: 2999
+    currency:
+      type: string
+      example: "SAR"
+    description:
+      type: string
+    metadata:
+      type: object
+      additionalProperties:
+        type: string
+      description: Must be merged into SDK `PaymentConfig.metadata` so webhooks can resolve the purchase.
+      example:
+        purchase_id: "purchase_Ab3Xyz"
+        customer_id: "user_123"
+        given_id: "550e8400-e29b-41d4-a716-446655440000"
+    publishableApiKey:
+      type: string
+      description: Present when `MOYASAR_PUBLISHABLE_KEY` is set on the server (optional convenience for the app).
+
+InvoiceData:
+  type: object
+  properties:
+    purchase:
+      $ref: "#/Purchase"
+    invoice:
+      type: object
+      properties:
+        number:
+          type: integer
+        status:
+          type: string
+        createdDate:
+          type: string
+        expiryDate:
+          type: string
+        expiryTime:
+          type: string
+        paymentId:
+          type: string
+        total:
+          type: string
+        error:
+          type: object
+          nullable: true
+    qrCode:
+      type: string
+      format: byte
+
+ErrorResponse:
+  type: object
+  properties:
+    statusCode:
+      type: integer
+      example: 400
+    message:
+      type: string
+      example: "Invalid amount provided."
+
+UserRole:
+  type: string
+  description: Application role (signup accepts Customer only)
+  enum: [Customer, Vendor, Admin, SuperAdmin]
+
+UserSignupBody:
+  type: object
+  required: [_id, password, role]
+  properties:
+    _id:
+      type: string
+      description: |
+        Primary user identifier (stored lowercase for customers). Often the WhatsApp number
+        used for OTP delivery.
+      example: "966501234567"
+    password:
+      type: string
+      format: password
+    confirm_password:
+      type: string
+      description: Optional; stripped server-side before persistence
+    name:
+      type: string
+      description: Defaults to `"user"` when omitted
+      example: "Sara"
+    role:
+      $ref: "#/UserRole"
+      description: Must be **Customer** for self-service signup
+
+UserSignupInvalidRoleResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: "User role is not valid"
+
+UserPublic:
+  type: object
+  description: User fields as returned by the API (no password)
+  properties:
+    _id:
+      type: string
+    name:
+      type: string
+    role:
+      $ref: "#/UserRole"
+    preferredCurrency:
+      type: string
+      example: "SAR"
+    isActive:
+      type: boolean
+    isDeleted:
+      type: boolean
+    created:
+      type: string
+      format: date-time
+    updated:
+      type: string
+      format: date-time
+
+UserOtpBody:
+  type: object
+  required: [_id, otp]
+  properties:
+    _id:
+      type: string
+      description: Same id used at signup (customer ids are stored lowercase)
+      example: "966501234567"
+    otp:
+      type: integer
+      description: Four-digit code sent after signup
+      example: 4821
+
+UserSigninBody:
+  type: object
+  required: [_id, password]
+  properties:
+    _id:
+      type: string
+      description: Stored user id (normalized to lowercase)
+      example: "966501234567"
+    password:
+      type: string
+      format: password
+    rememberMe:
+      type: boolean
+      description: When true, JWT uses the longer configured expiry (`JWT_EXPIRY_TIME2`).
+      default: false
+
+UserSigninResponse:
+  type: object
+  properties:
+    _id:
+      type: string
+    name:
+      type: string
+    role:
+      $ref: "#/UserRole"
+    preferredCurrency:
+      type: string
+      example: "USD"
+    token:
+      type: string
+      description: JWT value for the Authorization Bearer header
+    expiresIn:
+      type: integer
+      description: Token TTL in seconds (from server JWT config)
+      example: 86400

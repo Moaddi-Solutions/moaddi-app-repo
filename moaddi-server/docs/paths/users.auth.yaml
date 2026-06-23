@@ -1,0 +1,96 @@
+/users/signup:
+  post:
+    tags: [Authentication]
+    summary: Customer signup (sends OTP)
+    description: |
+      Creates a **Customer** account with `isActive: false`. Server generates a 4-digit OTP,
+      sends it via WhatsApp/Telegram (implementation-specific), and returns the user **without**
+      `password` or `otp`. `preferredCurrency` is set from geo/IP resolution when possible,
+      otherwise `BASE_CURRENCY` or USD.
+
+      Only `role: Customer` completes registration; other roles receive `{ "message": "User role is not valid" }` (still HTTP 201).
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/UserSignupBody"
+    responses:
+      "201":
+        description: User created (inactive until OTP verified), or invalid role message
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "../components/schemas.yaml#/UserPublic"
+                - $ref: "../components/schemas.yaml#/UserSignupInvalidRoleResponse"
+      "409":
+        description: User already exists
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/users/otp:
+  post:
+    tags: [Authentication]
+    summary: Verify signup OTP
+    description: |
+      Activates the account (`isActive: true`) when the submitted OTP matches the stored value.
+      Response is the user document without `password`.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/UserOtpBody"
+    responses:
+      "201":
+        description: Account activated
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/UserPublic"
+      "409":
+        description: User does not exist or wrong OTP
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+
+/users/signin:
+  post:
+    tags: [Authentication]
+    summary: Sign in (JWT)
+    description: |
+      Returns a Bearer JWT and metadata. Requires `isActive: true`. JWT lifetime is
+      `86400 * JWT_EXPIRY_TIME1` seconds by default, or `86400 * JWT_EXPIRY_TIME2` when
+      `rememberMe` is true (see server env).
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/UserSigninBody"
+    responses:
+      "200":
+        description: Authenticated
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/UserSigninResponse"
+      "401":
+        description: Invalid password or account not active
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "404":
+        description: User not found
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"

@@ -1,0 +1,83 @@
+/purchases/{purchaseId}:
+  get:
+    tags: [Purchases]
+    summary: Get a purchase by id
+    description: |
+      Returns the full purchase. Caller must be the customer, a scoped vendor for the
+      machine, or an admin (see `purchaseAccess` rules).
+    parameters:
+      - in: path
+        name: purchaseId
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Purchase
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Purchase"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Caller may not view this purchase
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+  put:
+    tags: [Purchases]
+    summary: Replace purchase line items
+    description: |
+      Only `items` is accepted. Caller must be allowed to mutate the purchase (same as GET).
+    parameters:
+      - in: path
+        name: purchaseId
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/PurchaseUpdateItemsBody"
+    responses:
+      "200":
+        description: Updated purchase
+        content:
+          application/json:
+            schema:
+              type: object
+      "400":
+        description: Body must include `items` array
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ErrorResponse"
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
+  delete:
+    tags: [Purchases]
+    summary: Delete a purchase
+    description: Deletable by owner, admin, or an owning vendor (enforced in controller).
+    parameters:
+      - in: path
+        name: purchaseId
+        required: true
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Deletion result
+        content:
+          application/json:
+            schema:
+              type: object
+      "401":
+        description: Unauthorized
+      "403":
+        description: Forbidden
