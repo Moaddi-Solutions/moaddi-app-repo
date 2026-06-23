@@ -1,0 +1,109 @@
+# Mostaql workspace — root gitignore
+# Each project (moaddi-next, moaddi-server, vending_app) has its own git repo.
+# This file covers root-level files and shared patterns across the workspace.
+
+# ─── Nested project repos (each has its own git history — not tracked by root) ─
+/moaddi-next/
+/moaddi-server/
+/vending_app/
+
+# ─── Dependencies ───────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnpm-store/
+
+# ─── Environment & secrets (never commit) ───────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env*.example
+env/
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+ca-cert.pem
+ca-key.pem
+# Firebase / GCP service account keys
+*-firebase-adminsdk-*.json
+*serviceAccount*.json
+moaddi-*.json
+
+# ─── Build & output ─────────────────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.expo/
+web-build/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+next-env.d.ts
+expo-env.d.ts
+
+# ─── Mobile (Expo / React Native) ─────────────────────────────────────────────
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+apks/
+.expo-shared/
+
+# ─── Logs & debug ─────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# ─── Testing & coverage ───────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ─── Caches ───────────────────────────────────────────────────────────────────
+.cache/
+.eslintcache
+.npm/
+.wwebjs_auth/
+.wwebjs_cache/
+
+# ─── Deploy & hosting ─────────────────────────────────────────────────────────
+.vercel/
+.netlify/
+
+# ─── OS & editor ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ─── Large / local-only assets ────────────────────────────────────────────────
+/images/
+/whatsapp/
+*.mp4
+debug.apk
+s12.apk
+
+# ─── Project-specific local dirs ──────────────────────────────────────────────
+.notes/
+.kuma/
+.husky/_/
+
+# ─── Docker / local overrides ─────────────────────────────────────────────────
+*.local
