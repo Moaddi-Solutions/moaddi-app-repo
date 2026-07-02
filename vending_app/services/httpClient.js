@@ -49,11 +49,21 @@ export const postRequest = async (url, body = null) => {
     if (!res.ok) {
       const errorText = await res.text();
       console.error(" [HTTP POST] Error response:", errorText);
-      throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
-      // return { error: true, statusCode: res.status, statusText: res.statusText };
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          return { message: parsed.message, statusCode: res.status };
+        }
+      } catch {
+        // non-JSON error body
+      }
+      return {
+        message: `Request failed (${res.status})`,
+        statusCode: res.status,
+      };
     }
 
-    const data = await res.json();
+    const data = await responseJson(res);
     console.log("✅ [HTTP POST] Response received:", data);
     return data;
   } catch (error) {

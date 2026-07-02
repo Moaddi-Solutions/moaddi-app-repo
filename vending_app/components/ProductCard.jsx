@@ -6,6 +6,7 @@ import { Badge, badgeTextVariants } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { useUser } from "~/context/UserContext";
+import { productImageUrl } from "~/services/serverAddresses";
 
 export default function ProductCard({
   _id,
@@ -27,32 +28,33 @@ export default function ProductCard({
   };
   console.log("💳 [PRODUCT CARD]","preferredCurrency",preferredCurrency)
   return (
-    <Card className="rounded-xl border">
-      <View className="grid gap-1 px-4">
-        <View className="relative flex justify-center mt-4">
-          <Image
-            className="h-52 w-full rounded-xl border border-muted "
-            source={{ uri: image.src }}
-            resizeMode="contain"
-            alt={name}
-            width="190"
-            height="200"
-          />
-          {campaignPrice && (
-            <Badge
-              variant="destructive"
-              className="absolute -start-2 -top-2 font-semibold"
+    <Card className="rounded-xl border overflow-hidden">
+      <View
+        className="relative w-full overflow-hidden bg-muted"
+        style={{ aspectRatio: 1 }}
+      >
+        <Image
+          style={{ width: "100%", height: "100%" }}
+          source={{ uri: productImageUrl(image) }}
+          resizeMode="cover"
+          alt={name}
+        />
+        {campaignPrice && (
+          <Badge
+            variant="destructive"
+            className="absolute start-2 top-2 font-semibold"
+          >
+            <Text
+              dir="ltr"
+              className={badgeTextVariants({ variant: "destructive" })}
             >
-              <Text
-                dir="ltr"
-                className={badgeTextVariants({ variant: "destructive" })}
-              >
-                {"-"} {Math.round(100 * (1 - campaignPrice / salePrice))}{" "}
-                {t("percent")}
-              </Text>
-            </Badge>
-          )}
-        </View>
+              {"-"} {Math.round(100 * (1 - campaignPrice / salePrice))}{" "}
+              {t("percent")}
+            </Text>
+          </Badge>
+        )}
+      </View>
+      <View className="grid gap-1 px-4 pb-4 pt-2">
         <Text className="font-semibold text-foreground">{name}</Text>
         <View className="flex flex-row justify-between">
           {campaignPrice ? (
@@ -75,7 +77,7 @@ export default function ProductCard({
           {/* <Link asChild href={`Machines/${_id}`}> */}
           <Button
             onPress={(e) => handlePress(_id)}
-            className="bg-indigo-600 py-2 mt-2 mb-4"
+            className="bg-indigo-600 py-2 mt-2"
           >
             <Text className="text-white">{t("showMachines")}</Text>
           </Button>

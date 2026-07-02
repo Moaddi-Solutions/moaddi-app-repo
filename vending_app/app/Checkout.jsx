@@ -49,6 +49,7 @@ import {
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
 import { Fit } from "~/services/dataProvider";
+import { productImageUrl } from "~/services/serverAddresses";
 import {
   deleteRequest,
   getRequest,
@@ -228,12 +229,11 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
                   <TableRow key={_id}>
                     <TableCell>
                       <Image
-                        source={{ uri: image.src }}
+                        source={{ uri: productImageUrl(image) }}
                         alt={name}
-                        width="70"
-                        height="60"
+                        style={{ width: 70, height: 60 }}
                         resizeMode="contain"
-                        className="h-10 rounded-xl border-foreground"
+                        className="rounded-xl border-foreground"
                       />
                     </TableCell>
                     <TableCell className="flex items-center justify-center">

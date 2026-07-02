@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 import {
   CreditCard,
@@ -25,6 +26,7 @@ export default function CheckoutMoyasarScreen({
 }) {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { t } = useTranslation();
   const machineQr = params.machineQr;
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -51,7 +53,7 @@ export default function CheckoutMoyasarScreen({
       // Get purchase ID from storage
       const id = await getPurchaseIdFromStorage();
       if (!id) {
-        alert("error", "Purchase Error", "No purchase ID found. Please add items to cart.");
+        alert("error", t("purchaseError"), t("noPurchaseId"));
         return;
       }
 
@@ -68,7 +70,7 @@ export default function CheckoutMoyasarScreen({
       setPaymentConfig(config);
     } catch (e) {
       console.error(e);
-      alert("error", "Checkout Error", e.message);
+      alert("error", t("checkoutError"), e.message);
     } finally {
       setLoading(false);
     }
@@ -95,14 +97,14 @@ export default function CheckoutMoyasarScreen({
 
       if (response.statusCode === 409) {
         console.warn("  Payment not confirmed yet, retrying...");
-        alert("info", "Processing", "Payment is being confirmed, please wait...");
+        alert("info", t("processing"), t("paymentBeingConfirmed"));
         // Retry after 0.5 seconds
         setTimeout(() => finalizePayment(idToFinalize), 500);
         return;
       }
 
       if (response.error || response.statusCode >= 400) {
-        throw new Error(response.message || response.error || "Payment finalization failed");
+        throw new Error(response.message || response.error || t("paymentFinalizationFailed"));
       }
 
       // Clear purchase ID from storage
@@ -110,7 +112,7 @@ export default function CheckoutMoyasarScreen({
       console.log("Cleared purchase ID from storage");
 
       console.log(" Payment completed successfully!");
-      alert("success", "Payment Confirmed!", "Your order is being prepared");
+      alert("success", t("paymentConfirmed"), t("orderBeingPrepared"));
 
       // Redirect to home after 1.5 seconds
       setTimeout(() => {
@@ -121,7 +123,7 @@ export default function CheckoutMoyasarScreen({
     } catch (error) {
       console.error(" Payment finalization error:", error);
       setFinalizing(false);
-      alert("error", "Payment Confirmation Error", error.message);
+      alert("error", t("paymentConfirmationError"), error.message);
     }
   };
 
@@ -133,7 +135,7 @@ export default function CheckoutMoyasarScreen({
 
     if (handled.success && handled.status === "paid") {
       console.log(" Payment successful from SDK, calling finalizePayment...");
-      alert("success", "Payment Success", "Confirming with server...");
+      alert("success", t("paymentSuccess"), t("confirmingWithServer"));
       await finalizePayment(purchaseId);
       return;
     }
@@ -150,7 +152,7 @@ export default function CheckoutMoyasarScreen({
       });
     }, 1500);
   
-    alert("error", "Payment Failed", handled.error || "Unknown error");
+    alert("error", t("paymentFailed"), handled.error || t("unknownError"));
   };
 
   // Show loading while fetching payment config
@@ -158,7 +160,7 @@ export default function CheckoutMoyasarScreen({
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-600">Loading payment form...</Text>
+        <Text className="mt-4 text-gray-600">{t("loadingPaymentForm")}</Text>
       </View>
     );
   }
@@ -168,8 +170,8 @@ export default function CheckoutMoyasarScreen({
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#10b981" />
-        <Text className="mt-4 text-gray-700 font-semibold">Finalizing payment...</Text>
-        <Text className="mt-2 text-sm text-gray-500">Please wait while we confirm your order</Text>
+        <Text className="mt-4 text-gray-700 font-semibold">{t("finalizingPayment")}</Text>
+        <Text className="mt-2 text-sm text-gray-500">{t("finalizingPaymentHint")}</Text>
       </View>
     );
   }

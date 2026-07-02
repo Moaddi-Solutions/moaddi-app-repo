@@ -17,6 +17,7 @@ import {
   MachinesByShopVendor,
   MachinesByVendor,
   productAPI,
+  productImageUrl,
   productsAPI,
   ProductsByMachine,
   ProductsByVendor,
@@ -48,12 +49,13 @@ export const Fit = {
     id: _id,
     ...rest,
   }),
-  image: ({ image, ...rest } = {}) => ({
-    ...(image && {
-      image: { src: `${process.env.EXPO_PUBLIC_STATIC}/${image}` },
-    }),
-    ...rest,
-  }),
+  image: ({ image, ...rest } = {}) => {
+    const src = productImageUrl(image);
+    return {
+      ...(src && { image: { src } }),
+      ...rest,
+    };
+  },
 };
 const Api = {
   machines: {

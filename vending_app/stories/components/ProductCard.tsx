@@ -45,10 +45,9 @@ export function ProductCard({
         <Image
           className="h-52 w-full rounded-xl border border-muted "
           source={{ uri: image.src }}
-          resizeMode="contain"
+          resizeMode="cover"
           alt={name}
-          width={190}
-          height={200}
+          style={{ width: "100%", height: "100%" }}
         />
 
         {/* Status Badge */}

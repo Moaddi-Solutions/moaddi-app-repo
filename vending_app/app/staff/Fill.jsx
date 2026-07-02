@@ -13,9 +13,9 @@ import { useGetOne } from "~/hook/useGetOne";
 import { useList } from "~/hook/useList";
 import { putRequest } from "~/services/httpClient";
 import {
-  baseUrl,
   boxUpdateAPI,
   machineToggleAPI,
+  productImageUrl,
   unassignBoxAPI,
 } from "~/services/serverAddresses";
 
@@ -67,11 +67,10 @@ const ProductRow = ({
                 </View>
                 {image && (
                   <Image
-                    // width={80}
-                    height={150}
+                    style={{ width: "100%", height: 150 }}
                     resizeMode="contain"
                     source={{
-                      uri: image.src,
+                      uri: productImageUrl(image),
                     }}
                   />
                 )}
@@ -307,10 +306,9 @@ const BoxesList = ({
           <>
             <Image
               source={{
-                uri: `${baseUrl}${product.image}`,
+                uri: productImageUrl(product.image),
               }}
-              height={150}
-              width={150}
+              style={{ width: 150, height: 150 }}
               resizeMode="contain"
             />
             <Text variant="body1">

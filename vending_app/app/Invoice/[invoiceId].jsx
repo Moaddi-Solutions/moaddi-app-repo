@@ -1,17 +1,9 @@
-import "core-js/actual/array/group-by";
 import { useLocalSearchParams } from "expo-router";
-import {
-  CalendarDays,
-  Phone,
-  Store,
-  User,
-  WashingMachine,
-} from "lucide-react-native";
-import { useEffect, useMemo } from "react";
+import { CalendarDays, Phone, User } from "lucide-react-native";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, View } from "react-native";
 import QRCode from "react-qr-code";
-import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Separator } from "~/components/ui/separator";
@@ -25,6 +17,13 @@ import {
 } from "~/components/ui/table";
 import { Text } from "~/components/ui/text";
 import { useUser } from "~/context/UserContext";
+import {
+  asNumber,
+  computeInvoiceSubtotal,
+  computeInvoiceTotalTax,
+  getProductPricing,
+  purchasePreferredCurrency,
+} from "~/lib/invoicePurchase";
 import { cn } from "~/lib/utils";
 
 const getStatusColor = (status) => {
@@ -44,14 +43,15 @@ function InvoicePage({ purchaseData }) {
   const { user } = useUser();
   const { t } = useTranslation();
 
-  const { products, items, created, price, status, invoiceId,_id } = purchaseData;
+  const { products, items, created, status, invoiceId, _id } = purchaseData;
+  const price = asNumber(purchaseData.price);
+  const currency = purchasePreferredCurrency(purchaseData);
 
   const address = `6563 Al Makhzoumi Street
   Al Yarmouk
   Riyadh 13243
   SAU`;
 
-  // Generate QR code data
   const qrCode = useMemo(() => {
     return JSON.stringify({
       invoiceId,
@@ -60,27 +60,14 @@ function InvoicePage({ purchaseData }) {
     });
   }, [invoiceId, price, created]);
 
-  // Calculate totals
-  const { subtotal, totalTax } = useMemo(() => {
-    const groupedProducts = products.groupBy(({ _id }) => _id);
-    const sub = items.reduce((sum, item) => {
-      const { campaignPrice, salePrice, tax } =
-        groupedProducts[item.productId][0];
-      const itemPrice = campaignPrice ?? salePrice;
-      const taxAmount = itemPrice * (tax / 100);
-      return sum + (itemPrice - taxAmount);
-    }, 0);
-
-    const tax = items.reduce((sum, item) => {
-      const { campaignPrice, salePrice, tax: taxRate } =
-        groupedProducts[item.productId][0];
-      const itemPrice = campaignPrice ?? salePrice;
-      const taxAmount = itemPrice * (taxRate / 100);
-      return sum + taxAmount;
-    }, 0);
-
-    return { subtotal: sub, totalTax: tax };
-  }, [products, items]);
+  const subtotal = useMemo(
+    () => computeInvoiceSubtotal(purchaseData),
+    [purchaseData]
+  );
+  const totalTax = useMemo(
+    () => computeInvoiceTotalTax(purchaseData),
+    [purchaseData]
+  );
 
   const { badge, text } = getStatusColor(status);
 
@@ -167,7 +154,7 @@ function InvoicePage({ purchaseData }) {
                   {t("totalAmount")}
                 </Text>
                 <Text className="text-2xl font-bold">
-                  {price.toFixed(2)} {t(products?.[0]?.preferredCurrency ?? "sar")}
+                  {price.toFixed(2)} {t(currency)}
                 </Text>
               </View>
             </CardContent>
@@ -211,13 +198,16 @@ function InvoicePage({ purchaseData }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map(
-                      ({ _id, name, tax, campaignPrice, salePrice, preferredCurrency }, i) => {
+                    {products.map((product, i) => {
+                        const { _id, name, preferredCurrency, currency: productCurrency } =
+                          product;
                         const quantity = items.filter(
                           ({ productId }) => productId == _id
                         ).length;
-                        const itemPrice = campaignPrice ?? salePrice;
+                        const { price: itemPrice, tax } = getProductPricing(product);
                         const taxAmount = itemPrice * (tax / 100);
+                        const lineCurrency =
+                          preferredCurrency ?? productCurrency ?? currency;
                         return (
                           <TableRow key={_id} className="flex justify-between">
                             <TableCell className="font-medium">
@@ -231,7 +221,7 @@ function InvoicePage({ purchaseData }) {
                             </TableCell>
                             <TableCell className="text-right">
                               <Text>
-                                {(itemPrice - taxAmount).toFixed(2)} {t(preferredCurrency)}
+                                {(itemPrice - taxAmount).toFixed(2)} {t(lineCurrency)}
                               </Text>
                             </TableCell>
                             <TableCell className="text-right">
@@ -242,18 +232,17 @@ function InvoicePage({ purchaseData }) {
                             </TableCell>
                             <TableCell className="text-right">
                               <Text>
-                                {taxAmount.toFixed(2)} {t(preferredCurrency)}
+                                {taxAmount.toFixed(2)} {t(lineCurrency)}
                               </Text>
                             </TableCell>
                             <TableCell className="text-right font-medium">
                               <Text>
-                                {(itemPrice * quantity).toFixed(2)} {t(preferredCurrency)}
+                                {(itemPrice * quantity).toFixed(2)} {t(lineCurrency)}
                               </Text>
                             </TableCell>
                           </TableRow>
                         );
-                      }
-                    )}
+                      })}
                   </TableBody>
                 </Table>
               </ScrollView>
@@ -268,7 +257,7 @@ function InvoicePage({ purchaseData }) {
                       {t("subtotal")}
                     </Text>
                     <Text>
-                      {subtotal.toFixed(2)} {t(products?.[0]?.preferredCurrency ?? "sar")}
+                      {subtotal.toFixed(2)} {t(currency)}
                     </Text>
                   </View>
                   <View className="flex flex-row justify-between text-sm">
@@ -276,14 +265,14 @@ function InvoicePage({ purchaseData }) {
                       {t("totalTax")}
                     </Text>
                     <Text>
-                      {totalTax.toFixed(2)} {t(products?.[0]?.preferredCurrency ?? "sar")}
+                      {totalTax.toFixed(2)} {t(currency)}
                     </Text>
                   </View>
                   <Separator className="my-2" />
                   <View className="flex flex-row justify-between text-lg font-bold">
                     <Text>{t("total")}</Text>
                     <Text>
-                      {(subtotal + totalTax).toFixed(2)} {t(products?.[0]?.preferredCurrency ?? "sar")}
+                      {(subtotal + totalTax).toFixed(2)} {t(currency)}
                     </Text>
                   </View>
                 </View>
@@ -298,8 +287,7 @@ function InvoicePage({ purchaseData }) {
 
 export default function Invoice() {
   const { purchaseData } = useLocalSearchParams();
- console.log(purchaseData);
- 
+
   if (!purchaseData) {
     return (
       <View className="flex-1 justify-center items-center">

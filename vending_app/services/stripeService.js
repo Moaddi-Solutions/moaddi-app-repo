@@ -20,6 +20,7 @@ export const getStripePublishableKey = () => {
 export const buildStripePaymentConfig = (data) => {
   return {
     clientSecret: data.clientSecret,
+    paymentIntentId: data.paymentIntentId,
     publishableKey: data.publishableKey || getStripePublishableKey(),
     amount: data.amount, // smallest unit (cents for USD, fils for SAR)
     currency: data.currency || "SAR",

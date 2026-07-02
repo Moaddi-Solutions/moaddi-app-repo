@@ -13,6 +13,7 @@ import PhoneInput from "~/components/PhoneInput";
 import { Text } from "~/components/ui/text";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
+import { getSignInErrorMessage } from "~/lib/signInErrors";
 import { getItem, setItem } from "~/lib/utils";
 import { getRequest, postRequest } from "~/services/httpClient";
 import { signInAddress, userAPI } from "~/services/serverAddresses";
@@ -56,13 +57,10 @@ const SigninScreen = () => {
       const response = await postRequest(signInAddress, user as any);
 
       if (response.message) {
-        alert("error", response.message);
+        alert("error", getSignInErrorMessage(response.message, t));
         if ("User not Active." == response.message) {
           await setItem("otp", user);
           router.navigate("/OTP");
-        }
-        if (response.message == "User not found.") {
-          alert("error", "User not found.");
         }
         return;
       }
@@ -86,6 +84,10 @@ const SigninScreen = () => {
       });
     } catch (error) {
       console.log({ error });
+      alert(
+        "error",
+        error instanceof Error ? error.message : t("loginFailed"),
+      );
     }
   };
 

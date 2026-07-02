@@ -9,7 +9,7 @@ import { Text } from "~/components/ui/text";
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
-import { baseUrl } from "~/services/serverAddresses";
+import { productImageUrl } from "~/services/serverAddresses";
 
 const BoxesContainer = ({
   boxProps,
@@ -92,7 +92,7 @@ const BoxesContainer = ({
                       width={80}
                       height={80}
                       resizeMode="contain"
-                      source={{ uri: `${baseUrl}${box.product.image}` }}
+                      source={{ uri: productImageUrl(box.product.image) }}
                     />
                     <Text>
                       {`${box.product.name} - ${

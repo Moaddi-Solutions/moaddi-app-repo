@@ -13,6 +13,7 @@ import PhoneInput from "~/components/PhoneInput";
 import { Text } from "~/components/ui/text";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
+import { getSignInErrorMessage } from "~/lib/signInErrors";
 import { getItem, setItem } from "~/lib/utils";
 import { getRequest, postRequest } from "~/services/httpClient";
 import { signInAddress, userAPI } from "~/services/serverAddresses";
@@ -40,45 +41,44 @@ const SigninAsStaffScreen = () => {
     };
 
     const handleSignin = async () => {
-        if (!formData.phone || !formData.password)
-            return alert("error", "Please fill in all fields");
-        if (formData.password.length < 6)
-            return alert("error", "Password must be at least 6 characters long");
+        try {
+            if (!formData.phone || !formData.password)
+                return alert("error", "Please fill in all fields");
+            if (formData.password.length < 6)
+                return alert("error", "Password must be at least 6 characters long");
 
-        const user = {
-            _id: formData.phone,
-            password: formData.password,
-            rememberMe: false,
-        };
+            const user = {
+                _id: formData.phone,
+                password: formData.password,
+                rememberMe: false,
+            };
 
-        const response = await postRequest(signInAddress, user as any);
+            const response = await postRequest(signInAddress, user as any);
 
-        if (response.message) {
-            alert("error", response.message);
-            if ("User not Active." == response.message) {
-                await setItem("otp", user);
-                router.navigate("/OTP");
+            if (response.message) {
+                alert("error", getSignInErrorMessage(response.message, t));
+                if ("User not Active." == response.message) {
+                    await setItem("otp", user);
+                    router.navigate("/OTP");
+                }
+                return;
             }
-            return;
+
+            setUser(response);
+            await setItem("user", response);
+            alert("success", "Logged in successfully!");
+
+            getRequest(userAPI(response._id)).then(async (response) => {
+                setUser((prev: any) => ({ ...prev, ...response }));
+                router.dismissAll();
+            });
+        } catch (error) {
+            console.log({ error });
+            alert(
+                "error",
+                error instanceof Error ? error.message : t("loginFailed"),
+            );
         }
-
-        setUser(response);
-        await setItem("user", response);
-        // setIsLoading(false);
-        alert("success", "Logged in successfully!");
-
-        getRequest(userAPI(response._id)).then(async (response) => {
-            setUser((prev: any) => ({ ...prev, ...response }));
-            // if (response.purchase) router.navigate("/checkout");
-            // router.navigate("/machine-scan");
-            // navigation.dispatch(
-            //   CommonActions.reset({
-            //     index: 0, // Sets the active route to the first in the new routes array
-            //     routes: [{ name: "/" }], // Define the new route(s)
-            //   })
-            // );
-            router.dismissAll();
-        });
     };
 
     const phoneInput = {

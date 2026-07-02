@@ -20,21 +20,23 @@ import { useSocket } from "~/context/Socket";
 import { MoveRight } from "~/lib/icons/MoveRight";
 import { grouped } from "~/lib/utils";
 import dataProvider from "~/services/dataProvider";
+import { productImageUrl } from "~/services/serverAddresses";
 
 function CategoryCard({ name, description, image, id }) {
   const router = useRouter();
   return (
     <Link href={`/Shop/${id}`}>
-      <Card className="relative rounded-xl border p-0 w-full">
+      <Card
+        className="relative rounded-xl border p-0 w-full overflow-hidden"
+        style={{ aspectRatio: 16 / 9 }}
+      >
         <Image
-          source={{ uri: image.src }}
+          source={{ uri: productImageUrl(image) }}
           alt={name}
           resizeMode="cover"
-          width="400"
-          height="200"
-          className="absolute h-full w-full rounded-xl "
+          style={{ position: "absolute", width: "100%", height: "100%" }}
         />
-        <View className="h-full gap-1 p-3 ">
+        <View className="relative flex-1 justify-end p-3">
           <Text className="text-white text-xl font-semibold">{name}</Text>
           <Text className="text-white text-xs ">{description}</Text>
           <Button

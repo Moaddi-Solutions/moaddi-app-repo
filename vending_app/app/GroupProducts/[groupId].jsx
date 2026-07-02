@@ -12,8 +12,8 @@ import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
 import { getRequest, postRequest } from "~/services/httpClient";
 import {
-  baseUrl,
   groupAPI,
+  productImageUrl,
   purchasesAPI,
   userAPI,
 } from "~/services/serverAddresses";
@@ -82,6 +82,7 @@ function MachineProductCard({
   machine,
   _id,
   productName,
+  name,
   boxes,
   image,
   salePrice,
@@ -91,6 +92,8 @@ function MachineProductCard({
   const [quantity, setQuantity] = useState(0);
   const { t } = useTranslation();
   const available = boxes.filter(({ isActive }) => isActive).length;
+  const title = productName ?? name ?? "";
+  const imageUri = productImageUrl(image);
   useEffect(() => {
     setTotal((total) =>
       immutableUpsertOrDelete(total, {
@@ -104,20 +107,17 @@ function MachineProductCard({
 
   return (
     available > 0 && (
-      <Card className="rounded-xl border">
-        <View className="grid gap-1 px-4">
-          <View className="relative flex justify-center">
-            <Image
-              style={styles.productImage}
-              source={{ uri: baseUrl + image }}
-              alt={productName}
-              resizeMode="contain"
-              // width="190"
-              // height="200"
-              className="h-50 w-full rounded-xl border border-muted mt-4"
-            />
-          </View>
-          <Text className="font-semibold text-center">{productName}</Text>
+      <Card className="rounded-xl border overflow-hidden">
+        <View style={styles.productImageWrap}>
+          <Image
+            style={styles.productImage}
+            source={{ uri: imageUri }}
+            alt={title}
+            resizeMode="cover"
+          />
+        </View>
+        <View className="grid gap-1 px-4 pb-4 pt-2">
+          <Text className="font-semibold text-center">{title}</Text>
           <View className="flex flex-row justify-between">
             <Text>
               {campaignPrice?.toFixed(2) ?? salePrice?.toFixed(2)} {t(machine.products[0]?.preferredCurrency)}
@@ -302,10 +302,14 @@ function MachineProducts({
 }
 
 const styles = StyleSheet.create({
+  productImageWrap: {
+    width: "100%",
+    aspectRatio: 1,
+    overflow: "hidden",
+    backgroundColor: "#f4f4f5",
+  },
   productImage: {
     width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 10,
+    height: "100%",
   },
 });

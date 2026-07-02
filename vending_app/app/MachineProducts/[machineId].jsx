@@ -10,15 +10,18 @@ import { Text } from "~/components/ui/text";
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
-import useBLE from "~/hook/useBLE";
 import useBlu2 from "~/hook/useBlu2";
 import useBlu3 from "~/hook/useBlu3";
 import useBlu4 from "~/hook/useBlu4";
 import alert from "~/lib/alert";
+import {
+  BLUETOOTH_MACHINE_TYPES,
+  isBleLinkedToMachine,
+} from "~/lib/bleMachine";
 import { getRequest, postRequest } from "~/services/httpClient";
 import {
-  baseUrl,
   machineQRScan,
+  productImageUrl,
   purchasesAPI,
   userAPI,
 } from "~/services/serverAddresses";
@@ -61,6 +64,7 @@ function DefaultView({
 function MachineProductCard({
   _id,
   productName,
+  name,
   boxes,
   image,
   salePrice,
@@ -71,6 +75,8 @@ function MachineProductCard({
   const [quantity, setQuantity] = useState(0);
   const { t } = useTranslation();
   const available = boxes.filter(({ isActive }) => isActive).length;
+  const title = productName ?? name ?? "";
+  const imageUri = productImageUrl(image);
   // const available = 10;
   useEffect(() => {
     setTotal((total) => ({ ...total, [_id]: quantity }));
@@ -79,20 +85,17 @@ function MachineProductCard({
 
   return (
     available > 0 && (
-      <Card className="rounded-xl border">
-        <View className="grid gap-1 px-4">
-          <View className="relative flex justify-center">
-            <Image
-              style={styles.productImage}
-              source={{ uri: baseUrl + image }}
-              alt={productName}
-              resizeMode="contain"
-              // width="190"
-              // height="200"
-              className="h-50 w-full rounded-xl border border-muted mt-4"
-            />
-          </View>
-          <Text className="font-semibold text-center">{productName}</Text>
+      <Card className="rounded-xl border overflow-hidden">
+        <View style={styles.productImageWrap}>
+          <Image
+            style={styles.productImage}
+            source={{ uri: imageUri }}
+            alt={title}
+            resizeMode="cover"
+          />
+        </View>
+        <View className="grid gap-1 px-4 pb-4 pt-2">
+          <Text className="font-semibold text-center">{title}</Text>
           <View className="flex flex-row justify-between">
             <Text>
               {campaignPrice?.toFixed(2) ?? salePrice?.toFixed(2)} {t(preferredCurrency)}
@@ -157,7 +160,8 @@ function StackScreen({ name, icon }) {
 
 export default function MachineProducts() {
   const { machineId } = useLocalSearchParams();
-  const { machine, setMachine, setBluFeedback, setMachines } = useMachine();
+  const { machine, setMachine, setBluFeedback, setMachines, connectedDevice } =
+    useMachine();
   const [total, setTotal] = useState({});
   const [isPurchasing, setIsPurchasing] = useState(false);
   const { user, setUser } = useUser();
@@ -226,7 +230,15 @@ export default function MachineProducts() {
       console.log("  [PURCHASE FLOW] No user found, redirecting to signin");
       return router.navigate("/Signin");
     }
-    
+
+    if (
+      BLUETOOTH_MACHINE_TYPES.has(machine?.type) &&
+      !isBleLinkedToMachine(machine, connectedDevice)
+    ) {
+      alert("error", t("connectBluetoothFirst"));
+      return;
+    }
+
     // Comment out to allow empty cart testing
     if (!totalPrice) return;
     // console.log("[PURCHASE FLOW] Total price check passed (testing mode allows 0)");
@@ -429,34 +441,16 @@ function MachineBluetooth2({
   totalPrice,
   isPurchasing,
 }) {
-  const {
-    // allDevices,
-    requestPermissions,
-    // scanForPeripherals,
-    connectToDevice,
-    bleState,
-    listenForMessages,
-    disconnectFromDevice,
-    writeMessages,
-  } = useBLE();
-  const { connectedDevice } = useMachine();
-  const {
-    connectRetryCount,
-    listenRetryCount,
-    sendRetryCount,
-    permissionsGranted,
-  } = useBlu2(0, { back: true });
+  const { connectRetryCount, sendRetryCount } = useBlu2(0, { back: true });
+  const bleReady = !connectRetryCount && !sendRetryCount;
 
   const stackScreen = {
     name: machine.name,
-    icon:
-      connectedDevice?.name == machine.name ||
-      connectedDevice?.localName == machine.name ||
-      connectedDevice?.id == machine.mac ? (
-        <Bluetooth color="green" />
-      ) : (
-        <Bluetooth color="red" />
-      ),
+    icon: bleReady ? (
+      <Bluetooth color="green" />
+    ) : (
+      <Bluetooth color="red" />
+    ),
   };
   const defaultView = {
     machine,
@@ -465,7 +459,7 @@ function MachineBluetooth2({
     totalPrice,
     isPurchasing,
     payButton: {
-      disabled: isPurchasing,
+      disabled: !bleReady || isPurchasing,
     },
   };
 
@@ -562,10 +556,14 @@ function MachineBluetooth4({
 }
 
 const styles = StyleSheet.create({
+  productImageWrap: {
+    width: "100%",
+    aspectRatio: 1,
+    overflow: "hidden",
+    backgroundColor: "#f4f4f5",
+  },
   productImage: {
     width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 10,
+    height: "100%",
   },
 });

@@ -226,6 +226,25 @@ const Stacks = () => {
             title: t("checkoutMoyasarSuccess"),
           }}
         />
+        {/* Checkout Stripe */}
+        <Stack.Screen
+          name="CheckoutStripe/failure"
+          options={{
+            title: t("checkoutStripeFailure"),
+          }}
+        />
+        <Stack.Screen
+          name="CheckoutStripe/index"
+          options={{
+            title: t("checkoutStripe"),
+          }}
+        />
+        <Stack.Screen
+          name="CheckoutStripe/success"
+          options={{
+            title: t("checkoutStripeSuccess"),
+          }}
+        />
         {/* </Stack.Protected> */}
       </Stack>
     </>

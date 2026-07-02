@@ -5,7 +5,7 @@ import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
-import { baseUrl } from "~/services/serverAddresses";
+import { productImageUrl } from "~/services/serverAddresses";
 
 const BoxGridContainer = ({ boxProps, machine }) => {
   const { t } = useTranslation();
@@ -43,7 +43,7 @@ const BoxGridContainer = ({ boxProps, machine }) => {
                         height={80}
                         resizeMode="contain"
                         source={{
-                          uri: `${baseUrl}${product.image}`,
+                          uri: productImageUrl(product.image),
                         }}
                       />
                       <Text>

@@ -8,7 +8,7 @@ import { Text } from "~/components/ui/text";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
 import { boxSerialDecoder, compressBoxData } from "~/services/functions";
-import { baseUrl } from "~/services/serverAddresses";
+import { productImageUrl } from "~/services/serverAddresses";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
   machineEvents.boxes.forEach((box) => {
@@ -103,7 +103,7 @@ const BoxGrid = () => {
                     width={80}
                     height={80}
                     resizeMode="contain"
-                    source={{ uri: `${baseUrl}${box.product.image}` }}
+                    source={{ uri: productImageUrl(box.product.image) }}
                   />
                   <Text>
                     {`${box.product.name} - ${

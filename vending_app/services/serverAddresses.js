@@ -61,8 +61,36 @@ export const myTransactionsAPI = address + "transactions";
 export const myWithdrawalsAPI = address + "withdrawals";
 export const withdrawalCreateAPI = address + "withdrawals";
 
+/** Media origin for /images and other static assets (defaults to API origin). */
+export const mediaBaseUrl = () => {
+  const fromEnv =
+    typeof process.env.EXPO_PUBLIC_STATIC === "string" &&
+    process.env.EXPO_PUBLIC_STATIC.trim() !== ""
+      ? process.env.EXPO_PUBLIC_STATIC.trim()
+      : rawOrigin;
+  return fromEnv.replace(/\/+$/, "");
+};
+
+export const normalizeAssetPath = (path) =>
+  String(path ?? "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+
+/**
+ * Resolve a product/shop image field to a fetchable URL.
+ * Accepts API path strings, `{ src }` objects, or absolute URLs.
+ */
+export const productImageUrl = (image) => {
+  if (image == null || image === "") return null;
+  if (typeof image === "object" && image.src) return productImageUrl(image.src);
+  const path = typeof image === "string" ? image : String(image);
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${mediaBaseUrl()}/${normalizeAssetPath(path)}`;
+};
+
 /** Public image URL for withdrawal proof (served from moaddi-server /images). */
-export const withdrawalProofImageUrl = (filename) =>
-  filename
-    ? `${baseUrl.replace(/\/?$/, "/")}images/${String(filename).replace(/^\/+/, "")}`
-    : null;
+export const withdrawalProofImageUrl = (filename) => {
+  if (!filename) return null;
+  const name = normalizeAssetPath(filename).replace(/^images\//, "");
+  return `${mediaBaseUrl()}/images/${name}`;
+};
