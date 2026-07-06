@@ -2,7 +2,7 @@
   "expo": {
     "name": "Moaddi",
     "slug": "moaddi-app",
-    "version": "4.1.1",
+    "version": "4.3.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon-new.jpg",
     "scheme": "moaddi",
@@ -23,7 +23,7 @@
         "NSBluetoothAlwaysUsageDescription": "We use Bluetooth to connect to vending locks.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "3"
+      "buildNumber": "7"
     },
     "android": {
       "adaptiveIcon": {
@@ -92,10 +92,10 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "29c1e61d-c811-47d8-92e1-2b1ea0327f83"
+        "projectId": "d21a7b3f-c67d-4971-aa87-b828fc5bec6c"
       }
     },
-    "runtimeVersion": "4.1.1",
-    "owner": "mrsawy"
+    "runtimeVersion": "4.3.0",
+    "owner": "moaddiexpo"
   }
 }
