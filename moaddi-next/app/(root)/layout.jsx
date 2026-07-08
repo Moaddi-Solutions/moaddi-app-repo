@@ -11,19 +11,9 @@ import { KumaRegistry } from "@kuma-ui/next-plugin/registry";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { Cairo /*Geist_Mono*/ } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
-  subsets: ["latin", "arabic"],
-  weight: ["300", "400", "600", "700"],
-});
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
 // const website = {
 //   en: websiteEn,
 //   ar: websiteAr,
@@ -106,7 +96,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang={locale} dir={rtlRules[locale] ? "rtl" : "ltr"}>
-      <body className={`${cairo.variable} bg-gray-100 font-sans antialiased`}>
+      <body className="bg-gray-100 font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
           <ThemeContextProvider>
             <KumaRegistry>

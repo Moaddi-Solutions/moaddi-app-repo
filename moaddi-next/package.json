@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
+    "@base-ui/react": "^1.6.0",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -74,6 +75,7 @@
     "react-qr-code": "^2.0.18",
     "react-zxing": "^2.1.0",
     "sass": "^1.89.2",
+    "shadcn": "^4.13.0",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
