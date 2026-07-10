@@ -9,8 +9,9 @@ MYFATORA_API_TOKEN=
 # Webhook V2 — set in MyFatoorah portal; sign PAYMENT_STATUS_CHANGED events
 MYFATORA_WEBHOOK_SECRET=
 
-# Stripe
+# Stripe — publishable key must pair with STRIPE_SECRET_KEY (both test or both live)
 STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
 STRIPE_DEFAULT_CURRENCY=sar
 

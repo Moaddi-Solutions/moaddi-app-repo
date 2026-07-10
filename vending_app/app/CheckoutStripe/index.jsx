@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { ActivityIndicator, ScrollView, View, Text } from "react-native";
+import { Loader } from "~/components/moaddi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -137,12 +138,7 @@ export default function CheckoutStripeScreen({ user, finalizePayment: finalizePa
   };
 
   if (loading || !paymentConfig) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-600">{t("loadingPaymentForm")}</Text>
-      </View>
-    );
+    return <Loader flex message={t("loadingPaymentForm")} />;
   }
 
   const publishableKey = paymentConfig.publishableKey || getStripePublishableKey();

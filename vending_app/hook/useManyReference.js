@@ -9,14 +9,13 @@ export const useManyReference = (resource, { target, id }) => {
         id,
         target,
       }),
+    enabled: Boolean(id),
     // staleTime: 1000 * 60 * 1, // 1 minute
     gcTime: 1000 * 60 * 60 * 2, // 2 hours
   });
   return {
     ...rest,
-    ...(data && {
-      total: data.total,
-      items: data.data,
-    }),
+    total: data?.total ?? 0,
+    items: data?.data ?? [],
   };
 };

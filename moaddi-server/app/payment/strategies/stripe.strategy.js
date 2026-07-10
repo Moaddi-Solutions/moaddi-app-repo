@@ -94,6 +94,7 @@ const createPayment = async ({ purchaseId, customerId, currency: currencyArg }) 
         return {
           clientSecret: existing.client_secret,
           paymentIntentId: existing.id,
+          publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || undefined,
         };
       }
     } catch (err) {
@@ -119,7 +120,11 @@ const createPayment = async ({ purchaseId, customerId, currency: currencyArg }) 
     paymentProvider: PAYMENT_PROVIDER.STRIPE,
   });
 
-  return { clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id };
+  return {
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || undefined,
+  };
 };
 
 const handleWebhook = async (req, res) => {
