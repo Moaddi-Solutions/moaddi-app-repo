@@ -3,6 +3,8 @@ import { Minus, Plus } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Loader } from "~/components/moaddi";
+import GuestCheckoutModal from "~/components/GuestCheckoutModal";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
@@ -189,6 +191,7 @@ export default function GroupProducts() {
   const router = useRouter();
   const { t } = useTranslation();
   const [total, setTotal] = useState([]); // [{productId, machineId, number}, ...]
+  const [guestModalVisible, setGuestModalVisible] = useState(false);
   const totalPrice = total.reduce(
     (prev /* 0 */, { productId, machineId, number }) => {
       const machine = machines.find(({ _id }) => _id == machineId);
@@ -203,7 +206,7 @@ export default function GroupProducts() {
   useEffect(() => {
     setBluFeedback(null);
     setMachine(null);
-    if (!user) return router.navigate("/Signin");
+    // Guests can browse freely; auth is only required at checkout tap.
     (async () => {
       const group = await getRequest(groupAPI(groupId));
       if (!group.machines.length) return alert("error", t("machineNotFound"));
@@ -212,8 +215,13 @@ export default function GroupProducts() {
     })();
   }, []);
 
-  const onPurchaseHandler = (e) => {
-    if (!user) return;
+  const onPurchaseHandler = (activeUserArg) => {
+    // onPress passes an event (no `_id`); the guest modal passes the new guest.
+    const activeUser = activeUserArg && activeUserArg._id ? activeUserArg : user;
+    if (!activeUser) {
+      setGuestModalVisible(true);
+      return;
+    }
     if (!totalPrice) return;
     const items = [];
     total.forEach(({ machineId, productId, number }) => {
@@ -232,16 +240,16 @@ export default function GroupProducts() {
     // log(JSON.stringify(total));
     // log(JSON.stringify(items));
     postRequest(purchasesAPI, {
-      customerId: user._id,
+      customerId: activeUser._id,
       machine: null,
       machineId: null,
       price: totalPrice,
       items,
       preferredCurrency:
-        user?.preferredCurrency ||
+        activeUser?.preferredCurrency ||
         machines?.[0]?.products?.[0]?.preferredCurrency,
     }).then((r) => {
-      getRequest(userAPI(user._id)).then((response) => {
+      getRequest(userAPI(activeUser._id)).then((response) => {
         setUser((prev) => ({ ...prev, ...response }));
         // log(JSON.stringify(response));
         if (response.purchase) {
@@ -271,8 +279,20 @@ export default function GroupProducts() {
       {machines.length ? (
         <MachineProducts {...machineProducts} />
       ) : (
-        <Text className="text-xl mx-auto my-6">{t("loading")}</Text>
+        <Loader />
       )}
+      <GuestCheckoutModal
+        isVisible={guestModalVisible}
+        onClose={() => setGuestModalVisible(false)}
+        onLogin={() => {
+          setGuestModalVisible(false);
+          router.navigate("/Signin");
+        }}
+        onComplete={(guest) => {
+          setGuestModalVisible(false);
+          onPurchaseHandler(guest);
+        }}
+      />
     </>
   );
 }

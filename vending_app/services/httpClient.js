@@ -8,6 +8,29 @@ function ngrokHeaders(url) {
     : {};
 }
 
+/** Default request timeout (ms). RN `fetch` has none, so a stalled server or
+ *  unreachable host would otherwise leave buttons spinning forever. */
+const REQUEST_TIMEOUT_MS = 30000;
+
+/** `fetch` with an abort-based timeout. Rejects with a clear error on timeout
+ *  so callers' catch blocks run (and reset their loading state). */
+async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      throw new Error(
+        `Request timed out after ${Math.round(timeoutMs / 1000)}s: ${url}`,
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function responseJson(response) {
   const text = await response.text();
   try {
@@ -36,7 +59,7 @@ export const postRequest = async (url, body = null) => {
     console.log(" [HTTP POST] Body:", body);
     console.log("[HTTP POST] Sending request...");
 
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "POST",
       headers,
       ...(body && {
@@ -86,7 +109,7 @@ export const postRequestPayment = async (url, body = null) => {
     console.log(" [HTTP POST] Body:", body);
     console.log("[HTTP POST] Sending request...");
 
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "POST",
       headers,
       ...(body && {
@@ -130,7 +153,7 @@ export const getRequest = async (url) => {
   const user = await getItem("user");
   if (user) headers["Authorization"] = "Bearer " + user.token;
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "GET",
       headers,
     });
@@ -163,7 +186,7 @@ export const putRequest = async (url, body = {}) => {
   if (user) headers["Authorization"] = "Bearer " + user.token;
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "PUT",
       headers,
       ...(body && {
@@ -190,7 +213,7 @@ export const deleteRequest = async (url) => {
   if (user) headers["Authorization"] = "Bearer " + user.token;
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "DELETE",
       headers,
     });

@@ -1,9 +1,26 @@
 // API + sockets + raw image paths use this origin. Override for local/ngrok (must match your moaddi-server base URL).
+import Constants from "expo-constants";
+
+const PRODUCTION_ORIGIN = "https://server.moaddi-app.com/";
+
+function normalizeOrigin(value) {
+  if (typeof value !== "string" || value.trim() === "") return "";
+  return value.trim().replace(/\/?$/, "/");
+}
+
 const rawOrigin =
-  typeof process.env.EXPO_PUBLIC_SERVER_ORIGIN === "string" &&
-  process.env.EXPO_PUBLIC_SERVER_ORIGIN.trim() !== ""
-    ? process.env.EXPO_PUBLIC_SERVER_ORIGIN.trim().replace(/\/?$/, "/")
-    : "https://server.moaddi-app.com/";
+  normalizeOrigin(Constants.expoConfig?.extra?.serverOrigin) ||
+  normalizeOrigin(process.env.EXPO_PUBLIC_SERVER_ORIGIN) ||
+  PRODUCTION_ORIGIN;
+
+if (__DEV__) {
+  console.log("[API] Server origin:", rawOrigin);
+  if (rawOrigin === PRODUCTION_ORIGIN) {
+    console.warn(
+      "[API] Still using production. Stop Metro, run `yarn dev` from vending_app, then reload the app.",
+    );
+  }
+}
 export const baseUrl = rawOrigin;
 export const socketAddress = baseUrl;
 export const address = baseUrl + "api/v1/";
@@ -11,6 +28,8 @@ export const address = baseUrl + "api/v1/";
 export const signInAddress = address + "users/signin";
 export const signUpAddress = address + "users/signup";
 export const otpAddress = address + "users/otp";
+export const guestSessionAddress = address + "users/guest";
+export const guestInfoAddress = address + "users/guest/me";
 export const getVendorsAPI = address + "users/role/Vendor";
 export const getCustomerAPI = address + "users/role/Customer";
 export const addUserAPI = address + "users/create";
@@ -63,12 +82,14 @@ export const withdrawalCreateAPI = address + "withdrawals";
 
 /** Media origin for /images and other static assets (defaults to API origin). */
 export const mediaBaseUrl = () => {
+  const fromExtra = normalizeOrigin(Constants.expoConfig?.extra?.staticOrigin);
   const fromEnv =
     typeof process.env.EXPO_PUBLIC_STATIC === "string" &&
     process.env.EXPO_PUBLIC_STATIC.trim() !== ""
       ? process.env.EXPO_PUBLIC_STATIC.trim()
-      : rawOrigin;
-  return fromEnv.replace(/\/+$/, "");
+      : "";
+  const fromOrigin = fromExtra || fromEnv || rawOrigin;
+  return fromOrigin.replace(/\/+$/, "");
 };
 
 export const normalizeAssetPath = (path) =>

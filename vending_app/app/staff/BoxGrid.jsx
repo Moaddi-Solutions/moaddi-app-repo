@@ -1,14 +1,13 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Text } from "~/components/ui/text";
+import { Image, ScrollView, Text, View } from "react-native";
+import { Button, Card } from "~/components/moaddi";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
 import { boxSerialDecoder, compressBoxData } from "~/services/functions";
 import { productImageUrl } from "~/services/serverAddresses";
+import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
   machineEvents.boxes.forEach((box) => {
@@ -28,39 +27,27 @@ const BoxGrid = () => {
   const [done, setDone] = useState(false);
   const { t } = useTranslation();
   const { machineEvents, publishData } = useSocket();
+  const router = useRouter();
 
-  // update boxes status on machineEvents change
   useEffect(() => {
-    console.log("machineEvents", machineEvents);
-
     if (!machineEvents?.boxes) return;
     setUser(({ purchase, ...prev }) => ({
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && {
-          boxes: boxUpdateHandler(purchase.boxes, machineEvents),
-        }),
+        ...(purchase && { boxes: boxUpdateHandler(purchase.boxes, machineEvents) }),
       },
     }));
-    console.log(
-      "boxes",
-      boxUpdateHandler(user?.purchase?.boxes, machineEvents)
-    );
   }, [machineEvents]);
-  // set Done after all boxes opened
+
   useEffect(() => {
-    console.log(user?.purchase);
     if (!user?.purchase?.boxes) return;
     if (!user.purchase.boxes.find(({ boxStatus }) => !boxStatus)) {
-      setUser(({ purchase, ...prev }) => ({
-        ...prev,
-      }));
-      // router.push("/");
+      setUser(({ purchase, ...prev }) => ({ ...prev }));
       setDone(true);
     }
   }, [user]);
-  // send open signal to socket
+
   const openOne = (cabinNumber, boxNumber) =>
     publishData({
       purchaseId: user.purchase._id,
@@ -70,95 +57,91 @@ const BoxGrid = () => {
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
     });
 
-  const opened = user?.purchase?.boxes.filter(
-    ({ boxStatus }) => boxStatus
-  ).length;
-  return done ? (
-    <View className="px-6 my-40 flex-col items-center justify-center">
-      <View className="flex flex-col space-y-2 text-center">
-        <Text className="text-2xl font-semibold my-4">
+  const opened = user?.purchase?.boxes.filter(({ boxStatus }) => boxStatus).length;
+
+  if (done) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surfacePage, alignItems: "center", justifyContent: "center", padding: space.gutter }}>
+        <Text style={{ ...typo.title2, color: colors.textHeading, marginBottom: 24, textAlign: "center" }}>
           {t("allBoxesAreOpened")}
         </Text>
-      </View>
-      <Link asChild href="/PurchaseHistory">
-        <Button color="secondary" className="w-full" variant="default">
-          <Text>{t("showInvoiceHistory")}</Text>
+        <Button fullWidth onPress={() => router.navigate("/PurchaseHistory")}>
+          {t("showInvoiceHistory")}
         </Button>
-      </Link>
-    </View>
-  ) : (
-    <ScrollView
-      contentContainerStyle={styles.scrollContainer}
-      className="my-6 px-6"
-    >
-      <Text className="mb-8 text-xl">{user?.purchase?.machine.name}</Text>
-      <View>
-        {(user?.purchase?.boxes ?? []).map((box) => (
-          <View key={box._id}>
-            <Card className="flex items-center justify-center p-4 m-4">
-              <Text>{box.name.slice(1)}</Text>
-              {box.product && (
-                <>
-                  <Image
-                    width={80}
-                    height={80}
-                    resizeMode="contain"
-                    source={{ uri: productImageUrl(box.product.image) }}
-                  />
-                  <Text>
-                    {`${box.product.name} - ${
-                      box.product.campaignPrice?.toFixed(2) ?? box.product.salePrice?.toFixed(2)
-                    } ${t(box?.product?.preferredCurrency)}`}
-                  </Text>
-                </>
-              )}
-              {/* Direct */}
-              {user.purchase.machine.type == 0 ? (
-                <Text className="mt-4">
-                  {box.boxStatus ? "Opened" : "Waiting for approve"}
-                </Text>
-              ) : (
-                <Button
-                  className="mt-4"
-                  disabled={box.boxStatus}
-                  onPress={() => openOne(box.cabinNumber, box.boxNumber)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Text>{box.boxStatus ? "Opened" : "Open"}</Text>
-                </Button>
-              )}
-            </Card>
-          </View>
-        ))}
       </View>
-      <View className="mb-6 flex flex-wrap justify-between gap-4">
-        <Card className="rounded p-3 !text-green-800">
-          <Text>
-            {t("readyToOpen")}:{" "}
-            <Text>{user?.purchase?.boxes.length - opened || ""}</Text>
-          </Text>
-        </Card>
-        <Card className="rounded p-3 !text-green-800">
-          <Text>
-            {t("opened")}: <Text>{t("opened-sm") || "0"}</Text>
-          </Text>
-        </Card>
-        <Card className="rounded p-3 !text-red-800">
-          <Text>
-            {t("remaining")}:{" "}
-            <Text>{user?.purchase?.boxes.length - opened || ""}</Text>
-          </Text>
-        </Card>
+    );
+  }
+
+  return (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ padding: space.gutter, gap: 12, paddingBottom: 24 }}
+    >
+      <Text style={{ ...typo.title3, color: colors.textHeading, marginBottom: 4 }}>
+        {user?.purchase?.machine.name}
+      </Text>
+
+      {(user?.purchase?.boxes ?? []).map((box) => (
+        <View
+          key={box._id}
+          style={{
+            backgroundColor: colors.surfaceCard,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.borderDefault,
+            padding: 16,
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{box.name.slice(1)}</Text>
+          {box.product && (
+            <>
+              <Image
+                width={80}
+                height={80}
+                resizeMode="contain"
+                source={{ uri: productImageUrl(box.product.image) }}
+              />
+              <Text style={{ ...typo.body, color: colors.textBody }}>
+                {`${box.product.name} — ${
+                  box.product.campaignPrice?.toFixed(2) ?? box.product.salePrice?.toFixed(2)
+                } ${t(box?.product?.preferredCurrency)}`}
+              </Text>
+            </>
+          )}
+          {user.purchase.machine.type === 0 ? (
+            <Text style={{ ...typo.caption, color: box.boxStatus ? colors.success : colors.textMuted }}>
+              {box.boxStatus ? t("opened") : t("waitingForApprove") || "Waiting for approve"}
+            </Text>
+          ) : (
+            <Button
+              variant={box.boxStatus ? "secondary" : "primary"}
+              disabled={box.boxStatus}
+              onPress={() => openOne(box.cabinNumber, box.boxNumber)}
+            >
+              {box.boxStatus ? t("opened") : t("open") || "Open"}
+            </Button>
+          )}
+        </View>
+      ))}
+
+      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+        <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
+          <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("readyToOpen")}</Text>
+          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes.length ?? 0) - (opened ?? 0)}</Text>
+        </View>
+        <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
+          <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("opened")}</Text>
+          <Text style={{ ...typo.bodyStrong, color: colors.success }}>{opened ?? 0}</Text>
+        </View>
+        <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
+          <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("remaining")}</Text>
+          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes.length ?? 0) - (opened ?? 0)}</Text>
+        </View>
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    alignItems: "center",
-  },
-});
 
 export default BoxGrid;

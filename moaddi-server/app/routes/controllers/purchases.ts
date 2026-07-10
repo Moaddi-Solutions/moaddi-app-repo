@@ -126,7 +126,7 @@ const controller = (): import('express').Router => {
   router.post(
     '/purchases/complete',
     authenticate(),
-    requireRole(['Admin', 'Vendor', 'Customer']),
+    requireRole(['Admin', 'Vendor', 'Customer', 'Guest']),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const results = await completePayment(req.body, req.authenticatedUser);

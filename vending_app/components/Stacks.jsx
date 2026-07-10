@@ -7,8 +7,9 @@ import {
 } from "lucide-react-native";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { IconButton } from "~/components/IconButton";
+import { Loader } from "~/components/moaddi";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import { useUser } from "~/context/UserContext";
 import "~/global.css";
@@ -40,11 +41,7 @@ const Stacks = () => {
     setModalVisible,
   };
   if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <Loader flex />;
   }
   // if (user && user?.role === "Admin" && !isLoading) {
   //   return <Redirect href={"/(staff)/rabie"} />;
@@ -57,78 +54,12 @@ const Stacks = () => {
           <Stack.Screen name="staff" options={{ headerShown: false }} />
         </Stack.Protected>
         {/* <Stack.Protected guard={user?.role !== "Admin"}> */}
-        <Stack.Screen
-          name="index"
-          options={
-            {
-              title: t("moaddi"),
-              headerTitle: LogoTitle,
-              headerTitleAlign: "left",
-              headerRight: () => (
-                <>
-                  {user ? (
-                    <View className="flex-row gap-2 pl-4">
-                      <Link href={"/MachineQRScan"}>
-                        <IconButton icon={ScanQrCode} />
-                      </Link>
-                      <Link href={"/Profile"}>
-                        <IconButton icon={User} />
-                      </Link>
-                      {/* <Link href={"/BluetoothTestControl"}>
-                        <IconButton icon={Bluetooth} />
-                      </Link> */}
-                      {user.purchase &&
-                        (user.purchase.controlRoute ? (
-                          <Link href={user.purchase.controlRoute}>
-                            <IconButton icon={ShoppingCart} />
-                          </Link>
-                        ) : (
-                          <Link href={"/CheckoutMoyasar"}>
-                            <IconButton icon={ShoppingCart} />
-                          </Link>
-                        ))}
-                      <Pressable
-                        className="w-10 h-7"
-                        onPress={() => setModalVisible(true)}
-                      >
-                        <IconButton icon={Languages} />
-                      </Pressable>
-                    </View>
-                  ) : (
-                    <View className="flex-row gap-2 pl-4">
-                      <Link href={"/Signin"}>
-                        <IconButton icon={ScanQrCode} />
-                      </Link>
-                      <Link href={"/Signin"}>
-                        <IconButton icon={User} />
-                      </Link>
-                      {/* <Link href={"/BluetoothScan"}>
-                        <IconButton icon={Bluetooth} />
-                      </Link> */}
-                      <Link href={"/Settings"}>
-                        <IconButton icon={Settings} />
-                      </Link>
-
-                      <Pressable
-                        className="w-10 h-7"
-                        onPress={() => setModalVisible(true)}
-                      >
-                        <IconButton icon={Languages} />
-                      </Pressable>
-                    </View>
-                  )}
-                </>
-              ),
-            }
-            // headerRight: () => <ThemeToggle />,
-          }
-        />
-        <Stack.Screen
-          name="Profile"
-          options={{
-            title: t("profile"),
-          }}
-        />
+        {/* Primary app shell: bottom tabs (Home / Shops / Profile). */}
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="Products" options={{ headerShown: false }} />
+        <Stack.Screen name="Search" options={{ headerShown: false }} />
+        <Stack.Screen name="Profile" options={{ headerShown: false }} />
         <Stack.Screen
           name="CheckoutFake"
           options={{

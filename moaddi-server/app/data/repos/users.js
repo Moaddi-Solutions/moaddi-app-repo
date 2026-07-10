@@ -1,7 +1,9 @@
+const crypto = require("crypto");
 const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const config = require("../../../config");
 const Users = require("../models/users");
+const Purchases = require("../models/purchases");
 const machinesRepo = require("../../data/repos/machines");
 const purchasesRepo = require("../../data/repos/purchases");
 const {
@@ -89,6 +91,8 @@ let otp = async ({ _id, otp }) => {
     user = await user.save();
     user = user.toJSON();
     delete user.password;
+    // Merge any guest purchases made with this phone into the now-active account.
+    await mergeGuestPurchases(user._id);
     return user;
   } else {
     return Promise.reject({
@@ -96,6 +100,122 @@ let otp = async ({ _id, otp }) => {
       statusCode: 409,
     });
   }
+};
+
+/*
+ * Normalize a phone number to the same shape used for user `_id`
+ * (lowercased, trimmed). Guest `phone` is stored this way so it can be
+ * matched against a real account's `_id` on merge.
+ */
+let normalizePhone = (phone) => String(phone || "").trim().toLowerCase();
+
+/* E.164: leading + then 8–15 digits (first digit non-zero). */
+let isValidE164 = (phone) => /^\+[1-9]\d{7,14}$/.test(normalizePhone(phone));
+
+const { PURCHASE_STATUS } = require("../../payment/constants");
+/* Only purchases the guest actually paid for are worth merging — this also
+ * blocks history-pollution via an unverified guest phone (abandoned/pending
+ * guest carts never attach to a real account). */
+const MERGEABLE_STATUSES = [
+  PURCHASE_STATUS.PAYMENT_DONE,
+  PURCHASE_STATUS.PROCESSING,
+  PURCHASE_STATUS.COMPLETED,
+];
+
+/*
+ * Create a guest session user.
+ * Guests get a synthetic `_id` (the phone can't be the id — a later real
+ * signup with that phone would collide), a random password (schema requires
+ * one), role "Guest", and a JWT so every existing authenticated endpoint
+ * (purchases, payment, boxes, sockets) works unchanged.
+ */
+let createGuest = async (preferredCurrency) => {
+  let guest = new Users({
+    _id: "guest-" + crypto.randomUUID(),
+    name: "Guest",
+    role: "Guest",
+    password: crypto.randomBytes(24).toString("hex"),
+    isActive: true,
+    isGuest: true,
+    preferredCurrency:
+      (typeof preferredCurrency === "string" && preferredCurrency.trim()) ||
+      process.env.BASE_CURRENCY ||
+      "SAR",
+    created: moment().utc().add(config.timeDifference, "hours"),
+    updated: moment().utc().add(config.timeDifference, "hours"),
+  });
+  guest = await guest.save();
+  guest = guest.toJSON();
+
+  let expiresIn = config.jwt.expiry2 || config.jwt.expiry1;
+  let token = jwt.sign(
+    { _id: guest._id, role: guest.role },
+    config.jwt.secret,
+    { expiresIn },
+  );
+
+  return {
+    _id: guest._id,
+    name: guest.name,
+    role: guest.role,
+    preferredCurrency: guest.preferredCurrency || "SAR",
+    isGuest: true,
+    token,
+    expiresIn,
+  };
+};
+
+/*
+ * Save contact info collected from a guest at checkout.
+ * Phone is required (used later for merge-by-phone); name/email optional.
+ */
+let updateGuestInfo = async (guestId, { phone, name, email }) => {
+  let user = await Users.findOne({ _id: guestId });
+  if (!user || user.isDeleted || user.role !== "Guest") {
+    return Promise.reject({ message: "Guest not found.", statusCode: 404 });
+  }
+  if (!phone || !isValidE164(phone)) {
+    return Promise.reject({
+      message: "A valid phone number is required.",
+      statusCode: 400,
+    });
+  }
+  user.phone = normalizePhone(phone);
+  if (name) user.name = name;
+  if (email) user.email = email;
+  user.updated = moment().utc().add(config.timeDifference, "hours");
+  user = await user.save();
+  user = user.toJSON();
+  delete user.password;
+  return user;
+};
+
+/*
+ * Reassign guest purchases to a real account, then soft-delete the guest
+ * records. Matched by phone: a real user's `_id` IS their phone number, and a
+ * guest's `phone` is stored normalized to the same shape.
+ */
+let mergeGuestPurchases = async (realUserId) => {
+  const phone = normalizePhone(realUserId);
+  if (!phone) return;
+  const guests = await Users.find({
+    role: "Guest",
+    phone,
+    isDeleted: { $ne: true },
+  });
+  if (!guests.length) return;
+  const guestIds = guests.map((g) => g._id);
+  // Only reassign PAID purchases — unverified guest phones can't pollute a real
+  // account's history with abandoned/pending carts.
+  await Purchases.updateMany(
+    { customerId: { $in: guestIds }, status: { $in: MERGEABLE_STATUSES } },
+    { $set: { customerId: realUserId } },
+  );
+  await Users.updateMany(
+    { _id: { $in: guestIds } },
+    { $set: { isDeleted: true, updated: moment().utc().add(config.timeDifference, "hours") } },
+  );
+  console.log(`Merged ${guestIds.length} guest(s) into ${realUserId}`);
 };
 
 /*
@@ -169,6 +289,9 @@ let signIn = async (credentials) => {
       statusCode: 401,
     });
   }
+
+  // Merge any guest purchases made with this phone into the account.
+  await mergeGuestPurchases(user._id);
 
   let expiresIn = config.jwt.expiry1;
   if (credentials.rememberMe) expiresIn = config.jwt.expiry2;
@@ -838,6 +961,9 @@ let remove = async (userId) => {
 module.exports = {
   signUp,
   create,
+  createGuest,
+  updateGuestInfo,
+  mergeGuestPurchases,
   signIn,
   toggle,
   get,

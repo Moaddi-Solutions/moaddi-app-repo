@@ -42,8 +42,11 @@ export const isStaffAdminRole = (role: string | undefined | null): boolean => {
   return r === 'admin' || r === 'superadmin';
 };
 
-const isCustomerRole = (role: string | undefined | null): boolean =>
-  normRole(role) === 'customer';
+// Guests own their purchases exactly like customers do (view/mutate their own only).
+const isCustomerRole = (role: string | undefined | null): boolean => {
+  const r = normRole(role);
+  return r === 'customer' || r === 'guest';
+};
 
 export const isVendorRole = (role: string | undefined | null): boolean =>
   normRole(role) === 'vendor';

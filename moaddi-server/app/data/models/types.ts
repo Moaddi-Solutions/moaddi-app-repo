@@ -200,6 +200,10 @@ export interface IUser {
   preferredCurrency?: string;
   /** Additional registered numbers; `_id` is the primary login key. */
   phoneNumbers?: string[];
+  /** Guest checkout: guests get a synthetic `_id`; `phone` holds the collected number (normalized) for merge-by-phone. */
+  isGuest?: boolean;
+  phone?: string;
+  email?: string;
   isActive: boolean;
   isDeleted: boolean;
   created: Date;

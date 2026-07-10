@@ -1,15 +1,13 @@
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, TextInput, View } from "react-native";
-import { Button } from "~/components/ui/button";
-import { Text } from "~/components/ui/text";
+import { ScrollView, Text, View } from "react-native";
+import { Button, Card, Input } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import { postRequest } from "~/services/httpClient";
 import { withdrawalCreateAPI } from "~/services/serverAddresses";
-
-const fieldClass =
-  "border border-border rounded-lg px-3 py-2 text-foreground bg-background";
+import { colors, space, type as typo } from "~/theme/moaddi";
 
 export default function WithdrawalRequest() {
   const { t } = useTranslation();
@@ -24,27 +22,16 @@ export default function WithdrawalRequest() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  const isVendor =
-    String(user?.role ?? "")
-      .toLowerCase()
-      .trim() === "vendor";
+  const isVendor = String(user?.role ?? "").toLowerCase().trim() === "vendor";
 
   const submit = async () => {
     setMsg("");
     setErr("");
     const n = parseFloat(String(amount).replace(",", "."));
-    if (!Number.isFinite(n) || n <= 0) {
-      setErr(`${t("amount")}: invalid`);
-      return;
-    }
-    if (!accountHolder.trim() || !iban.trim() || !bankName.trim()) {
-      setErr(t("error"));
-      return;
-    }
-    if (!isVendor) {
-      setErr(t("walletVendorOnly"));
-      return;
-    }
+    if (!Number.isFinite(n) || n <= 0) return setErr(`${t("amount")}: invalid`);
+    if (!accountHolder.trim() || !iban.trim() || !bankName.trim()) return setErr(t("error"));
+    if (!isVendor) return setErr(t("walletVendorOnly"));
+
     setBusy(true);
     try {
       const body = {
@@ -58,10 +45,7 @@ export default function WithdrawalRequest() {
         },
       };
       const res = await postRequest(withdrawalCreateAPI, body);
-      if (res?.error) {
-        setErr(res?.statusText || t("error"));
-        return;
-      }
+      if (res?.error) return setErr(res?.statusText || t("error"));
       setMsg(t("success"));
       setTimeout(() => router.replace("/staff/Wallet"), 800);
     } catch (e) {
@@ -72,56 +56,59 @@ export default function WithdrawalRequest() {
   };
 
   return (
-    <View className="flex-1 px-4 pt-4 gap-4">
-      <Text className="text-sm text-muted-foreground">{t("amount")}</Text>
-      <TextInput
-        className={fieldClass}
-        keyboardType="decimal-pad"
-        value={amount}
-        onChangeText={setAmount}
-        placeholder="0.00"
-        placeholderTextColor="#888"
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DetailHeader
+        title={t("requestWithdrawal")}
+        onBack={() => (router.canGoBack() ? router.back() : router.navigate("/staff/Wallet"))}
       />
 
-      <Text className="text-sm text-muted-foreground">{t("accountHolder")}</Text>
-      <TextInput
-        className={fieldClass}
-        value={accountHolder}
-        onChangeText={setAccountHolder}
-      />
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: space.gutter, gap: 16 }}
+      >
+        <Card raised>
+          <View style={{ gap: 14 }}>
+            <Text style={{ ...typo.title3, color: colors.textHeading }}>
+              {t("requestWithdrawal")}
+            </Text>
+            <Input
+              label={t("amount")}
+              value={amount}
+              onChangeText={setAmount}
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              textAlign="left"
+            />
+            <Input
+              label={t("accountHolder")}
+              value={accountHolder}
+              onChangeText={setAccountHolder}
+            />
+            <Input
+              label={t("iban")}
+              value={iban}
+              onChangeText={setIban}
+              autoCapitalize="characters"
+              placeholder="SA00 0000 0000 0000 0000 0000"
+              textAlign="left"
+            />
+            <Input label={t("bankName")} value={bankName} onChangeText={setBankName} />
+            <Input label={t("swift")} value={swift} onChangeText={setSwift} autoCapitalize="characters" />
 
-      <Text className="text-sm text-muted-foreground">{t("iban")}</Text>
-      <TextInput
-        className={fieldClass}
-        value={iban}
-        onChangeText={setIban}
-        autoCapitalize="characters"
-      />
+            {err ? <Text style={{ ...typo.caption, color: colors.danger }}>{err}</Text> : null}
+            {msg ? <Text style={{ ...typo.caption, color: colors.success }}>{msg}</Text> : null}
 
-      <Text className="text-sm text-muted-foreground">{t("bankName")}</Text>
-      <TextInput
-        className={fieldClass}
-        value={bankName}
-        onChangeText={setBankName}
-      />
-
-      <Text className="text-sm text-muted-foreground">{t("swift")}</Text>
-      <TextInput
-        className={fieldClass}
-        value={swift}
-        onChangeText={setSwift}
-      />
-
-      {err ? <Text className="text-destructive">{err}</Text> : null}
-      {msg ? <Text className="text-green-600">{msg}</Text> : null}
-
-      <Button onPress={submit} disabled={busy}>
-        {busy ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text>{t("submitRequest")}</Text>
-        )}
-      </Button>
+            <Button fullWidth disabled={busy} onPress={submit}>
+              {busy ? t("loading") : t("submitRequest")}
+            </Button>
+            <Text style={{ ...typo.caption, color: colors.textMuted, textAlign: "center" }}>
+              {t("requestsReviewedWithin2Days") || "Requests are reviewed within 2 business days."}
+            </Text>
+          </View>
+        </Card>
+      </ScrollView>
     </View>
   );
 }
