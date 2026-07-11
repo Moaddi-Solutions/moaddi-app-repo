@@ -29,7 +29,9 @@ const SigninAsStaffScreen = () => {
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (user) router.dismissAll();
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/staff");
     });
   }, []);
 
@@ -62,7 +64,8 @@ const SigninAsStaffScreen = () => {
 
       getRequest(userAPI(response._id)).then(async (r) => {
         setUser((prev: any) => ({ ...prev, ...r }));
-        router.dismissAll();
+        if (router.canDismiss()) router.dismissAll();
+        else router.replace("/staff");
       });
     } catch (error) {
       alert("error", error instanceof Error ? error.message : t("loginFailed"));

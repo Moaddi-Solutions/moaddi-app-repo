@@ -29,7 +29,9 @@ const SigninScreen = () => {
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (user) router.dismissAll();
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/(tabs)");
     });
   }, []);
 
@@ -58,7 +60,9 @@ const SigninScreen = () => {
 
       getRequest(userAPI(response._id)).then(async (r) => {
         setUser((prev: any) => ({ ...prev, ...r }));
-        router.dismissAll();
+        // Sign-in is often opened via `replace` (e.g. from Profile) — no stack to dismiss.
+        if (router.canDismiss()) router.dismissAll();
+        else router.replace("/(tabs)");
       });
     } catch (error) {
       alert("error", error instanceof Error ? error.message : t("loginFailed"));

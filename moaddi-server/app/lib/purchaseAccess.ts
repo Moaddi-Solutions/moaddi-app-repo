@@ -85,6 +85,20 @@ export const vendorOwnsAllMachines = async (
 };
 
 /**
+ * Gift-a-purchase: the buyer OR anyone recorded in `gift.authorizedOpeners`
+ * (recipients who claimed the share link) may open the box. Used by the socket
+ * control handlers in `events.js`.
+ */
+export const isAuthorizedOpener = (
+  purchase: Pick<IPurchase, 'customerId' | 'gift'>,
+  userId: string
+): boolean => {
+  if (sameCustomerId(purchase.customerId, userId)) return true;
+  const openers = purchase.gift?.authorizedOpeners ?? [];
+  return openers.some((id) => sameCustomerId(id, userId));
+};
+
+/**
  * For GET/PUT/DELETE/invoice: Admin, the owning customer, or Vendor owning all involved machines.
  */
 export const canViewOrMutatePurchase = async (
@@ -99,6 +113,20 @@ export const canViewOrMutatePurchase = async (
     return vendorOwnsAllMachines(purchase, u._id, machinesRepo);
   }
   return false;
+};
+
+/**
+ * For read-only GET routes: everyone allowed by `canViewOrMutatePurchase`, PLUS
+ * gift recipients who claimed the share link. Mutate/delete keep the stricter
+ * `canViewOrMutatePurchase` — a recipient never deletes the buyer's purchase.
+ */
+export const canViewPurchase = async (
+  purchase: IPurchase,
+  u: AuthUser,
+  machinesRepo: MachinesRepoForAccess
+): Promise<boolean> => {
+  if (isAuthorizedOpener(purchase, u._id)) return true;
+  return canViewOrMutatePurchase(purchase, u, machinesRepo);
 };
 
 /**

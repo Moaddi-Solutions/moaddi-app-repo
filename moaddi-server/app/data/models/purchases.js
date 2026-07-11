@@ -11,6 +11,20 @@ const Items = [
   },
 ];
 
+/**
+ * Gift-a-purchase: the buyer can share a bearer claim link so another user (or
+ * the buyer) can open the box. `authorizedOpeners` holds the ids allowed to
+ * open besides `customerId`. See docs/superpowers/specs/2026-07-11-gift-a-purchase-design.md.
+ */
+const Gift = {
+  isGift: { type: Boolean, default: false },
+  claimToken: { type: String, default: null },
+  sharedAt: { type: Date, required: false },
+  expiresAt: { type: Date, required: false },
+  authorizedOpeners: { type: [String], default: [] },
+  claimedAt: { type: Date, required: false },
+};
+
 const PurchasesSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
@@ -35,6 +49,7 @@ const PurchasesSchema = new mongoose.Schema(
     /** Set after a successful /purchases/stripeIsPaymentDone (Socket/telegram fan-out) */
     stripeNotified: { type: Boolean, required: false },
     moyasarNotified: { type: Boolean, required: false },
+    gift: { type: Gift, required: false },
     created: {
       type: Date,
       default: () =>
@@ -51,5 +66,8 @@ const PurchasesSchema = new mongoose.Schema(
     toJSON: { virtuals: true },
   }
 );
+
+// Fast lookup when a recipient opens a gift claim link.
+PurchasesSchema.index({ "gift.claimToken": 1 }, { sparse: true });
 
 module.exports = mongoose.model("purchases", PurchasesSchema);

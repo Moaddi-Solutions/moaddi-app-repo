@@ -26,7 +26,9 @@ const SignupScreen = () => {
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (user) router.dismissAll();
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/(tabs)");
     });
   }, []);
 

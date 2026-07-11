@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { Bell, Globe, Info, Moon, Shield, Trash2 } from "lucide-react-native";
+import { Bell, Globe, Info, Moon, Shield, UserX } from "lucide-react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, ScrollView, TextInput, View } from "react-native";
@@ -23,8 +23,8 @@ import i18n from "~/lib/i18n";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { removeItem, setItem } from "~/lib/utils";
-import { deleteRequest } from "~/services/httpClient";
-import { userAPI } from "~/services/serverAddresses";
+import { putRequest } from "~/services/httpClient";
+import { userToggleAPI } from "~/services/serverAddresses";
 import { colors, space } from "~/theme/moaddi";
 
 const SettingsScreen = () => {
@@ -36,7 +36,7 @@ const SettingsScreen = () => {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [deletable, setDeletable] = useState(false);
+  const [confirmable, setConfirmable] = useState(false);
 
   const handleColorChange = (value: boolean) => {
     const newTheme = value ? "dark" : "light";
@@ -45,9 +45,9 @@ const SettingsScreen = () => {
     setItem("theme", newTheme);
   };
 
-  const deleteAccount = () => {
+  const deactivateAccount = () => {
     // @ts-ignore
-    deleteRequest(userAPI(user._id)).then(async (response) => {
+    putRequest(userToggleAPI(user._id)).then(async (response) => {
       if (response) {
         // @ts-ignore
         await clearUser();
@@ -116,9 +116,9 @@ const SettingsScreen = () => {
         {user ? (
           <Card padded={false} style={{ paddingHorizontal: 12 }}>
             <ListItem
-              icon={<Trash2 size={18} color={listItemIconColor(true)} />}
-              title={t("deleteAccount")}
-              subtitle={t("thisActionCannotBeUndone")}
+              icon={<UserX size={18} color={listItemIconColor(true)} />}
+              title={t("deactivateAccount")}
+              subtitle={t("deactivateAccountHint")}
               destructive
               chevron={false}
               onPress={() => setAlertOpen(true)}
@@ -130,11 +130,11 @@ const SettingsScreen = () => {
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("areYouSureToDeleteAccount")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("typeDelete")}</AlertDialogDescription>
+            <AlertDialogTitle>{t("areYouSureToDeactivateAccount")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("typeDeactivate")}</AlertDialogDescription>
             <TextInput
               className="rounded-lg bg-muted text-foreground px-4 py-3 text-sm"
-              onChangeText={(value) => setDeletable(value === "Delete")}
+              onChangeText={(value) => setConfirmable(value === "Deactivate")}
             />
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -142,11 +142,11 @@ const SettingsScreen = () => {
               <Text>{t("cancel")}</Text>
             </AlertDialogCancel>
             <AlertDialogAction
-              onPress={deleteAccount}
-              variant={deletable ? "destructive" : "secondary"}
-              disabled={!deletable}
+              onPress={deactivateAccount}
+              variant={confirmable ? "destructive" : "secondary"}
+              disabled={!confirmable}
             >
-              <Text>{t("delete")}</Text>
+              <Text>{t("deactivate")}</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

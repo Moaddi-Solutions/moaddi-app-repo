@@ -10,6 +10,7 @@ const requireRole = require('../middlewares/requireRole') as (
 ) => import('express').RequestHandler;
 const {
   canViewOrMutatePurchase,
+  canViewPurchase,
   isStaffAdminRole,
 } = require('../../lib/purchaseAccess') as typeof import('../../lib/purchaseAccess');
 const {
@@ -114,7 +115,7 @@ const controller = (): import('express').Router => {
       const purchase = expand
         ? ((await purchasesRepo.getByIdExpanded(pathParam(req.params.purchaseId))) as IPurchase)
         : await purchasesRepo.getById(pathParam(req.params.purchaseId));
-      if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo))) {
+      if (!(await canViewPurchase(purchase, req.authenticatedUser!, machinesRepo))) {
         return res.status(403).json({ message: 'Forbidden.' });
       }
       return res.status(200).json(purchase);
