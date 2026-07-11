@@ -7,7 +7,9 @@ import { Button } from "@/../components/ui/button";
 import { Card } from "@/../components/ui/card";
 import { Container } from "@/../components/ui/container";
 import { boxSerialDecoder, compressBoxData } from "@/../services/functions";
+import { enableGift } from "@/../services/gift";
 import { baseUrl } from "@/../services/serverAddresses";
+import { Gift } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -47,11 +49,12 @@ const cabinBoxFrom = (box) => {
   return null;
 };
 
-const BoxGrid = ({ boxes, status, _id, machineId, machine }) => {
+const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
   const t = useTranslations("BoxGrid");
   const { user, setUser } = useCart();
   const { machineEvents, publishData } = useSocket();
   const [done, setDone] = useState(false);
+  const [sharing, setSharing] = useState(false);
   useEffect(() => {
     setUser((prev) => ({
       ...(prev ?? {}),
@@ -112,6 +115,47 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine }) => {
     });
   };
 
+  // Only the buyer (not a gift recipient) may enable sharing — the server's
+  // POST /purchases/:id/gift is owner/admin-only, so gate the button on identity
+  // to avoid a guaranteed 403. Recipients arrive here without a matching
+  // customerId, so the action stays hidden for them.
+  const isOwner =
+    user?._id != null &&
+    customerId != null &&
+    String(user._id).toLowerCase() === String(customerId).toLowerCase();
+  const liveBoxes = user?.purchase?.boxes ?? boxes ?? [];
+  const canGift =
+    isOwner &&
+    ["PaymentDone", "Processing"].includes(status) &&
+    liveBoxes.some(({ boxStatus }) => !boxStatus);
+
+  const shareGift = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const { claimToken } = await enableGift(_id);
+      const url = `${window.location.origin}/gift/${claimToken}`;
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share({
+            title: t("giftLinkShareTitle"),
+            text: t("giftLinkShareText"),
+            url,
+          });
+        } catch {
+          /* user dismissed the native share sheet — no-op */
+        }
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success(t("giftLinkCopied"));
+      }
+    } catch (e) {
+      toast.error(e?.message || t("giftLinkError"));
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const opened = user?.purchase?.boxes.filter(
     ({ boxStatus }) => boxStatus,
   ).length;
@@ -137,7 +181,20 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine }) => {
     </Container>
   ) : (
     <Container>
-      <BlockHeader title={user?.purchase?.machine?.name} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BlockHeader title={user?.purchase?.machine?.name} />
+        {canGift && (
+          <Button
+            variant="outline"
+            onClick={shareGift}
+            disabled={sharing}
+            className="font-bold"
+          >
+            <Gift data-icon="inline-start" aria-hidden="true" />
+            {sharing ? t("creatingGiftLink") : t("letSomeoneOpen")}
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 pt-2 pb-10">
         {(user?.purchase?.boxes ?? []).map((box) => (
           <Card

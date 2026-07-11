@@ -129,7 +129,25 @@
     "openedCount": "Opened",
     "remaining": "Remaining",
     "missingPurchaseContext": "Could not open the box: purchase data is missing. Refresh the page and try again.",
-    "invalidBoxSlot": "Could not determine which slot to open. Refresh the page or contact support."
+    "invalidBoxSlot": "Could not determine which slot to open. Refresh the page or contact support.",
+    "letSomeoneOpen": "Let someone else open it",
+    "creatingGiftLink": "Creating link…",
+    "giftLinkShareTitle": "A gift for you",
+    "giftLinkShareText": "I sent you something — claim it and open the box.",
+    "giftLinkCopied": "Gift link copied — share it with the recipient.",
+    "giftLinkError": "Could not create the gift link. Please try again."
+  },
+  "Gift": {
+    "title": "A gift for you",
+    "receivedHeading": "Someone sent you a gift!",
+    "receivedSubtitle": "Claim it, then open the box at the machine to grab your item.",
+    "notReady": "Not ready yet",
+    "items": "items",
+    "claimAndOpen": "Claim & open",
+    "claiming": "Claiming…",
+    "backToHome": "Back to Home",
+    "unavailable": "This gift link is no longer available.",
+    "claimError": "Could not claim this gift."
   },
   "PurchaseNotice": {
     "dismiss": "Remind me later",

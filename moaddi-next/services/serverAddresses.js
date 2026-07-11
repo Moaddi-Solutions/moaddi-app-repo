@@ -108,6 +108,14 @@ export const unassignBoxAPI = (id) =>
   `${address()}boxes/machine/${enc(id)}/unassign`;
 export const productsAPI = (id) => `${address()}products/${enc(id)}`;
 
+// Gift-a-purchase (see moaddi-server/app/routes/controllers/gifts.ts).
+export const giftEnableAPI = (purchaseId) =>
+  `${address()}purchases/${enc(purchaseId)}/gift`;
+export const giftPreviewAPI = (claimToken) =>
+  `${address()}gifts/${enc(claimToken)}`;
+export const giftClaimAPI = (claimToken) =>
+  `${address()}gifts/${enc(claimToken)}/claim`;
+
 export function paymentProvidersAPI() {
   return `${address()}paymentProviders`;
 }

@@ -129,7 +129,25 @@
     "openedCount": "تم فتحه",
     "remaining": "المتبقي",
     "missingPurchaseContext": "تعذر فتح الصندوق: بيانات الشراء غير متوفرة. حدّث الصفحة وحاول مرة أخرى.",
-    "invalidBoxSlot": "تعذر تحديد الخانة المراد فتحها. حدّث الصفحة أو تواصل مع الدعم."
+    "invalidBoxSlot": "تعذر تحديد الخانة المراد فتحها. حدّث الصفحة أو تواصل مع الدعم.",
+    "letSomeoneOpen": "دع شخصًا آخر يفتحه",
+    "creatingGiftLink": "جارٍ إنشاء الرابط…",
+    "giftLinkShareTitle": "هدية لك",
+    "giftLinkShareText": "أرسلت لك شيئًا — استلمه وافتح الصندوق.",
+    "giftLinkCopied": "تم نسخ رابط الهدية — شاركه مع المستلم.",
+    "giftLinkError": "تعذر إنشاء رابط الهدية. حاول مرة أخرى."
+  },
+  "Gift": {
+    "title": "هدية لك",
+    "receivedHeading": "أرسل لك أحدهم هدية!",
+    "receivedSubtitle": "استلمها، ثم افتح الصندوق عند الماكينة لأخذ منتجك.",
+    "notReady": "غير جاهزة بعد",
+    "items": "منتجات",
+    "claimAndOpen": "استلم وافتح",
+    "claiming": "جارٍ الاستلام…",
+    "backToHome": "العودة إلى الرئيسية",
+    "unavailable": "لم يعد رابط الهدية هذا متاحًا.",
+    "claimError": "تعذر استلام هذه الهدية."
   },
   "PurchaseNotice": {
     "dismiss": "ذكّرني لاحقًا",

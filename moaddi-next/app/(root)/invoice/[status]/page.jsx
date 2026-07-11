@@ -352,6 +352,7 @@ const page = async ({ params, searchParams }) => {
         machine={purchase.machine}
         boxes={purchase.boxes}
         status={purchase.status}
+        customerId={purchase.customerId}
       />
     );
   }
