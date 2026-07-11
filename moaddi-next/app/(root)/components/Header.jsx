@@ -3,10 +3,16 @@
 import StrapiImage from "@/(root)/components/StrapiImage";
 import { useCart } from "@/(root)/context/cart-provider";
 import { themeContext } from "@/(root)/context/Theme";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/../components/ui/dropdown-menu";
 import rtlRules from "@/../i18n/rtl";
 import { cn } from "@/../lib/utils";
 import { useTheme } from "@/../lib/use-theme";
-import { Menu, Moon, ScanQrCode, Sun, UserRound } from "lucide-react";
+import { Languages, Menu, Moon, ScanQrCode, Sun, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,9 +32,33 @@ const FALLBACK_NAV_ITEMS = {
     { title: "المتاجر", href: "/shops" },
     { title: "الماكينات", href: "/machines" },
   ],
+  zh: [
+    { title: "首页", href: "/" },
+    { title: "产品", href: "/products" },
+    { title: "商店", href: "/shops" },
+    { title: "机器", href: "/machines" },
+  ],
+  it: [
+    { title: "Home", href: "/" },
+    { title: "Prodotti", href: "/products" },
+    { title: "Negozi", href: "/shops" },
+    { title: "Macchine", href: "/machines" },
+  ],
 };
 
-const tagline = { en: "Vending Machine", ar: "بيع ذاتي ذكي" };
+const tagline = {
+  en: "Vending Machine",
+  ar: "بيع ذاتي ذكي",
+  zh: "自动售货机",
+  it: "Distributore automatico",
+};
+
+const LOCALES = [
+  { code: "en", label: "English" },
+  { code: "ar", label: "عربي" },
+  { code: "zh", label: "中文" },
+  { code: "it", label: "Italiano" },
+];
 
 export default function Header({ items = [], logo }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -146,24 +176,31 @@ function ThemeToggle() {
 function LocaleToggle() {
   const { setLocale } = useContext(themeContext);
   const locale = useLocale();
-  const nextLocale = locale === "ar" ? "en" : "ar";
-  const dir = rtlRules[locale];
+  const current = LOCALES.find((l) => l.code === locale) ?? LOCALES[0];
 
   return (
-    <button
-      className="moaddi-lang"
-      type="button"
-      aria-label={
-        nextLocale === "ar"
-          ? "Switch language to Arabic"
-          : "Switch language to English"
-      }
-      lang={nextLocale}
-      dir={dir ? "ltr" : "rtl"}
-      onClick={() => setLocale(nextLocale)}
-    >
-      {nextLocale === "ar" ? "عربي" : "English"}
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="moaddi-lang"
+        aria-label="Change language"
+      >
+        <Languages aria-hidden="true" className="size-4" />
+        <span>{current.label}</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {LOCALES.map(({ code, label }) => (
+          <DropdownMenuItem
+            key={code}
+            lang={code}
+            dir={rtlRules[code] ? "rtl" : "ltr"}
+            data-active={code === locale}
+            onClick={() => setLocale(code)}
+          >
+            {label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

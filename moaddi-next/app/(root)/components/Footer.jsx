@@ -47,6 +47,42 @@ const FOOTER_FALLBACK = {
       { title: "المدفوعات مؤمنة بواسطة ميسر · مودي للبيع الذاتي" },
     ],
   },
+  zh: {
+    title: "Moaddi",
+    body: "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    links: [
+      { category: "商店", title: "产品", url: "/products" },
+      { category: "商店", title: "机器", url: "/machines" },
+      { category: "法律", title: "隐私政策", url: "/privacy-policy" },
+      {
+        category: "法律",
+        title: "条款和条件",
+        url: "/terms-and-conditions",
+      },
+    ],
+    bottomLinks: [
+      { title: "© 2026 Moaddi。保留所有权利。" },
+      { title: "支付由 Moyasar 提供安全保障 · مودي للبيع الذاتي" },
+    ],
+  },
+  it: {
+    title: "Moaddi",
+    body: "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    links: [
+      { category: "Negozio", title: "Prodotti", url: "/products" },
+      { category: "Negozio", title: "Macchine", url: "/machines" },
+      { category: "Legale", title: "Informativa sulla privacy", url: "/privacy-policy" },
+      {
+        category: "Legale",
+        title: "Termini e condizioni",
+        url: "/terms-and-conditions",
+      },
+    ],
+    bottomLinks: [
+      { title: "© 2026 Moaddi. Tutti i diritti riservati." },
+      { title: "Pagamenti protetti da Moyasar · مودي للبيع الذاتي" },
+    ],
+  },
 };
 
 // A footer link row is valid only when it has BOTH a title and a url.

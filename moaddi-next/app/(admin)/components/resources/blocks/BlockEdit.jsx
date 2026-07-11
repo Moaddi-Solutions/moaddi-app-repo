@@ -21,25 +21,22 @@ export const BlockEditItems = {
       label="Title"
       helperText="Use | to split: text before is plain, text after is emphasized"
     />,
-    <TextInput
-      key="button.title"
-      source="button.title"
-      label="Button text"
-    />,
+    <TextInput key="button.title" source="button.title" label="Button text" />,
     <TextInput
       key="button.page.url"
       source="button.page.url"
       label="Button link"
     />,
-    <TextInput
-      key="appStoreUrl"
-      source="appStoreUrl"
-      label="App Store link"
-    />,
+    <TextInput key="appStoreUrl" source="appStoreUrl" label="App Store link" />,
     <TextInput
       key="googlePlayUrl"
       source="googlePlayUrl"
       label="Google Play link"
+    />,
+    <TextInput
+      key="appGalleryUrl"
+      source="appGalleryUrl"
+      label="AppGallery link"
     />,
     <ArrayInput key="stats" source="stats" className="sm:col-span-2">
       <SimpleFormIterator disableReordering>

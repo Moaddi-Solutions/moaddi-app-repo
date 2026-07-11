@@ -202,6 +202,12 @@
     "noMachines": "لا توجد آلات",
     "noProducts": "لا توجد منتجات"
   },
+  "ProductCard": {
+    "inStock": "متوفر",
+    "lowStock": "كمية محدودة",
+    "outOfStock": "غير متوفر",
+    "showMachines": "عرض الآلات التي تحتوي على {name}"
+  },
   "MachinesPage": {
     "title": "الآلات المتوفرة",
     "subtitleCount": "{count, plural, =0 {لا توجد آلة تحتوي على هذا المنتج حاليًا} one {آلة واحدة تحتوي على هذا المنتج} other {# آلة تحتوي على هذا المنتج}}",
@@ -272,6 +278,5 @@
       "completed": "مكتمل",
       "paymentDone": "تم الدفع"
     }
-  },
-  "small change to hit the redeploy on vercel": ""
+  }
 }

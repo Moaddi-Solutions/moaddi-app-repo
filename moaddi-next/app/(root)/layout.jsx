@@ -28,14 +28,18 @@ const cairo = Cairo({
 
 export async function generateMetadata() {
   const locale = await getLocale();
-  const { name: title, description } = await client(`${locale}Site`);
+  const { name: title, description } = await client(`${locale}Site`).then(
+    (data) => (Array.isArray(data) ? {} : data),
+  );
   const {
-    shareImage: { src: shareImageUrl },
+    shareImage: { src: shareImageUrl } = {},
     metaTitle,
     metaDescription,
-  } = await client(`${locale}Seo`);
+  } = await client(`${locale}Seo`).then((data) =>
+    Array.isArray(data) ? {} : data,
+  );
   const {
-    favicon: { src: faviconUrl },
+    favicon: { src: faviconUrl } = {},
   } = await client("site");
 
   return {
@@ -71,6 +75,8 @@ export async function generateMetadata() {
       languages: {
         "en-US": "/en",
         "ar-SA": "/ar",
+        "zh-CN": "/zh",
+        "it-IT": "/it",
       },
     },
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL),
@@ -80,10 +86,11 @@ export async function generateMetadata() {
 export default async function RootLayout({ children }) {
   const messages = await getMessages();
   const locale = await getLocale();
-  const headerLinks = await client(`${locale}HeaderLinks`);
+  const headerLinksRaw = await client(`${locale}HeaderLinks`);
+  const headerLinks = Array.isArray(headerLinksRaw) ? headerLinksRaw : [];
   const { body, title, links, bottomLinks } = await client(
     `${locale}FooterBody`,
-  );
+  ).then((data) => (Array.isArray(data) ? {} : data));
   const {
     logo: { src: logoUrl },
     socialMedia,

@@ -202,6 +202,12 @@
     "noMachines": "No machines",
     "noProducts": "No products"
   },
+  "ProductCard": {
+    "inStock": "In stock",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock",
+    "showMachines": "Show machines with {name}"
+  },
   "MachinesPage": {
     "title": "Available machines",
     "subtitleCount": "{count, plural, =0 {No machines currently stock this product} one {# machine has this product} other {# machines have this product}}",

@@ -115,6 +115,9 @@
 }
 
 .moaddi-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--site-header-line);
   border-radius: 999px;
   background: var(--site-header-surface);
@@ -404,8 +407,20 @@
 
 .moaddi-store-badge {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  background: #000;
   border-radius: 10px;
   transition: transform 0.15s ease;
+}
+
+.moaddi-store-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.18fr);
+  align-items: center;
+  width: min(100%, 430px);
+  gap: 10px;
 }
 
 .moaddi-store-badge:hover {
@@ -416,6 +431,11 @@
   display: block;
   width: auto;
   height: 48px;
+}
+
+.moaddi-store-row .moaddi-store-badge svg {
+  width: 100%;
+  height: auto;
 }
 
 .moaddi-hero-stats {
@@ -602,7 +622,11 @@
   border: none;
   padding: 0;
   background:
-    radial-gradient(circle at 50% 38%, var(--scan-accent-soft), transparent 62%),
+    radial-gradient(
+      circle at 50% 38%,
+      var(--scan-accent-soft),
+      transparent 62%
+    ),
     linear-gradient(180deg, var(--scan-bg-top), var(--scan-bg-bottom));
   display: grid;
   place-items: center;
