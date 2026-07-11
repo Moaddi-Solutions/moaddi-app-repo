@@ -1,15 +1,18 @@
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { Check, PackageOpen } from "lucide-react-native";
+import { Check, Gift, PackageOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Share, Text, View } from "react-native";
 import { routes } from "~/app/CheckoutMoyasar";
 import { Badge, Button, Card, Progress } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
+import alert from "~/lib/alert";
 import { compressBoxData } from "~/services/functions";
+import { enableGift } from "~/services/gift";
 import { productImageUrl } from "~/services/serverAddresses";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
@@ -28,6 +31,7 @@ const boxUpdateHandler = (boxes, machineEvents) => {
 const BoxGrid = () => {
   const { user, setUser } = useUser();
   const [done, setDone] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
   const finalEffect = useRef(false);
@@ -84,6 +88,27 @@ const BoxGrid = () => {
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
     });
 
+  // Enable a shareable claim link and open the native share sheet so someone
+  // else (or the buyer on another device) can open this box.
+  const shareGift = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const { claimToken, claimUrl } = await enableGift(user.purchase._id);
+      const link = claimUrl || Linking.createURL("gift/" + claimToken);
+      // Gift share: send ONLY the claim URL — no message/description text.
+      // `message` carries the link on Android; `url` carries it on iOS.
+      await Share.share({
+        message: link,
+        url: link,
+      });
+    } catch (e) {
+      alert("error", e?.message || t("giftShareError") || "Could not create the gift link.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const opened = item.filter(({ boxStatus }) => boxStatus).length;
   const total = item.length;
   const allDone = done || (total > 0 && opened === total);
@@ -91,11 +116,8 @@ const BoxGrid = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
-      <DetailHeader
-        title={t("boxList") || "Box list"}
-        subtitle={user?.purchase?.machine?.name}
-        onBack={() => router.replace("/")}
-      />
+   
+   
 
       <ScrollView
         style={{ flex: 1 }}
@@ -139,6 +161,21 @@ const BoxGrid = () => {
             ) : null}
           </View>
         </Card>
+
+        {/* Let someone else open the box */}
+        {!allDone ? (
+          <Button
+            fullWidth
+            variant="secondary"
+            disabled={sharing}
+            icon={<Gift size={18} color={palette.teal[600]} />}
+            onPress={shareGift}
+          >
+            {sharing
+              ? t("preparing") || "Preparing…"
+              : t("shareGift") || "Let someone else open it"}
+          </Button>
+        ) : null}
 
         {/* Boxes */}
         <View style={{ gap: space.card }}>

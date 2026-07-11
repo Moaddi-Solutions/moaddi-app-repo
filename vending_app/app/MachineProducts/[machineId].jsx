@@ -302,36 +302,40 @@ export default function MachineProducts() {
     }
     
     setIsPurchasing(true);
-    console.log(" [PURCHASE FLOW] Building items array from cart...");
-    
-    const items = [];
-    Object.entries(total).forEach(([id, number]) => {
-      const product = machine.products.find(({ _id }) => _id == id);
-      if (!product) {
-        console.warn(`⚠️  [PURCHASE FLOW] Product ${id} not found in machine`);
-        return;
-      }
-      
-      console.log(`   Product: ${product.productName}, Quantity: ${number}`);
-      
-      for (let i = 0; i < number; i++)
-        items.push({
-          productId: id,
-          boxId: product.boxes[i]._id,
-          boxStatus: false,
-        });
-    });
-    
-    console.log(" [PURCHASE FLOW] Items array built, count:", items.length);
-    console.log(" [PURCHASE FLOW] Sending purchase request with data:", {
-      customerId: user._id,
-      machine: machine._id,
-      machineId: machine._id,
-      price: totalPrice,
-      items,
-    });
 
     try {
+      console.log(" [PURCHASE FLOW] Building items array from cart...");
+
+      const items = [];
+      Object.entries(total).forEach(([id, number]) => {
+        const product = machine.products.find(({ _id }) => _id == id);
+        if (!product) {
+          console.warn(`⚠️  [PURCHASE FLOW] Product ${id} not found in machine`);
+          return;
+        }
+
+        console.log(`   Product: ${product.name}, Quantity: ${number}`);
+
+        for (let i = 0; i < number; i++)
+          items.push({
+            productId: id,
+            boxId: product.boxes[i]._id,
+            boxStatus: false,
+          });
+      });
+
+      console.log(" [PURCHASE FLOW] Items array built, count:", items.length);
+      // Use activeUser (not context user): after guest checkout, `user` is still
+      // stale until the next render — reading user._id threw and left
+      // isPurchasing stuck true (button shows Arabic "تحميل" forever).
+      console.log(" [PURCHASE FLOW] Sending purchase request with data:", {
+        customerId: activeUser._id,
+        machine: machine._id,
+        machineId: machine._id,
+        price: totalPrice,
+        items,
+      });
+
       console.log("[PURCHASE FLOW] Awaiting backend  request to:", purchasesAPI);
       console.log("Timeout: 30 seconds");
       
@@ -380,7 +384,6 @@ export default function MachineProducts() {
         }
         
         setUser((prev) => ({ ...prev, ...(response?.data ?? response), purchase: { ...syncedPurchase, boxes } }));
-        setIsPurchasing(false);
         console.log(" [PURCHASE FLOW] Navigating to checkout...");
         if (machine.paymentProvider == "moyasar") {
           return router.navigate({
@@ -401,8 +404,7 @@ export default function MachineProducts() {
       }
       
       setUser((prev) => ({ ...prev, purchase: { ...purchase, boxes } }));
-      console.log("[PURCHASE FLOW] User context updated with purchase",user);
-      setIsPurchasing(false);
+      console.log("[PURCHASE FLOW] User context updated with purchase", activeUser);
       console.log(" [PURCHASE FLOW] Navigating to checkout...");
       if (machine.paymentProvider == "moyasar") {
         return router.navigate({
@@ -424,8 +426,9 @@ export default function MachineProducts() {
         name: err?.name,
         ...err
       });
-      setIsPurchasing(false);
       alert("error", "Purchase Failed", err?.message ?? "An error occurred while creating purchase");
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
