@@ -10,5 +10,5 @@ const COOKIE_NAME = "NEXT_LOCALE";
 // }
 
 export async function setUserLocale(locale) {
-  (await cookies()).set(COOKIE_NAME, locale);
+  (await cookies()).set(COOKIE_NAME, locale, { path: "/" });
 }

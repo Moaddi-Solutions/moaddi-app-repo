@@ -6,8 +6,7 @@ import {
   isAppleConfigured,
   isGoogleConfigured,
 } from "@/../config/socialAuth";
-import { normalizeDashboardRole } from "@/../lib/dashboard-role";
-import { setLocalStorageItem } from "@/../lib/utils";
+import { persistShopperSession } from "@/../lib/shopper-session";
 import { getRequest } from "@/../services/events";
 import { userAPI } from "@/../services/serverAddresses";
 import {
@@ -16,9 +15,6 @@ import {
   signInWithApple,
   type SocialLoginResult,
 } from "@/../services/socialAuth";
-import axios from "axios";
-import Cookies from "js-cookie";
-import moment from "moment";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -54,23 +50,13 @@ export function SocialAuthButtons() {
   /** Persist the signin-shaped payload, hydrate the profile, then navigate. */
   const persistAndGo = useCallback(
     async (res: SocialLoginResult) => {
-      // Store `expiresIn` as an absolute timestamp so it doubles as the cookie
-      // expiry — same session shape the phone login writes.
-      const expiryDays = (res.expiresIn || 0) / 60 / 60 / 24 || 30;
-      const expiresAt = moment().add(expiryDays, "days").toDate();
-      const session = {
-        ...res,
-        role: normalizeDashboardRole(res.role) || "Customer",
-        expiresIn: expiresAt.getTime(),
-      };
-
-      Cookies.set("user", JSON.stringify(session), { expires: expiresAt });
-      setLocalStorageItem("user", JSON.stringify(session));
-      axios.defaults.headers.common.Authorization = `Bearer ${res.token}`;
+      // Social users are always Customers — same session shape phone
+      // sign-in and guest creation write, via the shared helper.
+      const session = persistShopperSession(res, { defaultRole: "Customer" });
 
       toast.success(t("Auth.youHaveSuccessfullyLoggedIn"));
 
-      // Social users are always Customers; hydrate the full profile if we can.
+      // Hydrate the full profile if we can.
       try {
         const profile = await getRequest(userAPI(res._id));
         setUser(profile);

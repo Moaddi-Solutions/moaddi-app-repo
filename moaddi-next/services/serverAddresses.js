@@ -27,6 +27,12 @@ export function otpAddress() {
 export function socialSignInAddress() {
   return `${address()}users/social`;
 }
+export function guestSignInAddress() {
+  return `${address()}users/guest`;
+}
+export function guestMeAddress() {
+  return `${address()}users/guest/me`;
+}
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }

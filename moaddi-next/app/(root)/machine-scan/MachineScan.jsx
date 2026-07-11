@@ -100,7 +100,7 @@ const MachineScan = () => {
       if (!response.isActive) return toast.error(t("machineIsNotActive"));
     }
     toast.success(t("machineDetected"));
-    setUser((prev) => ({ ...prev, machines: [response] }));
+    setUser((prev) => (prev ? { ...prev, machines: [response] } : prev));
     setMachine(response);
     const code = response.qrCode ?? data;
     router.push(

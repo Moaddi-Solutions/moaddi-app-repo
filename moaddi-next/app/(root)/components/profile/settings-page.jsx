@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Cookies from "js-cookie";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import PurchaseHistory from "./purchase-history";
@@ -37,6 +37,7 @@ export default function SettingsPage({ preferredCurrency }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const currency = preferredCurrency ?? user?.preferredCurrency ?? "SAR";
   const locale = useLocale();
+  const t = useTranslations("Profile");
   const BackChevron = rtlRules[locale] ? ChevronRight : ChevronLeft;
 
   const openDetail = (tab) => {
@@ -58,14 +59,14 @@ export default function SettingsPage({ preferredCurrency }) {
       <main className="mx-auto flex min-h-[55vh] max-w-3xl items-center px-4 py-16">
         <Card className="w-full border-border/80 bg-card">
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
+            <CardTitle>{t("title")}</CardTitle>
             <CardDescription>
-              Sign in to view your Moaddi account and orders.
+              {t("signedOutDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
-              <Link href="/signin">Sign In</Link>
+              <Link href="/signin">{t("signIn")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -91,7 +92,7 @@ export default function SettingsPage({ preferredCurrency }) {
             onClick={() => openDetail("overview")}
           >
             <BackChevron className="size-4" aria-hidden="true" />
-            Back to profile
+            {t("backToProfile")}
           </Button>
           {activeTab === "profile" ? (
             <UserProfileSettings />
@@ -105,6 +106,7 @@ export default function SettingsPage({ preferredCurrency }) {
 }
 
 function ProfileOverview({ user, onOpenDetail, onSignOut }) {
+  const t = useTranslations("Profile");
   const { isPending, data = [], total = 0 } = useGetManyReference("purchases", {
     id: user._id,
     target: "customerId",
@@ -120,7 +122,7 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-black leading-tight text-pretty sm:text-4xl">
-          Profile
+          {t("title")}
         </h1>
       </div>
 
@@ -133,7 +135,7 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
               </AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-col gap-1">
-              <h2 className="truncate text-lg font-black">{displayName(user)}</h2>
+              <h2 className="truncate text-lg font-black">{displayName(user, t)}</h2>
               <p className="truncate text-xs font-bold text-white/85" dir="ltr">
                 {user._id}
                 {location ? ` - ${location}` : ""}
@@ -146,7 +148,7 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
               onClick={() => onOpenDetail("profile")}
             >
               <Pencil data-icon="inline-start" aria-hidden="true" />
-              Edit Profile
+              {t("editProfile")}
             </Button>
           </CardContent>
         </Card>
@@ -155,19 +157,19 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
           <Card className="overflow-hidden rounded-xl border-border/80 bg-card" size="sm">
             <CardHeader className="pb-0">
               <CardDescription className="font-black uppercase tracking-[0.16em] text-primary-text">
-                Orders
+                {t("orders")}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <ProfileRow
                 icon={Clock3}
-                title="Last Order"
+                title={t("lastOrder")}
                 detail={
                   lastOrder
-                    ? `${shortOrderId(lastOrder)} - ${formatStatus(lastOrder.status)}`
+                    ? `${shortOrderId(lastOrder, t)} - ${formatStatus(lastOrder.status, t)}`
                   : isPending
-                      ? "Loading..."
-                      : "No orders yet"
+                      ? t("loading")
+                      : t("noOrdersYet")
                 }
                 showChevron={false}
                 href={
@@ -180,18 +182,18 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
               />
               <ProfileRow
                 icon={ReceiptText}
-                title="Order History"
+                title={t("orderHistory")}
                 detail={
                   isPending
-                    ? "Loading..."
-                    : `${orderCount} ${orderCount === 1 ? "order" : "orders"}`
+                    ? t("loading")
+                    : t("ordersCount", { count: orderCount })
                 }
                 onClick={() => onOpenDetail("purchases")}
               />
               <ProfileRow
                 icon={CircleHelp}
-                title="Help & Support"
-                detail="Order and machine support"
+                title={t("helpSupport")}
+                detail={t("helpSupportDetail")}
                 href="/contact"
               />
             </CardContent>
@@ -207,7 +209,7 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
                   <LogOut aria-hidden="true" />
                 </span>
-                Sign Out
+                {t("signOut")}
               </button>
             </CardContent>
           </Card>
@@ -281,8 +283,8 @@ function normalizeTab(tab) {
   return tab === "profile" || tab === "purchases" ? tab : "overview";
 }
 
-function displayName(user) {
-  return user?.name?.trim() || "Moaddi Customer";
+function displayName(user, t) {
+  return user?.name?.trim() || t("moaddiCustomer");
 }
 
 function getInitials(name) {
@@ -295,9 +297,9 @@ function getInitials(name) {
     .join("");
 }
 
-function shortOrderId(purchase) {
+function shortOrderId(purchase, t) {
   const id = String(purchase?.invoiceId ?? purchase?._id ?? "");
-  if (!id) return "Current Order";
+  if (!id) return t("currentOrder");
   if (id.startsWith("purchase_")) return `#${id.replace("purchase_", "")}`;
   return `#${id.slice(0, 8)}`;
 }
@@ -313,9 +315,9 @@ function getLastOrder(orders, fallbackOrder) {
   })[0];
 }
 
-function formatStatus(status) {
-  if (!status) return "Opening";
-  return String(status)
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace("Payment Done", "Opening");
+function formatStatus(status, t) {
+  if (!status || status === "PaymentDone") return t("status.opening");
+  if (status === "PaymentDoneRequest") return t("status.initiate");
+  if (status === "Completed") return t("status.completed");
+  return String(status).replace(/([a-z])([A-Z])/g, "$1 $2");
 }

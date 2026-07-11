@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import GuestCheckoutDialog from "@/(root)/components/GuestCheckoutDialog";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
 import { Badge } from "@/../components/ui/badge";
@@ -85,6 +86,7 @@ function MachineProductsContent() {
   const [total, setTotal] = useState({});
   const [qrLoading, setQrLoading] = useState(() => !!qrFromUrl);
   const [qrError, setQrError] = useState(null);
+  const [guestDialogOpen, setGuestDialogOpen] = useState(false);
 
   const {
     user,
@@ -189,127 +191,118 @@ function MachineProductsContent() {
   }, [user, machineFromCart, isPending, qrFromUrl]);
 
   const canPay =
-    !!user &&
-    !!machine?._id &&
-    machine.products?.length > 0 &&
-    totalPrice > 0;
+    !!machine?._id && machine.products?.length > 0 && totalPrice > 0;
+
+  const createPurchase = useCallback(
+    (forUser) => {
+      if (!machine?.products?.length) {
+        toast.error("No products on this machine.");
+        return;
+      }
+      if (totalPrice <= 0 || !Object.keys(total).length) {
+        toast.error("Select at least one product.");
+        return;
+      }
+
+      const items = [];
+      for (const [id, number] of Object.entries(total)) {
+        const product = machine.products.find(({ _id }) => _id == id);
+        if (!product) continue;
+        const activeBoxes = activeProductBoxes(product);
+        if (number > activeBoxes.length) {
+          toast.error(
+            "Not enough stock for one or more products. Refresh and try again.",
+          );
+          return;
+        }
+        for (let i = 0; i < number; i++)
+          items.push({
+            productId: id,
+            boxId: activeBoxes[i]._id,
+            boxStatus: false,
+          });
+      }
+
+      if (!items.length) {
+        toast.error("Could not build order - check product availability.");
+        return;
+      }
+
+      postRequest(purchasesAPI(), {
+        customerId: forUser._id,
+        machine,
+        machineId: machine._id,
+        price: totalPrice,
+        items,
+        preferredCurrency:
+          forUser?.preferredCurrency ||
+          machine?.products?.[0]?.preferredCurrency,
+        ...(machine?.paymentProvider
+          ? { paymentProvider: machine.paymentProvider }
+          : {}),
+      })
+        .then((createRes) => {
+          if (!createRes?._id) {
+            toast.error("Invalid server response.");
+            return;
+          }
+          const boxes = items.map((item) => {
+            const raw = machine.products.find(
+              (p) => String(p._id) === String(item.productId),
+            );
+            const product = raw ? Fit.image(raw) : null;
+            return {
+              _id: item.boxId,
+              productId: item.productId,
+              boxStatus: item.boxStatus,
+              product,
+            };
+          });
+          setUser((prev) => ({
+            ...(prev ?? forUser),
+            purchase: {
+              _id: createRes._id,
+              customerId: forUser._id,
+              machineId: machine._id,
+              status: createRes.status,
+              price: createRes.price ?? totalPrice,
+              paymentProvider: createRes.paymentProvider,
+              boxes,
+            },
+          }));
+          persistMachineInCart(machine);
+          toast.success(
+            "Order created. Use the order button to complete payment when you are ready.",
+          );
+        })
+        .catch(() => {
+          toast.error("Could not create order. Try again.");
+        });
+    },
+    [machine, totalPrice, total, setUser, persistMachineInCart],
+  );
 
   const onPurchaseHandler = useCallback(() => {
     if (!user) {
-      toast.error("Sign in to continue.");
-      router.push("/signin");
+      setGuestDialogOpen(true);
       return;
     }
-    if (!machine?.products?.length) {
-      toast.error("No products on this machine.");
-      return;
-    }
-    if (totalPrice <= 0 || !Object.keys(total).length) {
-      toast.error("Select at least one product.");
-      return;
-    }
+    createPurchase(user);
+  }, [user, createPurchase]);
 
-    const items = [];
-    for (const [id, number] of Object.entries(total)) {
-      const product = machine.products.find(({ _id }) => _id == id);
-      if (!product) continue;
-      const activeBoxes = activeProductBoxes(product);
-      if (number > activeBoxes.length) {
-        toast.error(
-          "Not enough stock for one or more products. Refresh and try again.",
-        );
-        return;
-      }
-      for (let i = 0; i < number; i++)
-        items.push({
-          productId: id,
-          boxId: activeBoxes[i]._id,
-          boxStatus: false,
-        });
-    }
+  const onGuestReady = useCallback(
+    (guestUser) => {
+      setUser(guestUser);
+      createPurchase(guestUser);
+    },
+    [setUser, createPurchase],
+  );
 
-    if (!items.length) {
-      toast.error("Could not build order â€” check product availability.");
-      return;
-    }
-
-    postRequest(purchasesAPI(), {
-      customerId: user._id,
-      machine,
-      machineId: machine._id,
-      price: totalPrice,
-      items,
-      preferredCurrency:
-        user?.preferredCurrency || machine?.products?.[0]?.preferredCurrency,
-      ...(machine?.paymentProvider
-        ? { paymentProvider: machine.paymentProvider }
-        : {}),
-    })
-      .then((createRes) => {
-        if (!createRes?._id) {
-          toast.error("Invalid server response.");
-          return;
-        }
-        const boxes = items.map((item) => {
-          const raw = machine.products.find(
-            (p) => String(p._id) === String(item.productId),
-          );
-          const product = raw ? Fit.image(raw) : null;
-          return {
-            _id: item.boxId,
-            productId: item.productId,
-            boxStatus: item.boxStatus,
-            product,
-          };
-        });
-        setUser((prev) => ({
-          ...(prev ?? {}),
-          purchase: {
-            _id: createRes._id,
-            customerId: user._id,
-            machineId: machine._id,
-            status: createRes.status,
-            price: createRes.price ?? totalPrice,
-            paymentProvider: createRes.paymentProvider,
-            boxes,
-          },
-        }));
-        persistMachineInCart(machine);
-        toast.success(
-          "Order created. Use the order button to complete payment when you are ready.",
-        );
-      })
-      .catch(() => {
-        toast.error("Could not create order. Try again.");
-      });
-  }, [
-    user,
-    machine,
-    totalPrice,
-    total,
-    router,
-    setUser,
-    persistMachineInCart,
-  ]);
-
-  /** QR deep links only wait for the scan API â€” not cart session hydration. */
+  /** QR deep links only wait for the scan API, not cart session hydration. */
   const showLoader = qrFromUrl ? qrLoading : isPending;
 
   if (showLoader) {
     return <MachineProductsSkeleton />;
-  }
-
-  if (!user) {
-    return (
-      <Container className="my-16 text-center">
-        <p className="mb-4 text-muted-foreground">
-          Sign in to shop from a machine.
-        </p>
-        <Button asChild>
-          <Link href="/signin">Sign in</Link>
-        </Button>
-      </Container>
-    );
   }
 
   if (qrFromUrl && qrError && !machine) {
@@ -369,7 +362,7 @@ function MachineProductsContent() {
           <div className="min-w-50 flex-1 leading-snug">
             <h1 className="text-xl font-extrabold">{machine.name}</h1>
             <p className="text-muted-foreground text-[12.5px] font-bold">
-              Scanned just now Â· {shelfCount}{" "}
+              Scanned just now - {shelfCount}{" "}
               {shelfCount === 1 ? "product" : "products"} on shelf
             </p>
           </div>
@@ -412,7 +405,7 @@ function MachineProductsContent() {
 
           {selectedItems.length === 0 ? (
             <p className="text-muted-foreground text-[13px]">
-              No items selected yet â€” tap + on a product.
+              No items selected yet - tap + on a product.
             </p>
           ) : (
             selectedItems.map(({ id, product, count, unit, isOffer, lineTotal }) => (
@@ -433,8 +426,8 @@ function MachineProductsContent() {
                     {product.productName ?? product.name}
                   </span>
                   <small className="text-muted-foreground block text-[11px] font-semibold">
-                    {count} Ã— {formatProductPrice(unit, checkoutCurrency)}
-                    {isOffer ? " Â· offer" : ""}
+                    {count} x {formatProductPrice(unit, checkoutCurrency)}
+                    {isOffer ? " - offer" : ""}
                   </small>
                 </span>
                 <span className="text-primary-text shrink-0 tabular-nums">
@@ -469,6 +462,12 @@ function MachineProductsContent() {
           </span>
         </aside>
       </Container>
+
+      <GuestCheckoutDialog
+        open={guestDialogOpen}
+        onOpenChange={setGuestDialogOpen}
+        onGuestReady={onGuestReady}
+      />
     </section>
   );
 }

@@ -100,7 +100,7 @@ export default function MachineProductCard({
           disabled={quantity <= 0}
           className="grid h-8 place-items-center rounded-s-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
         >
-          âˆ’
+          -
         </button>
         <span className="text-center text-sm font-extrabold tabular-nums">
           {quantity}

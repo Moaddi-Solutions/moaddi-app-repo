@@ -14,7 +14,6 @@ export default function MachineCard({ _id, name, qrCode, ...rest }) {
   const { user, setUser, setMachine } = useCart();
   const t = useTranslations("QR");
   const handleClick = async (e) => {
-    if (!user) router.push("/signin");
     let response = await getRequest(machineQRScan(qrCode));
     if (response.statusCode) return toast.error(t("machineNotFound"));
     if (process.env.NODE_ENV == "production") {
@@ -22,7 +21,7 @@ export default function MachineCard({ _id, name, qrCode, ...rest }) {
       if (!response.isActive) return toast.error(t("machineIsNotActive"));
     }
     toast.success(t("machineDetected"));
-    setUser((prev) => ({ ...prev, machines: [response] }));
+    if (user) setUser((prev) => ({ ...prev, machines: [response] }));
     setMachine(response);
     router.push(
       `/machine-products?qr=${encodeURIComponent(String(response.qrCode ?? qrCode))}`,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/(root)/context/cart-provider";
-import { isCustomerRole } from "@/../lib/dashboard-role";
+import { isShopperRole } from "@/../lib/dashboard-role";
 import {
   getPurchaseNotice,
   isNoticeTargetPath,
@@ -51,7 +51,7 @@ export default function PurchaseStatusNotifier() {
   const [dismissed, setDismissed] = useState(false);
   const lastAutoOpenedKeyRef = useRef(null);
 
-  const isCustomer = !!user?._id && isCustomerRole(user.role);
+  const isCustomer = !!user?._id && isShopperRole(user.role);
   const notice = useMemo(
     () => (isCustomer ? getPurchaseNotice(user) : null),
     [isCustomer, user?.purchase],
@@ -67,7 +67,7 @@ export default function PurchaseStatusNotifier() {
     : false;
 
   const syncProfile = useCallback(async () => {
-    if (!user?._id || !isCustomerRole(user.role)) return;
+    if (!user?._id || !isShopperRole(user.role)) return;
     const response = await getRequest(userAPI(user._id));
     if (!response) return;
 

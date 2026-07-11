@@ -64,7 +64,6 @@ const MachineCard = ({ name, location, qrCode, isActive, productsOnShelf }) => {
   const { user, setUser, setMachine } = useCart();
 
   const handleClick = async () => {
-    if (!user) return router.push("/signin");
     const response = await getRequest(machineQRScan(qrCode));
     if (response.statusCode) return toast.error("Machine Not Found!");
     if (process.env.NODE_ENV === "production") {
@@ -72,7 +71,10 @@ const MachineCard = ({ name, location, qrCode, isActive, productsOnShelf }) => {
       if (!response.isActive) return toast.error("Machine Is Not Active!");
     }
     toast.success("Machine Detected!");
-    setUser((prev) => ({ ...prev, machines: [response] }));
+    // Only attach the scanned machine to an existing shopper session — an
+    // anonymous click must not create a fake truthy `user` (see
+    // machine-products' guarded QR-scan effect for the same pattern).
+    if (user) setUser((prev) => ({ ...prev, machines: [response] }));
     setMachine(response);
     router.push(
       `/machine-products?qr=${encodeURIComponent(String(response.qrCode ?? qrCode))}`,

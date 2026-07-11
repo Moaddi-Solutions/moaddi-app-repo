@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import GuestCheckoutDialog from "@/(root)/components/GuestCheckoutDialog";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
 import { Badge } from "@/../components/ui/badge";
@@ -90,6 +91,7 @@ function GroupProductsContent() {
   const [total, setTotal] = useState({});
   const [loading, setLoading] = useState(Boolean(groupId));
   const [error, setError] = useState("");
+  const [guestDialogOpen, setGuestDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!groupId) {
@@ -176,111 +178,114 @@ function GroupProductsContent() {
     }, 0);
   }, [rows, total]);
 
-  const canPay = Boolean(user && rows.length && totalPrice > 0);
+  const canPay = Boolean(rows.length && totalPrice > 0);
 
-  const onPurchaseHandler = useCallback(() => {
-    if (!user) {
-      toast.error("Sign in to continue.");
-      router.push("/signin");
-      return;
-    }
-    if (!canPay) {
-      toast.error("Select at least one product.");
-      return;
-    }
-
-    const items = [];
-    for (const { machine, rawProduct, key } of rows) {
-      const quantity = Number(total[key] || 0);
-      if (quantity <= 0) continue;
-
-      const boxes = activeProductBoxes(rawProduct);
-      if (quantity > boxes.length) {
-        toast.error("Not enough stock for one or more products. Refresh and try again.");
+  const createPurchase = useCallback(
+    (forUser) => {
+      if (!canPay) {
+        toast.error("Select at least one product.");
         return;
       }
 
-      for (let i = 0; i < quantity; i++) {
-        items.push({
-          machineId: machine._id,
-          productId: rawProduct._id,
-          boxId: boxes[i]._id,
-          boxStatus: false,
-        });
-      }
-    }
+      const items = [];
+      for (const { machine, rawProduct, key } of rows) {
+        const quantity = Number(total[key] || 0);
+        if (quantity <= 0) continue;
 
-    if (!items.length) {
-      toast.error("Could not build order.");
-      return;
-    }
-
-    const paymentProvider = machines.find((machine) => machine.paymentProvider)?.paymentProvider;
-
-    postRequest(purchasesAPI(), {
-      customerId: user._id,
-      machine: null,
-      machineId: null,
-      price: totalPrice,
-      items,
-      preferredCurrency: checkoutCurrency,
-      ...(paymentProvider ? { paymentProvider } : {}),
-    })
-      .then((createRes) => {
-        if (!createRes?._id) {
-          toast.error("Invalid server response.");
+        const boxes = activeProductBoxes(rawProduct);
+        if (quantity > boxes.length) {
+          toast.error("Not enough stock for one or more products. Refresh and try again.");
           return;
         }
 
-        const boxes = items.map((item) => {
-          const row = rows.find(
-            ({ machine, rawProduct }) =>
-              String(machine._id) === String(item.machineId) &&
-              String(rawProduct._id) === String(item.productId),
-          );
-          return {
-            _id: item.boxId,
-            machineId: item.machineId,
-            productId: item.productId,
-            boxStatus: item.boxStatus,
-            product: row ? Fit.image(row.rawProduct) : null,
-          };
-        });
+        for (let i = 0; i < quantity; i++) {
+          items.push({
+            machineId: machine._id,
+            productId: rawProduct._id,
+            boxId: boxes[i]._id,
+            boxStatus: false,
+          });
+        }
+      }
 
-        setUser((prev) => ({
-          ...(prev ?? {}),
-          purchase: {
-            _id: createRes._id,
-            customerId: user._id,
-            machineId: null,
-            status: createRes.status,
-            price: createRes.price ?? totalPrice,
-            paymentProvider: createRes.paymentProvider,
-            boxes,
-          },
-        }));
+      if (!items.length) {
+        toast.error("Could not build order.");
+        return;
+      }
 
-        toast.success("Order created. Complete payment from checkout.");
-        router.push("/checkout");
+      const paymentProvider = machines.find((machine) => machine.paymentProvider)?.paymentProvider;
+
+      postRequest(purchasesAPI(), {
+        customerId: forUser._id,
+        machine: null,
+        machineId: null,
+        price: totalPrice,
+        items,
+        preferredCurrency: checkoutCurrency,
+        ...(paymentProvider ? { paymentProvider } : {}),
       })
-      .catch(() => {
-        toast.error("Could not create order. Try again.");
-      });
-  }, [user, canPay, rows, total, machines, totalPrice, checkoutCurrency, setUser, router]);
+        .then((createRes) => {
+          if (!createRes?._id) {
+            toast.error("Invalid server response.");
+            return;
+          }
+
+          const boxes = items.map((item) => {
+            const row = rows.find(
+              ({ machine, rawProduct }) =>
+                String(machine._id) === String(item.machineId) &&
+                String(rawProduct._id) === String(item.productId),
+            );
+            return {
+              _id: item.boxId,
+              machineId: item.machineId,
+              productId: item.productId,
+              boxStatus: item.boxStatus,
+              product: row ? Fit.image(row.rawProduct) : null,
+            };
+          });
+
+          setUser((prev) => ({
+            ...(prev ?? forUser),
+            purchase: {
+              _id: createRes._id,
+              customerId: forUser._id,
+              machineId: null,
+              status: createRes.status,
+              price: createRes.price ?? totalPrice,
+              paymentProvider: createRes.paymentProvider,
+              boxes,
+            },
+          }));
+
+          toast.success("Order created. Complete payment from checkout.");
+          router.push("/checkout");
+        })
+        .catch(() => {
+          toast.error("Could not create order. Try again.");
+        });
+    },
+    [canPay, rows, total, machines, totalPrice, checkoutCurrency, setUser, router],
+  );
+
+  const onPurchaseHandler = useCallback(() => {
+    if (!user) {
+      setGuestDialogOpen(true);
+      return;
+    }
+    createPurchase(user);
+  }, [user, createPurchase]);
+
+  const onGuestReady = useCallback(
+    (guestUser) => {
+      setUser(guestUser);
+      createPurchase(guestUser);
+    },
+    [setUser, createPurchase],
+  );
 
   if (loading || isPending) {
     return <GroupProductsSkeleton />;
-  }
-
-  if (!user) {
-    return (
-      <Container className="my-16 text-center">
-        <p className="text-muted-foreground mb-4">Sign in to shop from this group.</p>
-        <Button asChild className="font-bold">
-          <Link href="/signin">Sign in</Link>
-        </Button>
-      </Container>
-    );
   }
 
   if (error || !rows.length) {
@@ -319,7 +324,7 @@ function GroupProductsContent() {
               {groupName || "Group products"}
             </h1>
             <p className="text-muted-foreground text-[12.5px] font-bold">
-              {machines.length} {machines.length === 1 ? "machine" : "machines"} Â·{" "}
+              {machines.length} {machines.length === 1 ? "machine" : "machines"} -{" "}
               {rows.length} {rows.length === 1 ? "product" : "products"} available
             </p>
           </div>
@@ -347,7 +352,7 @@ function GroupProductsContent() {
 
           {selectedItems.length === 0 ? (
             <p className="text-muted-foreground text-[13px]">
-              No items selected yet â€” tap + on a product.
+              No items selected yet - tap + on a product.
             </p>
           ) : (
             selectedItems.map(({ key, product, count, unit, isOffer, lineTotal }) => (
@@ -368,8 +373,8 @@ function GroupProductsContent() {
                     {product.productName ?? product.name}
                   </span>
                   <small className="text-muted-foreground block text-[11px] font-semibold">
-                    {count} Ã— {formatProductPrice(unit, checkoutCurrency)}
-                    {isOffer ? " Â· offer" : ""}
+                    {count} x {formatProductPrice(unit, checkoutCurrency)}
+                    {isOffer ? " - offer" : ""}
                   </small>
                 </span>
                 <span className="text-primary-text shrink-0 tabular-nums">
@@ -404,6 +409,12 @@ function GroupProductsContent() {
           </span>
         </aside>
       </Container>
+
+      <GuestCheckoutDialog
+        open={guestDialogOpen}
+        onOpenChange={setGuestDialogOpen}
+        onGuestReady={onGuestReady}
+      />
     </section>
   );
 }

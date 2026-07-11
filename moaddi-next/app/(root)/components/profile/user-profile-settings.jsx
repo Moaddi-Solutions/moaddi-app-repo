@@ -11,10 +11,12 @@ import { Input } from "@/../components/ui/input";
 import { Label } from "@/../components/ui/label";
 import { Separator } from "@/../components/ui/separator";
 import { Eye, EyeOff, Phone, Save, Shield, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function UserProfileSettings() {
+  const t = useTranslations("Profile");
   const dataProvider = useDataProvider();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,10 +49,10 @@ export default function UserProfileSettings() {
         newPassword: "",
         confirmPassword: "",
       }));
-      return toast.error("New password and confirm password do not match.");
+      return toast.error(t("passwordsDoNotMatch"));
     }
     if (userInfo.newPassword && userInfo.newPassword.length < 6) {
-      return toast.error("New password must be at least 6 characters long.");
+      return toast.error(t("passwordTooShort"));
     }
 
     dataProvider
@@ -70,12 +72,12 @@ export default function UserProfileSettings() {
           newPassword: "",
           confirmPassword: "",
         }));
-        toast.success("Profile updated successfully");
+        toast.success(t("profileUpdated"));
       })
       .catch((err) => {
         setIsLoading(0);
         setIsEditing(false);
-        toast.error(err.message || "Failed to update profile");
+        toast.error(err.message || t("profileUpdateFailed"));
       });
   };
 
@@ -83,10 +85,10 @@ export default function UserProfileSettings() {
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-black leading-tight text-pretty sm:text-4xl">
-          Account Settings
+          {t("accountSettings")}
         </h1>
         <p className="text-muted-foreground text-sm font-semibold">
-          Manage your account information and security settings
+          {t("accountSettingsDescription")}
         </p>
       </div>
 
@@ -105,7 +107,7 @@ export default function UserProfileSettings() {
               className="w-fit border-green-200 bg-green-50 font-bold text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
             >
               <span className="size-1.5 rounded-full bg-green-600" />
-              Verified account
+              {t("verifiedAccount")}
             </Badge>
           </div>
         </CardContent>
@@ -117,7 +119,7 @@ export default function UserProfileSettings() {
           <div className="flex flex-col gap-1">
             <CardDescription className="text-primary-text flex items-center gap-1.5 font-black tracking-[0.04em] uppercase">
               <User className="size-3.5" />
-              Personal information
+              {t("personalInformation")}
             </CardDescription>
           </div>
           <Button
@@ -127,13 +129,13 @@ export default function UserProfileSettings() {
             className="font-bold"
             onClick={() => setIsEditing(!isEditing)}
           >
-            {isEditing ? "Cancel" : "Edit"}
+            {isEditing ? t("cancel") : t("edit")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="font-bold">
-              Name
+              {t("name")}
             </Label>
             <Input
               id="name"
@@ -147,7 +149,7 @@ export default function UserProfileSettings() {
           <div className="space-y-1.5">
             <Label htmlFor="phone" className="flex items-center gap-1.5 font-bold">
               <Phone className="size-3.5" />
-              Phone number
+              {t("phoneNumber")}
             </Label>
             <Input id="phone" value={userInfo.phone} disabled className="h-10" />
           </div>
@@ -167,14 +169,14 @@ export default function UserProfileSettings() {
                 ) : (
                   <Save className="size-4" />
                 )}
-                Save changes
+                {t("saveChanges")}
               </Button>
               <Button
                 variant="outline"
                 className="font-bold"
                 onClick={() => setIsEditing(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
             </div>
           )}
@@ -186,15 +188,15 @@ export default function UserProfileSettings() {
         <CardHeader>
           <CardDescription className="text-primary-text flex items-center gap-1.5 font-black tracking-[0.04em] uppercase">
             <Shield className="size-3.5" />
-            Security
+            {t("security")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm font-black">Change password</p>
+          <p className="text-sm font-black">{t("changePassword")}</p>
 
           <div className="space-y-1.5">
             <Label htmlFor="newPassword" className="font-bold">
-              New password
+              {t("newPassword")}
             </Label>
             <div className="relative">
               <Input
@@ -202,7 +204,7 @@ export default function UserProfileSettings() {
                 type={showNewPassword ? "text" : "password"}
                 value={userInfo.newPassword}
                 onChange={(e) => handleInputChange("newPassword", e.target.value)}
-                placeholder="Enter new password"
+                placeholder={t("enterNewPassword")}
                 className="h-10 pe-10"
               />
               <Button
@@ -223,7 +225,7 @@ export default function UserProfileSettings() {
 
           <div className="space-y-1.5">
             <Label htmlFor="confirmPassword" className="font-bold">
-              Confirm new password
+              {t("confirmNewPassword")}
             </Label>
             <div className="relative">
               <Input
@@ -231,7 +233,7 @@ export default function UserProfileSettings() {
                 type={showConfirmPassword ? "text" : "password"}
                 value={userInfo.confirmPassword}
                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                placeholder="Confirm new password"
+                placeholder={t("confirmNewPasswordPlaceholder")}
                 className="h-10 pe-10"
               />
               <Button
@@ -265,7 +267,7 @@ export default function UserProfileSettings() {
             ) : (
               <Save className="size-4" />
             )}
-            Update password
+            {t("updatePassword")}
           </Button>
         </CardContent>
       </Card>

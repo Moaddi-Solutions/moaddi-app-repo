@@ -168,11 +168,10 @@ function LocaleToggle() {
 }
 
 function ScanLink() {
-  const { user } = useCart();
   const t = useTranslations("Header");
 
   return (
-    <Link className="moaddi-scan-btn" href={user ? "/machine-scan" : "/signin"}>
+    <Link className="moaddi-scan-btn" href="/machine-scan">
       <ScanQrCode aria-hidden="true" />
       <span className="moaddi-btn-label">{t("scanMachine")}</span>
     </Link>

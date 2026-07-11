@@ -17,6 +17,16 @@ export function isCustomerRole(role) {
   return String(role ?? "").trim().toLowerCase() === "customer";
 }
 
+/** Guest sessions come from POST /users/guest with role "Guest" (never lowercased by the API). */
+export function isGuestRole(role) {
+  return String(role ?? "").trim().toLowerCase() === "guest";
+}
+
+/** Customer-facing shopper: signed-in customer or anonymous guest. Web-only distinction — server role rules are untouched. */
+export function isShopperRole(role) {
+  return isCustomerRole(role) || isGuestRole(role);
+}
+
 /** Full admin dashboard (machines, CMS, site options, etc.). */
 export function isDashboardAdminRole(role) {
   const normalized = normalizeDashboardRole(role);

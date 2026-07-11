@@ -7,11 +7,8 @@ import { useCart } from "@/(root)/context/cart-provider";
 import { Button } from "@/../components/ui/button";
 import { Input } from "@/../components/ui/input";
 import { Label } from "@/../components/ui/label";
-import {
-  isCustomerRole,
-  isDashboardRole,
-  normalizeDashboardRole,
-} from "@/../lib/dashboard-role";
+import { isCustomerRole, isDashboardRole } from "@/../lib/dashboard-role";
+import { persistShopperSession } from "@/../lib/shopper-session";
 import { cn, setLocalStorageItem } from "@/../lib/utils";
 import { getRequest, postRequest } from "@/../services/events";
 import {
@@ -21,9 +18,6 @@ import {
   userAPI,
 } from "@/../services/serverAddresses";
 
-import axios from "axios";
-import Cookies from "js-cookie";
-import moment from "moment";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,20 +53,13 @@ export function SignInForm({ className, variant = "default", ...props }) {
     const user = { _id: phone, password, rememberMe: false };
     try {
       const response = await postRequest(signInAddress(), user);
-      response.role = normalizeDashboardRole(response.role);
-      const expiryDays = response.expiresIn / 60 / 60 / 24;
-      const cookieExpiresAt = moment().add(expiryDays, "days").toDate();
-      response.expiresIn = cookieExpiresAt.getTime();
-      const session = JSON.stringify(response);
-      Cookies.set("user", session, { expires: cookieExpiresAt });
-
-      axios.defaults.headers.common.Authorization = `Bearer ${response.token}`;
+      const session = persistShopperSession(response);
 
       toast.success(t("Auth.youHaveSuccessfullyLoggedIn"));
 
-      if (isCustomerRole(response.role)) {
+      if (isCustomerRole(session.role)) {
         try {
-          const profile = await getRequest(userAPI(response._id));
+          const profile = await getRequest(userAPI(session._id));
           setUser(profile);
           push("/")
 
@@ -80,17 +67,10 @@ export function SignInForm({ className, variant = "default", ...props }) {
           console.error(profileError);
           const msg = profileError?.response?.data?.message;
           if (msg) toast.error(String(msg));
-          setUser({
-            _id: response._id,
-            name: response.name,
-            role: response.role,
-            preferredCurrency: response.preferredCurrency,
-            token: response.token,
-            expiresIn: response.expiresIn,
-          });
+          setUser(session);
         }
-      } else if (isDashboardRole(response.role)) {
-        setLocalStorageItem("user", session);
+      } else if (isDashboardRole(session.role)) {
+        setLocalStorageItem("user", JSON.stringify(session));
         push("/admin");
       }
     } catch (error) {

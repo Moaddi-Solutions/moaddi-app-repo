@@ -21,16 +21,17 @@ import {
   TableRow,
 } from "@/../components/ui/table";
 import { Eye } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, t) => {
   switch (status) {
     case "Completed":
-      return <Badge variant="default">Completed</Badge>;
+      return <Badge variant="default">{t("status.completed")}</Badge>;
     case "PaymentDoneRequest":
-      return <Badge variant="secondary">Initiate</Badge>;
+      return <Badge variant="secondary">{t("status.initiate")}</Badge>;
     case "PaymentDone":
-      return <Badge variant="outline">Payment Done</Badge>;
+      return <Badge variant="outline">{t("status.paymentDone")}</Badge>;
     // case "cancelled":
     //   return <Badge variant="destructive">Cancelled</Badge>;
     default:
@@ -39,6 +40,8 @@ const getStatusBadge = (status) => {
 };
 
 const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
+  const t = useTranslations("Profile");
+  const locale = useLocale();
   const { isPending, data = [], total = 0 } = useGetManyReference("purchases", {
     id,
     target: "customerId",
@@ -54,18 +57,18 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
   return (
     <section className="flex flex-col gap-5">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <SummaryCard label="Total Orders" value={isPending ? "..." : total} />
+        <SummaryCard label={t("totalOrders")} value={isPending ? "..." : total} />
         <SummaryCard
-          label="Total Spent"
+          label={t("totalSpent")}
           value={isPending ? "..." : formatProductPrice(totalSpent, preferredCurrency)}
         />
       </div>
 
       <Card className="border-border/80 bg-card" size="sm">
         <CardHeader className="gap-1">
-          <CardTitle className="text-2xl font-black">Purchase History</CardTitle>
+          <CardTitle className="text-2xl font-black">{t("purchaseHistory")}</CardTitle>
           <CardDescription>
-            View your orders and open the invoice for any purchase.
+            {t("purchaseHistoryDescription")}
           </CardDescription>
         </CardHeader>
 
@@ -75,13 +78,13 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
             <TableHeader className="bg-muted/40">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 font-black text-muted-foreground">
-                  Date
+                  {t("date")}
                 </TableHead>
-                <TableHead className="hidden md:table-cell">Items</TableHead>
-                <TableHead className="hidden sm:table-cell">Qty</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="px-4 text-end">Actions</TableHead>
+                <TableHead className="hidden md:table-cell">{t("items")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("qty")}</TableHead>
+                <TableHead>{t("total")}</TableHead>
+                <TableHead>{t("statusColumn")}</TableHead>
+                <TableHead className="px-4 text-end">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -91,7 +94,7 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                     colSpan={6}
                     className="h-24 px-4 text-center font-semibold text-muted-foreground"
                   >
-                    Loading orders...
+                    {t("loadingOrders")}
                   </TableCell>
                 </TableRow>
               ) : data.length === 0 ? (
@@ -100,7 +103,7 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                     colSpan={6}
                     className="h-24 px-4 text-center font-semibold text-muted-foreground"
                   >
-                    No orders yet.
+                    {t("noOrdersYetPeriod")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -118,11 +121,12 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                     const productsString = getPurchaseProductNames(
                       products,
                       boxes,
+                      t,
                     );
                     return (
                       <TableRow key={_id} className="hover:bg-accent/40">
                         <TableCell className="px-4 font-semibold">
-                          {formatDate(created)}
+                          {formatDate(created, locale)}
                         </TableCell>
                         <TableCell className="hidden max-w-[200px] md:table-cell">
                           <div className="truncate" title={productsString}>
@@ -135,7 +139,7 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                         <TableCell className="font-medium">
                           {formatProductPrice(price, preferredCurrency)}
                         </TableCell>
-                        <TableCell>{getStatusBadge(status)}</TableCell>
+                        <TableCell>{getStatusBadge(status, t)}</TableCell>
                         <TableCell className="px-4 text-end">
                           <Link
                             href={`/invoice/success?invoiceId=${encodeURIComponent(String(invoiceId ?? _id))}&show=1`}
@@ -143,7 +147,7 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              aria-label="View Order"
+                              aria-label={t("viewOrder")}
                             >
                               <Eye aria-hidden="true" />
                             </Button>
@@ -176,7 +180,7 @@ export default function PurchaseHistory({ preferredCurrency }) {
   );
 }
 
-function getPurchaseProductNames(products, boxes) {
+function getPurchaseProductNames(products, boxes, t) {
   const productNames = Array.isArray(products)
     ? products.map(({ name }) => name).filter(Boolean)
     : [];
@@ -189,7 +193,7 @@ function getPurchaseProductNames(products, boxes) {
 
   return boxProductNames.length > 0
     ? boxProductNames.join(", ")
-    : "Moaddi order";
+    : t("moaddiOrder");
 }
 
 function SummaryCard({ label, value }) {
@@ -203,12 +207,12 @@ function SummaryCard({ label, value }) {
   );
 }
 
-function formatDate(value) {
+function formatDate(value, locale) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
