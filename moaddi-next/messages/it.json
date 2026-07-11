@@ -1,0 +1,282 @@
+{
+  "AppBar": {
+    "title": "Home",
+    "description": "Benvenuto nella home page"
+  },
+  "Header": {
+    "scanMachine": "Scansiona macchina",
+    "signIn": "Accedi"
+  },
+  "Home": {
+    "specialOffers": "Offerte speciali",
+    "showMore": "Mostra altro",
+    "specialProducts": "Prodotti speciali",
+    "specialCategories": "Categorie in evidenza",
+    "specialShops": "Negozi",
+    "products": "Prodotti",
+    "howItWorks": {
+      "title": "Come funziona",
+      "steps": {
+        "scan": {
+          "label": "Passo 1",
+          "title": "Scansiona il QR",
+          "description": "Ogni macchina mostra il proprio codice sullo schermo o su un adesivo."
+        },
+        "pick": {
+          "label": "Passo 2",
+          "title": "Scegli i tuoi articoli",
+          "description": "Sfoglia gli scaffali della macchina in tempo reale con scorte effettive."
+        },
+        "pay": {
+          "label": "Passo 3",
+          "title": "Paga con un tocco",
+          "description": "Apple Pay, mada o carta — protetto da Moyasar."
+        },
+        "collect": {
+          "label": "Passo 4",
+          "title": "Ritira e vai",
+          "description": "Guarda ogni articolo aprirsi in diretta, poi prendilo dallo sportello."
+        }
+      }
+    },
+    "machinesNearYou": {
+      "titleLead": "Macchine",
+      "titleEmphasis": "vicino a te",
+      "description": "Stato in tempo reale direttamente da ogni macchina — acquista solo ciò che è realmente disponibile.",
+      "allMachines": "Tutte le macchine",
+      "online": "Online",
+      "offline": "Offline",
+      "currentlyUnavailable": "Attualmente non disponibile",
+      "viewProducts": "Vedi prodotti",
+      "productsOnShelf": "{count, plural, one {# prodotto} other {# prodotti}} sullo scaffale",
+      "noProductsOnShelf": "Nessun prodotto sullo scaffale",
+      "machineNotFound": "Macchina non trovata!",
+      "machineOffline": "Macchina offline!",
+      "machineNotActive": "Macchina non attiva!",
+      "machineDetected": "Macchina rilevata!"
+    }
+  },
+  "showMore": "Mostra altro",
+  "Auth": {
+    "and": "e",
+    "agree": "Cliccando su continua, accetti i nostri",
+    "terms": "Termini di servizio",
+    "or": "o",
+    "signUp": "Registrati",
+    "signIn": "Accedi",
+    "phone": "Telefono",
+    "privacy": "Informativa sulla privacy",
+    "password": "Password",
+    "rePassword": "Conferma password",
+    "passwordsDoesNotMatch": "Le password non corrispondono",
+    "accountHasBeenRegisteredSuccessfully": "Account registrato con successo!",
+    "youHaveSuccessfullyLoggedIn": "Accesso effettuato con successo",
+    "invalidPhoneNumber": "Numero di telefono non valido",
+    "staff": "Personale",
+    "otp": "OTP",
+    "alreadyHaveAccount": "Hai già un account? Accedi",
+    "accountAccess": "Accesso all'account",
+    "createCustomerAccount": "Crea un account cliente",
+    "staffPortal": "Portale del personale",
+    "staffPortalDescription": "Apri la dashboard operatore",
+    "orContinueWith": "oppure continua con",
+    "continueWithGoogle": "Continua con Google",
+    "continueWithApple": "Continua con Apple",
+    "loginFailed": "Accesso non riuscito. Riprova."
+  },
+  "GuestCheckout": {
+    "title": "Come vuoi effettuare il checkout?",
+    "description": "Accedi per salvare la cronologia degli ordini, oppure continua come ospite.",
+    "continueAsGuest": "Continua come ospite",
+    "formTitle": "Informazioni di contatto",
+    "formDescription": "Le utilizziamo per inviarti la ricevuta e gli aggiornamenti sull'ordine.",
+    "nameOptional": "Nome (opzionale)",
+    "emailOptional": "Email (opzionale)",
+    "back": "Indietro",
+    "continue": "Continua",
+    "submitting": "Attendere…",
+    "error": "Impossibile avviare il checkout come ospite. Riprova."
+  },
+  "SignIn": {
+    "input": "Inserisci il tuo numero per accedere"
+  },
+  "SignUp": {
+    "input": "Inserisci il tuo numero di telefono qui sotto per creare il tuo account",
+    "create": "Crea un account",
+    "name": "Nome"
+  },
+  "QR": {
+    "open": "Apri",
+    "scanMachine": "Scansiona il codice QR della macchina",
+    "scanMachineFromImage": "Scansiona da immagine",
+    "machineNotFound": "Macchina non trovata!",
+    "machineIsOffline": "Macchina offline!",
+    "machineIsNotActive": "Macchina non attiva!",
+    "machineDetected": "Macchina rilevata!",
+    "invalidQrCode": "Codice QR non valido",
+    "invalidImage": "Immagine non valida",
+    "invalidImageTypeOrSize": "Tipo o dimensione dell'immagine non validi",
+    "supportedTypesJpgJpegPngMaxSize_5mb": "Tipi supportati: jpg, jpeg, png. Dimensione massima: 5MB"
+  },
+  "available": "Disponibile",
+  "BoxGrid": {
+    "allBoxesOpened": "Tutte le scatole sono state aperte",
+    "showInvoiceHistory": "Mostra cronologia fatture",
+    "opened": "Aperto",
+    "open": "Apri",
+    "waitingForApprove": "In attesa di approvazione",
+    "readyToOpen": "Pronto per l'apertura",
+    "openedCount": "Aperto",
+    "remaining": "Rimanenti",
+    "missingPurchaseContext": "Impossibile aprire la scatola: dati di acquisto mancanti. Aggiorna la pagina e riprova.",
+    "invalidBoxSlot": "Impossibile determinare quale slot aprire. Aggiorna la pagina o contatta l'assistenza.",
+    "letSomeoneOpen": "Lascia che qualcun altro la apra",
+    "creatingGiftLink": "Creazione del link…",
+    "giftLinkShareTitle": "Un regalo per te",
+    "giftLinkShareText": "Ti ho inviato qualcosa — riscattalo e apri la scatola.",
+    "giftLinkCopied": "Link del regalo copiato — condividilo con il destinatario.",
+    "giftLinkError": "Impossibile creare il link del regalo. Riprova."
+  },
+  "Gift": {
+    "title": "Un regalo per te",
+    "receivedHeading": "Qualcuno ti ha inviato un regalo!",
+    "receivedSubtitle": "Riscattalo, poi apri la scatola presso la macchina per prendere il tuo articolo.",
+    "notReady": "Non ancora pronto",
+    "items": "articoli",
+    "claimAndOpen": "Riscatta e apri",
+    "claiming": "Riscatto in corso…",
+    "backToHome": "Torna alla home",
+    "unavailable": "Questo link regalo non è più disponibile.",
+    "claimError": "Impossibile riscattare questo regalo."
+  },
+  "PurchaseNotice": {
+    "dismiss": "Ricordamelo più tardi",
+    "kind": {
+      "awaiting_payment": {
+        "title": "Ordine in attesa di pagamento",
+        "body": "Hai un ordine non pagato ({price} {currency}). Completa il pagamento prima di lasciare l'area della macchina.",
+        "cta": "Vai al checkout",
+        "fab": "Ordine non pagato"
+      },
+      "ready_to_collect": {
+        "title": "Pagamento ricevuto — ritira i tuoi articoli",
+        "body": "Hai {count} articolo/i pronti per il ritiro dalla macchina.",
+        "cta": "Apri gli scomparti",
+        "fab": "Ritira ordine"
+      },
+      "payment_rejected": {
+        "title": "Il pagamento non è stato completato",
+        "body": "L'ultimo tentativo di pagamento non è andato a buon fine. Puoi riprovare dal checkout o iniziare un nuovo ordine.",
+        "cta": "Riprova il pagamento",
+        "fab": "Problema di pagamento"
+      }
+    }
+  },
+  "Checkout": {
+    "payment": "Pagamento",
+    "purchases": "Acquisti",
+    "paymentConfirming": "Conferma del pagamento in corso…",
+    "paymentConfirmFailed": "Non è stato ancora possibile confermare il pagamento con il server. Se sei stato addebitato, contatta l'assistenza.",
+    "paymentMissingPurchase": "Non è stato possibile determinare a quale acquisto appartiene questo pagamento. Torna al checkout e riprova.",
+    "paymentUnknownStatus": "Stato di pagamento imprevisto: {status}",
+    "paymentFailedDefault": "Il pagamento non è stato completato.",
+    "successTitle": "Pagamento riuscito",
+    "successDescription": "Grazie. Il pagamento è andato a buon fine. Puoi ritirare i tuoi articoli dalla macchina.",
+    "successCtaMachine": "Vai alla macchina",
+    "successCtaHome": "Home",
+    "failureTitle": "Pagamento non riuscito",
+    "failureCtaRetry": "Torna al checkout",
+    "payNow": "Paga",
+    "loadingPaymentForm": "Caricamento del modulo di pagamento…",
+    "stripeNotConfigured": "Il checkout Stripe non è configurato (chiave pubblicabile mancante).",
+    "paymentProviderUnset": "Questa macchina non ha un metodo di pagamento con carta configurato. Contatta l'operatore.",
+    "stripeInitFailed": "Impossibile avviare il checkout Stripe."
+  },
+  "otp": {
+    "activateAccount": "Attiva account",
+    "input": "Inserisci il codice che abbiamo inviato al tuo account WhatsApp"
+  },
+  "Shop": {
+    "machines": "Macchine",
+    "products": "Prodotti",
+    "noMachines": "Nessuna macchina",
+    "noProducts": "Nessun prodotto"
+  },
+  "ProductCard": {
+    "inStock": "Disponibile",
+    "lowStock": "Scorte limitate",
+    "outOfStock": "Esaurito",
+    "showMachines": "Mostra le macchine con {name}"
+  },
+  "MachinesPage": {
+    "title": "Macchine disponibili",
+    "subtitleCount": "{count, plural, =0 {Nessuna macchina ha attualmente questo prodotto} one {# macchina ha questo prodotto} other {# macchine hanno questo prodotto}}",
+    "online": "Online",
+    "offline": "Offline",
+    "stock": "{count, plural, =0 {Esaurito} one {# disponibile} other {# disponibili}}",
+    "productsOnShelf": "{count, plural, =0 {Nessun altro prodotto} one {# prodotto sullo scaffale} other {# prodotti sullo scaffale}}",
+    "totalStock": "{count, plural, =0 {0 articoli in totale} one {# articolo in totale} other {# articoli in totale}}",
+    "viewProducts": "Vedi prodotti",
+    "unavailable": "Attualmente non disponibile",
+    "emptyTitle": "Ancora nessuna macchina nelle vicinanze",
+    "emptyBody": "Questo prodotto non è attualmente caricato in nessuna macchina. Ricontrolla presto."
+  },
+  "Profile": {
+    "title": "Profilo",
+    "signedOutDescription": "Accedi per visualizzare il tuo account Moaddi e i tuoi ordini.",
+    "signIn": "Accedi",
+    "backToProfile": "Torna al profilo",
+    "editProfile": "Modifica profilo",
+    "orders": "Ordini",
+    "lastOrder": "Ultimo ordine",
+    "loading": "Caricamento...",
+    "noOrdersYet": "Ancora nessun ordine",
+    "orderHistory": "Cronologia ordini",
+    "ordersCount": "{count, plural, one {# ordine} other {# ordini}}",
+    "helpSupport": "Assistenza e supporto",
+    "helpSupportDetail": "Supporto ordini e macchine",
+    "signOut": "Esci",
+    "moaddiCustomer": "Cliente Moaddi",
+    "currentOrder": "Ordine attuale",
+    "totalOrders": "Ordini totali",
+    "totalSpent": "Spesa totale",
+    "purchaseHistory": "Cronologia acquisti",
+    "purchaseHistoryDescription": "Visualizza i tuoi ordini e apri la fattura di qualsiasi acquisto.",
+    "date": "Data",
+    "items": "Articoli",
+    "qty": "Quantità",
+    "total": "Totale",
+    "statusColumn": "Stato",
+    "actions": "Azioni",
+    "loadingOrders": "Caricamento ordini...",
+    "noOrdersYetPeriod": "Ancora nessun ordine.",
+    "viewOrder": "Visualizza ordine",
+    "moaddiOrder": "Ordine Moaddi",
+    "accountSettings": "Impostazioni account",
+    "accountSettingsDescription": "Gestisci le informazioni del tuo account e le impostazioni di sicurezza",
+    "verifiedAccount": "Account verificato",
+    "personalInformation": "Informazioni personali",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "name": "Nome",
+    "phoneNumber": "Numero di telefono",
+    "saveChanges": "Salva modifiche",
+    "security": "Sicurezza",
+    "changePassword": "Cambia password",
+    "newPassword": "Nuova password",
+    "enterNewPassword": "Inserisci la nuova password",
+    "confirmNewPassword": "Conferma la nuova password",
+    "confirmNewPasswordPlaceholder": "Conferma la nuova password",
+    "updatePassword": "Aggiorna password",
+    "passwordsDoNotMatch": "La nuova password e la conferma non corrispondono.",
+    "passwordTooShort": "La nuova password deve contenere almeno 6 caratteri.",
+    "profileUpdated": "Profilo aggiornato con successo",
+    "profileUpdateFailed": "Impossibile aggiornare il profilo",
+    "status": {
+      "opening": "Apertura in corso",
+      "initiate": "Avviato",
+      "completed": "Completato",
+      "paymentDone": "Pagamento effettuato"
+    }
+  }
+}

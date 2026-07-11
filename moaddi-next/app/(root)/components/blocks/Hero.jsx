@@ -62,6 +62,46 @@ const HERO_FALLBACK = {
       { title: "تم الدفع 13.95 ريال", subtitle: "جاري الفتح..." },
     ],
   },
+  zh: {
+    kicker: "全球 240+ 台机器",
+    title: "从每台 Moaddi 机器|更智能地购物",
+    button: {
+      title: "扫描机器",
+      page: { url: "/machine-scan" },
+    },
+    appStoreUrl: "#home",
+    googlePlayUrl: "#home",
+    appGalleryUrl: "#home",
+    stats: [
+      { value: "12+", label: "台在线机器" },
+      { value: "19", label: "件产品" },
+      { value: "<30秒", label: "从扫描到取货" },
+    ],
+    floatingCards: [
+      { title: "M-014 欧莱亚", subtitle: "在线 - 46 件产品" },
+      { title: "已支付 13.95 里亚尔", subtitle: "正在打开..." },
+    ],
+  },
+  it: {
+    kicker: "Oltre 240 macchine nel mondo",
+    title: "Acquista in modo più intelligente|da ogni macchina Moaddi",
+    button: {
+      title: "Scansiona una macchina",
+      page: { url: "/machine-scan" },
+    },
+    appStoreUrl: "#home",
+    googlePlayUrl: "#home",
+    appGalleryUrl: "#home",
+    stats: [
+      { value: "12+", label: "macchine online" },
+      { value: "19", label: "prodotti" },
+      { value: "<30s", label: "dalla scansione al prodotto" },
+    ],
+    floatingCards: [
+      { title: "M-014 Olaya", subtitle: "Online - 46 prodotti" },
+      { title: "Pagato 13.95 SAR", subtitle: "Apertura in corso..." },
+    ],
+  },
 };
 
 const splitTitle = (title) => {

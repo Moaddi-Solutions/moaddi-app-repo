@@ -115,6 +115,9 @@
 }
 
 .moaddi-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid var(--site-header-line);
   border-radius: 999px;
   background: var(--site-header-surface);

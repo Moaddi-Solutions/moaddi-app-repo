@@ -328,6 +328,86 @@ export const AppSidebar = () => {
                   </NavGroup>
                 </li>
                 <li>
+                  <NavGroup title="Chinese" icon={Languages}>
+                    <SubNavItem
+                      to={createPath({ resource: "zhSite", type: "show", id: "fortis" })}
+                      icon={Globe}
+                    >
+                      Website
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "zhSeo", type: "show", id: "fortis" })}
+                      icon={SearchCheck}
+                    >
+                      SEO
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "zhHeaderLinks", type: "list" })}
+                      icon={PanelTop}
+                    >
+                      Header
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "zhBlocks", type: "list" })}
+                      icon={Rows3}
+                    >
+                      Blocks
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "zhFooterBody", type: "show", id: "fortis" })}
+                      icon={PanelBottom}
+                    >
+                      Footer
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "zhPages", type: "list" })}
+                      icon={FileText}
+                    >
+                      Pages
+                    </SubNavItem>
+                  </NavGroup>
+                </li>
+                <li>
+                  <NavGroup title="Italian" icon={Languages}>
+                    <SubNavItem
+                      to={createPath({ resource: "itSite", type: "show", id: "fortis" })}
+                      icon={Globe}
+                    >
+                      Website
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "itSeo", type: "show", id: "fortis" })}
+                      icon={SearchCheck}
+                    >
+                      SEO
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "itHeaderLinks", type: "list" })}
+                      icon={PanelTop}
+                    >
+                      Header
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "itBlocks", type: "list" })}
+                      icon={Rows3}
+                    >
+                      Blocks
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "itFooterBody", type: "show", id: "fortis" })}
+                      icon={PanelBottom}
+                    >
+                      Footer
+                    </SubNavItem>
+                    <SubNavItem
+                      to={createPath({ resource: "itPages", type: "list" })}
+                      icon={FileText}
+                    >
+                      Pages
+                    </SubNavItem>
+                  </NavGroup>
+                </li>
+                <li>
                   <NavGroup title="Site Options" icon={Settings2}>
                     <SubNavItem
                       to={createPath({ resource: "paymentProvidersAll", type: "list" })}

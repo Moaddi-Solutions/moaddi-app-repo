@@ -278,6 +278,5 @@
       "completed": "مكتمل",
       "paymentDone": "تم الدفع"
     }
-  },
-  "small change to hit the redeploy on vercel": ""
+  }
 }

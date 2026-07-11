@@ -4,12 +4,14 @@ import { getRequestConfig } from "next-intl/server";
 import { cookies, headers as getHeaders } from "next/headers";
 import ar from "../messages/ar.json";
 import en from "../messages/en.json";
+import it from "../messages/it.json";
+import zh from "../messages/zh.json";
 
-const locales = ["en", "ar"] as const;
+const locales = ["en", "ar", "zh", "it"] as const;
 type AppLocale = (typeof locales)[number];
 const defaultLocale: AppLocale = "en";
 
-const messagesByLocale: Record<AppLocale, typeof en> = { en, ar };
+const messagesByLocale: Record<AppLocale, typeof en> = { en, ar, zh, it };
 
 const getLocale: () => Promise<string> = async () => {
   let locale: string | undefined;
