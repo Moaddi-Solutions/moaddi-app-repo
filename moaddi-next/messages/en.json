@@ -78,7 +78,11 @@
     "accountAccess": "Account access",
     "createCustomerAccount": "Create a customer account",
     "staffPortal": "Staff portal",
-    "staffPortalDescription": "Open the operator dashboard"
+    "staffPortalDescription": "Open the operator dashboard",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "loginFailed": "Sign-in failed. Please try again."
   },
   "SignIn": {
     "input": "Enter your number to login"

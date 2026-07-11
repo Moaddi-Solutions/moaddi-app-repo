@@ -24,6 +24,9 @@ export function signUpAddress() {
 export function otpAddress() {
   return `${address()}users/otp`;
 }
+export function socialSignInAddress() {
+  return `${address()}users/social`;
+}
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }

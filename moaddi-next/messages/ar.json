@@ -78,7 +78,11 @@
     "accountAccess": "الوصول للحساب",
     "createCustomerAccount": "إنشاء حساب عميل",
     "staffPortal": "بوابة الموظفين",
-    "staffPortalDescription": "فتح لوحة تحكم التشغيل"
+    "staffPortalDescription": "فتح لوحة تحكم التشغيل",
+    "orContinueWith": "أو تابع باستخدام",
+    "continueWithGoogle": "المتابعة باستخدام Google",
+    "continueWithApple": "المتابعة باستخدام Apple",
+    "loginFailed": "فشل تسجيل الدخول. حاول مرة أخرى."
   },
   "SignIn": {
     "input": "أدخل رقمك لتسجيل الدخول"

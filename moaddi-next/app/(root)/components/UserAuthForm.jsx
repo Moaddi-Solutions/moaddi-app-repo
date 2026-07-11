@@ -2,6 +2,7 @@
 
 import { Icons } from "@/(root)/components/Icons";
 import { PhoneInput } from "@/(root)/components/PhoneInput";
+import { SocialAuthButtons } from "@/(root)/components/SocialAuthButtons";
 import { useCart } from "@/(root)/context/cart-provider";
 import { Button } from "@/../components/ui/button";
 import { Input } from "@/../components/ui/input";
@@ -120,6 +121,7 @@ export function SignInForm({ className, variant = "default", ...props }) {
             )}
           </Button>
         </form>
+        <SocialAuthButtons />
         <p className="m-0 text-xs leading-5 text-muted-foreground">
           {t("Auth.agree")}{" "}
           <Link
@@ -269,6 +271,7 @@ export function SignUpForm({ className, variant = "default", ...props }) {
             )}
           </Button>
         </form>
+        <SocialAuthButtons />
         <p className="m-0 text-xs leading-5 text-muted-foreground">
           {t("Auth.agree")}{" "}
           <Link
