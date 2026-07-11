@@ -13,6 +13,9 @@ import {
 import { postRequestPayment } from "~/services/httpClient";
 import { purchaseAPI } from "~/services/serverAddresses";
 import alert from "~/lib/alert";
+import { goToOpenAfterPayment } from "~/lib/goToOpenAfterPayment";
+import { useUser } from "~/context/UserContext";
+import { useMachine } from "~/context/MachineContext";
 import { Button } from "~/components/ui/button";
 
 import {
@@ -24,6 +27,8 @@ import {
 export default function CheckoutStripeScreen({ user, finalizePayment: finalizePaymentProp }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { setUser } = useUser();
+  const { setMachine } = useMachine();
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -107,8 +112,8 @@ export default function CheckoutStripeScreen({ user, finalizePayment: finalizePa
       alert("success", t("paymentConfirmed"), t("orderBeingPrepared"));
 
       setTimeout(() => {
-        console.log("🔐 [STRIPE] Redirecting to success...");
-        router.navigate("/CheckoutStripe/success");
+        console.log("🔐 [STRIPE] Opening box screen...");
+        goToOpenAfterPayment(response, { setUser, setMachine, router });
       }, 1500);
     } catch (error) {
       console.error("🔐 [STRIPE] Payment finalization error:", error);
