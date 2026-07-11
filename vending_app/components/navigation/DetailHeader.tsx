@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react-native";
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton } from "~/components/moaddi";
@@ -18,6 +19,7 @@ interface DetailHeaderProps {
  * leading edge, optional trailing action, with the design's bottom hairline.
  */
 export function DetailHeader({ title, subtitle, onBack, trailing }: DetailHeaderProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -34,7 +36,7 @@ export function DetailHeader({ title, subtitle, onBack, trailing }: DetailHeader
         style={{ backgroundColor: colors.surfaceCard }}
         leading={
           <IconButton
-            label="Back"
+            label={t("back")}
             onPress={onBack}
             icon={<ArrowLeft size={20} color={colors.textHeading} />}
           />

@@ -1,5 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import { ProductCard } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
@@ -20,6 +21,7 @@ interface ProductItem {
 /** Full "Products" screen: every active product available on a live machine. */
 export function ProductsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [items, setItems] = useState<ProductItem[]>([]);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export function ProductsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
       <Stack.Screen options={{ headerShown: false }} />
       <DetailHeader
-        title="Products"
+        title={t("products")}
         onBack={() => (router.canGoBack() ? router.back() : router.navigate("/"))}
       />
       <ScrollView

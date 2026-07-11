@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Store } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ShopCard } from "~/components/moaddi";
@@ -18,6 +19,7 @@ interface ShopItem {
 /** Full "Shops" tab: all active, Bluetooth-enabled shops. */
 export function ShopsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<ShopItem[]>([]);
 
@@ -50,9 +52,9 @@ export function ShopsScreen() {
           borderBottomColor: colors.borderDefault,
         }}
       >
-        <Text style={{ ...type.title1, color: colors.textHeading }}>Shops</Text>
+        <Text style={{ ...type.title1, color: colors.textHeading }}>{t("shops")}</Text>
         <Text style={{ ...type.caption, color: colors.textMuted }}>
-          Explore our Bluetooth-enabled retail locations
+          {t("exploreShopsDescription")}
         </Text>
       </View>
 

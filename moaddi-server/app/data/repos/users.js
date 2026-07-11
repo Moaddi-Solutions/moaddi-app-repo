@@ -219,6 +219,105 @@ let mergeGuestPurchases = async (realUserId) => {
 };
 
 /*
+ * Sign in (or transparently sign up) via a social provider.
+ *
+ * `profile` is the normalized, already-verified payload from
+ * services/social-auth.js: { provider, sub, email, name, emailVerified }.
+ *
+ * Social users mirror the guest pattern: a synthetic `_id`
+ * (`<provider>-<sub>`) so they need no phone number, a random password
+ * (schema requires one, never used for login), role "Customer", active
+ * immediately. Returns the same shape as `signIn` (with a JWT).
+ */
+let socialSignIn = async (profile, preferredCurrency) => {
+  const provider = String(profile.provider || "").toLowerCase();
+  if (!provider || !profile.sub) {
+    return Promise.reject({
+      message: "Invalid social profile.",
+      statusCode: 400,
+    });
+  }
+
+  const _id = `${provider}-${profile.sub}`;
+  const currency =
+    (typeof preferredCurrency === "string" && preferredCurrency.trim()) ||
+    process.env.BASE_CURRENCY ||
+    "SAR";
+
+  let user = await Users.findOne({ _id });
+
+  if (user && user.isDeleted) {
+    return Promise.reject({
+      message: "This account has been deactivated.",
+      statusCode: 403,
+    });
+  }
+
+  if (user && !user.isActive) {
+    return Promise.reject({
+      message: "User not Active.",
+      statusCode: 401,
+    });
+  }
+
+  if (!user) {
+    user = new Users({
+      _id,
+      name: profile.name || "user",
+      role: "Customer",
+      password: crypto.randomBytes(24).toString("hex"),
+      email: profile.email || undefined,
+      provider,
+      providerId: profile.sub,
+      isActive: true,
+      preferredCurrency: currency,
+      created: moment().utc().add(config.timeDifference, "hours"),
+      updated: moment().utc().add(config.timeDifference, "hours"),
+    });
+    user = await user.save();
+  } else {
+    // Keep name/email fresh from the provider on subsequent logins.
+    let dirty = false;
+    if (profile.email && user.email !== profile.email) {
+      user.email = profile.email;
+      dirty = true;
+    }
+    if (profile.name && (!user.name || user.name === "user")) {
+      user.name = profile.name;
+      dirty = true;
+    }
+    if (dirty) {
+      user.updated = moment().utc().add(config.timeDifference, "hours");
+      user = await user.save();
+    }
+  }
+
+  user = user.toJSON();
+
+  // NOTE: guest-purchase merge is phone-based and keyed on `_id === phone`;
+  // social users have no phone at creation, so there is nothing to merge yet.
+  // When phone-linking is added, merge by the linked phone into this `_id`.
+
+  let expiresIn = config.jwt.expiry2 || config.jwt.expiry1;
+  let token = jwt.sign(
+    { _id: user._id, role: user.role },
+    config.jwt.secret,
+    { expiresIn },
+  );
+
+  return {
+    _id: user._id,
+    name: user.name,
+    role: user.role,
+    email: user.email || "",
+    provider,
+    preferredCurrency: user.preferredCurrency || "SAR",
+    token,
+    expiresIn,
+  };
+};
+
+/*
  * Create new user.
  */
 let create = async (user) => {
@@ -965,6 +1064,7 @@ module.exports = {
   updateGuestInfo,
   mergeGuestPurchases,
   signIn,
+  socialSignIn,
   toggle,
   get,
   getByShopId,

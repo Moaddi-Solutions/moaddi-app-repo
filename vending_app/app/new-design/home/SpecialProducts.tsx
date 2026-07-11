@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import { ProductCard, SectionHeader } from "~/components/moaddi";
 import { space } from "~/theme/moaddi";
@@ -19,6 +20,7 @@ interface ProductItem {
 /** Horizontal carousel of campaign/special products. */
 export function SpecialProducts() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [items, setItems] = useState<ProductItem[]>([]);
 
   useEffect(() => {
@@ -41,8 +43,8 @@ export function SpecialProducts() {
   return (
     <View style={{ marginTop: space.section }}>
       <SectionHeader
-        title="Special Products"
-        actionLabel="View all"
+        title={t("specialProducts")}
+        actionLabel={t("viewAll")}
         onAction={() => router.push("/Products" as never)}
       />
       <ScrollView

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import { Button, Card, PhoneInput } from "~/components/moaddi";
+import { Button, Card, PhoneInput, SocialAuthButtons } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import alert from "~/lib/alert";
 import { getItem, setItem } from "~/lib/utils";
@@ -26,17 +26,19 @@ const SignupScreen = () => {
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (user) router.dismissAll();
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/(tabs)");
     });
   }, []);
 
   const handleSignup = async () => {
     if (!formData.phone || !formData.password || !formData.confirmPassword)
-      return alert("error", "Please fill in all fields");
+      return alert("error", t("pleaseFillInAllFields"));
     if (formData.password !== formData.confirmPassword)
-      return alert("error", "Passwords do not match");
+      return alert("error", t("passwordsDoNotMatch"));
     if (formData.password.length < 6)
-      return alert("error", "Password must be at least 6 characters long");
+      return alert("error", t("passwordMinLength"));
 
     const user = {
       _id: formData.phone,
@@ -48,7 +50,7 @@ const SignupScreen = () => {
     const response = await postRequest(signUpAddress, user as any);
     if (response.message) return alert("error", response.message);
 
-    alert("success", "Account created successfully!");
+    alert("success", t("accountCreatedSuccessfully"));
     setItem("otp", response);
     router.navigate("/OTP");
   };
@@ -119,6 +121,8 @@ const SignupScreen = () => {
               <Button fullWidth onPress={handleSignup}>
                 {t("createAccount")}
               </Button>
+
+              <SocialAuthButtons />
 
               <View style={{ alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4 }}>
                 <Text

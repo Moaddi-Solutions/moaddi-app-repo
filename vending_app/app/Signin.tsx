@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import { Button, Card, PhoneInput } from "~/components/moaddi";
+import { Button, Card, PhoneInput, SocialAuthButtons } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
@@ -29,16 +29,18 @@ const SigninScreen = () => {
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (user) router.dismissAll();
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/(tabs)");
     });
   }, []);
 
   const handleSignin = async () => {
     try {
       if (!formData.phone || !formData.password)
-        return alert("error", "Please fill in all fields");
+        return alert("error", t("pleaseFillInAllFields"));
       if (formData.password.length < 6)
-        return alert("error", "Password must be at least 6 characters long");
+        return alert("error", t("passwordMinLength"));
 
       const user = { _id: formData.phone, password: formData.password, rememberMe: false };
       const response = await postRequest(signInAddress, user as any);
@@ -54,11 +56,13 @@ const SigninScreen = () => {
 
       setUser(response);
       await setItem("user", response);
-      alert("success", "Logged in successfully!");
+      alert("success", t("loggedInSuccessfully"));
 
       getRequest(userAPI(response._id)).then(async (r) => {
         setUser((prev: any) => ({ ...prev, ...r }));
-        router.dismissAll();
+        // Sign-in is often opened via `replace` (e.g. from Profile) — no stack to dismiss.
+        if (router.canDismiss()) router.dismissAll();
+        else router.replace("/(tabs)");
       });
     } catch (error) {
       alert("error", error instanceof Error ? error.message : t("loginFailed"));
@@ -94,7 +98,7 @@ const SigninScreen = () => {
               style={{ width: 72, height: 72, borderRadius: 20 }}
             />
             <Text style={{ ...typo.caption, color: colors.textMuted }}>
-              Scan. Pay. Grab it.
+              {t("scanPayGrabIt")}
             </Text>
           </View>
 
@@ -133,6 +137,8 @@ const SigninScreen = () => {
               <Button fullWidth onPress={handleSignin}>
                 {t("login")}
               </Button>
+
+              <SocialAuthButtons />
 
               <View
                 style={{

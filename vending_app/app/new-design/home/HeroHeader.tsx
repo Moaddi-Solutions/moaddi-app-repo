@@ -1,9 +1,12 @@
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Globe, Search } from "lucide-react-native";
+import { Globe, Search, UserRound } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { Image, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton } from "~/components/moaddi";
 import { TopBar } from "~/components/moaddi/TopBar";
+import { useUser } from "~/context/UserContext";
 import { colors, gradients, radius, space, type } from "~/theme/moaddi";
 
 interface HeroHeaderProps {
@@ -18,12 +21,15 @@ interface HeroHeaderProps {
  * pill. Bottom padding leaves room for the ServiceGrid card to overlap.
  */
 export function HeroHeader({
-  title = "Good evening",
-  subtitle = "Scan. Pay. Grab it.",
+  title,
+  subtitle,
   onLanguage,
   onSearch,
 }: HeroHeaderProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { user } = useUser();
   return (
     <LinearGradient
       colors={gradients.brandHero}
@@ -34,8 +40,8 @@ export function HeroHeader({
       <TopBar
         brand
         style={{ backgroundColor: "transparent" }}
-        title={title}
-        subtitle={subtitle}
+        title={title ?? t("goodEvening")}
+        subtitle={subtitle ?? t("scanPayGrabIt")}
         leading={
           <Image
             source={require("~/assets/images/icon-new.jpg")}
@@ -43,11 +49,20 @@ export function HeroHeader({
           />
         }
         trailing={
-          <IconButton
-            label="Language"
-            onPress={onLanguage}
-            icon={<Globe size={20} color={colors.textOnBrand} />}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {!user ? (
+              <IconButton
+                label={t("login")}
+                onPress={() => router.push("/Profile" as never)}
+                icon={<UserRound size={20} color={colors.textOnBrand} />}
+              />
+            ) : null}
+            <IconButton
+              label={t("language")}
+              onPress={onLanguage}
+              icon={<Globe size={20} color={colors.textOnBrand} />}
+            />
+          </View>
         }
       />
 
@@ -70,7 +85,7 @@ export function HeroHeader({
       >
         <Search size={18} color="rgba(255,255,255,0.9)" />
         <Text style={{ ...type.body, color: "rgba(255,255,255,0.9)" }}>
-          Search products…
+          {t("searchProducts")}
         </Text>
       </Pressable>
     </LinearGradient>

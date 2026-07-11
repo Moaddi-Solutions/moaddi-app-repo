@@ -1,4 +1,5 @@
 import { ReceiptText, ScanQrCode, ShoppingBag, Store } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { ServiceTile, serviceTileIconColor } from "~/components/moaddi";
 import { colors, radius, shadow, space } from "~/theme/moaddi";
@@ -19,6 +20,7 @@ export function ServiceGrid({
   onOrders,
   ordersBadge,
 }: ServiceGridProps) {
+  const { t } = useTranslation();
   return (
     <View
       style={{
@@ -34,25 +36,25 @@ export function ServiceGrid({
       }}
     >
       <ServiceTile
-        label="Scan"
+        label={t("scan")}
         tone="brand"
         onPress={onScan}
         icon={<ScanQrCode size={22} color={serviceTileIconColor("brand")} />}
       />
       <ServiceTile
-        label="Shops"
+        label={t("shops")}
         tone="periwinkle"
         onPress={onShops}
         icon={<Store size={22} color={serviceTileIconColor("periwinkle")} />}
       />
       <ServiceTile
-        label="Products"
+        label={t("products")}
         tone="gold"
         onPress={onProducts}
         icon={<ShoppingBag size={22} color={serviceTileIconColor("gold")} />}
       />
       <ServiceTile
-        label="Orders"
+        label={t("orders")}
         tone="neutral"
         badge={ordersBadge}
         onPress={onOrders}

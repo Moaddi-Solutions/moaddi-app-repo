@@ -27,6 +27,7 @@ export const address = baseUrl + "api/v1/";
 
 export const signInAddress = address + "users/signin";
 export const signUpAddress = address + "users/signup";
+export const socialSignInAddress = address + "users/social";
 export const otpAddress = address + "users/otp";
 export const guestSessionAddress = address + "users/guest";
 export const guestInfoAddress = address + "users/guest/me";

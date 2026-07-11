@@ -1,5 +1,6 @@
 import { ChevronDown, Search, X } from "lucide-react-native";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   Image,
@@ -136,6 +137,7 @@ export function PhoneInput({
   error,
   style,
 }: PhoneInputProps) {
+  const { t } = useTranslation();
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [cca2, setCca2] = useState(defaultCca2);
   const [callingCode, setCallingCode] = useState(defaultCallingCode);
@@ -232,7 +234,7 @@ export function PhoneInput({
         <TextInput
           value={national}
           onChangeText={(text) => emit(text.replace(/\D/g, ""))}
-          placeholder={placeholder ?? "Phone number"}
+          placeholder={placeholder ?? t("phoneNumber")}
           placeholderTextColor={palette.ink[400]}
           keyboardType="phone-pad"
           textAlign="left"
@@ -281,7 +283,7 @@ export function PhoneInput({
               }}
             >
               <Text style={{ ...type.title3, color: colors.textHeading }}>
-                Select country
+                {t("selectCountry")}
               </Text>
               <Pressable onPress={() => setPickerOpen(false)} hitSlop={12}>
                 <X size={20} color={colors.textMuted} />
@@ -304,7 +306,7 @@ export function PhoneInput({
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Search"
+                placeholder={t("search")}
                 placeholderTextColor={palette.ink[400]}
                 autoCapitalize="none"
                 style={{ flex: 1, ...type.body, color: colors.textHeading }}
