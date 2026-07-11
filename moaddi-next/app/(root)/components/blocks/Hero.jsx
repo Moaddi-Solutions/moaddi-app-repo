@@ -31,6 +31,7 @@ const HERO_FALLBACK = {
     },
     appStoreUrl: "#home",
     googlePlayUrl: "#home",
+    appGalleryUrl: "#home",
     stats: [
       { value: "12+", label: "machines online" },
       { value: "19", label: "products" },
@@ -50,6 +51,7 @@ const HERO_FALLBACK = {
     },
     appStoreUrl: "#home",
     googlePlayUrl: "#home",
+    appGalleryUrl: "#home",
     stats: [
       { value: "+12", label: "ماكينة متصلة" },
       { value: "19", label: "منتج" },
@@ -73,6 +75,7 @@ const Hero = ({
   button,
   appStoreUrl,
   googlePlayUrl,
+  appGalleryUrl,
   stats,
   floatingCards,
 }) => {
@@ -87,6 +90,7 @@ const Hero = ({
   const ctaUrl = button?.page?.url || fallback.button.page.url;
   const appStore = appStoreUrl || fallback.appStoreUrl;
   const googlePlay = googlePlayUrl || fallback.googlePlayUrl;
+  const appGallery = appGalleryUrl || fallback.appGalleryUrl;
   const statItems = stats?.length ? stats : fallback.stats;
   const cards = floatingCards?.length ? floatingCards : fallback.floatingCards;
 
@@ -123,8 +127,11 @@ const Hero = ({
                   />
                 </Link>
               </Button>
-              <GooglePlayBadge href={googlePlay} />
-              <AppStoreBadge href={appStore} />
+              <div className="moaddi-store-row">
+                <GooglePlayBadge href={googlePlay} />
+                <AppStoreBadge href={appStore} />
+                <AppGalleryBadge href={appGallery} />
+              </div>
             </div>
             <div className="moaddi-hero-stats">
               {statItems.map((stat, i) => (
@@ -166,19 +173,25 @@ const Hero = ({
   );
 };
 
-const BadgeShell = ({ label, href = "#home", children }) => (
+const BadgeShell = ({ label, href = "#home", width = 120, children }) => (
   <a className="moaddi-store-badge" href={href} aria-label={label} dir="ltr">
     <svg
       aria-hidden="true"
       focusable="false"
-      width="120"
+      width={width}
       height="40"
-      viewBox="0 0 120 40"
+      viewBox={`0 0 ${width} 40`}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect x="0.5" y="0.5" width="119" height="39" rx="5.5" fill="black" />
-      <rect x="0.5" y="0.5" width="119" height="39" rx="5.5" stroke="#A6A6A6" />
+      <rect
+        x="0.5"
+        y="0.5"
+        width={width - 1}
+        height="39"
+        rx="5.5"
+        fill="black"
+      />
       {children}
     </svg>
   </a>
@@ -245,6 +258,52 @@ const AppStoreBadge = ({ href }) => {
         fontWeight="500"
       >
         App Store
+      </text>
+    </BadgeShell>
+  );
+};
+
+const AppGalleryBadge = ({ href }) => {
+  return (
+    <BadgeShell label="Explore it on AppGallery" href={href} width={142}>
+      <rect x="9.5" y="7.5" width="28" height="25" rx="5.5" fill="#D90B34" />
+      <path
+        d="M20.25 11.3c.62 3.42 1.66 5.1 3.25 5.1s2.63-1.68 3.25-5.1"
+        stroke="white"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+      <text
+        x="23.5"
+        y="26.8"
+        textAnchor="middle"
+        fill="white"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="5.3"
+        fontWeight="800"
+        letterSpacing=".22"
+      >
+        HUAWEI
+      </text>
+      <text
+        x="46"
+        y="14"
+        fill="white"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="7.9"
+        fontWeight="800"
+      >
+        EXPLORE IT ON
+      </text>
+      <text
+        x="46"
+        y="31"
+        fill="white"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="17.5"
+        fontWeight="700"
+      >
+        AppGallery
       </text>
     </BadgeShell>
   );
