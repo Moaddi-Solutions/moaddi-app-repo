@@ -76,7 +76,7 @@ export function ProductCard({
           />
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...type.caption, color: palette.ink[400] }}>Product photo</Text>
+            <Text style={{ ...type.caption, color: palette.ink[400] }}>{t("productPhoto")}</Text>
           </View>
         )}
         {discount != null ? (

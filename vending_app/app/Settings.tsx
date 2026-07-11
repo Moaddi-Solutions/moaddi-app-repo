@@ -108,7 +108,7 @@ const SettingsScreen = () => {
           <ListItem
             icon={<Info size={18} color={listItemIconColor()} />}
             title={t("aboutMoaddi")}
-            subtitle="Version 4.3.0"
+            subtitle={t("versionLabel", { version: "4.3.0" })}
             chevron={false}
           />
         </Card>

@@ -4,6 +4,7 @@ const express = require("express");
 const users = require("../../data/repos/users");
 const authenticate = require("../middlewares/authenticate");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
+const { verifySocialToken } = require("../../services/social-auth");
 
 
 module.exports = () => {
@@ -35,6 +36,21 @@ module.exports = () => {
   router.post("/users/signin", async (req, res, next) => {
     try {
       let results = await users.signIn(req.body);
+      return res.status(200).json(results);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Social sign-in (Google / Apple) — public. Verifies the provider ID token,
+  // find-or-creates a `<provider>-<sub>` user, and returns a signin-shaped
+  // payload (with token). Body: { provider, idToken, name? }.
+  router.post("/users/social", async (req, res, next) => {
+    try {
+      const { provider, idToken, name } = req.body || {};
+      const profile = await verifySocialToken(provider, idToken, { name });
+      const preferredCurrency = await getCurrencyOfUser(req);
+      let results = await users.socialSignIn(profile, preferredCurrency);
       return res.status(200).json(results);
     } catch (err) {
       next(err);

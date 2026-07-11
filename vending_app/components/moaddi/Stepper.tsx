@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 import { colors, palette, radius, type } from "~/theme/moaddi";
 
@@ -17,6 +18,7 @@ export function Stepper({
   onChange,
   size = "md",
 }: StepperProps) {
+  const { t } = useTranslation();
   const h = size === "sm" ? 32 : 40;
 
   const decDisabled = value <= min;
@@ -25,7 +27,7 @@ export function Stepper({
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <Pressable
-        accessibilityLabel="Decrease"
+        accessibilityLabel={t("decrease")}
         disabled={decDisabled}
         onPress={() => !decDisabled && onChange?.(value - 1)}
         style={{
@@ -63,7 +65,7 @@ export function Stepper({
       </Text>
 
       <Pressable
-        accessibilityLabel="Increase"
+        accessibilityLabel={t("increase")}
         disabled={incDisabled}
         onPress={() => !incDisabled && onChange?.(value + 1)}
         style={{

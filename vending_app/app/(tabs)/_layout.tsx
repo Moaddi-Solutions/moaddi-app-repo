@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { MoaddiTabBar } from "~/components/navigation/MoaddiTabBar";
 
 /**
@@ -8,14 +9,16 @@ import { MoaddiTabBar } from "~/components/navigation/MoaddiTabBar";
  * Other screens (Shop/[id], Checkout, …) push over the tabs from the parent Stack.
  */
 export default function TabsLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
       tabBar={(props) => <MoaddiTabBar {...props} />}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="shops" options={{ title: "Shops" }} />
-      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+      <Tabs.Screen name="index" options={{ title: t("home") }} />
+      <Tabs.Screen name="shops" options={{ title: t("shops") }} />
+      <Tabs.Screen name="contact" options={{ title: t("contactUs") }} />
+      <Tabs.Screen name="profile" options={{ title: t("profile") }} />
     </Tabs>
   );
 }

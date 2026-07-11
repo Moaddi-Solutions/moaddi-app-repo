@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
+import { SocialLinks } from "~/components/moaddi";
 import { colors } from "~/theme/moaddi";
 import { HeroHeader } from "./home/HeroHeader";
 import { ServiceGrid } from "./home/ServiceGrid";
@@ -39,6 +40,7 @@ function HomeScreen() {
         />
         <SpecialProducts />
         <ShopsList />
+        <SocialLinks />
       </ScrollView>
     </View>
   );

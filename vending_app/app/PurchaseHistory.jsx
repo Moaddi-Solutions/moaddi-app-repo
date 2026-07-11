@@ -71,7 +71,19 @@ function PurchaseHistoryData() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8, paddingHorizontal: space.gutter, paddingTop: 16, paddingBottom: 64 }}
+            style={{
+              flexGrow: 0,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.borderDefault,
+            }}
+            contentContainerStyle={{
+              gap: 8,
+              paddingHorizontal: space.gutter,
+              
+              paddingTop: 16,
+              paddingBottom: 12,
+              alignItems: "center",
+            }}
           >
             {filters.map((f) => {
               const active = f === filter;
@@ -104,9 +116,9 @@ function PurchaseHistoryData() {
           </ScrollView>
 
           <ScrollView
-            // style={{ flex: 1 }}
+            style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: space.card, paddingHorizontal: space.gutter, paddingBottom: 24 }}
+            contentContainerStyle={{ gap: space.card, paddingHorizontal: space.gutter, paddingTop: space.card, paddingBottom: 24 }}
           >
             {orders.map((o) => {
               const currency = o.products?.[0]?.preferredCurrency;
