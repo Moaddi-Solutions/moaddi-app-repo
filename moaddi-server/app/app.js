@@ -57,6 +57,11 @@ app.use(function (req, res, next) {
 // Static
 app.use("/images", express.static("images"));
 
+// Deep-link association files (Universal / App Links) + gift browser fallback.
+// Mounted before helmet so the association JSON and landing HTML are served
+// verbatim with no CSP/redirect interference.
+app.use("/", require("./routes/deeplinks"));
+
 // json-server
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------

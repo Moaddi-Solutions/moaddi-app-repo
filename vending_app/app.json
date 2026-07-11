@@ -27,7 +27,10 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "7"
+      "buildNumber": "7",
+      "associatedDomains": [
+        "applinks:server.moaddi-app.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -42,6 +45,23 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "server.moaddi-app.com",
+              "pathPrefix": "/gift"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

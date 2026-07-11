@@ -96,11 +96,10 @@ const BoxGrid = () => {
     try {
       const { claimToken, claimUrl } = await enableGift(user.purchase._id);
       const link = claimUrl || Linking.createURL("gift/" + claimToken);
+      // Gift share: send ONLY the claim URL — no message/description text.
+      // `message` carries the link on Android; `url` carries it on iOS.
       await Share.share({
-        message: `${
-          t("giftShareMessage") ||
-          "I've got something for you at a Moaddi machine — open it here:"
-        } ${link}`,
+        message: link,
         url: link,
       });
     } catch (e) {
@@ -117,11 +116,8 @@ const BoxGrid = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
-      <DetailHeader
-        title={t("boxList") || "Box list"}
-        subtitle={user?.purchase?.machine?.name}
-        onBack={() => router.replace("/")}
-      />
+   
+   
 
       <ScrollView
         style={{ flex: 1 }}
