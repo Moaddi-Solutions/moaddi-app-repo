@@ -51,6 +51,10 @@ export const contentAPI = (id) => baseUrl + "content/" + id;
 export const userToggleAPI = (id) => address + "users/" + id + "/toggle";
 export const machineAPI = (id) => address + "machines/" + id;
 export const purchaseAPI = (id) => address + "purchases/" + id;
+// Gift a purchase: buyer enables a shareable claim link; a recipient previews & claims it.
+export const giftEnableAPI = (id) => address + "purchases/" + id + "/gift";
+export const giftPreviewAPI = (token) => address + "gifts/" + token;
+export const giftClaimAPI = (token) => address + "gifts/" + token + "/claim";
 export const MachinesByVendor = (id) => address + "machines/vendor/" + id;
 export const ShopsByVendor = (id) => address + "shops/vendor/" + id;
 export const purchaseByCustomer = (id) =>

@@ -72,11 +72,12 @@ function SocketContextProvider({ children }) {
     return newSocket;
   };
 
+  // (Re)connect whenever the auth token changes so identity switches — sign-in,
+  // guest checkout, or claiming a gift — always use the current token.
   useEffect(() => {
-    if (!user) return;
-    if (socket) return;
+    if (!user?.token) return;
     reSocket();
-  }, [user]);
+  }, [user?.token]);
 
   useEffect(() => {
     if (!socket) return;
