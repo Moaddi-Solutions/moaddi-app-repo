@@ -4,7 +4,7 @@ import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
 import { getRequest } from "@/../services/events";
 import { machineQRScan } from "@/../services/serverAddresses";
-import { QrCode } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import qrcodeParser from "qrcode-parser";
@@ -140,35 +140,56 @@ const MachineScan = () => {
     input.value = "";
   };
   return (
-    <Container
-      className={`${!showScan ? "my-40" : "my-2"} flex flex-col items-center justify-center gap-2`}
-    >
-      {showScan ? (
-        <CameraScan {...cameraScan} />
-      ) : (
-        <>
-          <Button
-            onClick={startCameraScan}
-            variant={"bordered"}
-            className="flex size-45 flex-col "
-          >
-            <QrCode className="size-30" />
-            <p>{t("scanMachine")}</p>
-          </Button>
-          <Button asChild variant={"bordered"} className="w-45 cursor-pointer">
-            <label htmlFor="file">
-              <input
-                onChange={imageUpload}
-                id="file"
-                type="file"
-                hidden
-                accept="image/*"
-              />
-              <p>{t("scanMachineFromImage")}</p>
-            </label>
-          </Button>
-        </>
-      )}
+    <Container className="my-10 flex max-w-md flex-col items-center gap-4 text-center">
+      <div>
+        <h1 className="text-xl font-extrabold md:text-2xl">
+          {t("scanMachine")}
+        </h1>
+        <p className="text-muted-foreground mt-1 text-[13.5px] font-semibold">
+          Point your camera at the QR on the machine&apos;s screen or sticker.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={!showScan ? startCameraScan : undefined}
+        aria-label={t("scanMachine")}
+        className="moaddi-scan-view w-full"
+      >
+        {showScan && <CameraScan setText={setText} />}
+        <span className="moaddi-reticle">
+          <i />
+          <i />
+          <i />
+          <i />
+          <span className="moaddi-scanline" />
+        </span>
+        {isLoader && (
+          <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-bold text-white">
+            Checking machine…
+          </span>
+        )}
+      </button>
+
+      <div className="grid w-full gap-2.5">
+        <Button asChild variant="outline" size="lg" className="w-full cursor-pointer font-bold">
+          <label htmlFor="file">
+            <input
+              onChange={imageUpload}
+              id="file"
+              type="file"
+              hidden
+              accept="image/*"
+            />
+            <Upload className="size-4" />
+            {t("scanMachineFromImage")}
+          </label>
+        </Button>
+        <span className="text-muted-foreground text-[12px] font-semibold">
+          Group QR codes work here too — you&apos;ll see every machine in the
+          group.
+        </span>
+      </div>
     </Container>
   );
 };
@@ -188,15 +209,13 @@ const CameraScan = ({ setText }) => {
     },
   });
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-lg border bg-black">
-      <video
-        className="aspect-square w-full object-cover"
-        ref={ref}
-        muted
-        playsInline
-        autoPlay
-      />
-    </div>
+    <video
+      className="absolute inset-0 h-full w-full object-cover"
+      ref={ref}
+      muted
+      playsInline
+      autoPlay
+    />
   );
 };
 

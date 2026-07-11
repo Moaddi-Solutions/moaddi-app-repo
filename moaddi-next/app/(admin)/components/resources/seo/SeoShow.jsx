@@ -1,30 +1,27 @@
-import { ImageField, Show, SimpleShowLayout, TextField } from "react-admin";
+import {
+  AdminDetailField,
+  AdminDetailGrid,
+  AdminDetailImage,
+} from "@/(admin)/components/AdminDetail";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { useRecordContext } from "ra-core";
 
-const Title = () => {
-  return <span>Seo</span>;
-};
-
-const seoListItems = [
-  <TextField key="metaTitle" source="metaTitle" />,
-  <TextField key="metaDescription" source="metaDescription" />,
-  <ImageField
-    sx={{
-      ".RaImageField-image": {
-        maxHeight: 150,
-      },
-    }}
-    label="shareImage"
-    source="shareImage.src"
-    key="shareImage.src"
-  />,
-];
-
-const SeoShow = () => {
+const SeoFields = () => {
+  const record = useRecordContext();
+  if (!record) return null;
   return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{seoListItems}</SimpleShowLayout>
-    </Show>
+    <AdminDetailGrid>
+      <AdminDetailField label="Meta title" value={record.metaTitle} />
+      <AdminDetailField label="Meta description" value={record.metaDescription} span={2} />
+      <AdminDetailImage label="Share image" source="shareImage.src" />
+    </AdminDetailGrid>
   );
 };
+
+const SeoShow = () => (
+  <AdminShow title="SEO">
+    <SeoFields />
+  </AdminShow>
+);
 
 export default SeoShow;

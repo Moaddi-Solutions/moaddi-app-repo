@@ -1,0 +1,465 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* Primary Color — brand teal, from the Moaddi logo (#1FA3B8) */
+  --color-primary-50: #f0f9fa;
+  --color-primary-100: #e2f2f5;
+  --color-primary-200: #cfe9ee;
+  --color-primary-300: #a3d8e1;
+  --color-primary-400: #5fbfce;
+  --color-primary-500: #1fa3b8;
+  --color-primary-600: #127285;
+  --color-primary-700: #0f5d6d;
+  --color-primary-800: #0e4a56;
+  --color-primary-900: #0e3a44;
+  --color-primary-950: #10282e;
+  /* Secondary Color — brand gold (#DBB44C), reserved for offers/savings/low-stock */
+  --color-secondary-50: #fdf9ef;
+  --color-secondary-100: #faf3df;
+  --color-secondary-200: #eedcae;
+  --color-secondary-300: #e8c470;
+  --color-secondary-400: #e2bc5e;
+  --color-secondary-500: #dbb44c;
+  --color-secondary-600: #c29a36;
+  --color-secondary-700: #a8842a;
+  --color-secondary-800: #86691f;
+  --color-secondary-900: #64500e;
+  --color-secondary-950: #3d2e07;
+  /* Tertiary Color */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Cairo, Tahoma, Arial, "Segoe UI", "Noto Sans Arabic", sans-serif;
+  /* --font-mono: var(--font-geist-mono);*/
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-text: var(--primary-text);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --text-xl--line-height: 2;
+  --text-2xl--line-height: 2;
+  --text-3xl--line-height: 2;
+  --text-4xl--line-height: 1.5;
+  --text-5xl--line-height: 1.5;
+  --text-6xl--line-height: 1.5;
+  --text-7xl--line-height: 1.5;
+  --text-8xl--line-height: 1;
+  --text-9xl--line-height: 1;
+}
+
+:root {
+  --primary: #1fa3b8;
+  --primary-foreground: #ffffff;
+  --primary-hover: #127285;
+  --primary-strong: #0e3a44;
+  /* darker teal for text/icons directly on background or card — #1fa3b8 only
+     hits 2.7:1 on the page background, well under WCAG AA (4.5:1) for text */
+  --primary-text: #127285;
+  /* soft gold surface + deep gold text — offer chips/badges */
+  --secondary: #faf3df;
+  --secondary-foreground: #a8842a;
+
+  --radius: 0.75rem;
+  /* mist page background, ink text */
+  --background: #f0f5f6;
+  --foreground: #10282e;
+  --card: #ffffff;
+  --card-foreground: #10282e;
+  --popover: #ffffff;
+  --popover-foreground: #10282e;
+  --muted: #e7eef0;
+  --muted-foreground: #5f787e;
+  /* teal-soft surface + deep teal text — quiet/ghost actions */
+  --accent: #e2f2f5;
+  --accent-foreground: #127285;
+  --success: #2e9e5b;
+  --success-foreground: #ffffff;
+  --success-soft: color-mix(in srgb, var(--success) 14%, transparent);
+  --destructive: #d64545;
+  --border: #dde8ea;
+  --input: #dde8ea;
+  --ring: #1fa3b8;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #10282e;
+  --sidebar-primary: #1fa3b8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2f2f5;
+  --sidebar-accent-foreground: #127285;
+  --sidebar-border: #dde8ea;
+  --sidebar-ring: #1fa3b8;
+
+  /* admin dashboard — hero gradient + gold accents (light) */
+  --admin-grad-ink: #0e3a44;
+  --admin-grad-deep: #127285;
+  --admin-grad-teal: #1fa3b8;
+  --admin-gold: #dbb44c;
+  --admin-gold-ink: #a8842a;
+  --admin-gold-line: #eedcae;
+  --admin-gold-soft: #faf3df;
+
+  --site-header-bg: color-mix(in srgb, var(--card) 92%, transparent);
+  --site-header-surface: var(--card);
+  --site-header-line: var(--border);
+  --site-header-ink: var(--foreground);
+  --site-header-muted: var(--muted-foreground);
+  --site-header-avatar: var(--primary-strong);
+  --brand-on-solid: #ffffff;
+  --brand-hero-muted: #cdeef5;
+  --brand-hero-muted-2: #9fcfd9;
+  --brand-hero-soft: #e8f6f9;
+  --brand-hero-glow: color-mix(in srgb, var(--admin-gold) 22%, transparent);
+  --brand-hero-wash: color-mix(in srgb, var(--brand-on-solid) 6%, transparent);
+  --brand-hero-kicker-border: color-mix(in srgb, var(--brand-on-solid) 20%, transparent);
+  --brand-hero-kicker-bg: color-mix(in srgb, var(--brand-on-solid) 12%, transparent);
+  --brand-hero-kicker-dot: color-mix(in srgb, var(--brand-on-solid) 90%, transparent);
+  --brand-shadow-strong: color-mix(in srgb, var(--foreground) 25%, transparent);
+  --brand-shadow-deep: color-mix(in srgb, black 40%, transparent);
+  --scan-bg-top: #16272d;
+  --scan-bg-bottom: #0d181c;
+  --scan-accent: #35c7dd;
+  --scan-accent-soft: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* brand dark theme — toggled via a `.dark` class on <html> */
+.dark {
+  /* darkened from #22a6bd — that shade only hit 2.9:1 for white button text,
+     under WCAG AA (4.5:1); #127285 keeps the brand teal but passes */
+  --primary: #127285;
+  --primary-foreground: #ffffff;
+  --primary-hover: #22a6bd;
+  --primary-strong: #0e3a44;
+  /* lighter teal for text/icons on the dark background/card — needs to be
+     light enough to read on dark surfaces, unlike the button-fill --primary */
+  --primary-text: #3fb8cf;
+  --secondary: #3a2f16;
+  --secondary-foreground: #e8c470;
+
+  --background: #0b1d22;
+  --foreground: #e8f1f2;
+  --card: #12292f;
+  --card-foreground: #e8f1f2;
+  --popover: #12292f;
+  --popover-foreground: #e8f1f2;
+  --muted: #16333a;
+  --muted-foreground: #93aab0;
+  --accent: #16333a;
+  --accent-foreground: #6fd8e6;
+  --success: #4cc383;
+  --success-foreground: #0b1d22;
+  --success-soft: color-mix(in srgb, var(--success) 18%, transparent);
+  --destructive: #ef6a6a;
+  --border: #23434b;
+  --input: #23434b;
+  --ring: #22a6bd;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: #12292f;
+  --sidebar-foreground: #e8f1f2;
+  --sidebar-primary: #22a6bd;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #16333a;
+  --sidebar-accent-foreground: #e8f1f2;
+  --sidebar-border: #23434b;
+  --sidebar-ring: #22a6bd;
+
+  /* admin dashboard — gold accents stay in-brand but slightly muted for dark surfaces */
+  --admin-gold: #e8c470;
+  --admin-gold-ink: #e8c470;
+  --admin-gold-line: #5c4a22;
+  --admin-gold-soft: #23330f;
+
+  --site-header-bg: color-mix(in srgb, var(--background) 88%, transparent);
+  --site-header-surface: var(--card);
+  --site-header-line: var(--border);
+  --site-header-ink: var(--foreground);
+  --site-header-muted: var(--muted-foreground);
+  --site-header-avatar: var(--primary-strong);
+  --brand-hero-muted: #cdeef5;
+  --brand-hero-muted-2: #9fcfd9;
+  --brand-hero-soft: #e8f6f9;
+  --scan-bg-top: #16272d;
+  --scan-bg-bottom: #0d181c;
+  --scan-accent: #35c7dd;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+
+  h1 {
+    @apply text-8xl md:text-9xl;
+  }
+  h2 {
+    @apply text-6xl md:text-7xl;
+  }
+  h3 {
+    @apply text-5xl md:text-6xl;
+  }
+  h4 {
+    @apply text-4xl md:text-5xl;
+  }
+  h5 {
+    @apply text-3xl md:text-4xl;
+  }
+  h6 {
+    @apply text-xl md:text-2xl;
+  }
+  p {
+    @apply text-base;
+  }
+  span {
+    @apply text-sm;
+  }
+  small {
+    @apply text-xs;
+  }
+  /*
+  a {
+    @apply text-secondary transition-colors;
+  }
+  a:hover,
+  a:active,
+  a:focus {
+    @apply text-secondary-600;
+  }
+  a:visited {
+    @apply text-purple-900;
+  }
+  */
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+/*
+body #cw-bubble-holder {
+  @apply container mx-auto flex px-4;
+  justify-content: end;
+  .woot-widget-bubble {
+    right: unset;
+    left: unset;
+  }
+}
+*/
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+[data-sonner-toaster] {
+  font-family: inherit !important;
+}
+
+/* Magic UI animation tokens (shimmer-button, aurora-text, marquee) */
+@theme inline {
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite
+    alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
+  --animate-marquee: marquee var(--duration) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes aurora {
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+    25% {
+      background-position: 50% 100%;
+      transform: rotate(5deg) scale(1.1);
+    }
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(-3deg) scale(0.95);
+    }
+    75% {
+      background-position: 50% 0%;
+      transform: rotate(3deg) scale(1.05);
+    }
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+    15%,
+    35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+    65%,
+    85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+    100% {
+      transform: translateZ(0) rotate(360deg);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer-slide,
+  .animate-spin-around,
+  .animate-aurora,
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation: none;
+  }
+}
+
+/* ---- admin dashboard hero ---- */
+.admin-hero {
+  background: linear-gradient(
+    130deg,
+    var(--admin-grad-ink) 0%,
+    var(--admin-grad-deep) 55%,
+    var(--admin-grad-teal) 100%
+  );
+  box-shadow: 0 18px 50px color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+/* soft radial glow, decorative */
+.admin-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 85% 0%,
+    var(--brand-hero-glow),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* live status dot pulse */
+.pulse-dot {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 55%, transparent);
+  animation: admin-pulse 2s ease-out infinite;
+}
+@keyframes admin-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--success) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
+
+/* ---- admin table row actions: react-admin's Edit/DeleteButton render as
+   full MUI outlined buttons even with no label — compact them into circular
+   icon buttons so they read as actions, not boxes. ---- */
+.admin-row-actions .MuiButton-root {
+  min-width: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 9999px;
+  border-color: transparent;
+  background-color: transparent;
+}
+.admin-row-actions .MuiButton-root .MuiButton-startIcon,
+.admin-row-actions .MuiButton-root .MuiButton-endIcon {
+  margin: 0;
+}
+.admin-row-actions .MuiButton-outlinedPrimary:hover {
+  background-color: var(--accent);
+  border-color: transparent;
+}
+.admin-row-actions .MuiButton-outlinedError:hover,
+.admin-row-actions .MuiButton-root.text-destructive:hover {
+  background-color: color-mix(in srgb, var(--destructive) 12%, transparent);
+  border-color: transparent;
+}

@@ -1,12 +1,15 @@
+﻿import { Badge } from "@/../components/ui/badge";
 import { Card } from "@/../components/ui/card";
 import { formatProductPrice } from "@/../constants/currency";
+import { cn } from "@/../lib/utils";
 import { baseUrl } from "@/../services/serverAddresses";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import Button from "@mui/material/Button";
-import ButtonGroup from "@mui/material/ButtonGroup";
-import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+
+function resolveImage(image) {
+  if (!image) return "/images/placeholder.webp";
+  const normalized = String(image).replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${baseUrl()}${normalized}`;
+}
 
 export default function MachineProductCard({
   _id,
@@ -19,9 +22,9 @@ export default function MachineProductCard({
   preferredCurrency,
   setTotal,
 }) {
-  const t = useTranslations("");
   const [quantity, setQuantity] = useState(0);
   const available = boxes.filter(({ isActive }) => isActive).length;
+  const remaining = available - quantity;
   const currency = preferredCurrency ?? "SAR";
   const sale = Number(salePrice);
   const campaign =
@@ -29,89 +32,89 @@ export default function MachineProductCard({
       ? Number(campaignPrice)
       : NaN;
   const hasCampaign =
-    Number.isFinite(campaign) &&
-    Number.isFinite(sale) &&
-    campaign < sale;
+    Number.isFinite(campaign) && Number.isFinite(sale) && campaign < sale;
+  const discountPct =
+    hasCampaign && sale > 0 ? Math.round(100 * (1 - campaign / sale)) : null;
+  const hasOffer = discountPct != null && discountPct > 0 && discountPct < 100;
 
   const title = productName ?? name ?? "";
 
   useEffect(() => {
     setTotal((total) => ({ ...total, [_id]: quantity }));
   }, [_id, quantity, setTotal]);
+
+  const increment = () =>
+    setQuantity((prev) => (prev < available ? prev + 1 : prev));
+  const decrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : prev));
+
+  if (available <= 0) return null;
+
   return (
-    available > 0 && (
-      <Card className="rounded-xl border">
-        <div className="grid h-full gap-1 px-4">
-          <div className="relative flex justify-center">
-            <img
-              src={baseUrl() + image || "/images/placeholder.webp"}
-              alt={title}
-              width="190"
-              height="200"
-              className="h-50 w-full rounded-xl border object-contain"
-            />
-          </div>
-          <p className="font-semibold ">{title}</p>
-          <div className="flex justify-between gap-2">
-            <div className="min-w-0">
-              {hasCampaign ? (
-                <div className="flex flex-col gap-0.5">
-                  <p>{formatProductPrice(campaign, currency)}</p>
-                  <del className="text-destructive text-sm font-semibold">
-                    {formatProductPrice(sale, currency)}
-                  </del>
-                </div>
-              ) : (
-                <p>{formatProductPrice(salePrice, currency)}</p>
-              )}
-            </div>
-            <p className="shrink-0">
-              {t("available")} {available - quantity}
-            </p>
-          </div>
-          <div className="mt-auto flex gap-1">
-            <ButtonGroup
-              sx={{ mt: 1, width: 1 }}
-              variant="outlined"
-              color="primary"
-            >
-              <Button
-                className={
-                  quantity >= 0 && quantity < available
-                    ? ""
-                    : "pointer-events-none"
-                }
-                onClick={(e) =>
-                  setQuantity((prev) =>
-                    prev >= 0 && prev < available ? ++prev : prev,
-                  )
-                }
-              >
-                <AddIcon
-                  className={
-                    quantity >= 0 && quantity < available ? "" : "opacity-40"
-                  }
-                  color="success"
-                />
-              </Button>
-              <Button sx={{ flex: 1, pointerEvents: "none" }}>
-                {quantity}
-              </Button>
-              <Button
-                className={quantity > 0 ? "" : "pointer-events-none"}
-                onClick={(e) =>
-                  setQuantity((prev) => (prev > 0 ? --prev : prev))
-                }
-              >
-                <RemoveIcon
-                  className={quantity > 0 ? "" : "opacity-40"}
-                  color="error"
-                />
-              </Button>
-            </ButtonGroup>
-          </div>
-        </div>
-      </Card>
-    )
+    <Card className="relative gap-0 rounded-xl p-3 !pt-3">
+      {hasOffer && (
+        <Badge
+          variant="secondary"
+          className="absolute inset-s-3 top-3 z-10 font-extrabold"
+        >
+          <span dir="ltr">- {discountPct}%</span>
+        </Badge>
+      )}
+      <img
+        src={resolveImage(image)}
+        alt={title}
+        width="190"
+        height="118"
+        onError={(e) => {
+          e.currentTarget.src = "/images/placeholder.webp";
+        }}
+        className="bg-muted h-29.5 w-full rounded-xl object-contain"
+      />
+      <p className="mt-2.5 truncate text-sm font-extrabold">{title}</p>
+      <span
+        className={cn(
+          "mt-0.5 text-[11.5px] font-bold",
+          remaining <= 1 ? "text-secondary-700" : "text-muted-foreground",
+        )}
+      >
+        {remaining <= 0
+          ? "0 left"
+          : remaining === 1
+            ? "Only 1 left"
+            : `${remaining} left`}
+      </span>
+      <div className="mt-2 flex items-baseline gap-1.5">
+        <p className="text-primary-text truncate text-[15px] font-extrabold tabular-nums">
+          {formatProductPrice(hasCampaign ? campaign : salePrice, currency)}
+        </p>
+        {hasCampaign && (
+          <del className="text-muted-foreground shrink-0 text-xs font-semibold tabular-nums">
+            {sale.toFixed(2)}
+          </del>
+        )}
+      </div>
+      <div className="bg-accent text-accent-foreground mt-2 grid grid-cols-3 items-center rounded-[11px]">
+        <button
+          type="button"
+          aria-label="Remove one"
+          onClick={decrement}
+          disabled={quantity <= 0}
+          className="grid h-8 place-items-center rounded-s-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
+        >
+          âˆ’
+        </button>
+        <span className="text-center text-sm font-extrabold tabular-nums">
+          {quantity}
+        </span>
+        <button
+          type="button"
+          aria-label="Add one"
+          onClick={increment}
+          disabled={remaining <= 0}
+          className="grid h-8 place-items-center rounded-e-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
+        >
+          +
+        </button>
+      </div>
+    </Card>
   );
 }

@@ -160,6 +160,61 @@ let get = async (skip = 0, limit = 1000, { role, _id }) => {
 };
 
 /*
+ * Get active machines for public storefront sections.
+ */
+let getActive = async (skip = 0, limit = 1000) => {
+  const filter = { isDeleted: false, isActive: true };
+  const total = await Machines.countDocuments(filter);
+  const machines = await Machines.find(filter)
+    .sort({ created: -1 })
+    .skip(parseInt(skip))
+    .limit(parseInt(limit));
+
+  const machineIds = machines.map((machine) => machine._id);
+  const shelfCounts = await Boxes.aggregate([
+    {
+      $match: {
+        machineId: { $in: machineIds },
+        isActive: true,
+        productId: { $ne: null },
+      },
+    },
+    {
+      $group: {
+        _id: { machineId: "$machineId", productId: "$productId" },
+        units: { $sum: 1 },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.machineId",
+        productsOnShelf: { $sum: 1 },
+        totalStock: { $sum: "$units" },
+      },
+    },
+  ]);
+  const shelfStatsByMachine = new Map(
+    shelfCounts.map(({ _id, productsOnShelf, totalStock }) => [
+      _id,
+      { productsOnShelf, totalStock },
+    ]),
+  );
+
+  return {
+    data: machines.map((machine) => {
+      const json = machine.toJSON();
+      const shelfStats = shelfStatsByMachine.get(json._id);
+      return {
+        ...json,
+        productsOnShelf: shelfStats?.productsOnShelf ?? 0,
+        totalStock: shelfStats?.totalStock ?? 0,
+      };
+    }),
+    total,
+  };
+};
+
+/*
  * Get machine by machineId.
  */
 let getById = async (machineId, getBoxes = true, responseReturn = true) => {
@@ -881,6 +936,7 @@ module.exports = {
   create,
   toggle,
   get,
+  getActive,
   getById,
   getByQrCode,
   getByProductId,

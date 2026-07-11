@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 import { useCart } from "@/(root)/context/cart-provider";
-import { Button } from "@/../components/ui/button";
 import { Card } from "@/../components/ui/card";
 import { getRequest } from "@/../services/events";
 import { machineQRScan } from "@/../services/serverAddresses";
-import { ScanQrCode } from "lucide-react";
+import { PackageOpen, ScanQrCode } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,7 +12,6 @@ import { toast } from "sonner";
 export default function MachineCard({ _id, name, qrCode, ...rest }) {
   const router = useRouter();
   const { user, setUser, setMachine } = useCart();
-  // console.log(user);
   const t = useTranslations("QR");
   const handleClick = async (e) => {
     if (!user) router.push("/signin");
@@ -31,15 +29,24 @@ export default function MachineCard({ _id, name, qrCode, ...rest }) {
     );
   };
   return (
-    <Card className="rounded-xl border">
-      <div className="flex h-full items-center justify-between gap-1 px-4">
-        <Button variant="outline" onClick={handleClick}>
-          {name}
-        </Button>
-        <Link title="QR Scan" href="/machine-scan">
-          <Button variant="ghost" size="icon" className="relative">
-            <ScanQrCode className="size-4" />
-          </Button>
+    <Card
+      role="button"
+      onClick={handleClick}
+      className="group/machine cursor-pointer gap-0 rounded-xl p-4 pt-4! transition-transform hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+    >
+      <div className="bg-muted text-primary-text flex size-11 items-center justify-center rounded-2xl">
+        <PackageOpen className="size-5.5" strokeWidth={1.75} />
+      </div>
+      <p className="mt-3 truncate text-base font-extrabold">{name}</p>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-primary-text text-sm font-bold">{t("open")}</span>
+        <Link
+          title="QR Scan"
+          href="/machine-scan"
+          onClick={(e) => e.stopPropagation()}
+          className="bg-primary text-primary-foreground grid size-8 shrink-0 place-items-center rounded-[10px] transition-colors hover:bg-primary-600"
+        >
+          <ScanQrCode className="size-4" />
         </Link>
       </div>
     </Card>

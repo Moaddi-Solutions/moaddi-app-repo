@@ -1,4 +1,4 @@
-import StoreIcon from "@mui/icons-material/Store";
+import { Globe as StoreIcon } from "lucide-react";
 import create from "./SiteCreate";
 import edit from "./SiteEdit";
 import list from "./SiteList";

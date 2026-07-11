@@ -1,16 +1,13 @@
-import { Create, SimpleForm } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import { HeaderEditItems } from "./HeaderEdit";
 
-const Title = () => {
-  return <span>Create Header</span>;
-};
 // const HeaderCreateItems = [...HeaderEditItems];
 const create = () => (
-  <Create title={<Title />} redirect="list">
-    <SimpleForm>
+  <AdminCreate title="Create Header" redirect="list">
+    <AdminSimpleForm>
       <HeaderEditItems />
-    </SimpleForm>
-  </Create>
+    </AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

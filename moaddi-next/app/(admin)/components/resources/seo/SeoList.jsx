@@ -1,3 +1,3 @@
-const SeoList = () => {};
+const SeoList = () => null;
 
 export default SeoList;

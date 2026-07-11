@@ -1,8 +1,5 @@
-import { Edit, SimpleForm, TextInput } from "react-admin";
-
-const Title = () => {
-  return <span>Edit Site</span>;
-};
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 
 const siteEditItems = [
   <TextInput source="name" key="name" />,
@@ -10,9 +7,9 @@ const siteEditItems = [
 ];
 const SiteEdit = () => {
   return (
-    <Edit title={<Title />} redirect="show">
-      <SimpleForm>{siteEditItems}</SimpleForm>
-    </Edit>
+    <AdminEdit title="Edit Site" redirect="show">
+      <AdminSimpleForm>{siteEditItems}</AdminSimpleForm>
+    </AdminEdit>
   );
 };
 

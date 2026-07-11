@@ -1,19 +1,14 @@
-import { Create, SimpleForm } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import { ProductEditItems } from "./ProductEdit";
-
-const Title = () => {
-  return <span>Create Product</span>;
-};
 
 const ProductCreateItems = [...ProductEditItems];
 
 const create = () => (
-  <Create
-    title={<Title />}
-    defaultValues={{ currency: "SAR", isActive: true }}
-  >
-    <SimpleForm>{ProductCreateItems}</SimpleForm>
-  </Create>
+  <AdminCreate>
+    <AdminSimpleForm defaultValues={{ currency: "SAR", isActive: true }}>
+      {ProductCreateItems}
+    </AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

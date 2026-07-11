@@ -1,4 +1,4 @@
-import StoreIcon from "@mui/icons-material/Store";
+import { PanelBottom as StoreIcon } from "lucide-react";
 import create from "./FooterBodyCreate";
 import edit from "./FooterBodyEdit";
 import list from "./FooterBodyList";

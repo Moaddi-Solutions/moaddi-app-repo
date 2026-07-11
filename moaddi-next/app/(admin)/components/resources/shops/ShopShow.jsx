@@ -1,28 +1,16 @@
-import {
-  DateField,
-  Show,
-  SimpleShowLayout,
-  useRecordContext,
-} from "react-admin";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminDetailFromColumns } from "@/(admin)/components/AdminDetail";
 import { ShopListItems } from "./ShopList";
 
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Shop {record ? `"${record.name}"` : ""}</span>;
-};
+const extraColumns = [
+  { key: "created", label: "Created", render: (r) => (r.created ? new Date(r.created).toLocaleString() : "—") },
+  { key: "updated", label: "Updated", render: (r) => (r.updated ? new Date(r.updated).toLocaleString() : "—") },
+];
 
-const ShopShow = () => {
-  const shopListItems = [
-    ...ShopListItems,
-    // <BooleanField label="Deleted" source="isDeleted" />,
-    <DateField source="created" />,
-    <DateField source="updated" />,
-  ];
-  return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{shopListItems}</SimpleShowLayout>
-    </Show>
-  );
-};
+const ShopShow = () => (
+  <AdminShow>
+    <AdminDetailFromColumns columns={ShopListItems} extra={extraColumns} />
+  </AdminShow>
+);
 
 export default ShopShow;

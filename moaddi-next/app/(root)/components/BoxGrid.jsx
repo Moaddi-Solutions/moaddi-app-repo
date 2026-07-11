@@ -3,10 +3,11 @@ import { formatNumberValue } from "@/../lib/formatMoney";
 import BlockHeader from "@/(root)/components/BlockHeader";
 import { useCart } from "@/(root)/context/cart-provider";
 import { useSocket } from "@/(root)/context/Socket";
+import { Button } from "@/../components/ui/button";
+import { Card } from "@/../components/ui/card";
 import { Container } from "@/../components/ui/container";
 import { boxSerialDecoder, compressBoxData } from "@/../services/functions";
 import { baseUrl } from "@/../services/serverAddresses";
-import { Box, Button, Card, Grid, Typography } from "@mui/material";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -126,87 +127,62 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine }) => {
                 {t("SignIn.input")}
               </p> */}
           </div>
-          <Link href="/profile?tab=purchases">
-            <Button
-              color="secondary"
-              className="w-full"
-              sx={{ textTransform: "none" }}
-              variant="contained"
-            >
+          <Button asChild className="w-full font-bold">
+            <Link href="/profile?tab=purchases">
               {t("showInvoiceHistory")}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </Container>
   ) : (
     <Container>
       <BlockHeader title={user?.purchase?.machine?.name} />
-      <Grid
-        container
-        justifyContent={"center"}
-        sx={{ pb: 10, pt: 2 }}
-        spacing={1}
-      >
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 pt-2 pb-10">
         {(user?.purchase?.boxes ?? []).map((box) => (
-          <Grid key={box._id} size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
-            <Card
-              sx={{
-                p: 1,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Typography variant="body1">{box.name.slice(1)}</Typography>
-              {box.product && (
-                <>
-                  <Box
-                    component={"img"}
-                    label="Image"
-                    src={`${baseUrl()}${box.product.image}`}
-                    sx={{
-                      px: 2,
-                      width: 1,
-                      height: 122,
-                      objectFit: "contain",
-                    }}
-                  />
-                  <Typography variant="body1">
-                    {`${box.product.name} - ${formatNumberValue(box.product.campaignPrice ?? box.product.salePrice)} SAR`}
-                  </Typography>
-                </>
-              )}
-              {user?.purchase?.machine?.type == 0 ? (
-                <b className="my-2">
-                  {box.boxStatus ? t("opened") : t("waitingForApprove")}
-                </b>
-              ) : (
-                <Button
-                  fullWidth
-                  disabled={box.boxStatus}
-                  onClick={() => openOne(box)}
-                  color="success"
-                  variant="outlined"
-                >
-                  {box.boxStatus ? t("opened") : t("open")}
-                </Button>
-              )}
-            </Card>
-          </Grid>
+          <Card
+            key={box._id}
+            className="flex flex-col items-center justify-center gap-2 rounded-xl p-3 text-center"
+          >
+            <p className="text-sm font-bold">{box.name.slice(1)}</p>
+            {box.product && (
+              <>
+                <img
+                  src={`${baseUrl()}${box.product.image}`}
+                  alt={box.product.name}
+                  className="h-30.5 w-full px-2 object-contain"
+                />
+                <p className="text-sm font-semibold">
+                  {`${box.product.name} - ${formatNumberValue(box.product.campaignPrice ?? box.product.salePrice)} SAR`}
+                </p>
+              </>
+            )}
+            {user?.purchase?.machine?.type == 0 ? (
+              <b className="my-2">
+                {box.boxStatus ? t("opened") : t("waitingForApprove")}
+              </b>
+            ) : (
+              <Button
+                variant="outline"
+                disabled={box.boxStatus}
+                onClick={() => openOne(box)}
+                className="w-full border-green-200 font-bold text-green-700 hover:bg-green-50 disabled:opacity-60 dark:border-green-900 dark:text-green-400 dark:hover:bg-green-950"
+              >
+                {box.boxStatus ? t("opened") : t("open")}
+              </Button>
+            )}
+          </Card>
         ))}
-      </Grid>
+      </div>
       <div className="mb-6 flex flex-wrap justify-between gap-4">
-        <Card className="rounded p-3 !text-green-800">
+        <Card className="rounded-xl p-3 text-green-700 dark:text-green-400">
           {t("readyToOpen")}:{" "}
           <b>{user?.purchase?.boxes.length - opened || ""}</b>
         </Card>
-        <Card className="rounded p-3 !text-green-800">
+        <Card className="rounded-xl p-3 text-green-700 dark:text-green-400">
           {t("openedCount")}: <b>{opened || ""}</b>
         </Card>
-        <Card className="rounded p-3 !text-red-800">
+        <Card className="text-destructive rounded-xl p-3">
           {t("remaining")}:{" "}
           <b>{user?.purchase?.boxes.length - opened || ""}</b>
         </Card>

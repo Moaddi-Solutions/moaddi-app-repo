@@ -1,16 +1,5 @@
-import {
-  BooleanInput,
-  Edit,
-  SelectInput,
-  SimpleForm,
-  TextInput,
-  useRecordContext,
-} from "react-admin";
-
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Customer {record ? `"${record.name}"` : ""}</span>;
-};
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { BooleanInput, TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 
 export const CustomerEditItems = [
   <TextInput key="name" source="name" />,
@@ -18,9 +7,9 @@ export const CustomerEditItems = [
 ];
 
 const CustomerEdit = () => (
-  <Edit title={<Title />}>
-    <SimpleForm>{CustomerEditItems}</SimpleForm>
-  </Edit>
+  <AdminEdit>
+    <AdminSimpleForm showDelete>{CustomerEditItems}</AdminSimpleForm>
+  </AdminEdit>
 );
 
 export default CustomerEdit;

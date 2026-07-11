@@ -3,13 +3,58 @@
     "title": "Home",
     "description": "Welcome to the home page"
   },
+  "Header": {
+    "scanMachine": "Scan machine",
+    "signIn": "Sign in"
+  },
   "Home": {
     "specialOffers": "Special Offers",
     "showMore": "Show more",
     "specialProducts": "Special Products",
     "specialCategories": "Featured Categories",
     "specialShops": "Shops",
-    "products": "Products"
+    "products": "Products",
+    "howItWorks": {
+      "title": "How it works",
+      "steps": {
+        "scan": {
+          "label": "Step 1",
+          "title": "Scan the QR",
+          "description": "Every machine shows its own code on the screen or sticker."
+        },
+        "pick": {
+          "label": "Step 2",
+          "title": "Pick your items",
+          "description": "Browse the machine's live shelves with real stock counts."
+        },
+        "pay": {
+          "label": "Step 3",
+          "title": "Pay in one tap",
+          "description": "Apple Pay, mada or card — secured by Moyasar."
+        },
+        "collect": {
+          "label": "Step 4",
+          "title": "Collect & go",
+          "description": "Watch each item open live, then grab it from the door."
+        }
+      }
+    },
+    "machinesNearYou": {
+      "titleLead": "Machines",
+      "titleEmphasis": "near you",
+      "description": "Live status straight from each machine — shop only what's really on the shelf.",
+      "allMachines": "All machines",
+      "online": "Online",
+      "offline": "Offline",
+      "currentlyUnavailable": "Currently unavailable",
+      "viewProducts": "View products",
+      "productsOnShelf": "{count, plural, one {# product} other {# products}} on shelf",
+      "noProductsOnShelf": "No products on shelf",
+      "machineNotFound": "Machine Not Found!",
+      "machineOffline": "Machine Is Offline!",
+      "machineNotActive": "Machine Is Not Active!",
+      "machineDetected": "Machine Detected!"
+    }
   },
   "showMore": "Show more",
   "Auth": {
@@ -28,7 +73,12 @@
     "youHaveSuccessfullyLoggedIn": "You have successfully logged in",
     "invalidPhoneNumber": "Invalid Phone number",
     "staff": "Staff",
-    "otp": "OTP"
+    "otp": "OTP",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "accountAccess": "Account access",
+    "createCustomerAccount": "Create a customer account",
+    "staffPortal": "Staff portal",
+    "staffPortalDescription": "Open the operator dashboard"
   },
   "SignIn": {
     "input": "Enter your number to login"
@@ -39,6 +89,7 @@
     "name": "Name"
   },
   "QR": {
+    "open": "Open",
     "scanMachine": "Scan Machine qr code",
     "scanMachineFromImage": "Scan from image",
     "machineNotFound": "Machine Not Found!",
@@ -109,5 +160,24 @@
   "otp": {
     "activateAccount": "Activate account",
     "input": "Enter the code that we sent to your whatsapp account"
+  },
+  "Shop": {
+    "machines": "Machines",
+    "products": "Products",
+    "noMachines": "No machines",
+    "noProducts": "No products"
+  },
+  "MachinesPage": {
+    "title": "Available machines",
+    "subtitleCount": "{count, plural, =0 {No machines currently stock this product} one {# machine has this product} other {# machines have this product}}",
+    "online": "Online",
+    "offline": "Offline",
+    "stock": "{count, plural, =0 {Out of stock} one {# in stock} other {# in stock}}",
+    "productsOnShelf": "{count, plural, =0 {No other products} one {# product on shelf} other {# products on shelf}}",
+    "totalStock": "{count, plural, =0 {0 items total} one {# item total} other {# items total}}",
+    "viewProducts": "View products",
+    "unavailable": "Currently unavailable",
+    "emptyTitle": "No machines nearby yet",
+    "emptyBody": "This product isn't loaded into a machine right now. Check back soon."
   }
 }

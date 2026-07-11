@@ -1,88 +1,74 @@
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import {
   ArrayInput,
-  BooleanInput,
-  Edit,
-  ImageField,
   ImageInput,
-  SimpleForm,
   SimpleFormIterator,
   TextInput,
-  useRecordContext,
-} from "react-admin";
+} from "@/(admin)/components/kit/inputs/AdminInputs";
+import { useRecordContext } from "ra-core";
 
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Block {record ? `"${record.id}"` : ""}</span>;
-};
-const imageSX = {
-  ".previews": {
-    display: "flex",
-    justifyContent: "center",
-  },
-};
 export const BlockEditItems = {
   Hero: [
-    <TextInput source="heading" key="heading" />,
-    <TextInput source="description" key="description" multiline />,
-    <ArrayInput key="features" source="features">
-      <SimpleFormIterator
-        inline
-        disableAdd
-        disableClear
-        disableRemove
-        disableReordering
-      >
-        <TextInput source="title" resource="title" />
-        <TextInput source="description" resource="description" />
-        <ImageInput sx={imageSX} key="icon" source="icon">
-          <ImageField source="src" title="title" />
-        </ImageInput>
-      </SimpleFormIterator>
-    </ArrayInput>,
-    <ImageInput
-      sx={{
-        ".previews": {
-          ".RaImageField-image": {
-            maxHeight: "unset",
-            maxWidth: "unset",
-            width: 1,
-            height: "auto",
-          },
-          display: "flex",
-          justifyContent: "center",
-        },
-      }}
-      key="background"
-      source="background"
-    >
-      <ImageField source="src" title="title" />
-    </ImageInput>,
-    // <ImageInput sx={imageSX} key="foreground" source="foreground">
-    //   <ImageField source="src" title="title" />
-    // </ImageInput>,
-    <TextInput key="button.title" source="button.title" />,
+    <TextInput
+      source="kicker"
+      key="kicker"
+      label="Kicker"
+      helperText="Small label above the title (e.g. 240+ machines across World)"
+    />,
+    <TextInput
+      source="title"
+      key="title"
+      label="Title"
+      helperText="Use | to split: text before is plain, text after is emphasized"
+    />,
+    <TextInput
+      key="button.title"
+      source="button.title"
+      label="Button text"
+    />,
     <TextInput
       key="button.page.url"
       source="button.page.url"
       label="Button link"
     />,
-    // <BooleanInput key="isActive" source="isActive" label="Active" />,
+    <TextInput
+      key="appStoreUrl"
+      source="appStoreUrl"
+      label="App Store link"
+    />,
+    <TextInput
+      key="googlePlayUrl"
+      source="googlePlayUrl"
+      label="Google Play link"
+    />,
+    <ArrayInput key="stats" source="stats" className="sm:col-span-2">
+      <SimpleFormIterator disableReordering>
+        <TextInput source="value" label="Value" />
+        <TextInput source="label" label="Label" />
+      </SimpleFormIterator>
+    </ArrayInput>,
+    <ArrayInput
+      key="floatingCards"
+      source="floatingCards"
+      className="sm:col-span-2"
+    >
+      <SimpleFormIterator disableReordering>
+        <TextInput source="title" label="Title" />
+        <TextInput source="subtitle" label="Subtitle" />
+      </SimpleFormIterator>
+    </ArrayInput>,
   ],
   Gallery: [
-    <ArrayInput key="items" source="items">
+    <ArrayInput key="items" source="items" className="sm:col-span-2">
       <SimpleFormIterator
-        inline
         disableAdd
         disableClear
         disableRemove
         disableReordering
       >
-        <TextInput source="title" resource="title" />
-        <TextInput source="description" resource="description" />
-        <ImageInput sx={imageSX} key="background" source="background">
-          <ImageField source="src" title="title" />
-        </ImageInput>
-        ,
+        <TextInput source="title" />
+        <TextInput source="description" />
+        <ImageInput key="background" source="background" />
       </SimpleFormIterator>
     </ArrayInput>,
   ],
@@ -105,16 +91,15 @@ export const BlockEditItems = {
       label="Button link"
       multiline
     />,
-    <ArrayInput key="services" source="services">
+    <ArrayInput key="services" source="services" className="sm:col-span-2">
       <SimpleFormIterator
-        inline
         disableAdd
         disableClear
         disableRemove
         disableReordering
       >
-        <TextInput source="title" resource="title" />
-        <TextInput source="page.url" resource="page.url" label="link" />,
+        <TextInput source="title" />
+        <TextInput source="page.url" label="link" />
       </SimpleFormIterator>
     </ArrayInput>,
   ],
@@ -122,15 +107,13 @@ export const BlockEditItems = {
 
 const EditList = () => {
   const record = useRecordContext();
-  return <SimpleForm>{BlockEditItems[record.id]}</SimpleForm>;
+  return <AdminSimpleForm>{BlockEditItems[record?.id] ?? []}</AdminSimpleForm>;
 };
 
-const BlockEdit = () => {
-  return (
-    <Edit redirect="list" title={<Title />}>
-      <EditList />
-    </Edit>
-  );
-};
+const BlockEdit = () => (
+  <AdminEdit redirect="list">
+    <EditList />
+  </AdminEdit>
+);
 
 export default BlockEdit;

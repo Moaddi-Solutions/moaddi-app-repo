@@ -1,38 +1,17 @@
-import { formatMoneyValue } from "@/../lib/formatMoney";
-import DownloadIcon from "@mui/icons-material/Download";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+  AdminDetailCard,
+  AdminDetailField,
+  AdminDetailGrid,
+} from "@/(admin)/components/AdminDetail";
+import { AdminStatusBadge } from "@/(admin)/components/AdminShadcnTable";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { Button } from "@/../components/ui/button";
+import { formatMoneyValue } from "@/../lib/formatMoney";
+import { Download, FileText, SquareArrowOutUpRight } from "lucide-react";
 import { useRef } from "react";
-import { Show, useRecordContext } from "react-admin";
+import { useRecordContext } from "ra-core";
 
 import { invoiceUrl } from "./invoiceUrl";
-
-const statusColors = {
-  PaymentDoneRequest: "warning",
-  PaymentDone: "success",
-  PaymentRejected: "error",
-  Processing: "info",
-  Completed: "success",
-};
-
-const Field = ({ label, value }) => (
-  <Box sx={{ minWidth: 160 }}>
-    <Typography variant="caption" color="text.secondary">
-      {label}
-    </Typography>
-    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-      {value ?? "—"}
-    </Typography>
-  </Box>
-);
 
 const InvoiceView = () => {
   const record = useRecordContext();
@@ -56,83 +35,82 @@ const InvoiceView = () => {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      {/* Summary + actions */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "center" }}
-          spacing={2}
-        >
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="h6">Invoice #{record.invoiceId}</Typography>
-            <Chip
-              size="small"
-              label={record.status ?? "—"}
-              color={statusColors[record.status] ?? "default"}
-            />
-          </Stack>
-          <Stack direction="row" spacing={1}>
+    <div className="flex flex-col gap-4 font-sans">
+      <AdminDetailCard>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+              <FileText className="size-5" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-muted-foreground">
+                Invoice
+              </p>
+              <div className="mt-0.5 flex items-center gap-2">
+                <p className="text-lg font-extrabold text-foreground">
+                  #{record.invoiceId}
+                </p>
+                <AdminStatusBadge value={record.status} />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
             <Button
-              variant="contained"
-              startIcon={<DownloadIcon />}
+              size="sm"
+              className="gap-2 rounded-full font-extrabold"
               onClick={printInvoice}
               disabled={!url}
             >
+              <Download className="size-4" />
               Download / Print PDF
             </Button>
             <Button
-              variant="outlined"
-              startIcon={<OpenInNewIcon />}
+              size="sm"
+              variant="outline"
+              className="gap-2 rounded-full font-extrabold"
               onClick={() => url && window.open(url, "_blank", "noopener")}
               disabled={!url}
             >
+              <SquareArrowOutUpRight className="size-4" />
               Open in new tab
             </Button>
-          </Stack>
-        </Stack>
+          </div>
+        </div>
 
-        <Divider sx={{ my: 2 }} />
-
-        <Stack direction="row" flexWrap="wrap" gap={3}>
-          <Field label="Customer" value={customer?.name ?? record.customerId} />
-          <Field
-            label="Phone"
-            value={customer?.phone ?? customer?.username ?? "—"}
-          />
-          <Field label="Provider" value={record.paymentProvider} />
-          <Field label="Amount" value={amount} />
-          <Field label="Payment ID" value={record.invoiceId} />
-          <Field label="Created" value={record.created} />
-          <Field label="Updated" value={record.updated} />
-        </Stack>
-      </Paper>
+        <AdminDetailGrid className="mt-6">
+          <AdminDetailField label="Customer" value={customer?.name ?? record.customerId} />
+          <AdminDetailField label="Phone" value={customer?.phone ?? customer?.username} />
+          <AdminDetailField label="Provider" value={record.paymentProvider} />
+          <AdminDetailField label="Amount" value={amount} />
+          <AdminDetailField label="Payment ID" value={record.invoiceId} />
+          <AdminDetailField label="Created" value={record.created} />
+          <AdminDetailField label="Updated" value={record.updated} />
+        </AdminDetailGrid>
+      </AdminDetailCard>
 
       {/* The real, printable invoice (ZATCA QR, items, tax, totals). */}
       {url ? (
-        <Paper variant="outlined" sx={{ overflow: "hidden" }}>
-          <Box
-            component="iframe"
+        <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-border/70">
+          <iframe
             ref={iframeRef}
             src={url}
             title={`Invoice ${record.invoiceId}`}
-            sx={{ width: "100%", height: 1400, border: 0, display: "block" }}
+            className="block h-[1400px] w-full border-0"
           />
-        </Paper>
+        </div>
       ) : (
-        <Typography color="text.secondary">
+        <p className="text-sm font-semibold text-muted-foreground">
           This payment has no invoice yet.
-        </Typography>
+        </p>
       )}
-    </Box>
+    </div>
   );
 };
 
 const InvoiceShow = () => (
-  <Show>
+  <AdminShow>
     <InvoiceView />
-  </Show>
+  </AdminShow>
 );
 
 export default InvoiceShow;

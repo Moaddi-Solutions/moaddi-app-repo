@@ -2,7 +2,7 @@
 import { useDataProvider } from "@/(root)/context/ra/DataProviderContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { useEvent } from "react-admin";
+import { useEvent } from "ra-core";
 
 const MAX_DATA_LENGTH_TO_CACHE = 100;
 

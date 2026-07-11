@@ -3,13 +3,58 @@
     "title": "الرئيسيه",
     "description": "مرحبا بكم في الصفحة الرئيسية"
   },
+  "Header": {
+    "scanMachine": "امسح الماكينة",
+    "signIn": "تسجيل الدخول"
+  },
   "Home": {
     "specialOffers": "العروض الخاصة",
     "showMore": "عرض المزيد",
     "specialProducts": "منتجات خاصة",
     "specialCategories": "التصنيفات المميزة",
     "specialShops": "المتاجر ",
-    "products": "منتجات"
+    "products": "منتجات",
+    "howItWorks": {
+      "title": "كيف يعمل",
+      "steps": {
+        "scan": {
+          "label": "الخطوة 1",
+          "title": "امسح رمز QR",
+          "description": "كل جهاز يعرض رمزه الخاص على الشاشة أو الملصق."
+        },
+        "pick": {
+          "label": "الخطوة 2",
+          "title": "اختر منتجاتك",
+          "description": "تصفح رفوف الجهاز المباشرة مع أعداد المخزون الفعلية."
+        },
+        "pay": {
+          "label": "الخطوة 3",
+          "title": "ادفع بنقرة واحدة",
+          "description": "Apple Pay أو مدى أو البطاقة — بحماية Moyasar."
+        },
+        "collect": {
+          "label": "الخطوة 4",
+          "title": "استلم وانطلق",
+          "description": "شاهد كل منتج يفتح مباشرة، ثم خذه من الباب."
+        }
+      }
+    },
+    "machinesNearYou": {
+      "titleLead": "الماكينات",
+      "titleEmphasis": "بالقرب منك",
+      "description": "حالة مباشرة من كل ماكينة — تسوق فقط ما هو متوفر فعليًا على الرف.",
+      "allMachines": "كل الماكينات",
+      "online": "متصلة",
+      "offline": "غير متصلة",
+      "currentlyUnavailable": "غير متاحة حاليًا",
+      "viewProducts": "عرض المنتجات",
+      "productsOnShelf": "{count, plural, one {# منتج} other {# منتجات}} على الرف",
+      "noProductsOnShelf": "لا توجد منتجات على الرف",
+      "machineNotFound": "الماكينة غير موجودة!",
+      "machineOffline": "الماكينة غير متصلة!",
+      "machineNotActive": "الماكينة غير نشطة!",
+      "machineDetected": "تم اكتشاف الماكينة!"
+    }
   },
   "showMore": "تظهر المزيد",
   "Auth": {
@@ -28,7 +73,12 @@
     "youHaveSuccessfullyLoggedIn": "تم تسجيل الدخول بنجاح",
     "invalidPhoneNumber": "رقم هاتف غير صالح",
     "staff": "طاقم عمل",
-    "otp": "OTP"
+    "otp": "OTP",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟ سجل الدخول",
+    "accountAccess": "الوصول للحساب",
+    "createCustomerAccount": "إنشاء حساب عميل",
+    "staffPortal": "بوابة الموظفين",
+    "staffPortalDescription": "فتح لوحة تحكم التشغيل"
   },
   "SignIn": {
     "input": "أدخل رقمك لتسجيل الدخول"
@@ -39,6 +89,7 @@
     "name": "الاسم"
   },
   "QR": {
+    "open": "فتح",
     "scanMachine": "مسح رمز QR",
     "scanMachineFromImage": "مسح من الصورة",
     "invalidImage": "صورة غير صالحة",
@@ -109,6 +160,25 @@
   "otp": {
     "activateAccount": "تنشيط الحساب",
     "input": "أدخل الرمز الذي أرسلناه إلى حساب WhatsApp الخاص بك"
+  },
+  "Shop": {
+    "machines": "الآلات",
+    "products": "المنتجات",
+    "noMachines": "لا توجد آلات",
+    "noProducts": "لا توجد منتجات"
+  },
+  "MachinesPage": {
+    "title": "الآلات المتوفرة",
+    "subtitleCount": "{count, plural, =0 {لا توجد آلة تحتوي على هذا المنتج حاليًا} one {آلة واحدة تحتوي على هذا المنتج} other {# آلة تحتوي على هذا المنتج}}",
+    "online": "متصل",
+    "offline": "غير متصل",
+    "stock": "{count, plural, =0 {نفدت الكمية} one {قطعة واحدة متوفرة} other {# قطعة متوفرة}}",
+    "productsOnShelf": "{count, plural, =0 {لا توجد منتجات أخرى} one {منتج واحد على الرف} other {# منتج على الرف}}",
+    "totalStock": "{count, plural, =0 {0 قطعة إجمالًا} one {قطعة واحدة إجمالًا} other {# قطعة إجمالًا}}",
+    "viewProducts": "عرض المنتجات",
+    "unavailable": "غير متاحة حاليًا",
+    "emptyTitle": "لا توجد آلات قريبة بعد",
+    "emptyBody": "هذا المنتج غير محمّل في أي آلة حاليًا. تحقق مرة أخرى قريبًا."
   }
 , "small change to hit the redeploy on vercel": ""
 }

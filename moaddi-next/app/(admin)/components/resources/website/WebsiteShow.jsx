@@ -1,52 +1,27 @@
-import { Divider } from "@mui/material";
 import {
-  ArrayField,
-  DataTable,
-  ImageField,
-  Show,
-  SimpleShowLayout,
-} from "react-admin";
+  AdminDetailArrayTable,
+  AdminDetailGrid,
+  AdminDetailImage,
+} from "@/(admin)/components/AdminDetail";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
 
-const Title = () => {
-  return <span>Website</span>;
-};
-
-const websiteListItems = [
-  <ImageField
-    sx={{
-      ".RaImageField-image": {
-        maxHeight: 150,
-      },
-    }}
-    label="favicon"
-    source="favicon.src"
-    key="favicon.src"
-  />,
-  <ImageField
-    sx={{
-      ".RaImageField-image": {
-        maxHeight: 150,
-      },
-    }}
-    label="logo"
-    source="logo.src"
-    key="logo.src"
-  />,
-  <Divider sx={{ my: 2 }} />,
-  <ArrayField source="socialMedia" key="socialMedia">
-    <DataTable bulkActionButtons={false} rowClick={false}>
-      <DataTable.Col source="platform" />
-      <DataTable.Col source="url" />
-    </DataTable>
-  </ArrayField>,
-];
-
-const WebsiteShow = () => {
-  return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{websiteListItems}</SimpleShowLayout>
-    </Show>
-  );
-};
+const WebsiteShow = () => (
+  <AdminShow title="Website">
+    <div className="flex flex-col gap-5">
+      <AdminDetailGrid>
+        <AdminDetailImage label="Favicon" source="favicon.src" />
+        <AdminDetailImage label="Logo" source="logo.src" />
+      </AdminDetailGrid>
+      <AdminDetailArrayTable
+        source="socialMedia"
+        title="Social media"
+        columns={[
+          { key: "platform", label: "Platform" },
+          { key: "url", label: "URL" },
+        ]}
+      />
+    </div>
+  </AdminShow>
+);
 
 export default WebsiteShow;

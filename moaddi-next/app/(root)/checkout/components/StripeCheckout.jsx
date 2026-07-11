@@ -7,7 +7,7 @@ import {
 } from "@/../services/checkoutPayments";
 import { getRequest } from "@/../services/events";
 import { userAPI } from "@/../services/serverAddresses";
-import { Button } from "@mui/material";
+import { Button } from "@/../components/ui/button";
 import {
   Elements,
   PaymentElement,
@@ -82,11 +82,11 @@ function StripePaymentForm({ purchaseId }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <PaymentElement />
-      <Button type="submit" variant="contained" disabled={!stripe || busy}>
+      <Button type="submit" className="font-bold" disabled={!stripe || busy}>
         {t("payNow")}
       </Button>
       {message ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           {message}
         </p>
       ) : null}
@@ -121,7 +121,7 @@ export default function StripeCheckout({ purchaseId }) {
 
   if (!publishableKey || !stripePromise) {
     return (
-      <p className="text-sm text-red-600" role="alert">
+      <p className="text-destructive text-sm" role="alert">
         {t("stripeNotConfigured")}
       </p>
     );
@@ -129,7 +129,7 @@ export default function StripeCheckout({ purchaseId }) {
 
   if (error) {
     return (
-      <p className="text-sm text-red-600" role="alert">
+      <p className="text-destructive text-sm" role="alert">
         {error}
       </p>
     );

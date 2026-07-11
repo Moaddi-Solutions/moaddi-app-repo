@@ -1,78 +1,63 @@
-import { Box } from "@mui/material";
-import {
-  BooleanField,
-  ChipField,
-  CreateButton,
-  Datagrid,
-  DateField,
-  DeleteButton,
-  EditButton,
-  ImageField,
-  List,
-  ReferenceManyField,
-  SingleFieldList,
-  TextField,
-  TextInput,
-  TopToolbar,
-  useTranslate,
-} from "react-admin";
-
-const filters = [<TextInput source="q" label="Search" alwaysOn />];
-
-const ListActions = () => {
-  return (
-    <TopToolbar>
-      <CreateButton />
-    </TopToolbar>
-  );
-};
+import AdminList from "@/(admin)/components/kit/AdminList";
+import AdminShadcnTable, {
+  AdminBooleanBadge,
+} from "@/(admin)/components/AdminShadcnTable";
+import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
+import { Fit } from "@/../services/data-provider";
 
 export const ShopListItems = [
-  <TextField source="name" key="name" />,
-  <TextField source="description" key="description" />,
-  <ImageField
-    sx={{
-      ".RaImageField-image": {
-        // width: 1,
-        maxWidth: 1,
-        maxHeight: 150,
-      },
-    }}
-    label="Image"
-    source="image.src"
-    key="image.src"
-  />,
-  <ReferenceManyField
-    key="shopId"
-    reference="machines"
-    label="Machines"
-    target="shopId"
-  >
-    <SingleFieldList linkType="show">
-      <ChipField source="name" key="name" />
-    </SingleFieldList>
-  </ReferenceManyField>,
-  <BooleanField label="Active" source="isActive" key="isActive" />,
+  { key: "name", label: "Name" },
+  { key: "description", label: "Description" },
+  {
+    key: "image",
+    label: "Image",
+    render: (record) => <ImagePreview src={record.image?.src ?? record.image} />,
+  },
+  {
+    key: "machines",
+    label: "Machines",
+    render: (record) => formatRelated(record.machines),
+  },
+  {
+    key: "isActive",
+    label: "Active",
+    render: (record) => <AdminBooleanBadge value={record.isActive} />,
+  },
 ];
 
-const ShopList = () => {
-  const t = useTranslate();
+const ShopList = () => (
+  <AdminList sort={{ field: "name", order: "DESC" }}>
+    <AdminShadcnTable
+      columns={ShopListItems}
+      rowClick="show"
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+  </AdminList>
+);
 
+function ImagePreview({ src }) {
+  const normalizedSrc =
+    typeof src === "string" && !src.startsWith("http")
+      ? Fit.image({ image: src }).image?.src
+      : src;
+  if (!normalizedSrc) return "-";
   return (
-    <List
-      // filters={filters}
-      sort={{ field: "name", order: "DESC" }}
-      actions={<ListActions />}
-    >
-      <Datagrid rowClick="show" bulkActionButtons={false}>
-        {ShopListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-    </List>
+    <img
+      src={normalizedSrc}
+      alt=""
+      className="size-12 rounded-md border border-border object-cover"
+    />
   );
-};
+}
+
+function formatRelated(items) {
+  if (!Array.isArray(items) || !items.length) return "-";
+  return items.map((item) => item.name ?? item.id ?? item._id).join(", ");
+}
 
 export default ShopList;

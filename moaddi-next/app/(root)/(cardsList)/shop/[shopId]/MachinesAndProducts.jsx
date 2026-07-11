@@ -4,9 +4,45 @@ import MachineCard from "@/(root)/components/MachineCard";
 import ProductCard from "@/(root)/components/ProductCard";
 import { useGetManyReference } from "@/(root)/hook/ra/useGetManyReference";
 import { Container } from "@/../components/ui/container";
+import { Skeleton } from "@/../components/ui/skeleton";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/../components/ui/tabs";
 import { Fit } from "@/../services/data-provider";
+import { useTranslations } from "next-intl";
+
+const MachineCardSkeleton = () => (
+  <div className="rounded-xl border p-4">
+    <Skeleton className="size-11 rounded-2xl" />
+    <Skeleton className="mt-3 h-5 w-3/4 rounded" />
+    <div className="mt-3 flex items-center justify-between">
+      <Skeleton className="h-4 w-10 rounded" />
+      <Skeleton className="size-8 rounded-[10px]" />
+    </div>
+  </div>
+);
+
+const ProductCardSkeleton = () => (
+  <div className="rounded-xl p-3">
+    <Skeleton className="h-42 w-full rounded-2xl" />
+    <Skeleton className="mt-3 h-4 w-3/4 rounded" />
+    <Skeleton className="mt-2 h-6 w-1/2 rounded" />
+  </div>
+);
+
+const CardsSkeleton = ({ Card, count = 8 }) => (
+  <Container className="my-4 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+    {Array.from({ length: count }).map((_, i) => (
+      <Card key={i} />
+    ))}
+  </Container>
+);
 
 const MachinesAndProducts = ({ id }) => {
+  const t = useTranslations("Shop");
   const { isPending, data: rawData } = useGetManyReference("machines", {
     target: "shopId",
     id,
@@ -25,35 +61,72 @@ const MachinesAndProducts = ({ id }) => {
           .values(),
       )
     : [];
+
   return (
     <section className="my-8">
-      {!isPending ? (
-        data.length ? (
-          <>
-            <BlockHeader title={data[0].shop[0].name} />
-            <BlockHeader title="Machines" />
-            <Container className="my-3 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-              {data
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((machine) => (
-                  <MachineCard key={machine._id} {...machine} />
-                ))}
+      {isPending ? (
+        <>
+          <BlockHeader title={<Skeleton className="h-6 w-40" />} />
+          <CardsSkeleton Card={MachineCardSkeleton} count={4} />
+        </>
+      ) : data.length ? (
+        <>
+          <BlockHeader title={data[0].shop[0].name} />
+          <Tabs defaultValue="machines" className="flex flex-col gap-0">
+            <Container>
+              <TabsList
+                variant="line"
+                className="h-auto w-full justify-start gap-6 border-b p-0"
+              >
+                <TabsTrigger
+                  value="machines"
+                  className="h-auto flex-none rounded-none px-0.5 pb-3 text-base font-bold"
+                >
+                  {t("machines")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="products"
+                  className="h-auto flex-none rounded-none px-0.5 pb-3 text-base font-bold"
+                >
+                  {t("products")}
+                </TabsTrigger>
+              </TabsList>
             </Container>
-            <BlockHeader title="Products" />
-            <Container className="my-3 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-              {products
-                .map(Fit.image)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((product, i) => (
-                  <ProductCard key={product._id} {...product} />
-                ))}
-            </Container>
-          </>
-        ) : (
-          <p className="mx-12">No products</p>
-        )
+            <TabsContent value="machines">
+              {data.length ? (
+                <Container className="my-4 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                  {data
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((machine) => (
+                      <MachineCard key={machine._id} {...machine} />
+                    ))}
+                </Container>
+              ) : (
+                <p className="mx-12 my-6 text-muted-foreground">
+                  {t("noMachines")}
+                </p>
+              )}
+            </TabsContent>
+            <TabsContent value="products">
+              {products.length ? (
+                <Container className="my-4 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                  {products
+                    .map(Fit.image)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((product) => (
+                      <ProductCard key={product._id} {...product} />
+                    ))}
+                </Container>
+              ) : (
+                <p className="mx-12 my-6 text-muted-foreground">
+                  {t("noProducts")}
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </>
       ) : (
-        <p className="mx-12">Loading</p>
+        <p className="mx-12">{t("noProducts")}</p>
       )}
     </section>
   );

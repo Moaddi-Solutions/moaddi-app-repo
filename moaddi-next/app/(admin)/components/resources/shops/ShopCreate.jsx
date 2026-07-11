@@ -1,14 +1,11 @@
-import { Create, SimpleForm } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import { ShopEditItems } from "./ShopEdit";
 
-const Title = () => {
-  return <span>Create Shop</span>;
-};
 const ShopCreateItems = [...ShopEditItems];
 const create = () => (
-  <Create title={<Title />}>
-    <SimpleForm>{ShopCreateItems}</SimpleForm>
-  </Create>
+  <AdminCreate>
+    <AdminSimpleForm>{ShopCreateItems}</AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

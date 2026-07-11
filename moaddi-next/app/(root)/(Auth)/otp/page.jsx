@@ -1,4 +1,4 @@
-import { OTPForm } from "@/(root)/components/UserAuthForm";
+﻿import { OTPForm } from "@/(root)/components/UserAuthForm";
 import { Container } from "@/../components/ui/container";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -22,14 +22,14 @@ export default async function OTPPage() {
               {t("Auth.agree")}
               <Link
                 href="/terms"
-                className="hover:text-primary underline underline-offset-4"
+                className="hover:text-primary-text underline underline-offset-4"
               >
                 {t("Auth.terms")}
               </Link>
               {t("Auth.and")}
               <Link
                 href="/privacy"
-                className="hover:text-primary underline underline-offset-4"
+                className="hover:text-primary-text underline underline-offset-4"
               >
                 {t("Auth.privacy")}
               </Link>

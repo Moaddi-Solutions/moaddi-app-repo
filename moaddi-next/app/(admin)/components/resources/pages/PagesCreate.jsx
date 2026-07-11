@@ -1,18 +1,15 @@
-import { Create, SimpleForm, TextInput } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 import { pagesEditItems } from "./PagesEdit";
-
-const Title = () => {
-  return <span>Create Pages</span>;
-};
 
 const PagesCreateItems = [
   <TextInput key="id" source="id" label="Slug" />,
   ...pagesEditItems,
 ];
 const create = () => (
-  <Create title={<Title />} redirect="list">
-    <SimpleForm>{PagesCreateItems}</SimpleForm>
-  </Create>
+  <AdminCreate title="Create Pages" redirect="list">
+    <AdminSimpleForm>{PagesCreateItems}</AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

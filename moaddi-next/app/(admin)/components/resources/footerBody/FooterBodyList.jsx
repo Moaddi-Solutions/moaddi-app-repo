@@ -1,3 +1,3 @@
-const FooterBodyList = () => {};
+const FooterBodyList = () => null;
 
 export default FooterBodyList;

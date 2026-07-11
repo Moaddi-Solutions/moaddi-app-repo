@@ -1,14 +1,11 @@
-import { Create, SimpleForm } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import { GroupEditItems } from "./GroupEdit";
 
-const Title = () => {
-  return <span>Create Group</span>;
-};
 const GroupCreateItems = [...GroupEditItems];
 const create = () => (
-  <Create title={<Title />}>
-    <SimpleForm>{GroupCreateItems}</SimpleForm>
-  </Create>
+  <AdminCreate>
+    <AdminSimpleForm>{GroupCreateItems}</AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

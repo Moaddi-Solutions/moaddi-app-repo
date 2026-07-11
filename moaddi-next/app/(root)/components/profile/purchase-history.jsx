@@ -22,95 +22,15 @@ import {
 } from "@/../components/ui/table";
 import { Eye } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-// Sample purchase data
-const x = [
-  {
-    id: "ORD-001",
-    date: "2024-01-15",
-    items: "MacBook Pro 14-inch, Magic Mouse",
-    quantity: 2,
-    total: 2299.0,
-    status: "delivered",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-002",
-    date: "2024-01-08",
-    items: "iPhone 15 Pro, AirPods Pro",
-    quantity: 2,
-    total: 1398.0,
-    status: "delivered",
-    paymentMethod: "PayPal",
-  },
-  {
-    id: "ORD-003",
-    date: "2024-01-02",
-    items: "iPad Air, Apple Pencil",
-    quantity: 2,
-    total: 729.0,
-    status: "shipped",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-004",
-    date: "2023-12-28",
-    items: "Apple Watch Series 9",
-    quantity: 1,
-    total: 399.0,
-    status: "processing",
-    paymentMethod: "Apple Pay",
-  },
-  {
-    id: "ORD-005",
-    date: "2023-12-20",
-    items: "AirTag 4-pack, MagSafe Charger",
-    quantity: 2,
-    total: 138.0,
-    status: "delivered",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-006",
-    date: "2023-12-15",
-    items: "HomePod mini",
-    quantity: 1,
-    total: 99.0,
-    status: "cancelled",
-    paymentMethod: "Credit Card",
-  },
-];
 
 const getStatusBadge = (status) => {
   switch (status) {
     case "Completed":
-      return (
-        <Badge
-          variant="default"
-          className="bg-green-100 text-green-800 hover:bg-green-100"
-        >
-          Completed
-        </Badge>
-      );
+      return <Badge variant="default">Completed</Badge>;
     case "PaymentDoneRequest":
-      return (
-        <Badge
-          variant="default"
-          className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-        >
-          Initiate
-        </Badge>
-      );
+      return <Badge variant="secondary">Initiate</Badge>;
     case "PaymentDone":
-      return (
-        <Badge
-          variant="default"
-          className="bg-blue-100 text-blue-800 hover:bg-blue-100"
-        >
-          Payment Done
-        </Badge>
-      );
+      return <Badge variant="outline">Payment Done</Badge>;
     // case "cancelled":
     //   return <Badge variant="destructive">Cancelled</Badge>;
     default:
@@ -119,112 +39,90 @@ const getStatusBadge = (status) => {
 };
 
 const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
-  const [totalSpent, setTotalSpent] = useState();
-  const { isPending, data, total } = useGetManyReference("purchases", {
+  const { isPending, data = [], total = 0 } = useGetManyReference("purchases", {
     id,
     target: "customerId",
     pagination: { page: 1, perPage: 100 },
     // sort: { field: "date", order: "DESC" },
     // filter: {},
   });
-  useEffect(() => {
-    if (!data) return;
-    setTotalSpent(
-      data
-        .reduce((sum, purchase) => parseFloat(purchase.price) + sum, 0)
-        .toFixed(2),
-    );
-  }, [data]);
+  const totalSpent = data.reduce(
+    (sum, purchase) => Number(purchase.price || 0) + sum,
+    0,
+  );
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle className="text-2xl font-bold">
-              Purchase History
-            </CardTitle>
-            <CardDescription>
-              View and manage your order history and purchase details
-            </CardDescription>
-          </div>
-          {/* <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search orders..." className="pl-8 w-full sm:w-[250px]" />
-              </div>
-            </div> */}
-        </div>
-      </CardHeader>
+    <section className="flex flex-col gap-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SummaryCard label="Total Orders" value={isPending ? "..." : total} />
+        <SummaryCard
+          label="Total Spent"
+          value={isPending ? "..." : formatProductPrice(totalSpent, preferredCurrency)}
+        />
+      </div>
 
-      <CardContent>
-        <div className="rounded-md border">
+      <Card className="border-border/80 bg-card" size="sm">
+        <CardHeader className="gap-1">
+          <CardTitle className="text-2xl font-black">Purchase History</CardTitle>
+          <CardDescription>
+            View your orders and open the invoice for any purchase.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <div className="overflow-hidden rounded-xl border border-border/80">
           <Table>
-            <TableHeader>
-              <TableRow>
-                {/* <TableHead className="w-[120px]">Order ID</TableHead> */}
-                <TableHead>Date</TableHead>
+            <TableHeader className="bg-muted/40">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 font-black text-muted-foreground">
+                  Date
+                </TableHead>
                 <TableHead className="hidden md:table-cell">Items</TableHead>
                 <TableHead className="hidden sm:table-cell">Qty</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
-                {/* <TableHead className="hidden lg:table-cell">Payment</TableHead> */}
                 <TableHead className="px-4 text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            {!isPending && (
-              <TableBody>
-                {data.map(
+            <TableBody>
+              {isPending ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="h-24 px-4 text-center font-semibold text-muted-foreground"
+                  >
+                    Loading orders...
+                  </TableCell>
+                </TableRow>
+              ) : data.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="h-24 px-4 text-center font-semibold text-muted-foreground"
+                  >
+                    No orders yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data.map(
                   ({
                     _id,
                     products,
+                    boxes,
                     items,
                     created,
                     price,
                     status,
                     invoiceId,
                   }) => {
-                    const productsString = products
-                      .map(({ name }) => name)
-                      .join(", ");
+                    const productsString = getPurchaseProductNames(
+                      products,
+                      boxes,
+                    );
                     return (
-                      <TableRow key={_id}>
-                        {/* {
-                        machineId: "machine_D8132A006674",
-                        items: [
-                          {
-                            productId: "product_J_k8MYj5d",
-                            boxId: "machine_D8132A006674_C1_5",
-                            boxStatus: false,
-                          },
-                        ],
-                        price: 40,
-                        created: "2025-07-25T16:19:30.958Z",
-                        status: "PaymentDoneRequest",
-                        products: [
-                          {
-                            _id: "product_J_k8MYj5d",
-                            name: "Nescafe Coffee",
-                            barCode: "105",
-                            isActive: true,
-                            isDeleted: false,
-                            created: "2023-07-27T04:22:34.163Z",
-                            image: "images/1750579773444_Pasted image (3).png",
-                            updated: "2025-06-26T17:25:12.673Z",
-                            originalPrice: 1,
-                            tax: 14,
-                            campaignPrice: 40,
-                            salePrice: 50,
-                          },
-                        ],
-                      } */}
-                        {/* <TableCell className="font-medium">{_id}</TableCell> */}
-                        <TableCell>
-                          {new Date(created).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
+                      <TableRow key={_id} className="hover:bg-accent/40">
+                        <TableCell className="px-4 font-semibold">
+                          {formatDate(created)}
                         </TableCell>
                         <TableCell className="hidden max-w-[200px] md:table-cell">
                           <div className="truncate" title={productsString}>
@@ -232,21 +130,22 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
-                          {items.length}
+                          {Array.isArray(items) ? items.length : 0}
                         </TableCell>
                         <TableCell className="font-medium">
                           {formatProductPrice(price, preferredCurrency)}
                         </TableCell>
                         <TableCell>{getStatusBadge(status)}</TableCell>
-                        {/* <TableCell className="text-muted-foreground hidden lg:table-cell">
-                        {purchase.paymentMethod}
-                      </TableCell> */}
-                        <TableCell className=" text-end">
+                        <TableCell className="px-4 text-end">
                           <Link
                             href={`/invoice/success?invoiceId=${encodeURIComponent(String(invoiceId ?? _id))}&show=1`}
                           >
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <Eye className="h-4 w-4 text-gray-700" />
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="View Order"
+                            >
+                              <Eye aria-hidden="true" />
                             </Button>
                           </Link>
                           {/* <Button
@@ -259,33 +158,14 @@ const PurchaseHistoryData = ({ id, preferredCurrency = "SAR" }) => {
                       </TableRow>
                     );
                   },
-                )}
-              </TableBody>
-            )}
+                )
+              )}
+            </TableBody>
           </Table>
         </div>
-
-        {/* Summary Stats */}
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">{total}</div>
-              <p className="text-muted-foreground text-xs">Total Orders</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold">
-                {totalSpent != null
-                  ? formatProductPrice(totalSpent, preferredCurrency)
-                  : null}
-              </div>
-              <p className="text-muted-foreground text-xs">Total Spent</p>
-            </CardContent>
-          </Card>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </section>
   );
 };
 export default function PurchaseHistory({ preferredCurrency }) {
@@ -294,4 +174,43 @@ export default function PurchaseHistory({ preferredCurrency }) {
   return (
     user && <PurchaseHistoryData id={user._id} preferredCurrency={currency} />
   );
+}
+
+function getPurchaseProductNames(products, boxes) {
+  const productNames = Array.isArray(products)
+    ? products.map(({ name }) => name).filter(Boolean)
+    : [];
+
+  if (productNames.length > 0) return productNames.join(", ");
+
+  const boxProductNames = Array.isArray(boxes)
+    ? boxes.map((box) => box?.product?.name).filter(Boolean)
+    : [];
+
+  return boxProductNames.length > 0
+    ? boxProductNames.join(", ")
+    : "Moaddi order";
+}
+
+function SummaryCard({ label, value }) {
+  return (
+    <Card className="border-border/80 bg-card" size="sm">
+      <CardContent className="flex min-h-28 flex-col justify-center p-5">
+        <div className="text-2xl font-black tabular-nums">{value}</div>
+        <p className="mt-2 text-xs font-semibold text-muted-foreground">{label}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }

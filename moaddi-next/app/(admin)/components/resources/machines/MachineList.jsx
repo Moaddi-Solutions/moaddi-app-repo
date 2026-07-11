@@ -1,32 +1,22 @@
+import AdminList from "@/(admin)/components/kit/AdminList";
+import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
+import { AdminCreateButton, AdminDeleteButton, AdminEditButton, AdminReferenceField } from "@/(admin)/components/kit/AdminUI";
 import { useSocket } from "@/(root)/context/Socket";
+import { Badge } from "@/../components/ui/badge";
+import { Switch } from "@/../components/ui/switch";
+import { cn } from "@/../lib/utils";
 import { putRequest } from "@/../services/events";
 import { machineToggleAPI } from "@/../services/serverAddresses";
-import WifiIcon from "@mui/icons-material/Wifi";
-import WifiOffIcon from "@mui/icons-material/WifiOff";
-import { Box, Switch } from "@mui/material";
 import { useQueryClient } from "@tanstack/react-query";
+import { Wifi, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  BooleanField,
-  CreateButton,
-  Datagrid,
-  DeleteButton,
-  EditButton,
-  FunctionField,
-  List,
-  ReferenceField,
-  TextField,
-  TextInput,
-  TopToolbar,
-  useNotify,
-  useRefresh,
-} from "react-admin";
-const filters = [<TextInput source="q" label="Search" alwaysOn />];
+import { useNotify, useRefresh } from "ra-core";
 
 const ActiveSwitch = ({ record }) => {
   const [disabled, setDisabled] = useState(false);
   const notify = useNotify();
   const refresh = useRefresh();
+
   const handleToggle = ({ _id }) => {
     setDisabled(true);
     putRequest(machineToggleAPI(_id), {}).then((response) => {
@@ -37,87 +27,99 @@ const ActiveSwitch = ({ record }) => {
       }
     });
   };
+
   return (
     <Switch
       disabled={disabled}
       checked={record.isActive}
-      onClick={(e) => e.stopPropagation()}
-      onChange={(e) => handleToggle(record)}
-      color="primary"
+      onClick={(event) => event.stopPropagation()}
+      onCheckedChange={() => handleToggle(record)}
+      className="data-[state=checked]:bg-[color:var(--success)]"
     />
   );
 };
 
-const ListActions = () => {
-  return (
-    <TopToolbar>
-      <CreateButton />
-    </TopToolbar>
-  );
-};
+const ConnectionBadge = ({ connected }) => (
+  <Badge
+    className={cn(
+      "gap-1 rounded-full border-0 font-extrabold",
+      connected
+        ? "bg-[color:var(--success-soft)] text-[color:var(--success)]"
+        : "bg-muted text-muted-foreground",
+    )}
+  >
+    {connected ? <Wifi className="size-3" /> : <WifiOff className="size-3" />}
+    {connected ? "Online" : "Offline"}
+  </Badge>
+);
 
-export const MachineListItems = [
-  <TextField source="name" key="name" />,
-  <TextField source="mac" key={"mac"} />,
-  <TextField source="location" key="location" label="Location" />,
-  <BooleanField
-    label="Connection"
-    source="isConnected"
-    key={"isConnected"}
-    TrueIcon={() => <WifiIcon color="success" />}
-    FalseIcon={() => <WifiOffIcon color="error" />}
-  />,
-  <TextField label="boxes" source="boxes" key={"boxes"} />,
-  <FunctionField
-    label="Active"
-    source="isActive"
-    key={"isActive"}
-    render={(record) => {
-      return <ActiveSwitch record={record} />;
-    }}
-  />,
-  <ReferenceField
-    source="vendorId"
-    key="vendorId"
-    reference="vendors"
-    label="Vendor"
-  />,
-  <ReferenceField
-    source="shopId"
-    key="shopId"
-    reference="shops"
-    label="Shop"
-  />,
-  <ReferenceField
-    source="paymentProvider"
-    key="paymentProvider"
-    reference="paymentProvidersAll"
-    label="Payment provider"
-    link={false}
-  />,
+export const machineColumns = [
+  {
+    key: "name",
+    label: "Name",
+    render: (record) => <span className="font-bold">{record.name}</span>,
+  },
+  {
+    key: "mac",
+    label: "MAC",
+    render: (record) => <span className="font-mono text-xs">{record.mac}</span>,
+  },
+  {
+    key: "location",
+    label: "Location",
+    render: (record) => record.location || "-",
+  },
+  {
+    key: "isConnected",
+    label: "Connection",
+    render: (record) => <ConnectionBadge connected={record.isConnected} />,
+  },
+  { key: "boxes", label: "Boxes", render: (record) => record.boxes },
+  {
+    key: "isActive",
+    label: "Active",
+    render: (record) => <ActiveSwitch record={record} />,
+  },
+  {
+    key: "vendorId",
+    label: "Vendor",
+    render: (record) => (
+      <AdminReferenceField record={record} source="vendorId" reference="vendors" />
+    ),
+  },
+  {
+    key: "shopId",
+    label: "Shop",
+    render: (record) => (
+      <AdminReferenceField record={record} source="shopId" reference="shops" />
+    ),
+  },
+  {
+    key: "paymentProvider",
+    label: "Payment provider",
+    render: (record) => (
+      <AdminReferenceField record={record} source="paymentProvider" reference="paymentProvidersAll" />
+    ),
+  },
 ];
 
-const MachineList = () => {
-  return (
-    <List
-      // filters={filters}
-      sort={{ field: "name", order: "DESC" }}
-      actions={<ListActions />}
-    >
-      <Datagrid rowClick="show" bulkActionButtons={false}>
-        {MachineListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-      <RealTime />
-    </List>
-  );
-};
+const MachineList = () => (
+  <AdminList sort={{ field: "name", order: "DESC" }} actions={<AdminCreateButton />}>
+    <AdminShadcnTable
+      columns={machineColumns}
+      rowClick={false}
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+    <RealTime />
+  </AdminList>
+);
 
 const RealTime = () => {
-  // const { page, perPage, sort, filter, meta } = useListContext();
   const { machineStatus, liveEvents } = useSocket();
   const queryClient = useQueryClient();
 
@@ -132,18 +134,13 @@ const RealTime = () => {
         if (!Array.isArray(prev?.data)) return prev;
         return {
           ...prev,
-          data: prev.data.map((item) => {
-            if (item._id === machineId)
-              return {
-                ...item,
-                isActive: isActive,
-              };
-            return item;
-          }),
+          data: prev.data.map((item) =>
+            item._id === machineId ? { ...item, isActive } : item,
+          ),
         };
       },
     );
-  }, [machineStatus]);
+  }, [machineStatus, queryClient]);
 
   useEffect(() => {
     if (!liveEvents) return;
@@ -159,19 +156,16 @@ const RealTime = () => {
             const liveEvent = liveEvents.find(
               (event) => event.machineId === item._id,
             );
-            if (liveEvent) {
-              return {
-                ...item,
-                isConnected: !!liveEvent.connected,
-              };
-            }
-            return item;
+            return liveEvent
+              ? { ...item, isConnected: !!liveEvent.connected }
+              : item;
           }),
         };
       },
     );
-    // console.log("Live Events Updated", liveEvents);
-  }, [liveEvents]);
+  }, [liveEvents, queryClient]);
+
+  return null;
 };
 
 export default MachineList;

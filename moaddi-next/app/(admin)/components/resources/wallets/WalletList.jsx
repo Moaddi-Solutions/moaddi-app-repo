@@ -1,28 +1,25 @@
+import AdminShadcnTable, {
+  AdminBooleanBadge,
+} from "@/(admin)/components/AdminShadcnTable";
+import AdminList from "@/(admin)/components/kit/AdminList";
 import { formatMoneyValue } from "@/../lib/formatMoney";
-import {
-  BooleanField,
-  DatagridConfigurable,
-  FunctionField,
-  List,
-  TextField,
-  TopToolbar,
-} from "react-admin";
 
-const ListActions = () => <TopToolbar />;
+const walletColumns = [
+  { key: "_id", label: "Wallet ID" },
+  { key: "vendorId", label: "Vendor" },
+  { key: "currency", label: "Currency" },
+  { key: "balance", label: "Balance", render: (record) => formatMoneyValue(record?.balance) },
+  {
+    key: "isActive",
+    label: "Active",
+    render: (record) => <AdminBooleanBadge value={record.isActive} />,
+  },
+];
 
 const WalletList = () => (
-  <List sort={{ field: "created", order: "DESC" }} actions={<ListActions />}>
-    <DatagridConfigurable rowClick="show" bulkActionButtons={false}>
-      <TextField source="_id" label="Wallet ID" />
-      <TextField source="vendorId" />
-      <TextField source="currency" />
-      <FunctionField
-        label="Balance"
-        render={(record) => formatMoneyValue(record?.balance)}
-      />
-      <BooleanField source="isActive" />
-    </DatagridConfigurable>
-  </List>
+  <AdminList sort={{ field: "created", order: "DESC" }} actions={null}>
+    <AdminShadcnTable columns={walletColumns} rowClick="show" />
+  </AdminList>
 );
 
 export default WalletList;

@@ -191,9 +191,10 @@ const buildQrCode = ({ timestamp, total, vatTotal }) =>
 
 const buildProviderInvoice = (purchase, invoiceId) => {
   const createdDate = purchase.created ?? new Date().toISOString();
+  const currency = String(purchase.preferredCurrency ?? "SAR").toUpperCase();
   const total =
     purchase.price != null
-      ? `${Number(purchase.price).toFixed(2)} SAR`
+      ? `${Number(purchase.price).toFixed(2)} ${currency}`
       : "—";
   const isPaid = ["PaymentDone", "Processing", "Completed"].includes(
     purchase.status,

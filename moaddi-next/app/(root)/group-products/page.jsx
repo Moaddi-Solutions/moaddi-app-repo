@@ -1,19 +1,72 @@
-"use client";
+﻿"use client";
 
-import BlockHeader from "@/(root)/components/BlockHeader";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
+import { Badge } from "@/../components/ui/badge";
+import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
+import { Skeleton } from "@/../components/ui/skeleton";
 import { formatProductPrice } from "@/../constants/currency";
+import { cn } from "@/../lib/utils";
 import { Fit } from "@/../services/data-provider";
 import { getRequest, postRequest } from "@/../services/events";
 import { activeProductBoxes } from "@/../services/productBoxes";
-import { groupAPI, purchasesAPI } from "@/../services/serverAddresses";
-import { Button, ButtonGroup } from "@mui/material";
+import {
+  baseUrl,
+  groupAPI,
+  purchasesAPI,
+} from "@/../services/serverAddresses";
+import { ChevronRight, Boxes } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
+function resolveImage(image) {
+  if (!image) return "/images/placeholder.webp";
+  const normalized = String(image).replace(/\\/g, "/").replace(/^\/+/, "");
+  return `${baseUrl()}${normalized}`;
+}
+
+const GroupProductCardSkeleton = () => (
+  <div className="rounded-xl p-3">
+    <Skeleton className="h-29.5 w-full rounded-xl" />
+    <Skeleton className="mt-2.5 h-4 w-3/4 rounded" />
+    <Skeleton className="mt-1.5 h-3 w-12 rounded" />
+    <Skeleton className="mt-2.5 h-5 w-16 rounded" />
+    <Skeleton className="mt-2 h-8 w-full rounded-[11px]" />
+  </div>
+);
+
+const GroupProductsSkeleton = () => (
+  <section className="pb-12">
+    <Container className="mt-6">
+      <div className="bg-card ring-foreground/10 flex flex-wrap items-center gap-4 rounded-2xl p-5 ring-1">
+        <Skeleton className="size-13.5 shrink-0 rounded-[15px]" />
+        <div className="min-w-50 flex-1 space-y-2">
+          <Skeleton className="h-5 w-40 rounded" />
+          <Skeleton className="h-3.5 w-56 rounded" />
+        </div>
+        <Skeleton className="h-6 w-20 rounded-full" />
+      </div>
+    </Container>
+
+    <Container className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <GroupProductCardSkeleton key={i} />
+        ))}
+      </div>
+
+      <aside className="bg-card ring-foreground/10 grid gap-3 rounded-2xl p-5 ring-1 lg:sticky lg:top-24">
+        <Skeleton className="h-5 w-32 rounded" />
+        <Skeleton className="h-3.5 w-full rounded" />
+        <Skeleton className="h-3.5 w-2/3 rounded" />
+        <Skeleton className="mt-2 h-10 w-full rounded-xl" />
+      </aside>
+    </Container>
+  </section>
+);
 
 const itemKey = (machineId, productId) => `${machineId}::${productId}`;
 const productPrice = (product) => {
@@ -216,19 +269,15 @@ function GroupProductsContent() {
   }, [user, canPay, rows, total, machines, totalPrice, checkoutCurrency, setUser, router]);
 
   if (loading || isPending) {
-    return (
-      <Container className="my-16 text-center text-muted-foreground">
-        Loading group products...
-      </Container>
-    );
+    return <GroupProductsSkeleton />;
   }
 
   if (!user) {
     return (
       <Container className="my-16 text-center">
-        <p className="mb-4 text-muted-foreground">Sign in to shop from this group.</p>
-        <Button component={Link} href="/signin" variant="contained">
-          Sign in
+        <p className="text-muted-foreground mb-4">Sign in to shop from this group.</p>
+        <Button asChild className="font-bold">
+          <Link href="/signin">Sign in</Link>
         </Button>
       </Container>
     );
@@ -238,34 +287,122 @@ function GroupProductsContent() {
     return (
       <Container className="my-16 space-y-4 text-center">
         <p className="text-destructive">Could not open this group.</p>
-        <Button component={Link} href="/machine-scan" variant="contained">
-          Scan again
+        <Button asChild className="font-bold">
+          <Link href="/machine-scan">Scan again</Link>
         </Button>
       </Container>
     );
   }
 
+  const selectedItems = rows
+    .map(({ product, rawProduct, key }) => {
+      const count = Number(total[key] || 0);
+      if (!count) return null;
+      const isOffer =
+        rawProduct.campaignPrice != null &&
+        rawProduct.campaignPrice !== "" &&
+        Number(rawProduct.campaignPrice) < Number(rawProduct.salePrice);
+      const unit = productPrice(rawProduct);
+      return { key, product, count, unit, isOffer, lineTotal: unit * count };
+    })
+    .filter(Boolean);
+
   return (
-    <section>
-      <BlockHeader title={groupName || "Group products"} />
-      <Container className="my-3 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-        {rows.map(({ product, key }) => (
-          <MachineProductCard
-            key={key}
-            {...product}
-            setTotal={setTotal}
-          />
-        ))}
+    <section className="pb-12">
+      <Container className="mt-6">
+        <div className="bg-card ring-foreground/10 flex flex-wrap items-center gap-4 rounded-2xl p-5 ring-1">
+          <span className="bg-accent text-accent-foreground grid size-13.5 shrink-0 place-items-center rounded-[15px]">
+            <Boxes className="size-7" />
+          </span>
+          <div className="min-w-50 flex-1 leading-snug">
+            <h1 className="text-xl font-extrabold">
+              {groupName || "Group products"}
+            </h1>
+            <p className="text-muted-foreground text-[12.5px] font-bold">
+              {machines.length} {machines.length === 1 ? "machine" : "machines"} Â·{" "}
+              {rows.length} {rows.length === 1 ? "product" : "products"} available
+            </p>
+          </div>
+          <Badge variant="outline" className="shrink-0 font-bold">
+            <span className="bg-primary size-1.5 rounded-full" />
+            Group
+          </Badge>
+        </div>
       </Container>
-      <Container className="my-4 flex justify-center">
-        <ButtonGroup>
-          <Button onClick={onPurchaseHandler} disabled={!canPay}>
-            Checkout and pay
-          </Button>
-          <Button sx={{ pointerEvents: "none" }}>
-            {formatProductPrice(totalPrice, checkoutCurrency)}
-          </Button>
-        </ButtonGroup>
+
+      <Container className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+          {rows.map(({ product, key }) => (
+            <MachineProductCard key={key} {...product} setTotal={setTotal} />
+          ))}
+        </div>
+
+        <aside className="bg-card ring-foreground/10 grid gap-3 rounded-2xl p-5 ring-1 lg:sticky lg:top-24">
+          <h3 className="flex items-baseline justify-between text-base font-extrabold">
+            Your selection
+            <small className="text-muted-foreground truncate ps-2 text-xs font-bold">
+              {groupName}
+            </small>
+          </h3>
+
+          {selectedItems.length === 0 ? (
+            <p className="text-muted-foreground text-[13px]">
+              No items selected yet â€” tap + on a product.
+            </p>
+          ) : (
+            selectedItems.map(({ key, product, count, unit, isOffer, lineTotal }) => (
+              <div
+                key={key}
+                className="flex items-center gap-2.5 text-[13px] font-bold"
+              >
+                <img
+                  src={resolveImage(product.image)}
+                  alt=""
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/placeholder.webp";
+                  }}
+                  className="bg-muted size-9.5 shrink-0 rounded-lg object-contain"
+                />
+                <span className="min-w-0 flex-1 leading-tight">
+                  <span className="block truncate">
+                    {product.productName ?? product.name}
+                  </span>
+                  <small className="text-muted-foreground block text-[11px] font-semibold">
+                    {count} Ã— {formatProductPrice(unit, checkoutCurrency)}
+                    {isOffer ? " Â· offer" : ""}
+                  </small>
+                </span>
+                <span className="text-primary-text shrink-0 tabular-nums">
+                  {formatProductPrice(lineTotal, checkoutCurrency)}
+                </span>
+              </div>
+            ))
+          )}
+
+          <div className="border-border flex items-baseline justify-between border-t border-dashed pt-3 font-extrabold">
+            <span>Total</span>
+            <span className="text-primary-text text-xl tabular-nums">
+              {formatProductPrice(totalPrice, checkoutCurrency)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onPurchaseHandler}
+            disabled={!canPay}
+            className={cn(
+              "bg-primary text-primary-foreground hover:bg-primary-600 flex w-full items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-extrabold transition-colors",
+              "disabled:pointer-events-none disabled:opacity-50",
+            )}
+          >
+            Checkout
+            <ChevronRight className="size-4" />
+          </button>
+
+          <span className="text-muted-foreground text-center text-[11.5px] font-bold">
+            Items reserved on the machine while you pay
+          </span>
+        </aside>
       </Container>
     </section>
   );
@@ -273,13 +410,7 @@ function GroupProductsContent() {
 
 export default function GroupProductsPage() {
   return (
-    <Suspense
-      fallback={
-        <Container className="my-16 text-center text-muted-foreground">
-          Loading...
-        </Container>
-      }
-    >
+    <Suspense fallback={<GroupProductsSkeleton />}>
       <GroupProductsContent />
     </Suspense>
   );

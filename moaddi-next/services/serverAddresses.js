@@ -45,6 +45,9 @@ export function groupsAPI() {
 export function unassignedMachinesAPI() {
   return `${machinesAPI()}/all`;
 }
+export function activeMachinesAPI() {
+  return `${machinesAPI()}/active`;
+}
 export function productAPI() {
   return `${address()}products`;
 }

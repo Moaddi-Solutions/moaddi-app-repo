@@ -1,30 +1,15 @@
-import MuiTelInputRA from "@/(admin)/components/MuiTelInputAdminRA";
-import { Create, SimpleForm } from "react-admin";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { AdminPhoneInput } from "@/(admin)/components/kit/inputs/AdminPhoneInput";
 import { VendorEditItems } from "./VendorEdit";
 
-const Title = () => {
-  return <span>Create Vendor</span>;
-};
 const VendorCreateItems = [
-  <MuiTelInputRA
-    key="_id"
-    source="_id"
-    label="Phone Number"
-    defaultCountry="SA"
-    // forceCallingCode
-    preferredCountries={["SA", "EG", "AE"]}
-    slotProps={{
-      htmlInput: {
-        maxLength: 20,
-      },
-    }}
-  />,
+  <AdminPhoneInput key="_id" source="_id" label="Phone number" defaultCountry="SA" />,
   ...VendorEditItems,
 ];
 const create = () => (
-  <Create title={<Title />}>
-    <SimpleForm>{VendorCreateItems}</SimpleForm>
-  </Create>
+  <AdminCreate>
+    <AdminSimpleForm>{VendorCreateItems}</AdminSimpleForm>
+  </AdminCreate>
 );
 
 export default create;

@@ -1,5 +1,4 @@
-import GroupIcon from "@mui/icons-material/Group";
-import create from "./CustomerCreate";
+import { UsersRound } from "lucide-react";
 import edit from "./CustomerEdit";
 import list from "./CustomerList";
 import show from "./CustomerShow";
@@ -7,10 +6,9 @@ import show from "./CustomerShow";
 const name = "customers";
 export default ({
   name,
-  create,
   list,
   show,
   edit,
-  icon: GroupIcon,
+  icon: UsersRound,
   recordRepresentation: "name",
 });

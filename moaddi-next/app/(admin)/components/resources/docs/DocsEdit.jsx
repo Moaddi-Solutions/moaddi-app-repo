@@ -1,22 +1,12 @@
-import { RichTextInput } from "ra-input-rich-text";
-import {
-  Edit,
-  SimpleForm,
-  useEditController,
-  useRecordContext,
-} from "react-admin";
-
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Docs {record ? `"${record.id}"` : ""}</span>;
-};
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { RichTextInput } from "@/(admin)/components/kit/inputs/AdminRichTextInput";
 
 export const docsEditItems = [<RichTextInput key="body" source="body" />];
-useEditController;
+
 const DocsEdit = () => (
-  <Edit title={<Title />} actions={false}>
-    <SimpleForm>{docsEditItems}</SimpleForm>
-  </Edit>
+  <AdminEdit>
+    <AdminSimpleForm>{docsEditItems}</AdminSimpleForm>
+  </AdminEdit>
 );
 
 export default DocsEdit;

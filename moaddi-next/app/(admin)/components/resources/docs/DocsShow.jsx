@@ -1,61 +1,24 @@
-import { Box, Typography } from "@mui/material";
-import { FunctionField, Show, SimpleShowLayout, TextField } from "react-admin";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { useRecordContext } from "ra-core";
 
-const Title = () => {
-  return <span>Site</span>;
-};
-
-const DocsShow = () => {
+const DocsBody = () => {
+  const record = useRecordContext();
+  if (!record) return null;
   return (
-    <Show title={<Title />}>
-      <FunctionField
-        render={({ id, body }) => {
-          return (
-            <Box
-              sx={{
-                p: 4,
-              }}
-            >
-              <Typography variant="h2">{id}</Typography>
-              <Box
-                sx={{
-                  summary: {
-                    padding: "4px",
-                    cursor: "pointer",
-                    listStyle: "none",
-                    margin: "0 1rem",
-                    "&::marker": {
-                      content: "'👉 '",
-                    },
-                    "&::-webkit-details-marker": {
-                      display: "none",
-                    },
-                  },
-                  details: {
-                    border: "1px solid gray",
-                    padding: "0.5rem",
-                    borderRadius: "0.2rem",
-                    "&[open]": {
-                      summary: {
-                        borderBottom: "1px solid gray",
-                        marginBottom: "0.5rem",
-                        "&::marker": {
-                          content: "'👇'",
-                        },
-                      },
-                    },
-                  },
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: body,
-                }}
-              />
-            </Box>
-          );
-        }}
+    <article className="prose prose-sm max-w-none font-sans dark:prose-invert">
+      <h1 className="text-xl font-extrabold text-foreground">{record.id}</h1>
+      <div
+        className="rounded-xl border border-border bg-background p-4 text-sm leading-7 text-foreground"
+        dangerouslySetInnerHTML={{ __html: record.body ?? "" }}
       />
-    </Show>
+    </article>
   );
 };
+
+const DocsShow = () => (
+  <AdminShow title="Docs">
+    <DocsBody />
+  </AdminShow>
+);
 
 export default DocsShow;
