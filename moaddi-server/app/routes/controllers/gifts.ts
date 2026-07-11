@@ -3,14 +3,17 @@ import type { Request, Response, NextFunction } from 'express';
 import type { IPurchase } from '../../data/models/types';
 
 const purchasesRepo = require('../../data/repos/purchases') as typeof import('../../data/repos/purchases');
+interface GuestSession {
+  _id: string;
+  name: string;
+  role: string;
+  preferredCurrency: string;
+  isGuest: boolean;
+  token: string;
+  expiresIn: number;
+}
 const usersRepo = require('../../data/repos/users') as {
-  createGuest: (preferredCurrency?: string) => Promise<{
-    _id: string;
-    token: string;
-    role: string;
-    preferredCurrency: string;
-    expiresIn: number;
-  }>;
+  createGuest: (preferredCurrency?: string) => Promise<GuestSession>;
 };
 const authenticate = require('../middlewares/authenticate') as () => import('express').RequestHandler;
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate') as () => import('express').RequestHandler;
@@ -130,16 +133,17 @@ const controller = (): import('express').Router => {
         const preferredCurrency = await getCurrencyOfUser(req);
 
         // Signed-in recipient (or the buyer) reuses their own identity; otherwise
-        // mint a fresh Guest session so no account is required.
+        // mint a fresh Guest session so no account is required. `session` is the
+        // full guest record (same shape as POST /users/guest) so the client can
+        // persist it as the current user unchanged.
         let openerId: string;
-        let session: { token: string; expiresIn: number } | null = null;
+        let session: GuestSession | null = null;
         const authed = req.authenticatedUser;
         if (authed && authed._id) {
           openerId = authed._id;
         } else {
-          const guest = await usersRepo.createGuest(preferredCurrency);
-          openerId = guest._id;
-          session = { token: guest.token, expiresIn: guest.expiresIn };
+          session = await usersRepo.createGuest(preferredCurrency);
+          openerId = session._id;
         }
 
         await purchasesRepo.recordGiftClaim(purchase._id, openerId);
