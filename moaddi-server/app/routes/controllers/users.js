@@ -41,6 +41,32 @@ module.exports = () => {
     }
   });
 
+  // Guest session — public. Returns a signin-shaped payload (with token) so the
+  // guest can use every authenticated endpoint (purchases, payment, boxes).
+  router.post("/users/guest", async (req, res, next) => {
+    try {
+      const preferredCurrency = await getCurrencyOfUser(req);
+      let results = await users.createGuest(preferredCurrency);
+      return res.status(201).json(results);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Guest contact info — authenticated, guest updates only itself.
+  router.put("/users/guest/me", authenticate(), async (req, res, next) => {
+    try {
+      const u = req.authenticatedUser;
+      if (!u || u.role !== "Guest") {
+        return res.status(403).json({ message: "Forbidden." });
+      }
+      let results = await users.updateGuestInfo(u._id, req.body);
+      return res.status(200).json(results);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Create new sub-users.
   router.post("/users/create", authenticate(), async (req, res, next) => {
     try {

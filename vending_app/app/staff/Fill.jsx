@@ -1,5 +1,6 @@
 import { Loader, Plus } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Image, ScrollView, TouchableOpacity, View } from "react-native";
 import QrCodeSvg from "react-native-qrcode-svg";
 import { Badge } from "~/components/ui/badge";
@@ -34,6 +35,7 @@ const ProductRow = ({
   readyToSet,
   loading,
 }) => {
+  const { t } = useTranslation();
   const { items, total } = useList("productsActive", {
     pagination: { page: 1, perPage: 100 },
     filter: null,
@@ -49,7 +51,7 @@ const ProductRow = ({
         // sx={{ p: 1, overflowX: "auto", width: 1, position: "absolute" }}
       >
         {items?.map(
-          ({ id, name, image, campaignPrice, salePrice, isActive }) => (
+          ({ id, name, image, campaignPrice, salePrice, isActive, preferredCurrency }) => (
             <TouchableOpacity
               className="m-2"
               key={id}
@@ -75,7 +77,7 @@ const ProductRow = ({
                   />
                 )}
                 <View className="flex flex-row justify-center">
-                  <Text>{`${(campaignPrice ?? salePrice).toFixed(2)} ${t(selectedProduct?.preferredCurrency ?? "sar")}`}</Text>
+                  <Text>{`${(campaignPrice ?? salePrice).toFixed(2)} ${t(preferredCurrency ?? "sar")}`}</Text>
                 </View>
               </Card>
             </TouchableOpacity>
@@ -256,6 +258,7 @@ const BoxesList = ({
   loading,
   setLoading,
 }) => {
+  const { t } = useTranslation();
   const { machine } = useMachine();
   const { isPending, item, refetch, dataUpdatedAt } = useGetOne(
     "vendors",

@@ -3,7 +3,10 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "dev": "expo start -c",
+    "dev": "node scripts/start-local.mjs",
+    "dev:local": "node scripts/start-local.mjs",
+    "dev:emu": "node scripts/start-local.mjs --emu",
+    "dev:online": "node scripts/start-online.mjs",
     "dev:tunnel": "node scripts/start-tunnel.mjs",
     "dev:web": "expo start -c --web",
     "dev:android": "expo start -c --android",

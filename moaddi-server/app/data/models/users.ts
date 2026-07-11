@@ -31,6 +31,11 @@ const UsersSchema = new mongoose.Schema<UserDocument>(
         message: 'Invalid currency',
       },
     },
+    // Guest checkout: guests get a synthetic _id; `phone` holds the collected
+    // number (normalized) used to merge guest purchases into a real account.
+    isGuest: { type: Boolean, required: false },
+    phone: { type: String, required: false },
+    email: { type: String, required: false },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },

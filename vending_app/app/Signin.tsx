@@ -1,44 +1,37 @@
-import { Link, useNavigation, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Image,
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
-  StyleSheet,
-  TouchableOpacity,
+  Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import PhoneInput from "~/components/PhoneInput";
-import { Text } from "~/components/ui/text";
+import { Button, Card, PhoneInput } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
 import { getSignInErrorMessage } from "~/lib/signInErrors";
 import { getItem, setItem } from "~/lib/utils";
 import { getRequest, postRequest } from "~/services/httpClient";
 import { signInAddress, userAPI } from "~/services/serverAddresses";
+import { colors, space, type as typo } from "~/theme/moaddi";
 
 const SigninScreen = () => {
-  const [formData, setFormData] = useState({
-    phone: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ phone: "", password: "" });
   const { t } = useTranslation();
-
   const { setUser } = useUser() as any;
   const router = useRouter();
 
   useEffect(() => {
     getItem("user").then((user) => {
-      if (!user) return;
-      router.dismissAll();
-      // console.log("replace from Signin");
+      if (user) router.dismissAll();
     });
   }, []);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
 
   const handleSignin = async () => {
     try {
@@ -47,13 +40,7 @@ const SigninScreen = () => {
       if (formData.password.length < 6)
         return alert("error", "Password must be at least 6 characters long");
 
-      const user = {
-        _id: formData.phone,
-        password: formData.password,
-        rememberMe: false,
-      };
-      console.log({ user });
-
+      const user = { _id: formData.phone, password: formData.password, rememberMe: false };
       const response = await postRequest(signInAddress, user as any);
 
       if (response.message) {
@@ -67,99 +54,136 @@ const SigninScreen = () => {
 
       setUser(response);
       await setItem("user", response);
-      // setIsLoading(false);
       alert("success", "Logged in successfully!");
 
-      getRequest(userAPI(response._id)).then(async (response) => {
-        setUser((prev: any) => ({ ...prev, ...response }));
-        // if (response.purchase) router.navigate("/checkout");
-        // router.navigate("/machine-scan");
-        // navigation.dispatch(
-        //   CommonActions.reset({
-        //     index: 0, // Sets the active route to the first in the new routes array
-        //     routes: [{ name: "/" }], // Define the new route(s)
-        //   })
-        // );
+      getRequest(userAPI(response._id)).then(async (r) => {
+        setUser((prev: any) => ({ ...prev, ...r }));
         router.dismissAll();
       });
     } catch (error) {
-      console.log({ error });
-      alert(
-        "error",
-        error instanceof Error ? error.message : t("loginFailed"),
-      );
+      alert("error", error instanceof Error ? error.message : t("loginFailed"));
     }
   };
 
-  const phoneInput = {
-    formData,
-    setFormData,
-  };
-  const passwordInput = {
-    formData,
-    setFormData,
-  };
-
   return (
-    <View className="flex-1 px-6">
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View className="items-center mb-10">
-            <Text className="text-foreground text-2xl font-bold">
-              {t("login")}
-            </Text>
-            <Text className="text-muted-foreground text-sm">
-              {t("loginToYourAccount")}
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DetailHeader
+        title={t("signIn")}
+        onBack={() =>
+          router.canGoBack() ? router.back() : router.replace("/(tabs)")
+        }
+      />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: space.gutter,
+            paddingVertical: 32,
+            gap: 24,
+          }}
+        >
+          <View style={{ alignItems: "center", gap: 10 }}>
+            <Image
+              source={require("~/assets/images/icon-new.jpg")}
+              style={{ width: 72, height: 72, borderRadius: 20 }}
+            />
+            <Text style={{ ...typo.caption, color: colors.textMuted }}>
+              Scan. Pay. Grab it.
             </Text>
           </View>
 
-          <View className="border border-muted rounded-2xl p-8">
-            <View className="mb-5">
-              <Text className="mb-2">{t("phone")}</Text>
-              <PhoneInput {...phoneInput} />
-            </View>
+          <Card raised radius="xl" style={{ padding: 24 }}>
+            <View style={{ gap: 16 }}>
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    ...typo.bodyStrong,
+                    fontSize: 13,
+                    color: colors.textHeading,
+                  }}
+                >
+                  {t("phone")}
+                </Text>
+                <PhoneInput
+                  value={formData.phone}
+                  onChangeText={(full) =>
+                    setFormData((p) => ({ ...p, phone: full }))
+                  }
+                />
+              </View>
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    ...typo.bodyStrong,
+                    fontSize: 13,
+                    color: colors.textHeading,
+                  }}
+                >
+                  {t("password")}
+                </Text>
+                <PasswordInput formData={formData} setFormData={setFormData} />
+              </View>
 
-            <View className="mb-5">
-              <Text className="mb-2">{t("password")}</Text>
-              <PasswordInput {...passwordInput} />
-            </View>
-
-            <TouchableOpacity
-              className="bg-foreground rounded-xl p-3 mt-2 items-center "
-              onPress={handleSignin}
-            >
-              <Text className="text-lg font-bold text-background">
+              <Button fullWidth onPress={handleSignin}>
                 {t("login")}
-              </Text>
-            </TouchableOpacity>
+              </Button>
 
-            <View className="mt-5 flex items-center">
-              <Text>{t("dontHaveAnAccount")} </Text>
-              <Link href="/Signup">
-                <Text className="text-indigo-500">{t("signUp")}</Text>
-              </Link>
-            </View>
-            <View className="mt-5 flex items-center">
-              <Text>{t("areYouStaff")} </Text>
-              <TouchableOpacity
-                onPress={() => router.replace("/SigninAsStaff")}
+              <View
+                style={{
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
               >
-                <Text className="text-indigo-500">{t("signInAsStaff")}</Text>
-              </TouchableOpacity>
+                <Text
+                  onPress={() => router.navigate("/Signup")}
+                  style={{
+                    ...typo.caption,
+                    color: colors.textBrand,
+                    fontWeight: "600",
+                  }}
+                >
+                  {t("signUp")}
+                </Text>
+                <Text style={{ ...typo.caption, color: colors.textMuted }}>
+                  {t("dontHaveAnAccount")}
+                </Text>
+              </View>
+              <View
+                style={{
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
+              >
+                <Text
+                  onPress={() => router.replace("/SigninAsStaff")}
+                  style={{
+                    ...typo.caption,
+                    color: colors.textBrand,
+                    fontWeight: "600",
+                  }}
+                >
+                  {t("signInAsStaff")}
+                </Text>
+                <Text style={{ ...typo.caption, color: colors.textMuted }}>
+                  {t("areYouStaff")}
+                </Text>
+              </View>
             </View>
-          </View>
+          </Card>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
-});
 
 export default SigninScreen;

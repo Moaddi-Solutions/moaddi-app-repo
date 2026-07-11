@@ -21,7 +21,10 @@
       "bundleIdentifier": "com.moaddi",
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "We use Bluetooth to connect to vending locks.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
       },
       "buildNumber": "7"
     },
@@ -74,7 +77,8 @@
             "minSdkVersion": 26,
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0"
+            "buildToolsVersion": "35.0.0",
+            "usesCleartextTraffic": true
           }
         }
       ],
