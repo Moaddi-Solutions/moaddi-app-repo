@@ -19,3 +19,7 @@ export const SOCIAL_LINKS: Record<SocialPlatform, string | null> = {
 };
 
 export const CONTACT_EMAIL = "info@moaddi.net";
+
+/** Public marketing site linked from the home footer. */
+export const WEBSITE_URL = "https://moaddi-app.com";
+export const WEBSITE_LABEL = "moaddi-app.com";

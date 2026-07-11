@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { BadgeCheck, Globe, LogOut, ReceiptText, Trash2, User } from "lucide-react-native";
+import { BadgeCheck, Globe, LogOut, ReceiptText, User, UserX } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -129,8 +129,8 @@ function Profile() {
           />
           <Separator />
           <ListItem
-            icon={<Trash2 size={18} color={listItemIconColor(true)} />}
-            title={t("deleteAccount")}
+            icon={<UserX size={18} color={listItemIconColor(true)} />}
+            title={t("deactivateAccount")}
             destructive
             chevron={false}
             onPress={() => router.navigate("/Settings")}

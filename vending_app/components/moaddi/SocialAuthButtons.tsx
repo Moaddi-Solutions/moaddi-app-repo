@@ -54,6 +54,16 @@ export function SocialAuthButtons() {
 
   if (!showGoogle && !showApple) return null;
 
+  /** Sign-in is often opened via `replace` (e.g. from Profile), so there is no
+   *  stack to dismiss — fall back to home instead of POP_TO_TOP. */
+  const leaveAuthScreen = () => {
+    if (router.canDismiss()) {
+      router.dismissAll();
+      return;
+    }
+    router.replace("/(tabs)");
+  };
+
   const persistAndGo = async (res: SocialLoginResult) => {
     setUser(res as any);
     await setItem("user", res);
@@ -62,9 +72,7 @@ export function SocialAuthButtons() {
       .then((full) => {
         setUser((prev: any) => ({ ...prev, ...full }));
       })
-      .finally(() => {
-        router.dismissAll();
-      });
+      .finally(leaveAuthScreen);
   };
 
   const run = async (

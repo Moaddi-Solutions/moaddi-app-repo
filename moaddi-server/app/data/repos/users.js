@@ -253,6 +253,13 @@ let socialSignIn = async (profile, preferredCurrency) => {
     });
   }
 
+  if (user && !user.isActive) {
+    return Promise.reject({
+      message: "User not Active.",
+      statusCode: 401,
+    });
+  }
+
   if (!user) {
     user = new Users({
       _id,
