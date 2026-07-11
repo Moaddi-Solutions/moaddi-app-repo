@@ -1,4 +1,5 @@
 "use client";
+import Dashboard from "@/(admin)/components/Dashboard";
 import Layout, { Login } from "@/(admin)/components/layout/Layout";
 import blocks from "@/(admin)/components/resources/blocks";
 import customers from "@/(admin)/components/resources/customers";
@@ -24,11 +25,11 @@ import vendors from "@/(admin)/components/resources/vendors";
 import wallets from "@/(admin)/components/resources/wallets";
 import withdrawals from "@/(admin)/components/resources/withdrawals";
 import website from "@/(admin)/components/resources/website";
-import { DarkTheme, LightTheme } from "@/(admin)/theme";
+import i18nProvider from "@/(admin)/components/kit/i18nProvider";
 import { isDashboardAdminRole, isVendorRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
 import authProvider from "@/../services/auth-provider";
 import { getAdminDataProvider } from "@/../services/data-provider";
-import { Admin, CustomRoutes, Resource } from "react-admin";
+import { CoreAdmin as Admin, CustomRoutes, Resource } from "ra-core";
 import { Route } from "react-router-dom";
 
 const adminDataProvider = getAdminDataProvider();
@@ -39,17 +40,17 @@ const AdminApp = () => {
       title="Dashboard"
       dataProvider={adminDataProvider}
       authProvider={authProvider}
+      i18nProvider={i18nProvider}
       loginPage={Login}
       requireAuth
-      theme={LightTheme}
-      darkTheme={DarkTheme}
       layout={Layout}
+      dashboard={Dashboard}
     >
       {(permissions = {}) => {
         const role = normalizeDashboardRole(permissions.role);
         return [
         <CustomRoutes key="custom-routes">
-          <Route path="/home" element={<p />} />
+          <Route path="/home" element={<Dashboard />} />
         </CustomRoutes>,
         ...(isDashboardAdminRole(role)
           ? [

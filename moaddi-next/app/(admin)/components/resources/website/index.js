@@ -1,4 +1,4 @@
-import StoreIcon from '@mui/icons-material/Store';
+import { MonitorCog as StoreIcon } from "lucide-react";
 import create from "./WebsiteCreate";
 import edit from "./WebsiteEdit";
 import list from "./WebsiteList";

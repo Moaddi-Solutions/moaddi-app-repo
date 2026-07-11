@@ -1,110 +1,113 @@
-import { formatMoneyValue } from "@/../lib/formatMoney";
-import { Box, Typography } from "@mui/material";
+import AdminShadcnTable, {
+  AdminBooleanBadge,
+} from "@/(admin)/components/AdminShadcnTable";
 import {
-  BooleanField,
-  Datagrid,
-  FunctionField,
-  ReferenceManyField,
-  Show,
-  SimpleShowLayout,
-  TextField,
-} from "react-admin";
+  AdminDetailField,
+  AdminDetailGrid,
+  AdminDetailSection,
+} from "@/(admin)/components/AdminDetail";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { formatMoneyValue } from "@/../lib/formatMoney";
+import { ReferenceManyFieldBase, useRecordContext } from "ra-core";
 
-const PurchaseSummaryField = () => (
-  <FunctionField
-    label="Purchase / products"
-    render={(r) => {
-      if (!r?.purchaseId) return "—";
-      const s = r?.purchaseSummary;
-      if (!s) {
-        return (
-          <Box sx={{ maxWidth: 420 }}>
-            <Typography variant="body2" component="span">
-              {r.purchaseId}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Purchase details unavailable
-            </Typography>
-          </Box>
-        );
-      }
-      return (
-        <Box sx={{ maxWidth: 420 }}>
-          <Typography variant="caption" color="text.secondary" display="block">
-            {s._id}
-            {s.preferredCurrency != null || s.price != null
-              ? ` · ${s.preferredCurrency ?? ""}${s.preferredCurrency != null && s.price != null ? " " : ""}${s.price != null ? formatMoneyValue(s.price) : ""}`
-              : ""}
-            {s.status != null ? ` · ${s.status}` : ""}
-          </Typography>
-          {s.items?.length ? (
-            s.items.map((it) => (
-              <Typography
-                key={`${it.productId}-${it.boxId}`}
-                variant="body2"
-                display="block"
-              >
-                {it.productName}
-                <Typography
-                  component="span"
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ ml: 0.5 }}
-                >
-                  ({it.boxId})
-                </Typography>
-              </Typography>
-            ))
-          ) : (
-            <Typography variant="caption" color="text.secondary">
-              No line items (or none for this vendor)
-            </Typography>
-          )}
-        </Box>
-      );
-    }}
-  />
-);
+const transactionColumns = [
+  { key: "_id", label: "Txn ID" },
+  { key: "type", label: "Type" },
+  { key: "kind", label: "Kind" },
+  { key: "purchaseId", label: "Purchase ID" },
+  { key: "purchaseSummary", label: "Purchase / products", render: PurchaseSummaryCell },
+  { key: "amount", label: "Amount", render: (record) => formatMoneyValue(record?.amount) },
+  {
+    key: "balanceAfter",
+    label: "Balance after",
+    render: (record) => formatMoneyValue(record?.balanceAfter),
+  },
+  { key: "description", label: "Description" },
+  { key: "created", label: "Created", render: (record) => formatDate(record.created) },
+];
+
+const WalletFields = () => {
+  const record = useRecordContext();
+  if (!record) return null;
+  return (
+    <AdminDetailGrid>
+      <AdminDetailField label="Wallet ID" value={record._id} span={2} />
+      <AdminDetailField label="Vendor" value={record.vendorId} />
+      <AdminDetailField label="Currency" value={record.currency} />
+      <AdminDetailField label="Balance" value={formatMoneyValue(record.balance)} />
+      <AdminDetailField label="Active" value={<AdminBooleanBadge value={record.isActive} />} />
+      <AdminDetailField label="Created" value={formatDate(record.created)} />
+      <AdminDetailField label="Updated" value={formatDate(record.updated)} />
+    </AdminDetailGrid>
+  );
+};
 
 const WalletShow = () => (
-  <Show>
-    <SimpleShowLayout>
-      <TextField source="_id" label="Wallet ID" />
-      <TextField source="vendorId" />
-      <TextField source="currency" />
-      <FunctionField
-        label="Balance"
-        render={(record) => formatMoneyValue(record?.balance)}
-      />
-      <BooleanField source="isActive" />
-      <TextField source="created" emptyText="—" />
-      <TextField source="updated" emptyText="—" />
-      <ReferenceManyField
+  <AdminShow>
+    <div className="flex flex-col gap-4">
+      <WalletFields />
+      <AdminDetailSection title="Transactions">
+      <ReferenceManyFieldBase
         reference="transactions"
         target="walletId"
-        label="Transactions"
         perPage={25}
       >
-        <Datagrid bulkActionButtons={false}>
-          <TextField source="_id" label="Txn ID" />
-          <TextField source="type" />
-          <TextField source="kind" />
-          <TextField source="purchaseId" label="Purchase ID" emptyText="—" />
-          <PurchaseSummaryField />
-          <FunctionField
-            label="Amount"
-            render={(r) => formatMoneyValue(r?.amount)}
-          />
-          <FunctionField
-            label="Balance after"
-            render={(r) => formatMoneyValue(r?.balanceAfter)}
-          />
-          <TextField source="description" emptyText="—" />
-          <TextField source="created" />
-        </Datagrid>
-      </ReferenceManyField>
-    </SimpleShowLayout>
-  </Show>
+        <AdminShadcnTable columns={transactionColumns} rowClick={false} />
+      </ReferenceManyFieldBase>
+      </AdminDetailSection>
+    </div>
+  </AdminShow>
 );
+
+function PurchaseSummaryCell(record) {
+  if (!record?.purchaseId) return "-";
+  const summary = record?.purchaseSummary;
+  if (!summary) {
+    return (
+      <div className="max-w-sm">
+        <p className="font-semibold">{record.purchaseId}</p>
+        <p className="text-xs font-medium text-muted-foreground">
+          Purchase details unavailable
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-sm space-y-1">
+      <p className="text-xs font-medium text-muted-foreground">
+        {summary._id}
+        {summary.preferredCurrency != null || summary.price != null
+          ? ` - ${summary.preferredCurrency ?? ""}${
+              summary.preferredCurrency != null && summary.price != null ? " " : ""
+            }${summary.price != null ? formatMoneyValue(summary.price) : ""}`
+          : ""}
+        {summary.status != null ? ` - ${summary.status}` : ""}
+      </p>
+      {summary.items?.length ? (
+        summary.items.map((item) => (
+          <p key={`${item.productId}-${item.boxId}`} className="font-semibold">
+            {item.productName}
+            <span className="ml-1 text-xs font-medium text-muted-foreground">
+              ({item.boxId})
+            </span>
+          </p>
+        ))
+      ) : (
+        <p className="text-xs font-medium text-muted-foreground">
+          No line items for this vendor
+        </p>
+      )}
+    </div>
+  );
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
 export default WalletShow;

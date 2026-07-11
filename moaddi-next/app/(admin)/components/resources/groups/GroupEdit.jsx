@@ -1,21 +1,14 @@
-import { Edit, SimpleForm, TextInput, useRecordContext } from "react-admin";
-
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Group {record ? `"${record.name}"` : ""}</span>;
-};
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 
 export const GroupEditItems = [
-  // <TextInput key="id" source="id" />,
   <TextInput key="name" source="name" />,
 ];
 
-const GroupEdit = () => {
-  return (
-    <Edit title={<Title />}>
-      <SimpleForm>{GroupEditItems}</SimpleForm>
-    </Edit>
-  );
-};
+const GroupEdit = () => (
+  <AdminEdit>
+    <AdminSimpleForm showDelete>{GroupEditItems}</AdminSimpleForm>
+  </AdminEdit>
+);
 
 export default GroupEdit;

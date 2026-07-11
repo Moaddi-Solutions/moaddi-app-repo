@@ -1,31 +1,28 @@
 import { useEffect, useState } from "react";
 import {
   ArrayInput,
-  AutocompleteArrayInput,
   BooleanInput,
-  DateInput,
-  Edit,
   NumberInput,
   PasswordInput,
-  ReferenceArrayInput,
   ReferenceInput,
   SelectInput,
-  SimpleForm,
   SimpleFormIterator,
   TextInput,
-  useGetList,
-  useRecordContext,
-  useResourceContext,
-} from "react-admin";
-
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Machine {record ? `"${record.name}"` : ""}</span>;
-};
+} from "@/(admin)/components/kit/inputs/AdminInputs";
+import {
+  AdminEdit,
+  AdminFormSection,
+  AdminSimpleForm,
+} from "@/(admin)/components/kit/AdminForm";
+import { useRecordContext } from "ra-core";
 
 const GenaiInputs = () => {
   return (
     <ArrayInput
+      key="specialProducts.charge"
+      source="specialProducts.charge"
+      label="Charge service"
+      className="sm:col-span-2"
       defaultValue={[
         { duration: "Half an hour" },
         { duration: "1 Hour" },
@@ -42,17 +39,6 @@ const GenaiInputs = () => {
         { duration: "12 Hours" },
         { duration: "24 Hours" },
       ]}
-      key="specialProducts.charge"
-      source="specialProducts.charge"
-      label="Charge service"
-      sx={{
-        ".RaSimpleFormIterator-line": {
-          py: 2,
-        },
-        ".MuiFormHelperText-root": {
-          display: "none",
-        },
-      }}
     >
       <SimpleFormIterator
         inline
@@ -61,8 +47,8 @@ const GenaiInputs = () => {
         disableRemove
         disableReordering
       >
-        <TextInput readOnly source="duration" resource="duration" />
-        <TextInput source="price" resource="price" />
+        <TextInput readOnly source="duration" label="Duration" />
+        <TextInput source="price" label="Price" />
       </SimpleFormIterator>
     </ArrayInput>
   );
@@ -81,47 +67,55 @@ export const MachineEditItems = () => {
   }, [record]);
   return (
     <>
-      <TextInput source="mac" />
-      <TextInput source="name" />
-      <TextInput source="location" />
-      {/* <TextInput source="qrCode" /> */}
-      <NumberInput source="boxes" />
-      {/* <BooleanInput source="status" /> */}
-      <ReferenceInput reference="vendors" source="vendorId" />
-      <SelectInput
-        onChange={onSelectChange}
-        source="type"
-        choices={[
-          { id: 0, name: "Store" },
-          { id: 1, name: "MQTT (moaddi-najaf)" },
-          { id: 2, name: "zbmpos - Wifi 4g" },
-          { id: 3, name: "kaisijin 12" },
-          { id: 4, name: "Yunxian Bluetooth" },
-          { id: 5, name: "kaisijin 24" },
-          { id: 6, name: "genai" },
-        ]}
-      />
-      {showPassword && <PasswordInput source="password" />}
-      {isGenai && <GenaiInputs />}
-      <ReferenceInput reference="shops" source="shopId" />
-      <ReferenceInput reference="groups" source="groupId" />
-      <ReferenceInput reference="paymentProviders" source="paymentProvider">
+      <AdminFormSection title="Identity">
+        <TextInput source="mac" placeholder="AA:BB:CC:DD:EE:FF" />
+        <TextInput source="name" />
+        <TextInput source="location" />
+        {/* <TextInput source="qrCode" /> */}
+        <NumberInput source="boxes" />
+        {/* <BooleanInput source="status" /> */}
+      </AdminFormSection>
+
+      <AdminFormSection title="Assignment">
+        <ReferenceInput reference="vendors" source="vendorId" />
+        <ReferenceInput reference="shops" source="shopId" />
+        <ReferenceInput reference="groups" source="groupId" />
+      </AdminFormSection>
+
+      <AdminFormSection title="Configuration">
         <SelectInput
-          label="Payment provider"
-          optionText="name"
-          optionValue="id"
+          onChange={onSelectChange}
+          source="type"
+          choices={[
+            { id: 0, name: "Store" },
+            { id: 1, name: "MQTT (moaddi-najaf)" },
+            { id: 2, name: "zbmpos - Wifi 4g" },
+            { id: 3, name: "kaisijin 12" },
+            { id: 4, name: "Yunxian Bluetooth" },
+            { id: 5, name: "kaisijin 24" },
+            { id: 6, name: "genai" },
+          ]}
         />
-      </ReferenceInput>
+        <ReferenceInput reference="paymentProviders" source="paymentProvider">
+          <SelectInput
+            label="Payment provider"
+            optionText="name"
+            optionValue="id"
+          />
+        </ReferenceInput>
+        {showPassword && <PasswordInput source="password" />}
+        {isGenai && <GenaiInputs />}
+      </AdminFormSection>
     </>
   );
 };
 
 const MachineEdit = () => (
-  <Edit title={<Title />}>
-    <SimpleForm>
+  <AdminEdit>
+    <AdminSimpleForm showDelete>
       <MachineEditItems />
-    </SimpleForm>
-  </Edit>
+    </AdminSimpleForm>
+  </AdminEdit>
 );
 
 export default MachineEdit;

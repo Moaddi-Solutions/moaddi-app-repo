@@ -1,4 +1,4 @@
-import StoreIcon from "@mui/icons-material/Store";
+import { Files as StoreIcon } from "lucide-react";
 import create from "./PagesCreate";
 import edit from "./PagesEdit";
 import list from "./PagesList";

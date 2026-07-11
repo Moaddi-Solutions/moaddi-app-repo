@@ -12,7 +12,9 @@
  *
  * Credentials come from env (left empty until real client ids are issued):
  *   GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID
- *   APPLE_CLIENT_ID  (the app bundle id, e.g. com.moaddi)
+ *   APPLE_CLIENT_ID  (comma-separated list of accepted audiences: the native
+ *                     app bundle id e.g. com.moaddi, AND — for the web flow —
+ *                     the "Sign in with Apple" Services ID e.g. com.moaddi.web)
  */
 
 const { OAuth2Client } = require("google-auth-library");
@@ -74,14 +76,20 @@ let verifyGoogle = async (idToken) => {
  * first authorization, so the client forwards it; we fall back to that here.
  */
 let verifyApple = async (idToken, fallbackName) => {
-  const clientId = process.env.APPLE_CLIENT_ID;
-  if (!clientId || !clientId.trim()) return rejectUnconfigured("Apple");
+  // Accept one or more audiences (native bundle id + web Services id). A token's
+  // `aud` must match one of them; jsonwebtoken checks membership when given an
+  // array. Keeps working for a single, comma-free value.
+  const audiences = String(process.env.APPLE_CLIENT_ID || "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (!audiences.length) return rejectUnconfigured("Apple");
   if (!idToken) return rejectInvalidToken("Apple");
 
   let payload;
   try {
     payload = await appleSignin.verifyIdToken(idToken, {
-      audience: clientId,
+      audience: audiences.length === 1 ? audiences[0] : audiences,
       ignoreExpiration: false,
     });
   } catch (err) {

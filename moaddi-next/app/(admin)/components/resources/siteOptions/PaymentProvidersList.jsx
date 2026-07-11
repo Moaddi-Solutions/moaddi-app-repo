@@ -1,20 +1,15 @@
-import { Box, Switch } from "@mui/material";
+import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
+import AdminList from "@/(admin)/components/kit/AdminList";
+import { Switch } from "@/../components/ui/switch";
 import { useState } from "react";
-import {
-  Datagrid,
-  FunctionField,
-  List,
-  TextField,
-  useDataProvider,
-  useNotify,
-  useRefresh,
-} from "react-admin";
+import { useDataProvider, useNotify, useRefresh } from "ra-core";
 
 const ToggleSwitch = ({ record }) => {
   const [disabled, setDisabled] = useState(false);
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const refresh = useRefresh();
+
   const handleToggle = () => {
     setDisabled(true);
     dataProvider
@@ -40,38 +35,40 @@ const ToggleSwitch = ({ record }) => {
         setDisabled(false);
       });
   };
+
   return (
     <Switch
       disabled={disabled}
       checked={!!record.isActive}
-      onClick={(e) => e.stopPropagation()}
-      onChange={handleToggle}
-      color="primary"
+      onClick={(event) => event.stopPropagation()}
+      onCheckedChange={handleToggle}
     />
   );
 };
 
+const paymentProviderColumns = [
+  { key: "id", label: "Key" },
+  { key: "name", label: "Provider" },
+  {
+    key: "isActive",
+    label: "Active",
+    render: (record) => <ToggleSwitch record={record} />,
+  },
+];
+
 const PaymentProvidersList = () => (
-  <List
+  <AdminList
     title="Payment Providers"
     sort={{ field: "name", order: "ASC" }}
-    pagination={false}
-    exporter={false}
+    actions={null}
+    perPage={100}
   >
-    <Datagrid bulkActionButtons={false} rowClick={false}>
-      <TextField source="id" label="Key" />
-      <TextField source="name" label="Provider" />
-      <FunctionField
-        source="isActive"
-        label="Active"
-        render={(record) => (
-          <Box onClick={(e) => e.stopPropagation()}>
-            <ToggleSwitch record={record} />
-          </Box>
-        )}
-      />
-    </Datagrid>
-  </List>
+    <AdminShadcnTable
+      columns={paymentProviderColumns}
+      rowClick={false}
+      empty="No payment providers found."
+    />
+  </AdminList>
 );
 
 export default PaymentProvidersList;

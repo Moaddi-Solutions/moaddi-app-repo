@@ -1,37 +1,19 @@
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import {
-  Edit,
-  ImageField,
   ImageInput,
-  SimpleForm,
   TextInput,
-} from "react-admin";
-
-const Title = () => {
-  return <span>Edit Seo</span>;
-};
+} from "@/(admin)/components/kit/inputs/AdminInputs";
 
 const seoEditItems = [
   <TextInput source="metaTitle" key="metaTitle" />,
   <TextInput source="metaDescription" key="metaDescription" />,
-  <ImageInput
-    sx={{
-      ".previews": {
-        display: "flex",
-        justifyContent: "center",
-      },
-    }}
-    key="shareImage"
-    source="shareImage"
-  >
-    <ImageField source="src" title="title" />
-  </ImageInput>,
+  <ImageInput key="shareImage" source="shareImage" />,
 ];
-const SeoEdit = () => {
-  return (
-    <Edit title={<Title />} redirect="show">
-      <SimpleForm>{seoEditItems}</SimpleForm>
-    </Edit>
-  );
-};
+
+const SeoEdit = () => (
+  <AdminEdit title="Edit SEO" redirect="show">
+    <AdminSimpleForm>{seoEditItems}</AdminSimpleForm>
+  </AdminEdit>
+);
 
 export default SeoEdit;

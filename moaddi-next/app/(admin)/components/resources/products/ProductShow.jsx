@@ -1,49 +1,33 @@
-import {
-  BooleanField,
-  DateField,
-  FunctionField,
-  Show,
-  SimpleShowLayout,
-  TextField,
-  useRecordContext,
-} from "react-admin";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminDetailFromColumns } from "@/(admin)/components/AdminDetail";
 import { formatNumberValue } from "@/../lib/formatMoney";
 import { ProductListItems } from "./ProductList";
 
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Product {record ? `"${record.name}"` : ""}</span>;
-};
+const extraColumns = [
+  { key: "currency", label: "Currency" },
+  {
+    key: "usdPrice",
+    label: "USD (stored)",
+    render: (record) => {
+      const u = record.usdPrice;
+      if (!u || typeof u !== "object") return "—";
+      const parts = [
+        `original ${u.originalPrice != null ? formatNumberValue(u.originalPrice) : "—"}`,
+        `tax ${u.tax != null ? formatNumberValue(u.tax) : "—"}`,
+        `sale ${u.salePrice != null ? formatNumberValue(u.salePrice) : "—"}`,
+      ];
+      if (u.campaignPrice != null) parts.push(`campaign ${formatNumberValue(u.campaignPrice)}`);
+      return parts.join(", ");
+    },
+  },
+  { key: "created", label: "Created", render: (r) => (r.created ? new Date(r.created).toLocaleString() : "—") },
+  { key: "updated", label: "Updated", render: (r) => (r.updated ? new Date(r.updated).toLocaleString() : "—") },
+];
 
-const ProductShow = () => {
-  const productListItems = [
-    ...ProductListItems,
-    <TextField key="currency" source="currency" />,
-    <FunctionField
-      key="usdPrice"
-      label="USD (stored)"
-      render={(record) => {
-        const u = record.usdPrice;
-        if (!u || typeof u !== "object") return "—";
-        const parts = [
-          `original ${u.originalPrice != null ? formatNumberValue(u.originalPrice) : "—"}`,
-          `tax ${u.tax != null ? formatNumberValue(u.tax) : "—"}`,
-          `sale ${u.salePrice != null ? formatNumberValue(u.salePrice) : "—"}`,
-        ];
-        if (u.campaignPrice != null) {
-          parts.push(`campaign ${formatNumberValue(u.campaignPrice)}`);
-        }
-        return parts.join(", ");
-      }}
-    />,
-    <DateField key="created" source="created" />,
-    <DateField key="updated" source="updated" />,
-  ];
-  return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{productListItems}</SimpleShowLayout>
-    </Show>
-  );
-};
+const ProductShow = () => (
+  <AdminShow>
+    <AdminDetailFromColumns columns={ProductListItems} extra={extraColumns} />
+  </AdminShow>
+);
 
 export default ProductShow;

@@ -1,4 +1,4 @@
-import StoreIcon from "@mui/icons-material/Store";
+import { Menu as StoreIcon } from "lucide-react";
 import create from "./HeaderCreate";
 import edit from "./HeaderEdit";
 import list from "./HeaderList";

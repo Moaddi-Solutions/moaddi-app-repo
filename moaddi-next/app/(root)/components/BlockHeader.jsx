@@ -1,21 +1,26 @@
-"use client";
-import { Badge } from "@/../components/ui/badge";
+﻿"use client";
 import { Container } from "@/../components/ui/container";
-import { useTranslations } from "next-intl";
+import rtlRules from "@/../i18n/rtl";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 const BlockHeader = ({ title, href }) => {
   const t = useTranslations("Home");
+  const locale = useLocale();
+  const Chevron = rtlRules[locale] ? ChevronLeft : ChevronRight;
   return (
-    <Container className="max-md:bg-primary mt-3 mb-2 flex items-center justify-between">
-      <h6 className="text-primary-900 px-1 font-bold max-md:text-white">
+    <Container className="mt-3 mb-3 flex items-baseline justify-between gap-4">
+      <h6 className="text-[22px] font-extrabold tracking-tight text-foreground">
         {title}
       </h6>
       {href && (
-        <Link className="my-2 flex items-center" href={href}>
-          <Badge className="max-md:text-primary rounded-full max-md:bg-white">
-            {t("showMore")}
-          </Badge>
+        <Link
+          className="text-primary-text hover:text-primary-700 flex items-center gap-1 text-[13.5px] font-extrabold whitespace-nowrap"
+          href={href}
+        >
+          {t("showMore")}
+          <Chevron className="size-3.5" />
         </Link>
       )}
     </Container>

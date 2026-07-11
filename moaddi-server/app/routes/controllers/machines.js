@@ -44,6 +44,23 @@ module.exports = () => {
     }
   });
 
+  //get active machines (public, optional user context)
+  router.get(
+    "/machines/active",
+    optionalAuthenticate(),
+    async (req, res, next) => {
+      try {
+        let results = await machines.getActive(
+          req.query.offset,
+          req.query.limit,
+        );
+        return res.status(200).json(results);
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
   //get machine by id
   router.get("/machines/:machineId", authenticate(), async (req, res, next) => {
     try {

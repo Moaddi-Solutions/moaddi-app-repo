@@ -1,16 +1,15 @@
-import { Edit, NumberInput, SimpleForm, TextInput } from "react-admin";
-
-const Title = () => <span>Edit Platform Fees</span>;
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { NumberInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 
 const PlatformFeesEdit = () => (
-  <Edit
+  <AdminEdit
     id="platform"
     resource="platformOptions"
-    title={<Title />}
+    title="Edit Platform Fees"
     redirect="show"
     mutationMode="pessimistic"
   >
-    <SimpleForm>
+    <AdminSimpleForm>
       <NumberInput
         source="platformFeePercent"
         label="Platform fee (%)"
@@ -19,8 +18,8 @@ const PlatformFeesEdit = () => (
         step={0.01}
       />
       {/* <TextInput source="currency" label="Currency" /> */}
-    </SimpleForm>
-  </Edit>
+    </AdminSimpleForm>
+  </AdminEdit>
 );
 
 export default PlatformFeesEdit;

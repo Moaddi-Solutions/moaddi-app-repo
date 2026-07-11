@@ -1,4 +1,6 @@
 import BlockHeader from "@/(root)/components/BlockHeader";
+import HowItWorks from "@/(root)/components/blocks/HowItWorks";
+import MachinesNearYou from "@/(root)/components/blocks/MachinesNearYou";
 import CardGrid from "@/(root)/components/layout/CardGrid";
 import PageBlocks from "@/(root)/components/PageBlocks";
 import { client } from "@/../services/contentClient";
@@ -70,28 +72,24 @@ export default async function Home() {
     },
   };
   return (
-    <main>
-      <PageBlocks
-        blocks={blocks}
-        offers={
-          <section>
-            <BlockHeader title={t("specialProducts")} href={"/offers"} />
-            <CardGrid {...cardGrid.specialProducts} />
-          </section>
-        }
-        shops={
-          <section>
-            <BlockHeader title={t("specialShops")} href={"/shops"} />
-            <CardGrid {...cardGrid.shops} />
-          </section>
-        }
-        products={
-          <section>
-            <BlockHeader title={t("products")} href={"/products"} />
-            <CardGrid {...cardGrid.products} />
-          </section>
-        }
-      />
+    <main className="pb-12">
+      <PageBlocks blocks={blocks} />
+      <div className="space-y-5">
+        <section className="py-3">
+          <BlockHeader title={t("specialShops")} href={"/shops"} />
+          <CardGrid {...cardGrid.shops} />
+        </section>
+        <MachinesNearYou />
+        <section className="py-3">
+          <BlockHeader title={t("specialProducts")} href={"/offers"} />
+          <CardGrid {...cardGrid.specialProducts} />
+        </section>
+        <section className="py-3">
+          <BlockHeader title={t("products")} href={"/products"} />
+          <CardGrid {...cardGrid.products} />
+        </section>
+        <HowItWorks />
+      </div>
     </main>
   );
 }

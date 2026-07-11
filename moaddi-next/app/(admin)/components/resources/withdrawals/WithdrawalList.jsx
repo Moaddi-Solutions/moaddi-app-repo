@@ -1,72 +1,61 @@
+import AdminShadcnTable, {
+  AdminStatusBadge,
+} from "@/(admin)/components/AdminShadcnTable";
+import AdminList, { AdminSelectFilter } from "@/(admin)/components/kit/AdminList";
+import { AdminCreateButton } from "@/(admin)/components/kit/AdminUI";
 import { formatMoneyValue } from "@/../lib/formatMoney";
-import { Chip } from "@mui/material";
-import {
-  CreateButton,
-  DatagridConfigurable,
-  FunctionField,
-  List,
-  SelectInput,
-  TextField,
-  TopToolbar,
-} from "react-admin";
 import { WithdrawalEmpty } from "./WithdrawalCreate";
 
-const statusColors = {
-  Pending: "warning",
-  Approved: "info",
-  Rejected: "error",
-  Paid: "success",
-};
-
 const filters = [
-  <SelectInput
+  <AdminSelectFilter
     key="status"
     source="status"
-    label="Status"
+    placeholder="Status"
     choices={[
       { id: "Pending", name: "Pending" },
       { id: "Approved", name: "Approved" },
       { id: "Rejected", name: "Rejected" },
       { id: "Paid", name: "Paid" },
     ]}
-    emptyText="All"
   />,
 ];
 
-const ListActions = () => (
-  <TopToolbar>
-    <CreateButton label="Request withdrawal" />
-  </TopToolbar>
-);
+const ListActions = () => <AdminCreateButton label="Request withdrawal" />;
+
+const withdrawalColumns = [
+  { key: "_id", label: "ID" },
+  { key: "vendorId", label: "Vendor" },
+  { key: "amount", label: "Amount", render: (record) => formatMoneyValue(record?.amount) },
+  { key: "currency", label: "Currency" },
+  {
+    key: "status",
+    label: "Status",
+    render: (record) => <AdminStatusBadge value={record?.status} />,
+  },
+  {
+    key: "requestedAt",
+    label: "Requested at",
+    render: (record) => formatDate(record.requestedAt),
+  },
+];
 
 const WithdrawalList = () => (
-  <List
+  <AdminList
     sort={{ field: "requestedAt", order: "DESC" }}
     filters={filters}
     actions={<ListActions />}
     empty={<WithdrawalEmpty />}
   >
-    <DatagridConfigurable rowClick="show" bulkActionButtons={false}>
-      <TextField source="_id" label="ID" />
-      <TextField source="vendorId" label="Vendor" />
-      <FunctionField
-        label="Amount"
-        render={(record) => formatMoneyValue(record?.amount)}
-      />
-      <TextField source="currency" />
-      <FunctionField
-        label="Status"
-        render={(record) => (
-          <Chip
-            size="small"
-            label={record?.status ?? ""}
-            color={statusColors[record?.status] ?? "default"}
-          />
-        )}
-      />
-      <TextField source="requestedAt" />
-    </DatagridConfigurable>
-  </List>
+    <AdminShadcnTable columns={withdrawalColumns} rowClick="show" />
+  </AdminList>
 );
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
 export default WithdrawalList;

@@ -1,32 +1,33 @@
 import {
-  EditButton,
-  NumberField,
-  Show,
-  SimpleShowLayout,
-  TextField,
-  TopToolbar,
-} from "react-admin";
+  AdminDetailField,
+  AdminDetailGrid,
+} from "@/(admin)/components/AdminDetail";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminEditButton } from "@/(admin)/components/kit/AdminUI";
+import { useRecordContext } from "ra-core";
 
-const Title = () => <span>Platform Fees</span>;
-
-const PlatformFeesActions = () => (
-  <TopToolbar>
-    <EditButton />
-  </TopToolbar>
-);
+const PlatformFeesFields = () => {
+  const record = useRecordContext();
+  if (!record) return null;
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
+        <AdminEditButton record={record} resource="platformOptions" label="Edit" />
+      </div>
+      <AdminDetailGrid>
+        <AdminDetailField
+          label="Platform fee (%)"
+          value={record.platformFeePercent}
+        />
+      </AdminDetailGrid>
+    </div>
+  );
+};
 
 const PlatformFeesShow = () => (
-  <Show
-    id="platform"
-    resource="platformOptions"
-    title={<Title />}
-    actions={<PlatformFeesActions />}
-  >
-    <SimpleShowLayout>
-      <NumberField source="platformFeePercent" label="Platform fee (%)" />
-      {/* <TextField source="currency" label="Currency" /> */}
-    </SimpleShowLayout>
-  </Show>
+  <AdminShow id="platform" resource="platformOptions" title="Platform Fees">
+    <PlatformFeesFields />
+  </AdminShow>
 );
 
 export default PlatformFeesShow;

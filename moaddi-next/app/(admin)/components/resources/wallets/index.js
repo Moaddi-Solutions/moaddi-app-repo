@@ -1,4 +1,4 @@
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import { Wallet as AccountBalanceWalletIcon } from "lucide-react";
 import list from "./WalletList";
 import show from "./WalletShow";
 

@@ -1,42 +1,45 @@
-import { Divider } from "@mui/material";
 import {
-  ArrayField,
-  DataTable,
-  Show,
-  SimpleShowLayout,
-  TextField,
-} from "react-admin";
+  AdminDetailArrayTable,
+  AdminDetailField,
+  AdminDetailGrid,
+} from "@/(admin)/components/AdminDetail";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { useRecordContext } from "ra-core";
 
-const Title = () => {
-  return <span>FooterBody</span>;
-};
-
-const footerBodyListItems = [
-  <TextField key="body" source="body" />,
-  <TextField key="title" source="title" />,
-  <Divider sx={{ my: 2 }} />,
-  <ArrayField source="links" key="links">
-    <DataTable bulkActionButtons={false} rowClick={false}>
-      <DataTable.Col source="category" />
-      <DataTable.Col source="title" />
-      <DataTable.Col source="url" />
-    </DataTable>
-  </ArrayField>,
-  <Divider sx={{ my: 2 }} />,
-  <ArrayField source="bottomLinks" key="bottomLinks">
-    <DataTable bulkActionButtons={false} rowClick={false}>
-      <DataTable.Col source="title" />
-      <DataTable.Col source="url" />
-    </DataTable>
-  </ArrayField>,
-];
-
-const FooterBodyShow = () => {
+const FooterFields = () => {
+  const record = useRecordContext();
+  if (!record) return null;
   return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{footerBodyListItems}</SimpleShowLayout>
-    </Show>
+    <div className="flex flex-col gap-5">
+      <AdminDetailGrid>
+        <AdminDetailField label="Title" value={record.title} />
+        <AdminDetailField label="Body" value={record.body} span={2} />
+      </AdminDetailGrid>
+      <AdminDetailArrayTable
+        source="links"
+        title="Links"
+        columns={[
+          { key: "category", label: "Category" },
+          { key: "title", label: "Title" },
+          { key: "url", label: "URL" },
+        ]}
+      />
+      <AdminDetailArrayTable
+        source="bottomLinks"
+        title="Bottom links"
+        columns={[
+          { key: "title", label: "Title" },
+          { key: "url", label: "URL" },
+        ]}
+      />
+    </div>
   );
 };
+
+const FooterBodyShow = () => (
+  <AdminShow title="Footer Body">
+    <FooterFields />
+  </AdminShow>
+);
 
 export default FooterBodyShow;

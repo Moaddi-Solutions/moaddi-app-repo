@@ -3,13 +3,58 @@
     "title": "الرئيسيه",
     "description": "مرحبا بكم في الصفحة الرئيسية"
   },
+  "Header": {
+    "scanMachine": "امسح الماكينة",
+    "signIn": "تسجيل الدخول"
+  },
   "Home": {
     "specialOffers": "العروض الخاصة",
     "showMore": "عرض المزيد",
     "specialProducts": "منتجات خاصة",
     "specialCategories": "التصنيفات المميزة",
     "specialShops": "المتاجر ",
-    "products": "منتجات"
+    "products": "منتجات",
+    "howItWorks": {
+      "title": "كيف يعمل",
+      "steps": {
+        "scan": {
+          "label": "الخطوة 1",
+          "title": "امسح رمز QR",
+          "description": "كل جهاز يعرض رمزه الخاص على الشاشة أو الملصق."
+        },
+        "pick": {
+          "label": "الخطوة 2",
+          "title": "اختر منتجاتك",
+          "description": "تصفح رفوف الجهاز المباشرة مع أعداد المخزون الفعلية."
+        },
+        "pay": {
+          "label": "الخطوة 3",
+          "title": "ادفع بنقرة واحدة",
+          "description": "Apple Pay أو مدى أو البطاقة — بحماية Moyasar."
+        },
+        "collect": {
+          "label": "الخطوة 4",
+          "title": "استلم وانطلق",
+          "description": "شاهد كل منتج يفتح مباشرة، ثم خذه من الباب."
+        }
+      }
+    },
+    "machinesNearYou": {
+      "titleLead": "الماكينات",
+      "titleEmphasis": "بالقرب منك",
+      "description": "حالة مباشرة من كل ماكينة — تسوق فقط ما هو متوفر فعليًا على الرف.",
+      "allMachines": "كل الماكينات",
+      "online": "متصلة",
+      "offline": "غير متصلة",
+      "currentlyUnavailable": "غير متاحة حاليًا",
+      "viewProducts": "عرض المنتجات",
+      "productsOnShelf": "{count, plural, one {# منتج} other {# منتجات}} على الرف",
+      "noProductsOnShelf": "لا توجد منتجات على الرف",
+      "machineNotFound": "الماكينة غير موجودة!",
+      "machineOffline": "الماكينة غير متصلة!",
+      "machineNotActive": "الماكينة غير نشطة!",
+      "machineDetected": "تم اكتشاف الماكينة!"
+    }
   },
   "showMore": "تظهر المزيد",
   "Auth": {
@@ -28,7 +73,29 @@
     "youHaveSuccessfullyLoggedIn": "تم تسجيل الدخول بنجاح",
     "invalidPhoneNumber": "رقم هاتف غير صالح",
     "staff": "طاقم عمل",
-    "otp": "OTP"
+    "otp": "OTP",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟ سجل الدخول",
+    "accountAccess": "الوصول للحساب",
+    "createCustomerAccount": "إنشاء حساب عميل",
+    "staffPortal": "بوابة الموظفين",
+    "staffPortalDescription": "فتح لوحة تحكم التشغيل",
+    "orContinueWith": "أو تابع باستخدام",
+    "continueWithGoogle": "المتابعة باستخدام Google",
+    "continueWithApple": "المتابعة باستخدام Apple",
+    "loginFailed": "فشل تسجيل الدخول. حاول مرة أخرى."
+  },
+  "GuestCheckout": {
+    "title": "كيف تود إتمام الشراء؟",
+    "description": "سجّل الدخول لحفظ سجل طلباتك، أو تابع كضيف.",
+    "continueAsGuest": "المتابعة كضيف",
+    "formTitle": "بيانات التواصل",
+    "formDescription": "نستخدم هذه البيانات لإرسال إيصالك وتحديثات الطلب.",
+    "nameOptional": "الاسم (اختياري)",
+    "emailOptional": "البريد الإلكتروني (اختياري)",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "submitting": "جارٍ التنفيذ…",
+    "error": "تعذر بدء الشراء كضيف. حاول مرة أخرى."
   },
   "SignIn": {
     "input": "أدخل رقمك لتسجيل الدخول"
@@ -39,6 +106,7 @@
     "name": "الاسم"
   },
   "QR": {
+    "open": "فتح",
     "scanMachine": "مسح رمز QR",
     "scanMachineFromImage": "مسح من الصورة",
     "invalidImage": "صورة غير صالحة",
@@ -61,7 +129,25 @@
     "openedCount": "تم فتحه",
     "remaining": "المتبقي",
     "missingPurchaseContext": "تعذر فتح الصندوق: بيانات الشراء غير متوفرة. حدّث الصفحة وحاول مرة أخرى.",
-    "invalidBoxSlot": "تعذر تحديد الخانة المراد فتحها. حدّث الصفحة أو تواصل مع الدعم."
+    "invalidBoxSlot": "تعذر تحديد الخانة المراد فتحها. حدّث الصفحة أو تواصل مع الدعم.",
+    "letSomeoneOpen": "دع شخصًا آخر يفتحه",
+    "creatingGiftLink": "جارٍ إنشاء الرابط…",
+    "giftLinkShareTitle": "هدية لك",
+    "giftLinkShareText": "أرسلت لك شيئًا — استلمه وافتح الصندوق.",
+    "giftLinkCopied": "تم نسخ رابط الهدية — شاركه مع المستلم.",
+    "giftLinkError": "تعذر إنشاء رابط الهدية. حاول مرة أخرى."
+  },
+  "Gift": {
+    "title": "هدية لك",
+    "receivedHeading": "أرسل لك أحدهم هدية!",
+    "receivedSubtitle": "استلمها، ثم افتح الصندوق عند الماكينة لأخذ منتجك.",
+    "notReady": "غير جاهزة بعد",
+    "items": "منتجات",
+    "claimAndOpen": "استلم وافتح",
+    "claiming": "جارٍ الاستلام…",
+    "backToHome": "العودة إلى الرئيسية",
+    "unavailable": "لم يعد رابط الهدية هذا متاحًا.",
+    "claimError": "تعذر استلام هذه الهدية."
   },
   "PurchaseNotice": {
     "dismiss": "ذكّرني لاحقًا",
@@ -109,6 +195,83 @@
   "otp": {
     "activateAccount": "تنشيط الحساب",
     "input": "أدخل الرمز الذي أرسلناه إلى حساب WhatsApp الخاص بك"
-  }
-, "small change to hit the redeploy on vercel": ""
+  },
+  "Shop": {
+    "machines": "الآلات",
+    "products": "المنتجات",
+    "noMachines": "لا توجد آلات",
+    "noProducts": "لا توجد منتجات"
+  },
+  "MachinesPage": {
+    "title": "الآلات المتوفرة",
+    "subtitleCount": "{count, plural, =0 {لا توجد آلة تحتوي على هذا المنتج حاليًا} one {آلة واحدة تحتوي على هذا المنتج} other {# آلة تحتوي على هذا المنتج}}",
+    "online": "متصل",
+    "offline": "غير متصل",
+    "stock": "{count, plural, =0 {نفدت الكمية} one {قطعة واحدة متوفرة} other {# قطعة متوفرة}}",
+    "productsOnShelf": "{count, plural, =0 {لا توجد منتجات أخرى} one {منتج واحد على الرف} other {# منتج على الرف}}",
+    "totalStock": "{count, plural, =0 {0 قطعة إجمالًا} one {قطعة واحدة إجمالًا} other {# قطعة إجمالًا}}",
+    "viewProducts": "عرض المنتجات",
+    "unavailable": "غير متاحة حاليًا",
+    "emptyTitle": "لا توجد آلات قريبة بعد",
+    "emptyBody": "هذا المنتج غير محمّل في أي آلة حاليًا. تحقق مرة أخرى قريبًا."
+  },
+  "Profile": {
+    "title": "الملف الشخصي",
+    "signedOutDescription": "سجّل الدخول لعرض حسابك وطلباتك في مؤدي.",
+    "signIn": "تسجيل الدخول",
+    "backToProfile": "العودة إلى الملف الشخصي",
+    "editProfile": "تعديل الملف الشخصي",
+    "orders": "الطلبات",
+    "lastOrder": "آخر طلب",
+    "loading": "جاري التحميل...",
+    "noOrdersYet": "لا توجد طلبات بعد",
+    "orderHistory": "سجل الطلبات",
+    "ordersCount": "{count} طلب",
+    "helpSupport": "المساعدة والدعم",
+    "helpSupportDetail": "دعم الطلبات والماكينات",
+    "signOut": "تسجيل الخروج",
+    "moaddiCustomer": "عميل مؤدي",
+    "currentOrder": "الطلب الحالي",
+    "totalOrders": "إجمالي الطلبات",
+    "totalSpent": "إجمالي الإنفاق",
+    "purchaseHistory": "سجل المشتريات",
+    "purchaseHistoryDescription": "اعرض طلباتك وافتح فاتورة أي عملية شراء.",
+    "date": "التاريخ",
+    "items": "العناصر",
+    "qty": "الكمية",
+    "total": "الإجمالي",
+    "statusColumn": "الحالة",
+    "actions": "الإجراءات",
+    "loadingOrders": "جاري تحميل الطلبات...",
+    "noOrdersYetPeriod": "لا توجد طلبات بعد.",
+    "viewOrder": "عرض الطلب",
+    "moaddiOrder": "طلب مؤدي",
+    "accountSettings": "إعدادات الحساب",
+    "accountSettingsDescription": "إدارة معلومات الحساب وإعدادات الأمان",
+    "verifiedAccount": "حساب موثّق",
+    "personalInformation": "المعلومات الشخصية",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "name": "الاسم",
+    "phoneNumber": "رقم الهاتف",
+    "saveChanges": "حفظ التغييرات",
+    "security": "الأمان",
+    "changePassword": "تغيير كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "enterNewPassword": "أدخل كلمة المرور الجديدة",
+    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "confirmNewPasswordPlaceholder": "أكّد كلمة المرور الجديدة",
+    "updatePassword": "تحديث كلمة المرور",
+    "passwordsDoNotMatch": "كلمة المرور الجديدة وتأكيدها غير متطابقين.",
+    "passwordTooShort": "يجب أن تكون كلمة المرور الجديدة 6 أحرف على الأقل.",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "profileUpdateFailed": "تعذر تحديث الملف الشخصي",
+    "status": {
+      "opening": "قيد الفتح",
+      "initiate": "بدء العملية",
+      "completed": "مكتمل",
+      "paymentDone": "تم الدفع"
+    }
+  },
+  "small change to hit the redeploy on vercel": ""
 }

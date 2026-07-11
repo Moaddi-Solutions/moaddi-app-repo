@@ -1,99 +1,149 @@
 import { SocialMediaIcons } from "@/(root)/components/SocialMediaIcons";
 import { Container } from "@/../components/ui/container";
 import { grouped } from "@/../lib/utils";
-import { css, cx } from "@kuma-ui/core";
+import { useLocale } from "next-intl";
 import Link from "next/link";
-import Typography from "./Typography";
+
+/**
+ * Fallback Footer content, used when the dashboard ({locale}FooterBody)
+ * returns nothing for a given field. Edit these defaults to change what
+ * renders before/without dashboard data.
+ */
+const FOOTER_FALLBACK = {
+  en: {
+    title: "Moaddi",
+    body: "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    // Grouped by `category` — each becomes a footer column.
+    links: [
+      { category: "Shop", title: "Products", url: "/products" },
+      { category: "Shop", title: "Machines", url: "/machines" },
+      { category: "Legal", title: "Privacy policy", url: "/privacy-policy" },
+      {
+        category: "Legal",
+        title: "Terms and conditions",
+        url: "/terms-and-conditions",
+      },
+    ],
+    bottomLinks: [
+      { title: "© 2026 Moaddi. All rights reserved." },
+      { title: "Payments secured by Moyasar · مودي للبيع الذاتي" },
+    ],
+  },
+  ar: {
+    title: "معدي",
+    body: "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    links: [
+      { category: "المتجر", title: "المنتجات", url: "/products" },
+      { category: "المتجر", title: "الماكينات", url: "/machines" },
+      { category: "قانوني", title: "سياسة الخصوصية", url: "/privacy-policy" },
+      {
+        category: "قانوني",
+        title: "الشروط والأحكام",
+        url: "/terms-and-conditions",
+      },
+    ],
+    bottomLinks: [
+      { title: "© 2026 معدي. جميع الحقوق محفوظة." },
+      { title: "المدفوعات مؤمنة بواسطة ميسر · مودي للبيع الذاتي" },
+    ],
+  },
+};
+
+// A footer link row is valid only when it has BOTH a title and a url.
+const isValidLink = (link) =>
+  Boolean(link?.title?.trim?.() && link?.url?.trim?.());
+
+// md+ grid: a wide brand column (1.4fr) plus one 1fr per rendered category.
+// Full literal class strings so Tailwind's JIT picks them up.
+const FOOTER_GRID_CLASSES = {
+  1: "md:grid-cols-[1.4fr_1fr]",
+  2: "md:grid-cols-[1.4fr_1fr_1fr]",
+  3: "md:grid-cols-[1.4fr_1fr_1fr_1fr]",
+  4: "md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]",
+};
+
+const footerGridClass = (count) =>
+  FOOTER_GRID_CLASSES[count] ?? "md:grid-cols-[1.4fr_1fr_1fr_1fr]";
+
+const normalizeHref = (url) => {
+  if (!url) return "/";
+  if (/^https?:\/\//.test(url)) return url;
+  if (url === "home" || url === "/home") return "/";
+  return url.startsWith("/") ? url : `/${url}`;
+};
 
 const Footer = ({ body, title, links, bottomLinks, socialMedia }) => {
-  const groupedLinks = grouped(links, "category");
-  const bodyText = (body ?? "").split("|");
+  const locale = useLocale();
+  const fallback = FOOTER_FALLBACK[locale] ?? FOOTER_FALLBACK.en;
+  const brandTitle = title || fallback.title;
+  const brandBody = body || fallback.body;
+
+  // Keep only rows with both title + url; if the dashboard yields none,
+  // fall back to the hardcoded links. Empty categories drop out naturally.
+  const validLinks = (links ?? []).filter(isValidLink);
+  const columns = grouped(
+    validLinks.length ? validLinks : fallback.links,
+    "category",
+  );
+  const bottom = bottomLinks?.length ? bottomLinks : fallback.bottomLinks;
+
   return (
-    <footer className="bg-primary-800 text-primary-100 [&_a]:transition-all">
-      <Container className="relative flex flex-col items-center justify-center pt-8">
-        {/* <div className="bg-primary absolute -top-8 flex w-full items-center justify-between rounded-md px-6 py-4 font-bold text-white md:w-5/6 lg:w-4xl">
-          Ready to get Started ?
-          <Button variant="outlined" color="white">
-            Contact us
-          </Button>
-        </div> */}
-        <div className="flex items-center gap-4 max-md:flex-col md:gap-8 lg:mx-16">
-          <div className="flex-1">
-            <h4>Moaddi solution</h4>
-            <p className="mt-4 font-bold">{bodyText[0]}</p>
-            <p>{bodyText[1]}</p>
-            {/* <Blocks
-              className={"pt-6 [&_p]:text-xs md:[&_p]:text-sm"}
-              content={body}
-            /> */}
-            <SocialMediaIcons
-              items={socialMedia}
-              variant="outlined"
-              className="z-10 mt-6"
-            />
-          </div>
-          <div className="mt-6 flex w-full flex-1 justify-around gap-4 max-md:justify-between md:mb-15">
-            {groupedLinks.map(([category, links]) => (
-              <div
-                key={category}
-                className="[&_a]:text-secondary-200 [&_a]:hover:text-secondary-300 flex flex-col gap-2"
-              >
-                <Typography className="mb-2 font-semibold" variant="body2">
-                  {category}
-                </Typography>
-                {links.map(({ title, url, article }, i) => {
-                  const { slug } = article ?? {};
-                  return (
-                    <Link key={i} href={slug || url}>
-                      <small>{title}</small>
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Container>
-      <div
-        className={cx(
-          "relative mt-6 flex w-full justify-center overflow-hidden",
-          css`
-            height: 3rem;
-          `,
-        )}
+    <footer className="bg-primary-900 mt-14 text-[#bcd8de]">
+      <Container
+        variant="breakpoint"
+        className={`grid grid-cols-1 gap-7.5 pt-11.5 pb-7.5 sm:grid-cols-2 ${footerGridClass(columns.length)}`}
       >
-        <div
-          className={cx(
-            "bg-primary-500 absolute",
-            css`
-              width: 102%;
-              height: 110%;
-              border-top-left-radius: 50%;
-              border-top-right-radius: 50%;
-            `,
-          )}
-        />
-      </div>
-      <div className={cx("bg-primary-500")}>
-        <Container
-          variant={"breakpoint"}
-          className="flex justify-between pb-12 max-md:flex-col max-md:gap-4 max-md:text-center"
-        >
-          <small className="py-1">{title}</small>
-          <div className="[&_a]:text-secondary-50 [&_a]:hover:text-secondary-200 flex flex-wrap gap-4 max-md:justify-center">
-            {bottomLinks.map(({ title, url }) => (
-              <Link key={title} href={url}>
-                <small>{title}</small>
-              </Link>
-            ))}
+        <div>
+          <h4 className="mb-2.5 text-sm font-extrabold text-white">
+            {brandTitle}
+          </h4>
+          <p className="max-w-[34ch] text-[13px]">{brandBody}</p>
+          <SocialMediaIcons
+            items={socialMedia}
+            variant="tile"
+            size="md"
+            className="mt-3.5 gap-2.5"
+          />
+        </div>
+        {columns.map(([category, items]) => (
+          <div key={category}>
+            <h4 className="mb-2.5 text-sm font-extrabold text-white">
+              {category}
+            </h4>
+            <ul className="grid gap-1.75 text-[13px] font-semibold">
+              {items.map(({ title, url }) => (
+                <li key={title}>
+                  <Link
+                    href={normalizeHref(url)}
+                    className="transition-colors hover:text-white"
+                  >
+                    {title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-        </Container>
-        {/* <a
-          href="https://fortis-team.vercel.app/"
-          className="!text-secondary-50 hover:!text-secondary-200 block py-3 text-center"
+        ))}
+      </Container>
+      <div className="border-t border-white/10">
+        <Container
+          variant="breakpoint"
+          className="flex flex-wrap justify-between gap-3.5 py-4 text-xs"
         >
-          Website by Fortis
-        </a> */}
+          {bottom.map(({ title, url }, i) =>
+            url ? (
+              <Link
+                key={i}
+                href={normalizeHref(url)}
+                className="transition-colors hover:text-white"
+              >
+                {title}
+              </Link>
+            ) : (
+              <span key={i}>{title}</span>
+            ),
+          )}
+        </Container>
       </div>
     </footer>
   );

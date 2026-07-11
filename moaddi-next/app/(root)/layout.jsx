@@ -8,22 +8,19 @@ import { ThemeContextProvider } from "@/(root)/context/Theme";
 import rtlRules from "@/../i18n/rtl";
 import { client } from "@/../services/contentClient";
 import { KumaRegistry } from "@kuma-ui/next-plugin/registry";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { Cairo /*Geist_Mono*/ } from "next/font/google";
+import { Cairo } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
 
 const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["latin", "arabic"],
-  weight: ["300", "400", "600", "700"],
+  weight: ["300", "400", "600", "700", "800"],
 });
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+
 // const website = {
 //   en: websiteEn,
 //   ar: websiteAr,
@@ -106,24 +103,28 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang={locale} dir={rtlRules[locale] ? "rtl" : "ltr"}>
-      <body className={`${cairo.variable} bg-gray-100 font-sans antialiased`}>
+      <body className={`${cairo.variable} bg-background font-sans antialiased`}>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark");}catch(e){}`}
+        </Script>
         <NextIntlClientProvider messages={messages}>
           <ThemeContextProvider>
             <KumaRegistry>
-              <AppRouterCacheProvider options={{ enableCssLayer: true }}>
                 <CartProvider>
                   <AdminContextProvider>
                     <SocketContextProvider>
-                      <div data-vaul-drawer-wrapper>
+                      <div
+                        data-vaul-drawer-wrapper
+                        className="flex min-h-screen flex-col"
+                      >
                         <Header {...header} />
-                        {children}
+                        <div className="flex-1">{children}</div>
                         <Footer {...footer} />
                       </div>
                       <PurchaseStatusNotifier />
                     </SocketContextProvider>
                   </AdminContextProvider>
                 </CartProvider>
-              </AppRouterCacheProvider>
             </KumaRegistry>
           </ThemeContextProvider>
         </NextIntlClientProvider>

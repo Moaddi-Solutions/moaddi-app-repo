@@ -2,7 +2,7 @@
 import { useDataProvider } from "@/(root)/context/ra/DataProviderContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useEvent } from "react-admin";
+import { useEvent } from "ra-core";
 
 /**
  * Call the dataProvider.getManyReference() method and return the resolved result

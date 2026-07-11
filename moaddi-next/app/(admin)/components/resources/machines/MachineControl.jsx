@@ -1,4 +1,12 @@
-import { useSocket } from "@/(root)/context/Socket";
+﻿import { useSocket } from "@/(root)/context/Socket";
+import { Button } from "@/../components/ui/button";
+import { Card, CardContent } from "@/../components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/../components/ui/tooltip";
 import { putRequest } from "@/../services/events";
 import {
   boxesConvert,
@@ -10,37 +18,24 @@ import {
   boxUpdateAPI,
   unassignBoxAPI,
 } from "@/../services/serverAddresses";
-import AddIcon from "@mui/icons-material/Add";
-import DoNotDisturbOnIcon from "@mui/icons-material/DoNotDisturbOn";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
-import SyncIcon from "@mui/icons-material/Sync";
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Card,
-  CardContent,
-  Checkbox,
-  Grid,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { cn } from "@/../lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  CircleOff,
+  Lightbulb,
+  Lock,
+  Plus,
+  Power,
+  RefreshCw,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
-  FunctionField,
-  ImageField,
-  List,
+  ListBase,
   RecordContextProvider,
-  TextField,
   useGetOne,
   useListContext,
   useRecordContext,
-} from "react-admin";
+} from "ra-core";
 import QRCode from "react-qr-code";
 
 const BoxApi = {
@@ -50,28 +45,6 @@ const BoxApi = {
       boxIds,
     }),
   productUnassign: (machineId) => putRequest(unassignBoxAPI(machineId)),
-  // openAll: (machineId) =>
-  //   publishData({
-  //     machineId,
-  //     type: "LOCKER",
-  //     value: 1,
-  //     boxes: ["all"],
-  //   }),
-  // openSelected: (machineId, boxes) => {
-  //   return publishData({
-  //     machineId,
-  //     type: "LOCKER",
-  //     value: 1,
-  //     boxes: boxesConvert(boxes),
-  //   });
-  // },
-  // openOne: (machineId, cabinNumber, boxNumber) =>
-  //   publishData({
-  //     machineId,
-  //     type: "LOCKER",
-  //     value: 1,
-  //     boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
-  //   }),
 };
 
 const ProductRow = ({
@@ -82,81 +55,67 @@ const ProductRow = ({
 }) => {
   const { data } = useListContext();
   return (
-    <Stack
-      direction={"row"}
-      sx={{ p: 1, overflowX: "auto", width: 1, position: "absolute" }}
-      spacing={1}
-    >
-      {data?.map((product) => (
-        <RecordContextProvider key={product.id} value={product}>
-          <Card
-            onClick={() => setSelectedProduct(product.id)}
-            sx={{
-              minWidth: 200,
-              display: "flex",
-              gap: 1,
-              p: 1,
-              flexDirection: "column",
-              justifyContent: "space-between",
-              cursor: "pointer",
-              ...(product.id == selectedProduct && {
-                border: 2,
-                borderColor: "info.main",
-                opacity: 0.7,
-              }),
-              ...(!(!loading && readyToSet && product.isActive) && {
-                pointerEvents: "none",
-                opacity: 0.3,
-              }),
-            }}
-          >
-            {!product.isActive && (
-              <LockOutlineIcon sx={{ position: "absolute" }} />
-            )}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-              }}
+    <div className="absolute inset-x-0 flex w-full gap-2 overflow-x-auto p-2">
+      {data?.map((product) => {
+        const disabled = !(!loading && readyToSet && product.isActive);
+        return (
+          <RecordContextProvider key={product.id} value={product}>
+            <button
+              type="button"
+              onClick={() => setSelectedProduct(product.id)}
+              disabled={disabled}
+              className={cn(
+                "relative flex min-w-[200px] flex-col justify-between gap-2 rounded-xl border border-border bg-card p-3 text-start shadow-sm transition hover:border-primary/50",
+                product.id === selectedProduct && "border-primary opacity-75 ring-2 ring-primary/25",
+                disabled && "pointer-events-none opacity-30",
+              )}
             >
-              <TextField source="name" />
-            </Box>
-            {product.image && (
-              <ImageField
-                sx={{
-                  ".RaImageField-image": {
-                    // width: 1,
-                    maxWidth: 1,
-                    maxHeight: 150,
-                  },
-                }}
-                label="Image"
-                source="image.src"
-              />
-            )}
-            <Box
-              sx={{
-                "*": {
-                  typography: "h6",
-                  display: "flex",
-                  justifyContent: "center",
-                },
-              }}
-            >
-              <FunctionField
-                source="price"
-                label="price"
-                render={({ campaignPrice, salePrice }) =>
-                  `${campaignPrice ?? salePrice} SAR`
-                }
-              />
-            </Box>
-          </Card>
-        </RecordContextProvider>
-      ))}
-    </Stack>
+              {!product.isActive ? (
+                <Lock className="absolute start-2 top-2 size-4 text-muted-foreground" />
+              ) : null}
+              <p className="text-center text-sm font-bold text-foreground">{product.name}</p>
+              {product.image?.src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={product.image.src}
+                  alt=""
+                  className="mx-auto h-[150px] max-w-full object-contain"
+                />
+              ) : null}
+              <p className="text-center text-lg font-extrabold text-foreground">
+                {product.campaignPrice ?? product.salePrice} SAR
+              </p>
+            </button>
+          </RecordContextProvider>
+        );
+      })}
+    </div>
   );
 };
+
+const ButtonRow = ({ disabled, children, className }) => (
+  <div
+    className={cn(
+      "flex w-full overflow-hidden rounded-xl border border-border bg-background",
+      disabled && "pointer-events-none opacity-50",
+      className,
+    )}
+  >
+    {children}
+  </div>
+);
+
+const RowButton = ({ children, disabled, variant = "ghost", className, ...props }) => (
+  <Button
+    type="button"
+    variant={variant}
+    disabled={disabled}
+    className={cn("h-10 flex-1 rounded-none font-bold", className)}
+    {...props}
+  >
+    {children}
+  </Button>
+);
 
 const BoxGrid = ({
   machine,
@@ -176,8 +135,8 @@ const BoxGrid = ({
     publishData,
     controlDirectMachine,
     controlBluetooth1Machine,
-    // controlBluetooth2Machine,
   } = useSocket();
+
   useEffect(() => {
     refetchBoxes.current = refetch;
     if (isPending) boxes.current = [];
@@ -186,23 +145,23 @@ const BoxGrid = ({
       boxes.current = _machine ? _machine.boxes : [];
     }
   }, [isPending, data, dataUpdatedAt, refetch]);
+
   useEffect(() => {
     if (loading) return;
     setSelectedBoxes([]);
   }, [loading]);
+
   const productAssignOne = (boxId) => {
     setLoading(true);
-    BoxApi.productAssign(machine._id, [boxId], selectedProduct).then(
-      (response) =>
-        refetchBoxes
-          .current?.()
-          .then((r) => setTimeout(() => setLoading(false), 100)),
+    BoxApi.productAssign(machine._id, [boxId], selectedProduct).then(() =>
+      refetchBoxes
+        .current?.()
+        .then(() => setTimeout(() => setLoading(false), 100)),
     );
   };
 
   const changeStatus = (machineId, cabinNumber, boxNumber, status) => {
     switch (machine.type) {
-      // Direct
       case 0:
         controlDirectMachine({
           machineId,
@@ -211,7 +170,6 @@ const BoxGrid = ({
           boxes: [`${cabinNumber}_${boxNumber}`],
         });
         break;
-      // MQTT
       case 1:
         publishData({
           machineId,
@@ -220,50 +178,26 @@ const BoxGrid = ({
           boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
         });
         break;
-      // Bluetooth (zbmpos - Wifi 4g)
       case 2:
         controlBluetooth1Machine({
           machineId,
           box: [cabinNumber, boxNumber],
         });
         break;
-      // Bluetooth 2 (kaisijin 12)
-      case 3:
-        // controlBluetooth2Machine({
-        //   machineId,
-        //   // box: `${cabinNumber}_${boxNumber}`,
-        //   box: boxNumber,
-        // });
+      default:
         break;
     }
   };
-  // console.log(selectedBoxes);
 
   return (
-    <Grid container sx={{ p: 1 }} spacing={1}>
+    <div className="grid grid-cols-1 gap-3 p-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
       {boxes.current.map?.((box, i) => (
         <RecordContextProvider key={box._id} value={box}>
-          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
-            <Card
-              sx={{
-                p: 1,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  width: 1,
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  ">*": { p: 1 },
-                }}
-              >
-                <Checkbox
+          <Card className="border-border bg-card shadow-sm">
+            <CardContent className="flex flex-col items-center gap-3 p-3">
+              <div className="flex w-full items-center justify-between gap-2">
+                <input
+                  type="checkbox"
                   checked={selectedBoxes.includes(box._id)}
                   onChange={(event) => {
                     setSelectedBoxes((prev) =>
@@ -272,204 +206,120 @@ const BoxGrid = ({
                         : prev.filter((_id) => _id != box._id),
                     );
                   }}
+                  className="size-4 accent-primary"
                 />
+                <p className="text-base font-extrabold text-foreground">{box.name}</p>
+                <p className="text-sm font-semibold text-muted-foreground">{i + 1}</p>
+              </div>
 
-                <TextField sx={{ typography: "h6" }} source="name" />
-                <Typography variant="body1">{i + 1}</Typography>
-              </Box>
               {loading ? (
-                <IconButton
-                  disabled
-                  size="large"
-                  sx={{
-                    my: 5.5,
-                    "@keyframes rotate": {
-                      from: {
-                        transform: "rotate(0deg)",
-                      },
-                      to: {
-                        transform: "rotate(360deg)",
-                      },
-                    },
-                    animation: "rotate 2s linear infinite",
-                    transformOrigin: "center",
-                  }}
-                >
-                  <SyncIcon sx={{ width: 40, height: 40 }} />
-                </IconButton>
+                <Button type="button" variant="ghost" size="icon-lg" disabled className="my-11">
+                  <RefreshCw className="size-10 animate-spin" />
+                </Button>
               ) : box.product ? (
                 <>
-                  <Box
-                    component={"img"}
-                    label="Image"
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={`${baseUrl()}${box.product.image}`}
-                    sx={{
-                      px: 2,
-                      width: 1,
-                      height: 122,
-                      objectFit: "contain",
-                    }}
+                    alt=""
+                    className="h-[122px] w-full object-contain px-2"
                   />
-                  <Typography variant="body1">
+                  <p className="text-center text-sm font-semibold text-foreground">
                     {`${box.product.name} - ${box.product.campaignPrice ?? box.product.salePrice} SAR`}
-                  </Typography>
+                  </p>
                 </>
               ) : (
-                <IconButton
-                  // disabled={!(readyToSet && box.status && selectedProduct)}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-lg"
                   disabled={!(readyToSet && selectedProduct)}
-                  onClick={(e) => productAssignOne(box._id)}
-                  size="large"
-                  sx={{ my: 5.5, cursor: "pointer" }}
+                  onClick={() => productAssignOne(box._id)}
+                  className="my-11"
                 >
-                  <AddIcon sx={{ width: 40, height: 40 }} />
-                </IconButton>
+                  <Plus className="size-10" />
+                </Button>
               )}
-              {/* Direct */}
-              {machine.type === 0 && (
-                <ButtonGroup fullWidth>
-                  <Button
+
+              {machine.type === 0 ? (
+                <ButtonRow>
+                  <RowButton
                     disabled={!(readyToSet && !box.status)}
+                    variant={!box.status && box.productId ? "default" : "outline"}
                     onClick={() =>
-                      changeStatus(
-                        machine._id,
-                        box.cabinNumber,
-                        box.boxNumber,
-                        1,
-                      )
-                    }
-                    color="success"
-                    variant={
-                      !box.status && box.productId ? "contained" : "outlined"
+                      changeStatus(machine._id, box.cabinNumber, box.boxNumber, 1)
                     }
                   >
                     Open
-                  </Button>
-                  <Button
+                  </RowButton>
+                  <RowButton
                     disabled={!(readyToSet && box.status)}
+                    variant={!box.status && box.productId ? "default" : "outline"}
                     onClick={() =>
-                      changeStatus(
-                        machine._id,
-                        box.cabinNumber,
-                        box.boxNumber,
-                        0,
-                      )
-                    }
-                    color="success"
-                    variant={
-                      !box.status && box.productId ? "contained" : "outlined"
+                      changeStatus(machine._id, box.cabinNumber, box.boxNumber, 0)
                     }
                   >
                     Close
-                  </Button>
-                </ButtonGroup>
-              )}
-              {/* MQTT */}
-              {machine.type === 1 && (
-                <ButtonGroup fullWidth>
-                  <Box component={"span"} sx={{ width: 1 }}>
-                    <Button
+                  </RowButton>
+                </ButtonRow>
+              ) : null}
+
+              {machine.type === 1 ? (
+                <TooltipProvider>
+                  <ButtonRow>
+                    <RowButton
                       disabled={!(readyToSet && !box.status && box.productId)}
+                      variant={!box.status && box.productId ? "default" : "outline"}
                       onClick={() =>
-                        changeStatus(
-                          machine._id,
-                          box.cabinNumber,
-                          box.boxNumber,
-                          1,
-                        )
-                      }
-                      color="success"
-                      variant={
-                        !box.status && box.productId ? "contained" : "outlined"
+                        changeStatus(machine._id, box.cabinNumber, box.boxNumber, 1)
                       }
                     >
                       Open
-                    </Button>
-                  </Box>
-                  <Tooltip title="Fill" placement="top">
-                    <Box component={"span"} sx={{ width: 1 }}>
-                      <Button disabled>
-                        <LightModeIcon
-                          color={box.isFilled ? "info" : undefined}
-                        />
-                      </Button>
-                    </Box>
-                  </Tooltip>
-                  <Tooltip title="Close" placement="top">
-                    <Box component={"span"} sx={{ width: 1 }}>
-                      <Button disabled>
-                        <DoNotDisturbOnIcon
-                          color={!box.status ? "error" : undefined}
-                        />
-                      </Button>
-                    </Box>
-                  </Tooltip>
-                </ButtonGroup>
-              )}
-              {/* Bluetooth (zbmpos - Wifi 4g) */}
-              {machine.type === 2 && (
-                <ButtonGroup fullWidth>
-                  <Button
+                    </RowButton>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <RowButton disabled>
+                          <Lightbulb className={cn(box.isFilled && "text-primary-text")} />
+                        </RowButton>
+                      </TooltipTrigger>
+                      <TooltipContent>Fill</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <RowButton disabled>
+                          <CircleOff className={cn(!box.status && "text-destructive")} />
+                        </RowButton>
+                      </TooltipTrigger>
+                      <TooltipContent>Close</TooltipContent>
+                    </Tooltip>
+                  </ButtonRow>
+                </TooltipProvider>
+              ) : null}
+
+              {machine.type === 2 ? (
+                <ButtonRow>
+                  <RowButton
                     disabled={!(readyToSet && !box.status)}
                     onClick={() =>
-                      changeStatus(
-                        machine._id,
-                        box.cabinNumber,
-                        box.boxNumber,
-                        1,
-                      )
+                      changeStatus(machine._id, box.cabinNumber, box.boxNumber, 1)
                     }
-                    color="success"
-                    // variant={
-                    //   !box.status && box.productId ? "contained" : "outlined"
-                    // }
                   >
                     Open
-                  </Button>
-                </ButtonGroup>
-              )}
-              {/* Bluetooth 2 (kaisijin 12) */}
-              {machine.type === 3 && (
-                <ButtonGroup fullWidth>
-                  {/* <Button
-                    disabled={!(readyToSet && !box.status)}
-                    onClick={() =>
-                      changeStatus(
-                        machine._id,
-                        box.cabinNumber,
-                        box.boxNumber,
-                        1,
-                      )
-                    }
-                    color="success"
-                    // variant={
-                    //   !box.status && box.productId ? "contained" : "outlined"
-                    // }
-                  >
-                    Open
-                  </Button> */}
-                </ButtonGroup>
-              )}
-            </Card>
-          </Grid>
+                  </RowButton>
+                </ButtonRow>
+              ) : null}
+            </CardContent>
+          </Card>
         </RecordContextProvider>
       ))}
       <RealTime machine={machine} />
-    </Grid>
+    </div>
   );
 };
 
 const RealTime = ({ machine }) => {
   const { machineEvents } = useSocket();
   const queryClient = useQueryClient();
-  // console.log(queryClient);
-
-  // const all = useGetOne("vendors", {
-  //   id: machine.vendorId,
-  // });
-  // useEffect(() => {
-  //   console.log(all);
-  // }, [all.dataUpdatedAt]);
 
   useEffect(() => {
     if (!machineEvents) return;
@@ -491,7 +341,9 @@ const RealTime = ({ machine }) => {
         };
       },
     );
-  }, [machineEvents]);
+  }, [machineEvents, machine, queryClient]);
+
+  return null;
 };
 
 const boxUpdateHandler = (boxes, machineEvents, statusName) => {
@@ -551,39 +403,40 @@ const MachineControl = ({ children }) => {
     loading,
     setLoading,
   };
+
   const productAssignAll = () => {
     setLoading(true);
     BoxApi.productAssign(
       machine.id,
       boxes.current.map(({ _id }) => _id),
       selectedProduct,
-    ).then((response) => {
+    ).then(() => {
       refetchBoxes
         .current?.()
-        .then((r) => setTimeout(() => setLoading(false), 100));
+        .then(() => setTimeout(() => setLoading(false), 100));
     });
   };
+
   const productAssignSelected = () => {
     setLoading(true);
-    BoxApi.productAssign(machine.id, selectedBoxes, selectedProduct).then(
-      (response) => {
-        refetchBoxes
-          .current?.()
-          .then((r) => setTimeout(() => setLoading(false), 100));
-      },
-    );
-  };
-  const productUnassignAll = (machineId) => {
-    setLoading(true);
-    BoxApi.productUnassign(machineId).then((response) => {
+    BoxApi.productAssign(machine.id, selectedBoxes, selectedProduct).then(() => {
       refetchBoxes
         .current?.()
-        .then((r) => setTimeout(() => setLoading(false), 100));
+        .then(() => setTimeout(() => setLoading(false), 100));
     });
   };
+
+  const productUnassignAll = (machineId) => {
+    setLoading(true);
+    BoxApi.productUnassign(machineId).then(() => {
+      refetchBoxes
+        .current?.()
+        .then(() => setTimeout(() => setLoading(false), 100));
+    });
+  };
+
   const openAll = (machineId) => {
     switch (machine.type) {
-      // Direct
       case 0:
         controlDirectMachine({
           machineId,
@@ -592,7 +445,6 @@ const MachineControl = ({ children }) => {
           boxes: ["all"],
         });
         break;
-      // MQTT
       case 1:
         publishData({
           machineId,
@@ -601,14 +453,13 @@ const MachineControl = ({ children }) => {
           boxes: ["all"],
         });
         break;
-      // case 2:
-      //   controlBluetooth1Machine();
-      //   break;
+      default:
+        break;
     }
   };
+
   const openSelected = async (machineId, boxes) => {
     switch (machine.type) {
-      // Direct
       case 0:
         for (const { cabinNumber, boxNumber } of boxes) {
           controlDirectMachine({
@@ -620,7 +471,6 @@ const MachineControl = ({ children }) => {
           await new Promise((r) => setTimeout(r, 500));
         }
         break;
-      // MQTT
       case 1:
         publishData({
           machineId,
@@ -629,7 +479,6 @@ const MachineControl = ({ children }) => {
           boxes: boxesConvert(boxes),
         });
         break;
-      // Bluetooth1
       case 2:
         for (const { cabinNumber, boxNumber } of boxes) {
           controlBluetooth1Machine({
@@ -638,151 +487,101 @@ const MachineControl = ({ children }) => {
           });
           await new Promise((r) => setTimeout(r, 500));
         }
+        break;
+      default:
+        break;
     }
   };
+
   const reboot = () => {};
 
+  if (!machine) return null;
+
   return (
-    machine && (
-      <Card>
-        <CardContent>
-          <Typography variant="h6">Control Machine</Typography>
-          <Stack
-            sx={{
-              flexDirection: { xs: "column", md: "row" },
-              ">*": { m: "0!important" },
-            }}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            spacing={2}
-          >
-            <Box
-              sx={{
-                width: 220,
-                height: 220,
-                border: 8,
-                borderColor: "white",
-                bgcolor: "white",
-              }}
-              component={QRCode}
-              value={machine.qrCode}
-            />
-            {children}
-            {!!machine.vendorId && (
-              <>
-                <Stack
-                  sx={{
-                    "button.MuiButtonGroup-firstButton": { minWidth: 136 },
-                  }}
-                  spacing={1}
+    <Card className="border-border bg-card shadow-sm">
+      <CardContent className="space-y-4 p-4">
+        <h2 className="text-lg font-extrabold text-foreground">Control Machine</h2>
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="h-[220px] w-[220px] rounded-xl border-8 border-white bg-white p-2">
+            <QRCode value={machine.qrCode} className="h-full w-full" />
+          </div>
+          {children}
+          {!!machine.vendorId ? (
+            <div className="flex w-full max-w-md flex-col gap-2">
+              {machine.type == 2 ? (
+                <ButtonRow disabled={!(!loading && readyToSet)}>
+                  <RowButton variant="outline" onClick={reboot}>
+                    <Power className="me-1 size-4" />
+                    Reboot machine
+                  </RowButton>
+                </ButtonRow>
+              ) : null}
+              <ButtonRow disabled={!(!loading && readyToSet)}>
+                {machine.type != 3 ? (
+                  <RowButton variant="outline" disabled>
+                    Box open
+                  </RowButton>
+                ) : null}
+                {machine.type != 2 ? (
+                  <RowButton onClick={() => openAll(machine._id)}>All</RowButton>
+                ) : null}
+                <RowButton
+                  onClick={() =>
+                    openSelected(
+                      machine._id,
+                      selectedBoxes.map((id) =>
+                        boxes.current.find(({ _id }) => id == _id),
+                      ),
+                    )
+                  }
+                  disabled={!selectedBoxes.length}
                 >
-                  {/* Bluetooth1  */}
-                  {machine.type == 2 && (
-                    <ButtonGroup
-                      disabled={!(!loading && readyToSet)}
-                      variant="contained"
-                      color="secondary"
-                      sx={{ width: 1, ">.MuiButton-root": { flex: 1 } }}
-                    >
-                      <Button variant="outlined" onClick={reboot}>
-                        <PowerSettingsNewIcon sx={{ marginInlineEnd: 1 }} />{" "}
-                        Reboot machine
-                      </Button>
-                    </ButtonGroup>
-                  )}
-                  <ButtonGroup
-                    sx={{ width: 1, ">.MuiButton-root": { flex: 1 } }}
-                    disabled={!(!loading && readyToSet)}
-                    variant="contained"
-                    color="secondary"
-                  >
-                    {/* Not Bluetooth 2  */}
-                    {machine.type != 3 && (
-                      <Button variant="outlined" disabled>
-                        Box open
-                      </Button>
-                    )}
-                    {/* Not Bluetooth 1  */}
-                    {machine.type != 2 && (
-                      <Button onClick={(e) => openAll(machine._id)}>All</Button>
-                    )}
-                    <Button
-                      onClick={(e) =>
-                        openSelected(
-                          machine._id,
-                          selectedBoxes.map((id) =>
-                            boxes.current.find(({ _id }) => id == _id),
-                          ),
-                        )
-                      }
-                      disabled={!selectedBoxes.length}
-                    >
-                      Selected{" "}
-                      {!!selectedBoxes.length && `(${selectedBoxes.length})`}
-                    </Button>
-                  </ButtonGroup>
-                  <ButtonGroup
-                    disabled={!(!loading && readyToSet && selectedProduct)}
-                    color="primary"
-                    variant="contained"
-                  >
-                    <Button variant="outlined" disabled>
-                      Add product
-                    </Button>
-                    <Button onClick={productAssignAll}>All</Button>
-                    <Button
-                      disabled={!selectedBoxes.length}
-                      onClick={productAssignSelected}
-                    >
-                      Selected{" "}
-                      {!!selectedBoxes.length && `(${selectedBoxes.length})`}
-                    </Button>
-                  </ButtonGroup>
-                  <ButtonGroup
-                    disabled={!(!loading && readyToSet)}
-                    color="error"
-                    variant="contained"
-                  >
-                    <Button variant="outlined" disabled>
-                      Remove product
-                    </Button>
-                    <Button
-                      sx={{ width: 1 }}
-                      onClick={(e) => productUnassignAll(machine.id)}
-                    >
-                      All
-                    </Button>
-                    {/* <Button>
-                  Selected{" "}
-                  {!!selectedBoxes.length && `(${selectedBoxes.length})`}
-                </Button> */}
-                  </ButtonGroup>
-                </Stack>
-              </>
-            )}
-          </Stack>
-          {!!machine.vendorId && (
-            <>
-              <Typography>Products</Typography>
-              <List
+                  Selected {selectedBoxes.length ? `(${selectedBoxes.length})` : ""}
+                </RowButton>
+              </ButtonRow>
+              <ButtonRow disabled={!(!loading && readyToSet && selectedProduct)}>
+                <RowButton variant="outline" disabled>
+                  Add product
+                </RowButton>
+                <RowButton onClick={productAssignAll}>All</RowButton>
+                <RowButton
+                  disabled={!selectedBoxes.length}
+                  onClick={productAssignSelected}
+                >
+                  Selected {selectedBoxes.length ? `(${selectedBoxes.length})` : ""}
+                </RowButton>
+              </ButtonRow>
+              <ButtonRow disabled={!(!loading && readyToSet)}>
+                <RowButton variant="outline" disabled>
+                  Remove product
+                </RowButton>
+                <RowButton
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => productUnassignAll(machine.id)}
+                >
+                  All
+                </RowButton>
+              </ButtonRow>
+            </div>
+          ) : null}
+        </div>
+        {!!machine.vendorId ? (
+          <>
+            <h3 className="text-sm font-extrabold text-foreground">Products</h3>
+            <div className="relative mt-1 h-[220px] overflow-hidden rounded-xl border border-border bg-background">
+              <ListBase
                 resource="products"
                 sort={{ field: "name", order: "DESC" }}
-                actions={null}
-                sx={{
-                  mt: 1,
-                  ".RaList-content": {
-                    height: 220,
-                  },
-                }}
+                perPage={100}
               >
                 <ProductRow {...productRow} />
-              </List>
-              <BoxGrid {...boxGrid} />
-            </>
-          )}
-        </CardContent>
-      </Card>
-    )
+              </ListBase>
+            </div>
+            <BoxGrid {...boxGrid} />
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 };
 

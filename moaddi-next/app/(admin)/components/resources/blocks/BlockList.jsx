@@ -1,34 +1,25 @@
-import { Box } from "@mui/material";
+import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
+import AdminList from "@/(admin)/components/kit/AdminList";
 import {
-  Datagrid,
-  DeleteButton,
-  EditButton,
-  List,
-  TextField,
-  TopToolbar,
-} from "react-admin";
+  AdminDeleteButton,
+  AdminEditButton,
+} from "@/(admin)/components/kit/AdminUI";
 
-const ListActions = () => {
-  return <TopToolbar />;
-};
+export const BlockListItems = [{ key: "id", label: "ID" }];
 
-export const BlockListItems = [
-  <TextField source="id" key="id" />,
-  //   <NumberField source="order" key="order" />,
-];
-
-const BlockList = () => {
-  return (
-    <List sort={{ field: "order", order: "ASC" }} actions={<ListActions />}>
-      <Datagrid rowClick="edit" bulkActionButtons={false}>
-        {BlockListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-    </List>
-  );
-};
+const BlockList = () => (
+  <AdminList sort={{ field: "order", order: "ASC" }} actions={null}>
+    <AdminShadcnTable
+      columns={BlockListItems}
+      rowClick="edit"
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+  </AdminList>
+);
 
 export default BlockList;

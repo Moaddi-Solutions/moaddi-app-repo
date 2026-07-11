@@ -5,6 +5,7 @@ import { client } from "@/../services/contentClient";
 import * as events from "@/../services/events";
 import revalidateContent from "@/../services/revalidateContent";
 import {
+  activeMachinesAPI,
   addUserAPI,
   allPendingRequests,
   contentAPI,
@@ -88,6 +89,15 @@ export const Fit = {
   },
 };
 const Api = {
+  machinesActive: {
+    getList: (offset, limit) =>
+      getRequest(
+        `${activeMachinesAPI()}?${new URLSearchParams({
+          offset,
+          limit,
+        })}`,
+      ),
+  },
   machines: {
     create: (data) => postRequest(machinesAPI(), data),
     getList: (offset, limit) =>
@@ -147,7 +157,6 @@ const Api = {
     delete: (id) => deleteRequest(userAPI(id)),
   },
   customers: {
-    create: null,
     getList: (offset, limit) =>
       getRequest(
         `${getCustomerAPI()}?${new URLSearchParams({
@@ -408,53 +417,11 @@ const Api = {
         };
       }),
     Hero: {
-      getOne: (locale) =>
-        client(`${locale}HomeBlocks`, "Hero").then(
-          ({ features, background, ...rest }) => ({
-            background: {
-              src: contentAssetUrl(background.src),
-              prevSrc: background.src,
-            },
-            features: features.map(({ icon, ...rest }) => ({
-              icon: {
-                src: contentAssetUrl(icon.src),
-                prevSrc: icon.src,
-              },
-              ...rest,
-            })),
-            ...rest,
-          }),
-        ),
-      update: (
-        locale,
-        { features, background, foreground, image: ___, ...rest },
-      ) =>
-        Api.content
-          .upload(
-            ...features.map((feature) => feature.icon?.rawFile),
-            background?.rawFile,
-            foreground?.rawFile,
-          )
-          .then(({ files }) =>
-            putRequest(contentAPI(`${locale}HomeBlocks/Hero`), {
-              ...rest,
-              features: features.map((feature) => ({
-                ...feature,
-                icon: {
-                  src:
-                    files.find(
-                      ({ originalname }) => originalname == feature.icon.title,
-                    )?.filename ?? feature.icon.prevSrc,
-                },
-              })),
-              background: {
-                src:
-                  files.find(
-                    ({ originalname }) => originalname == background.title,
-                  )?.filename ?? background.prevSrc,
-              },
-            }),
-          ),
+      // Hero is now text/link-only (kicker, title, button, store links, stats,
+      // floatingCards). No images, so no upload/transform is needed.
+      getOne: (locale) => client(`${locale}HomeBlocks`, "Hero"),
+      update: (locale, { image: ___, ...rest }) =>
+        putRequest(contentAPI(`${locale}HomeBlocks/Hero`), rest),
     },
     Gallery: {
       getOne: (locale) =>

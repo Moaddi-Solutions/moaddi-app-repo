@@ -1,4 +1,4 @@
-import GroupIcon from "@mui/icons-material/Group";
+import { Handshake } from "lucide-react";
 import create from "./VendorCreate";
 import edit from "./VendorEdit";
 import list from "./VendorList";
@@ -11,6 +11,6 @@ export default ({
   list,
   show,
   edit,
-  icon: GroupIcon,
+  icon: Handshake,
   recordRepresentation: "name",
 });

@@ -1,30 +1,18 @@
+import AdminShadcnTable, {
+  AdminStatusBadge,
+} from "@/(admin)/components/AdminShadcnTable";
+import AdminList, { AdminSelectFilter } from "@/(admin)/components/kit/AdminList";
+import { Button } from "@/../components/ui/button";
 import { formatMoneyValue } from "@/../lib/formatMoney";
-import DownloadIcon from "@mui/icons-material/Download";
-import { Button, Chip } from "@mui/material";
-import {
-  DatagridConfigurable,
-  FunctionField,
-  List,
-  SelectInput,
-  TextField,
-  TopToolbar,
-} from "react-admin";
+import { Download } from "lucide-react";
 
 import { invoiceUrl } from "./invoiceUrl";
 
-const statusColors = {
-  PaymentDoneRequest: "warning",
-  PaymentDone: "success",
-  PaymentRejected: "error",
-  Processing: "info",
-  Completed: "success",
-};
-
 const filters = [
-  <SelectInput
+  <AdminSelectFilter
     key="status"
     source="status"
-    label="Status"
+    placeholder="Status"
     choices={[
       { id: "PaymentDoneRequest", name: "Awaiting payment" },
       { id: "PaymentDone", name: "Paid" },
@@ -32,81 +20,81 @@ const filters = [
       { id: "Processing", name: "Processing" },
       { id: "Completed", name: "Completed" },
     ]}
-    emptyText="All"
   />,
-  <SelectInput
+  <AdminSelectFilter
     key="paymentProvider"
     source="paymentProvider"
-    label="Provider"
+    placeholder="Provider"
     choices={[
       { id: "myfatoora", name: "MyFatoora" },
       { id: "stripe", name: "Stripe" },
       { id: "moyasar", name: "Moyasar" },
     ]}
-    emptyText="All"
   />,
 ];
 
-const ListActions = () => <TopToolbar />;
+const invoiceColumns = [
+  { key: "invoiceId", label: "Invoice #" },
+  { key: "customer", label: "Customer", render: customerName },
+  {
+    key: "paymentProvider",
+    label: "Provider",
+    render: (record) => record?.paymentProvider ?? "-",
+  },
+  {
+    key: "status",
+    label: "Status",
+    render: (record) => <AdminStatusBadge value={record?.status} />,
+  },
+  { key: "price", label: "Amount", render: formatAmount },
+  { key: "created", label: "Date", render: (record) => formatDate(record.created) },
+  { key: "invoice", label: "Invoice", render: (record) => <DownloadButton record={record} /> },
+];
 
-const customerName = (record) =>
-  record?.customer?.[0]?.name ?? record?.customerId ?? "—";
+const InvoiceList = () => (
+  <AdminList
+    sort={{ field: "created", order: "DESC" }}
+    filters={filters}
+    actions={null}
+  >
+    <AdminShadcnTable columns={invoiceColumns} rowClick="show" />
+  </AdminList>
+);
 
-const DownloadButton = ({ record }) => {
+function DownloadButton({ record }) {
   const url = invoiceUrl(record);
-  if (!url) return null;
+  if (!url) return "-";
   return (
     <Button
-      size="small"
-      variant="outlined"
-      startIcon={<DownloadIcon />}
-      onClick={(e) => {
-        // Don't trigger the row's "show" navigation.
-        e.stopPropagation();
+      type="button"
+      size="sm"
+      variant="outline"
+      className="gap-2"
+      onClick={(event) => {
+        event.stopPropagation();
         window.open(url, "_blank", "noopener");
       }}
     >
+      <Download className="size-4" />
       Download
     </Button>
   );
-};
+}
 
-const InvoiceList = () => (
-  <List
-    sort={{ field: "created", order: "DESC" }}
-    filters={filters}
-    actions={<ListActions />}
-  >
-    <DatagridConfigurable rowClick="show" bulkActionButtons={false}>
-      <TextField source="invoiceId" label="Invoice #" />
-      <FunctionField label="Customer" render={customerName} />
-      <FunctionField
-        label="Provider"
-        render={(record) => record?.paymentProvider ?? "—"}
-      />
-      <FunctionField
-        label="Status"
-        render={(record) => (
-          <Chip
-            size="small"
-            label={record?.status ?? "—"}
-            color={statusColors[record?.status] ?? "default"}
-          />
-        )}
-      />
-      <FunctionField
-        label="Amount"
-        render={(record) =>
-          `${formatMoneyValue(record?.price)} ${record?.preferredCurrency ?? ""}`.trim()
-        }
-      />
-      <TextField source="created" label="Date" />
-      <FunctionField
-        label="Invoice"
-        render={(record) => <DownloadButton record={record} />}
-      />
-    </DatagridConfigurable>
-  </List>
-);
+function customerName(record) {
+  return record?.customer?.[0]?.name ?? record?.customerId ?? "-";
+}
+
+function formatAmount(record) {
+  return `${formatMoneyValue(record?.price)} ${record?.preferredCurrency ?? ""}`.trim();
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
 export default InvoiceList;

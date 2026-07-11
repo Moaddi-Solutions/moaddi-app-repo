@@ -1,4 +1,4 @@
-import StoreIcon from "@mui/icons-material/Store";
+import { SearchCheck as StoreIcon } from "lucide-react";
 import create from "./SeoCreate";
 import edit from "./SeoEdit";
 import list from "./SeoList";

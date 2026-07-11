@@ -1,4 +1,7 @@
 import { client } from "@/../services/contentClient";
+import Script from "next/script";
+import { Toaster } from "sonner";
+import "../globals.css";
 
 export async function generateMetadata() {
   const title = "Moaddi | Admin Dashboard";
@@ -22,7 +25,13 @@ export async function generateMetadata() {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark");}catch(e){}`}
+        </Script>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

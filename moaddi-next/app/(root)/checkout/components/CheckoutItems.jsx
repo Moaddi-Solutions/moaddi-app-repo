@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/../components/ui/table";
+import { Button } from "@/../components/ui/button";
 import { Fit } from "@/../services/data-provider";
 import { activeProductBoxes } from "@/../services/productBoxes";
 import { deleteRequest, getRequest, putRequest } from "@/../services/events";
@@ -18,11 +19,7 @@ import {
   purchaseAPI,
   userAPI,
 } from "@/../services/serverAddresses";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import RemoveIcon from "@mui/icons-material/Remove";
-import { Button, ButtonGroup } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
+import { Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { mergeServerUser } from "@/../lib/purchase-session";
 import { toast } from "sonner";
@@ -40,32 +37,35 @@ const CheckoutButtonGroup = ({ _id, amount, boxes, setTotal }) => {
     setTotal((total) => ({ ...total, [_id]: quantity }));
   }, [quantity, _id, setTotal]);
 
+  const canIncrement = quantity >= 0 && quantity < available;
+  const canDecrement = quantity > 1;
+
   return (
-    <ButtonGroup variant="outlined" color="primary">
-      <Button
-        className={
-          quantity >= 0 && quantity < available ? "" : "pointer-events-none"
-        }
+    <div className="bg-accent text-accent-foreground grid grid-cols-3 items-center rounded-[11px]">
+      <button
+        type="button"
+        aria-label="Remove one"
+        disabled={!canDecrement}
+        onClick={() => setQuantity((prev) => (prev > 1 ? --prev : prev))}
+        className="grid h-8 place-items-center rounded-s-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
+      >
+        −
+      </button>
+      <span className="text-center text-sm font-extrabold tabular-nums">
+        {quantity}
+      </span>
+      <button
+        type="button"
+        aria-label="Add one"
+        disabled={!canIncrement}
         onClick={() =>
           setQuantity((prev) => (prev >= 0 && prev < available ? ++prev : prev))
         }
+        className="grid h-8 place-items-center rounded-e-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
       >
-        <AddIcon
-          className={quantity >= 0 && quantity < available ? "" : "opacity-40"}
-          color="success"
-        />
-      </Button>
-      <Button sx={{ flex: 1, pointerEvents: "none" }}>{quantity}</Button>
-      <Button
-        className={quantity > 1 ? "" : "pointer-events-none"}
-        onClick={() => setQuantity((prev) => (prev > 1 ? --prev : prev))}
-      >
-        <RemoveIcon
-          className={quantity > 1 ? "" : "opacity-40"}
-          color="error"
-        />
-      </Button>
-    </ButtonGroup>
+        +
+      </button>
+    </div>
   );
 };
 
@@ -347,9 +347,16 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
                       {displayCurrency}
                     </TableCell>
                     <TableCell>
-                      <IconButton onClick={() => cancel(_id)}>
-                        <DeleteIcon color="error" />
-                      </IconButton>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Remove item"
+                        onClick={() => cancel(_id)}
+                        className="text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

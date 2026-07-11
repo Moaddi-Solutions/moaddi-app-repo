@@ -1,6 +1,7 @@
-import { Container } from "@/../components/ui/container";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
+﻿import { Container } from "@/../components/ui/container";
+import { Button } from "@/../components/ui/button";
+import { Input } from "@/../components/ui/input";
+import { Textarea } from "@/../components/ui/textarea";
 import Typography from "./Typography";
 
 export default function Contact() {
@@ -21,32 +22,25 @@ export default function Contact() {
             <form className="space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <TextField label="Name" />
+                  <Input name="name" placeholder="Name" />
                 </div>
                 <div>
-                  <TextField label="Email" type="email" />
+                  <Input name="email" placeholder="Email" type="email" />
                 </div>
               </div>
               <div>
-                <TextField
-                  variant="outlined"
-                  label={"Message"}
+                <Textarea
+                  placeholder="Message"
                   name="message"
-                  // defaultValue={response.formData?.get("message")}
-                  multiline
                   rows={4}
-                  fullWidth
                   required
-                  maxLength={5}
-                  length={5}
-                  slotProps={{ htmlInput: { maxLength: 1000 } }}
-                  // onChange={handleChange}
+                  maxLength={1000}
                 />
               </div>
               {/* <Button type="submit" className="w-full md:w-auto">
               Submit
             </Button> */}
-              <Button variant="contained" color="primary">
+              <Button type="submit">
                 Submit
               </Button>
             </form>
@@ -61,7 +55,7 @@ export default function Contact() {
             </div>
             <div className="space-y-4">
               <div className="flex items-start gap-4">
-                <LocateIcon className="text-primary h-6 w-6" />
+                <LocateIcon className="text-primary-text h-6 w-6" />
                 <div>
                   <p className="font-medium">Office Address</p>
                   <p className="text-muted-foreground">
@@ -72,7 +66,7 @@ export default function Contact() {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <PhoneIcon className="text-primary h-6 w-6" />
+                <PhoneIcon className="text-primary-text h-6 w-6" />
                 <div>
                   <p className="font-medium">Phone Number</p>
                   <p className="text-muted-foreground">(123) 456-7890</p>

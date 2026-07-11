@@ -1,4 +1,4 @@
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { Package } from "lucide-react";
 import create from "./ProductCreate";
 import edit from "./ProductEdit";
 import list from "./ProductList";
@@ -11,6 +11,6 @@ export default ({
   list,
   show,
   edit,
-  icon: ShoppingCartIcon,
+  icon: Package,
   recordRepresentation: "name",
 });

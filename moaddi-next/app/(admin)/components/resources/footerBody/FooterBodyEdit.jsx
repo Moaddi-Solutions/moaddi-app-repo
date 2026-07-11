@@ -1,57 +1,32 @@
-import { RichTextInput } from "ra-input-rich-text";
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
 import {
   ArrayInput,
-  AutocompleteInput,
-  Edit,
-  ReferenceInput,
-  SimpleForm,
   SimpleFormIterator,
   TextInput,
-  useResourceContext,
-} from "react-admin";
+} from "@/(admin)/components/kit/inputs/AdminInputs";
 
-const Title = () => {
-  return <span>Edit FooterBody</span>;
-};
-
-const footerBodyEditItems = (resource) => [
+const footerBodyEditItems = [
   <TextInput source="body" key="body" />,
   <TextInput source="title" key="title" />,
-  <ArrayInput key="links" source="links">
-    <SimpleFormIterator inline disableClear disableReordering>
-      <TextInput source="category" resource="category" />
-      <TextInput source="title" resource="title" />
-      {/* <TextInput source="url" resource="url" /> */}
-      <ReferenceInput
-        reference={`${resource.slice(0, 2)}Pages`}
-        key="url"
-        source="url"
-      >
-        <AutocompleteInput label="Page" />
-      </ReferenceInput>
+  <ArrayInput key="links" source="links" className="sm:col-span-2">
+    <SimpleFormIterator disableClear disableReordering>
+      <TextInput source="category" label="Category" />
+      <TextInput source="title" label="Title" />
+      <TextInput source="url" label="Link (URL)" />
     </SimpleFormIterator>
   </ArrayInput>,
-  <ArrayInput key="bottomLinks" source="bottomLinks">
-    <SimpleFormIterator inline disableClear disableReordering>
-      <TextInput source="title" resource="title" />
-      {/* <TextInput source="url" resource="url" /> */}
-      <ReferenceInput
-        reference={`${resource.slice(0, 2)}Pages`}
-        key="url"
-        source="url"
-      >
-        <AutocompleteInput label="Page" />
-      </ReferenceInput>
+  <ArrayInput key="bottomLinks" source="bottomLinks" className="sm:col-span-2">
+    <SimpleFormIterator disableClear disableReordering>
+      <TextInput source="title" label="Title" />
+      <TextInput source="url" label="Link (URL)" />
     </SimpleFormIterator>
   </ArrayInput>,
 ];
-const FooterBodyEdit = () => {
-  const resource = useResourceContext();
-  return (
-    <Edit title={<Title />} redirect="show">
-      <SimpleForm>{footerBodyEditItems(resource)}</SimpleForm>
-    </Edit>
-  );
-};
+
+const FooterBodyEdit = () => (
+  <AdminEdit title="Edit Footer Body" redirect="show">
+    <AdminSimpleForm>{footerBodyEditItems}</AdminSimpleForm>
+  </AdminEdit>
+);
 
 export default FooterBodyEdit;
