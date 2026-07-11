@@ -26,6 +26,34 @@ const assertPaymentProviderAllowed = async (paymentProvider) => {
   }
 };
 
+/**
+ * The shop/group aggregation pipelines `$lookup` boxes onto the machine, then
+ * `$lookup` products via `boxes.productId` — which dedupes into a flat
+ * `machine.products` list without preserving which boxes belong to which
+ * product. Re-attach each product's own boxes here (mirrors what the
+ * `getByQrCode` pipeline does with its `$group` stages), then drop the raw
+ * machine-level `boxes` field like the old `$project: { boxes: false }` did.
+ */
+const attachBoxesToProducts = (machine) => {
+  const boxesByProduct = new Map();
+  for (const box of machine.boxes ?? []) {
+    if (!box.productId) continue;
+    const key = String(box.productId);
+    if (!boxesByProduct.has(key)) boxesByProduct.set(key, []);
+    boxesByProduct.get(key).push(box);
+  }
+  const { boxes, ...rest } = machine;
+  return {
+    ...rest,
+    products: Array.isArray(machine.products)
+      ? machine.products.map((product) => ({
+          ...product,
+          boxes: boxesByProduct.get(String(product._id)) ?? [],
+        }))
+      : machine.products,
+  };
+};
+
 const { convertToUSD } = require("../../services/currency");
 const {
   flattenProductForPreferredCurrency,
@@ -521,22 +549,21 @@ let getByShopId = async (shopId, skip = 0, limit = 1000, preferredCurrency) => {
           as: "products",
         },
       },
-      {
-        $project: {
-          boxes: false,
-        },
-      },
     ];
     const data = await Machines.aggregate(pipeline).exec();
     console.log(data, "data");
-    const shaped = data.map((machine) => ({
-      ...machine,
-      products: Array.isArray(machine.products)
-        ? machine.products.map((product) =>
-            flattenProductForPreferredCurrency(product, preferredCurrency)
-          )
-        : machine.products,
-    }));
+    const shaped = data.map((machine) => {
+      const withBoxes = attachBoxesToProducts(machine);
+      return {
+        ...withBoxes,
+        products: Array.isArray(withBoxes.products)
+          ? withBoxes.products.map((product) => ({
+              ...flattenProductForPreferredCurrency(product, preferredCurrency),
+              boxes: product.boxes,
+            }))
+          : withBoxes.products,
+      };
+    });
     return { data: shaped, total, preferredCurrency };
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -592,21 +619,20 @@ let getByGroupId = async (
           as: "products",
         },
       },
-      {
-        $project: {
-          boxes: false,
-        },
-      },
     ];
     const data = await Machines.aggregate(pipeline).exec();
-    const shaped = data.map((machine) => ({
-      ...machine,
-      products: Array.isArray(machine.products)
-        ? machine.products.map((product) =>
-            flattenProductForPreferredCurrency(product, preferredCurrency)
-          )
-        : machine.products,
-    }));
+    const shaped = data.map((machine) => {
+      const withBoxes = attachBoxesToProducts(machine);
+      return {
+        ...withBoxes,
+        products: Array.isArray(withBoxes.products)
+          ? withBoxes.products.map((product) => ({
+              ...flattenProductForPreferredCurrency(product, preferredCurrency),
+              boxes: product.boxes,
+            }))
+          : withBoxes.products,
+      };
+    });
     return { data: shaped, total, preferredCurrency };
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -662,14 +688,18 @@ let getByShopIdVendorId = async (
       },
     ];
     const data = await Machines.aggregate(pipeline).exec();
-    const shaped = data.map((machine) => ({
-      ...machine,
-      products: Array.isArray(machine.products)
-        ? machine.products.map((product) =>
-            flattenProductForPreferredCurrency(product, preferredCurrency)
-          )
-        : machine.products,
-    }));
+    const shaped = data.map((machine) => {
+      const withBoxes = attachBoxesToProducts(machine);
+      return {
+        ...withBoxes,
+        products: Array.isArray(withBoxes.products)
+          ? withBoxes.products.map((product) => ({
+              ...flattenProductForPreferredCurrency(product, preferredCurrency),
+              boxes: product.boxes,
+            }))
+          : withBoxes.products,
+      };
+    });
     return { data: shaped, total, preferredCurrency };
   } catch (error) {
     console.error("Error fetching product:", error);

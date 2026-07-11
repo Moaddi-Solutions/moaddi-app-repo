@@ -1,15 +1,10 @@
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 import { colors, palette, radius, type } from "~/theme/moaddi";
 import { IconButton } from "./IconButton";
 
 export type Connectivity = "bluetooth" | "online" | "offline";
-
-const connLabels: Record<Connectivity, string> = {
-  bluetooth: "Bluetooth",
-  online: "Online",
-  offline: "Offline",
-};
 
 interface MachineCardProps {
   name: string;
@@ -36,6 +31,12 @@ export function MachineCard({
   onOpen,
   onScan,
 }: MachineCardProps) {
+  const { t } = useTranslation();
+  const connLabels: Record<Connectivity, string> = {
+    bluetooth: t("bluetooth"),
+    online: t("online"),
+    offline: t("offline"),
+  };
   const connColor = connectivityColor(connectivity);
   return (
     <Pressable
@@ -77,7 +78,7 @@ export function MachineCard({
 
       <IconButton
         variant="soft"
-        label="Scan QR"
+        label={t("scanQr")}
         icon={scanIcon}
         onPress={onScan}
       />

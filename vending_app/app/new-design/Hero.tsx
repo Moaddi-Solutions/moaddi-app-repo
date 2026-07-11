@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Wifi } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 import { Line, Path, Rect, Svg } from "react-native-svg";
 import GradientText from "~/components/GradientText";
@@ -27,6 +28,7 @@ const ConnectionLine = ({
   );
 };
 const Hero = () => {
+  const { t } = useTranslation();
   return (
     <View className="relative flex flex-col items-center justify-center px-6 pt-4 overflow-hidden">
       {/* Content */}
@@ -161,7 +163,7 @@ const Hero = () => {
               100+
             </Text> */}
             <Text className="text-xs text-gray-500 mt-1 text-center">
-              Devices
+              {t("devices")}
             </Text>
           </View>
           <View className="text-center">
@@ -175,7 +177,7 @@ const Hero = () => {
               50+
             </GradientText>
             <Text className="text-xs text-gray-500 mt-1 text-center">
-              Shops
+              {t("shops")}
             </Text>
           </View>
           <View className="text-center">
@@ -189,7 +191,7 @@ const Hero = () => {
               24/7
             </GradientText>
             <Text className="text-xs text-gray-500 mt-1 text-center">
-              Access
+              {t("access")}
             </Text>
           </View>
         </View>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import dataProvider from "~/services/dataProvider";
 import { ShopCard } from "../../stories/components/ShopCard";
@@ -35,6 +36,7 @@ import { ShopCard } from "../../stories/components/ShopCard";
 // ];
 
 function ShopsScreen() {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   useEffect(() => {
     dataProvider
@@ -61,9 +63,9 @@ function ShopsScreen() {
     <View className="mt-4 py-4 px-6 bg-gray-50">
       {/* Section Header */}
       <View className="mb-8">
-        <Text className="text-2xl font-bold text-gray-900 mb-2">Shops</Text>
+        <Text className="text-2xl font-bold text-gray-900 mb-2">{t("shops")}</Text>
         <Text className="text-gray-600">
-          Explore our Bluetooth-enabled retail locations
+          {t("exploreShopsDescription")}
         </Text>
       </View>
 

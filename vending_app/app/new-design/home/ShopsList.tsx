@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Store } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { SectionHeader, ShopCard } from "~/components/moaddi";
 import { palette, space } from "~/theme/moaddi";
@@ -17,6 +18,7 @@ interface ShopItem {
 /** Vertical list of active, Bluetooth-enabled shops. */
 export function ShopsList() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [items, setItems] = useState<ShopItem[]>([]);
 
   useEffect(() => {
@@ -40,8 +42,8 @@ export function ShopsList() {
   return (
     <View style={{ marginTop: 12, paddingBottom: 20 }}>
       <SectionHeader
-        title="Shops"
-        actionLabel="View all"
+        title={t("shops")}
+        actionLabel={t("viewAll")}
         onAction={() => router.push("/(tabs)/shops" as never)}
       />
       <View style={{ gap: space.card, paddingHorizontal: space.gutter }}>

@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight } from "lucide-react-native";
 import React, { useEffect } from "react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Animated, Pressable, Text, View } from "react-native";
 import { colors, gradients, palette, radius, type } from "~/theme/moaddi";
 
@@ -53,9 +54,10 @@ export function ShopCard({
   description,
   icon,
   live = true,
-  liveLabel = "Bluetooth Enabled",
+  liveLabel,
   onPress,
 }: ShopCardProps) {
+  const { t } = useTranslation();
   return (
     <Pressable
       onPress={onPress}
@@ -116,7 +118,9 @@ export function ShopCard({
             }}
           >
             <PulsingDot />
-            <Text style={{ ...type.label, color: palette.teal[500] }}>{liveLabel}</Text>
+            <Text style={{ ...type.label, color: palette.teal[500] }}>
+              {liveLabel ?? t("bluetoothEnabled")}
+            </Text>
           </View>
         ) : null}
       </View>

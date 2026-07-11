@@ -1,5 +1,8 @@
 import { getItem } from "~/lib/utils";
-import { signInAddress } from "./serverAddresses";
+import { signInAddress, socialSignInAddress } from "./serverAddresses";
+
+/** Public auth endpoints that must NOT carry an existing (e.g. guest) token. */
+const NO_AUTH_URLS = [signInAddress, socialSignInAddress];
 
 /** Ngrok free tier returns an HTML interstitial unless this header is sent. */
 function ngrokHeaders(url) {
@@ -50,7 +53,7 @@ export const postRequest = async (url, body = null) => {
     "Content-Type": "application/json",
     ...ngrokHeaders(url),
   };
-  if (url !== signInAddress) {
+  if (!NO_AUTH_URLS.includes(url)) {
     const user = await getItem("user");
     if (user) headers["Authorization"] = "Bearer " + user.token;
   }

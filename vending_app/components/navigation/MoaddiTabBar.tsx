@@ -1,34 +1,26 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { House, Store, User } from "lucide-react-native";
+import { House, Mail, Store, User } from "lucide-react-native";
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomNav, BottomNavItem } from "~/components/moaddi";
 import { colors, palette } from "~/theme/moaddi";
 
-/** Per-route presentation: label + icon. Keyed by the route file name. */
-const TAB_CONFIG: Record<
-  string,
-  { label: string; icon: (active: boolean) => ReactNode }
-> = {
-  index: {
-    label: "Home",
-    icon: (active) => (
-      <House size={20} color={active ? palette.teal[500] : palette.ink[500]} />
-    ),
-  },
-  shops: {
-    label: "Shops",
-    icon: (active) => (
-      <Store size={20} color={active ? palette.teal[500] : palette.ink[500]} />
-    ),
-  },
-  profile: {
-    label: "Profile",
-    icon: (active) => (
-      <User size={20} color={active ? palette.teal[500] : palette.ink[500]} />
-    ),
-  },
+/** Per-route presentation: icon. Keyed by the route file name. */
+const TAB_ICONS: Record<string, (active: boolean) => ReactNode> = {
+  index: (active) => (
+    <House size={20} color={active ? palette.teal[500] : palette.ink[500]} />
+  ),
+  shops: (active) => (
+    <Store size={20} color={active ? palette.teal[500] : palette.ink[500]} />
+  ),
+  contact: (active) => (
+    <Mail size={20} color={active ? palette.teal[500] : palette.ink[500]} />
+  ),
+  profile: (active) => (
+    <User size={20} color={active ? palette.teal[500] : palette.ink[500]} />
+  ),
 };
 
 /**
@@ -36,14 +28,21 @@ const TAB_CONFIG: Record<
  * so the app shell matches the redesign. Safe-area aware at the bottom.
  */
 export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const tabLabels: Record<string, string> = {
+    index: t("home"),
+    shops: t("shops"),
+    contact: t("contactUs"),
+    profile: t("profile"),
+  };
 
   const items: BottomNavItem[] = state.routes
-    .filter((route) => TAB_CONFIG[route.name])
+    .filter((route) => TAB_ICONS[route.name])
     .map((route) => ({
       id: route.name,
-      label: TAB_CONFIG[route.name].label,
-      icon: TAB_CONFIG[route.name].icon,
+      label: tabLabels[route.name],
+      icon: TAB_ICONS[route.name],
     }));
 
   const activeId = state.routes[state.index]?.name;

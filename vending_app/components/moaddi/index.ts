@@ -28,3 +28,5 @@ export { ListItem, listItemIconColor } from "./ListItem";
 export { Input, PhoneInput } from "./Input";
 export { BottomSheet } from "./BottomSheet";
 export { Loader } from "./Loader";
+export { SocialLinks } from "./SocialLinks";
+export { SocialAuthButtons } from "./SocialAuthButtons";

@@ -2,6 +2,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { Flashlight, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { palette, radius, space, type as typo } from "~/theme/moaddi";
@@ -20,6 +21,7 @@ function Corner({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) {
 }
 
 export default function MachineQRScan() {
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const pathname = usePathname();
@@ -59,7 +61,7 @@ export default function MachineQRScan() {
         <Pressable onPress={closeScanner} hitSlop={10}>
           <X size={24} color="#fff" />
         </Pressable>
-        <Text style={{ ...typo.title3, color: "#fff" }}>Scan QR Code</Text>
+        <Text style={{ ...typo.title3, color: "#fff" }}>{t("scanQrCode")}</Text>
         <Pressable onPress={() => setTorch((v) => !v)} hitSlop={10}>
           <Flashlight size={24} color={torch ? TEAL : "#fff"} />
         </Pressable>
@@ -94,7 +96,7 @@ export default function MachineQRScan() {
           />
         </View>
         <Text style={{ ...typo.body, color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: 260 }}>
-          Point your camera at the QR code on the vending machine.
+          {t("pointCameraAtQrCode")}
         </Text>
       </View>
     </View>

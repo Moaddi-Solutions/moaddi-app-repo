@@ -36,9 +36,9 @@ const SigninAsStaffScreen = () => {
   const handleSignin = async () => {
     try {
       if (!formData.phone || !formData.password)
-        return alert("error", "Please fill in all fields");
+        return alert("error", t("pleaseFillInAllFields"));
       if (formData.password.length < 6)
-        return alert("error", "Password must be at least 6 characters long");
+        return alert("error", t("passwordMinLength"));
 
       const user = {
         _id: formData.phone,
@@ -58,7 +58,7 @@ const SigninAsStaffScreen = () => {
 
       setUser(response);
       await setItem("user", response);
-      alert("success", "Logged in successfully!");
+      alert("success", t("loggedInSuccessfully"));
 
       getRequest(userAPI(response._id)).then(async (r) => {
         setUser((prev: any) => ({ ...prev, ...r }));

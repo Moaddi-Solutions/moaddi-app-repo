@@ -1,6 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import { Search as SearchIcon, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ProductCard } from "~/components/moaddi";
@@ -21,6 +22,7 @@ interface ProductItem {
 /** Live product search: filters active products by name as the user types. */
 export function SearchScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<ProductItem[]>([]);
   const [query, setQuery] = useState("");
@@ -80,7 +82,7 @@ export function SearchScreen() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search products…"
+            placeholder={t("searchProducts")}
             placeholderTextColor={palette.ink[400]}
             autoFocus
             autoCapitalize="none"
@@ -94,7 +96,7 @@ export function SearchScreen() {
           ) : null}
         </View>
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.navigate("/"))} hitSlop={10}>
-          <Text style={{ ...type.bodyStrong, color: colors.textBrand }}>Cancel</Text>
+          <Text style={{ ...type.bodyStrong, color: colors.textBrand }}>{t("cancel")}</Text>
         </Pressable>
       </View>
 
@@ -107,7 +109,7 @@ export function SearchScreen() {
           <Text
             style={{ ...type.body, color: colors.textMuted, textAlign: "center", marginTop: 32 }}
           >
-            {query ? "No products match your search." : "Start typing to search products."}
+            {query ? t("noProductsMatchSearch") : t("startTypingToSearchProducts")}
           </Text>
         ) : (
           <View style={{ gap: space.card }}>

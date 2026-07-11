@@ -3,6 +3,8 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import arTranslation from "./locales/ar.json";
 import enTranslation from "./locales/en.json";
+import itTranslation from "./locales/it.json";
+import zhTranslation from "./locales/zh.json";
 
 // const languageDetector = {
 //   type: "languageDetector",
@@ -27,6 +29,12 @@ i18n
       },
       ar: {
         translation: arTranslation,
+      },
+      zh: {
+        translation: zhTranslation,
+      },
+      it: {
+        translation: itTranslation,
       },
     },
     lng: "ar", // default language
