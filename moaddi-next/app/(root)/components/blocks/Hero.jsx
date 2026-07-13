@@ -30,8 +30,9 @@ const HERO_FALLBACK = {
       page: { url: "/machine-scan" },
     },
     appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-    appGalleryUrl: "#home",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    appGalleryUrl: "https://appgallery.huawei.com/app/C115473181",
     stats: [
       { value: "12+", label: "machines online" },
       { value: "19", label: "products" },
@@ -50,8 +51,9 @@ const HERO_FALLBACK = {
       page: { url: "/machine-scan" },
     },
     appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-    appGalleryUrl: "#home",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    appGalleryUrl: "https://appgallery.huawei.com/app/C115473181",
     stats: [
       { value: "+12", label: "ماكينة متصلة" },
       { value: "19", label: "منتج" },
@@ -70,8 +72,9 @@ const HERO_FALLBACK = {
       page: { url: "/machine-scan" },
     },
     appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-    appGalleryUrl: "#home",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    appGalleryUrl: "https://appgallery.huawei.com/app/C115473181",
     stats: [
       { value: "12+", label: "台在线机器" },
       { value: "19", label: "件产品" },
@@ -90,8 +93,9 @@ const HERO_FALLBACK = {
       page: { url: "/machine-scan" },
     },
     appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-    appGalleryUrl: "#home",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    appGalleryUrl: "https://appgallery.huawei.com/app/C115473181",
     stats: [
       { value: "12+", label: "macchine online" },
       { value: "19", label: "prodotti" },
@@ -214,7 +218,14 @@ const Hero = ({
 };
 
 const BadgeShell = ({ label, href = "#home", width = 120, children }) => (
-  <a className="moaddi-store-badge" href={href} aria-label={label} dir="ltr">
+  <a
+    target="_blank"
+    rel="noopener noreferrer"
+    className="moaddi-store-badge"
+    href={href}
+    aria-label={label}
+    dir="ltr"
+  >
     <svg
       aria-hidden="true"
       focusable="false"
