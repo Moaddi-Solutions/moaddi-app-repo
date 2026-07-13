@@ -39,7 +39,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 Olaya", subtitle: "Online - 46 products" },
-      { title: "Paid 13.95 SAR", subtitle: "Opening..." },
+      { title: "Paid $13.95", subtitle: "Opening..." },
     ],
   },
   ar: {
@@ -79,7 +79,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 欧莱亚", subtitle: "在线 - 46 件产品" },
-      { title: "已支付 13.95 里亚尔", subtitle: "正在打开..." },
+      { title: "已支付 ¥13.95", subtitle: "正在打开..." },
     ],
   },
   it: {
@@ -99,7 +99,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 Olaya", subtitle: "Online - 46 prodotti" },
-      { title: "Pagato 13.95 SAR", subtitle: "Apertura in corso..." },
+      { title: "Pagato €13,95", subtitle: "Apertura in corso..." },
     ],
   },
 };
