@@ -54,6 +54,23 @@ const attachBoxesToProducts = (machine) => {
   };
 };
 
+const getProductStockById = (machines) => {
+  const stockByProduct = new Map();
+  for (const machine of machines ?? []) {
+    if (machine?.isActive === false || machine?.isDeleted === true) continue;
+
+    for (const box of machine.boxes ?? []) {
+      if (!box?.productId || box.isActive !== true || box.isDeleted === true) {
+        continue;
+      }
+
+      const productId = String(box.productId);
+      stockByProduct.set(productId, (stockByProduct.get(productId) ?? 0) + 1);
+    }
+  }
+  return stockByProduct;
+};
+
 const { convertToUSD } = require("../../services/currency");
 const {
   flattenProductForPreferredCurrency,
@@ -607,6 +624,7 @@ let getByShopId = async (shopId, skip = 0, limit = 1000, preferredCurrency) => {
     ];
     const data = await Machines.aggregate(pipeline).exec();
     console.log(data, "data");
+    const stockByProduct = getProductStockById(data);
     const shaped = data.map((machine) => {
       const withBoxes = attachBoxesToProducts(machine);
       return {
@@ -615,6 +633,7 @@ let getByShopId = async (shopId, skip = 0, limit = 1000, preferredCurrency) => {
           ? withBoxes.products.map((product) => ({
               ...flattenProductForPreferredCurrency(product, preferredCurrency),
               boxes: product.boxes,
+              stock: stockByProduct.get(String(product._id)) ?? 0,
             }))
           : withBoxes.products,
       };
