@@ -449,7 +449,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
+  padding: 2px;
   background: #000;
   border-radius: 10px;
   transition: transform 0.15s ease;
@@ -460,8 +460,8 @@
   flex-basis: 100%;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.18fr);
   align-items: center;
-  width: min(100%, 430px);
-  gap: 10px;
+  width: min(100%, 350px);
+  gap: 7px;
 }
 
 .moaddi-store-badge:hover {
