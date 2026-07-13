@@ -50,25 +50,49 @@ const adminAccess = {
     [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
   arBlocks: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
+  zhBlocks: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
+  itBlocks: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
   enSite: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   arSite: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  zhSite: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  itSite: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   enSeo: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   arSeo: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  zhSeo: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  itSeo: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   enFooterBody: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   arFooterBody: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  zhFooterBody: (action) =>
+    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
+  itFooterBody: (action) =>
     [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
   enHeaderLinks: (action) =>
     ["create", "delete", "edit", "show", "list"].includes(action),
   arHeaderLinks: (action) =>
     ["create", "delete", "edit", "show", "list"].includes(action),
+  zhHeaderLinks: (action) =>
+    ["create", "delete", "edit", "show", "list"].includes(action),
+  itHeaderLinks: (action) =>
+    ["create", "delete", "edit", "show", "list"].includes(action),
   enPages: (action) =>
     ["create", "delete", "edit", "show", "list"].includes(action),
   arPages: (action) =>
+    ["create", "delete", "edit", "show", "list"].includes(action),
+  zhPages: (action) =>
+    ["create", "delete", "edit", "show", "list"].includes(action),
+  itPages: (action) =>
     ["create", "delete", "edit", "show", "list"].includes(action),
 };
 

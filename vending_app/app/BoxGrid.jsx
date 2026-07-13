@@ -1,28 +1,22 @@
-import { Link, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
+import { Check, Gift, PackageOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Image, ScrollView, Share, Text, View } from "react-native";
 import { routes } from "~/app/CheckoutMoyasar";
-import { Button } from "~/components/ui/button";
-import { Card } from "~/components/ui/card";
-import { Text } from "~/components/ui/text";
+import { Badge, Button, Card, Progress } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
+import alert from "~/lib/alert";
 import { compressBoxData } from "~/services/functions";
+import { enableGift } from "~/services/gift";
 import { productImageUrl } from "~/services/serverAddresses";
+import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
-  // machineEvents.boxes.forEach((box) => {
-  //   boxSerialDecoder(machineEvents.machineId, box).map((cBox) => {
-  //     boxes = boxes.map((oldBox) => {
-  //       if (cBox === oldBox._id && machineEvents.type === "LOCKER")
-  //         oldBox["boxStatus"] = !!machineEvents.value;
-  //       return oldBox;
-  //     });
-  //   });
-  // });
-  // return boxes;
   if (machineEvents.type === "LOCKER")
     return boxes.map((box) => {
       if (
@@ -37,6 +31,7 @@ const boxUpdateHandler = (boxes, machineEvents) => {
 const BoxGrid = () => {
   const { user, setUser } = useUser();
   const [done, setDone] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
   const finalEffect = useRef(false);
@@ -45,6 +40,7 @@ const BoxGrid = () => {
 
   const item =
     user?.purchase?.boxes.filter((box) => box.machineId == machine._id) ?? [];
+
   // update boxes status on machineEvents change
   useEffect(() => {
     log("machineEvents", JSON.stringify(machineEvents));
@@ -53,16 +49,11 @@ const BoxGrid = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && {
-          boxes: boxUpdateHandler(purchase.boxes, machineEvents),
-        }),
+        ...(purchase && { boxes: boxUpdateHandler(purchase.boxes, machineEvents) }),
       },
     }));
-    // console.log(
-    //   "boxes",
-    //   boxUpdateHandler(item, machineEvents)
-    // );
   }, [machineEvents]);
+
   // set Done after all boxes opened
   useEffect(() => {
     if (finalEffect.current) return;
@@ -71,29 +62,22 @@ const BoxGrid = () => {
     if (!item.find(({ boxStatus }) => !boxStatus)) {
       finalEffect.current = true;
       const nextMachine = machines.at(0);
-      // log(JSON.stringify(machines));
       if (nextMachine) {
         setMachines((prev) => [...prev.slice(1)]);
         setMachine(nextMachine);
         setUser(({ purchase, ...rest }) => ({
           ...rest,
-          purchase: {
-            ...purchase,
-            machine: nextMachine,
-            controlRoute: routes[nextMachine.type],
-          },
+          purchase: { ...purchase, machine: nextMachine, controlRoute: routes[nextMachine.type] },
         }));
         router.replace(routes[nextMachine.type]);
       } else {
-        // doneCallback
-        setTimeout(() => {
-          setUser(({ purchase, ...prev }) => prev);
-        }, 1000);
+        setTimeout(() => setUser(({ purchase, ...prev }) => prev), 1000);
         setDone(true);
         clearAll();
       }
     }
   }, [user]);
+
   // send open signal to socket
   const openOne = (cabinNumber, boxNumber) =>
     publishData({
@@ -104,92 +88,186 @@ const BoxGrid = () => {
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
     });
 
+  // Enable a shareable claim link and open the native share sheet so someone
+  // else (or the buyer on another device) can open this box.
+  const shareGift = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const { claimToken, claimUrl } = await enableGift(user.purchase._id);
+      const link = claimUrl || Linking.createURL("gift/" + claimToken);
+      // Gift share: send ONLY the claim URL — no message/description text.
+      // `message` carries the link on Android; `url` carries it on iOS.
+      await Share.share({
+        message: link,
+        url: link,
+      });
+    } catch (e) {
+      alert("error", e?.message || t("giftShareError") || "Could not create the gift link.");
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const opened = item.filter(({ boxStatus }) => boxStatus).length;
-  return done ? (
-    <View className="px-6 my-40 flex-col items-center justify-center">
-      <View className="flex flex-col space-y-2 text-center">
-        <Text className="text-2xl font-semibold my-4">
-          {t("allBoxesAreOpened")}
-        </Text>
-      </View>
-      <Link asChild href="/PurchaseHistory">
-        <Button color="secondary" className="w-full" variant="default">
-          <Text>{t("showInvoiceHistory")}</Text>
-        </Button>
-      </Link>
-    </View>
-  ) : (
-    <ScrollView
-      contentContainerStyle={styles.scrollContainer}
-      className="my-6 px-6"
-    >
-      <Text className="mb-8 text-xl">{user?.purchase?.machine.name}</Text>
-      <View>
-        {item.map((box) => (
-          <View key={box._id}>
-            <Card className="flex items-center justify-center p-4 m-4">
-              <Text>{box.name.slice(1)}</Text>
-              {box.product && (
-                <>
-                  <Image
-                    width={80}
-                    height={80}
-                    resizeMode="contain"
-                    source={{ uri: productImageUrl(box.product.image) }}
-                  />
-                  <Text>
-                    {`${box.product.name} - ${
-                      box.product.campaignPrice?.toFixed(2) ?? box.product.salePrice?.toFixed(2)
-                    } ${t(box.product.preferredCurrency)}`}
-                  </Text>
-                </>
-              )}
-              {/* Direct */}
-              {user.purchase.machine.type == 0 ? (
-                <Text className="mt-4">
-                  {box.boxStatus ? "Opened" : "Waiting for approve"}
-                </Text>
+  const total = item.length;
+  const allDone = done || (total > 0 && opened === total);
+  const isDirect = user?.purchase?.machine?.type == 0;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+   
+   
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: space.gutter, gap: 16 }}
+      >
+        {/* Status card */}
+        <Card raised style={allDone ? { backgroundColor: colors.successBg } : undefined}>
+          <View style={{ alignItems: "center", gap: 10, paddingVertical: 6 }}>
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: allDone ? colors.success : colors.surfaceBrandSoft,
+              }}
+            >
+              {allDone ? (
+                <Check size={24} color="#fff" strokeWidth={3} />
               ) : (
-                // MQTT
+                <PackageOpen size={24} color={palette.teal[600]} />
+              )}
+            </View>
+            <Text style={{ ...typo.title2, color: colors.textHeading, textAlign: "center" }}>
+              {allDone ? t("allBoxesAreOpened") : t("paymentConfirmed") || "Payment Confirmed!"}
+            </Text>
+            <Text style={{ ...typo.caption, color: colors.textMuted, textAlign: "center" }}>
+              {allDone
+                ? t("enjoyYourItems") || "Thanks! Enjoy your items."
+                : t("tapBoxToOpen") || "Tap a box to open it and grab your item."}
+            </Text>
+            {total > 0 ? (
+              <View style={{ width: "100%", marginTop: 4 }}>
+                <Progress value={opened} max={total} tone={allDone ? "success" : "brand"} />
+                <Text style={{ ...typo.caption, color: colors.textMuted, marginTop: 6 }}>
+                  {opened} {t("of") || "of"} {total} {t("opened") || "opened"}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        </Card>
+
+        {/* Let someone else open the box */}
+        {!allDone ? (
+          <Button
+            fullWidth
+            variant="secondary"
+            disabled={sharing}
+            icon={<Gift size={18} color={palette.teal[600]} />}
+            onPress={shareGift}
+          >
+            {sharing
+              ? t("preparing") || "Preparing…"
+              : t("shareGift") || "Let someone else open it"}
+          </Button>
+        ) : null}
+
+        {/* Boxes */}
+        <View style={{ gap: space.card }}>
+          {item.map((box) => (
+            <View
+              key={box._id}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                backgroundColor: colors.surfaceCard,
+                borderRadius: radius.lg,
+                borderWidth: 1,
+                borderColor: colors.borderDefault,
+                padding: 14,
+              }}
+            >
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: radius.md,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: box.boxStatus ? colors.successBg : colors.surfaceBrandSoft,
+                }}
+              >
+                {box.product ? (
+                  <Image
+                    source={{ uri: productImageUrl(box.product.image) }}
+                    resizeMode="contain"
+                    style={{ width: 40, height: 40, borderRadius: 8 }}
+                  />
+                ) : (
+                  <Text
+                    style={{
+                      ...typo.bodyStrong,
+                      color: box.boxStatus ? colors.success : palette.teal[600],
+                    }}
+                  >
+                    {String(box.name).slice(1)}
+                  </Text>
+                )}
+              </View>
+
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>
+                  {t("box") || "Box"} {String(box.name).slice(1)}
+                </Text>
+                {box.product ? (
+                  <Text numberOfLines={1} style={{ ...typo.caption, color: colors.textMuted }}>
+                    {box.product.name} ·{" "}
+                    {(box.product.campaignPrice ?? box.product.salePrice)?.toFixed(2)}{" "}
+                    {t(box.product.preferredCurrency)}
+                  </Text>
+                ) : null}
+              </View>
+
+              {box.boxStatus ? (
+                <Badge tone="success" dot>
+                  {t("opened") || "Opened"}
+                </Badge>
+              ) : isDirect ? (
+                <Badge tone="warning" dot>
+                  {t("waitingForApprove") || "Waiting"}
+                </Badge>
+              ) : (
                 <Button
-                  className="mt-4"
-                  disabled={box.boxStatus}
-                  onPress={() => openOne(box.cabinNumber, box.boxNumber)}
-                  variant="outline"
                   size="sm"
+                  variant="secondary"
+                  onPress={() => openOne(box.cabinNumber, box.boxNumber)}
                 >
-                  <Text>{box.boxStatus ? "Opened" : "Open"}</Text>
+                  {t("open") || "Open"}
                 </Button>
               )}
-            </Card>
+            </View>
+          ))}
+        </View>
+
+        {allDone ? (
+          <View style={{ gap: 10 }}>
+            <Button fullWidth onPress={() => router.replace("/")}>
+              {t("backToHome") || "Back to Home"}
+            </Button>
+            <Button fullWidth variant="secondary" onPress={() => router.replace("/PurchaseHistory")}>
+              {t("showInvoiceHistory")}
+            </Button>
           </View>
-        ))}
-      </View>
-      <View className="mb-6 flex flex-wrap justify-between gap-4">
-        <Card className="rounded p-3 !text-green-800">
-          <Text>
-            {t("readyToOpen")}: <Text>{item.length - opened || ""}</Text>
-          </Text>
-        </Card>
-        <Card className="rounded p-3 !text-green-800">
-          <Text>
-            {t("opened")}: <Text>{t("opened-sm") || "0"}</Text>
-          </Text>
-        </Card>
-        <Card className="rounded p-3 !text-red-800">
-          <Text>
-            {t("remaining")}: <Text>{item.length - opened || ""}</Text>
-          </Text>
-        </Card>
-      </View>
-    </ScrollView>
+        ) : null}
+      </ScrollView>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContainer: {
-    alignItems: "center",
-  },
-});
 
 export default BoxGrid;

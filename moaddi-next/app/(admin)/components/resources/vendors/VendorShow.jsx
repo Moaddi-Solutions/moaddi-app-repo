@@ -1,37 +1,16 @@
-import {
-  BooleanField,
-  DateField,
-  ReferenceArrayField,
-  ReferenceField,
-  Show,
-  SimpleShowLayout,
-  useRecordContext,
-} from "react-admin";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminDetailFromColumns } from "@/(admin)/components/AdminDetail";
 import { VendorListItems } from "./VendorList";
 
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Vendor {record ? `"${record.name}"` : ""}</span>;
-};
+const extraColumns = [
+  { key: "created", label: "Created", render: (r) => (r.created ? new Date(r.created).toLocaleString() : "—") },
+  { key: "updated", label: "Updated", render: (r) => (r.updated ? new Date(r.updated).toLocaleString() : "—") },
+];
 
-const VendorShow = () => {
-  const vendorListItems = [
-    ...VendorListItems,
-    // <ReferenceField
-    //   source="shopId"
-    //   key="shopId"
-    //   reference="shops"
-    //   label="Shop"
-    // />,
-    // <BooleanField label="Deleted" source="isDeleted" />,
-    <DateField source="created" />,
-    <DateField source="updated" />,
-  ];
-  return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{vendorListItems}</SimpleShowLayout>
-    </Show>
-  );
-};
+const VendorShow = () => (
+  <AdminShow>
+    <AdminDetailFromColumns columns={VendorListItems} extra={extraColumns} />
+  </AdminShow>
+);
 
 export default VendorShow;

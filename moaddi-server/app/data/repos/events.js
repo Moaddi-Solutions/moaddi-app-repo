@@ -5,6 +5,7 @@ const Events = require("../models/events");
 const machinesRepo = require("../repos/machines");
 const boxesRepo = require("../repos/boxes");
 const purchasesRepo = require("../repos/purchases");
+const { isAuthorizedOpener } = require("../../lib/purchaseAccess");
 const { sendToBroker } = require("../../services/bluetooth.ipc");
 
 /*
@@ -141,18 +142,23 @@ const controlVendor = async (event, user) => {
   if (machine && machine.vendorId == user._id) await control(event);
 };
 
-const controlCustomer = async (event, user) => {
+// Buyer OR a gift recipient (in gift.authorizedOpeners) may open the box.
+const controlBuyerOrGiftee = async (event, user) => {
   if (!(event.machineId && event.purchaseId)) return;
   const machine = await machinesRepo.getById(event.machineId, false, false);
   const purchase = await purchasesRepo.getById(event.purchaseId);
   if (
     machine &&
     purchase &&
-    purchase.customerId == user._id &&
+    isAuthorizedOpener(purchase, user._id) &&
     ["PaymentDone", "Processing"].includes(purchase.status)
   )
     await control(event);
 };
+
+const controlCustomer = controlBuyerOrGiftee;
+// Gift recipients claim a Guest session; the socket resolves this handler by role.
+const controlGuest = controlBuyerOrGiftee;
 /* --------------------------------------------------------------- */
 /* ---------------------------0-Direct---------------------------- */
 /* --------------------------------------------------------------- */
@@ -181,7 +187,7 @@ const controlBluetooth1Machine = async (event, user) => {
     (user.role == "Admin" ||
       machine.vendorId == user._id ||
       (purchase &&
-        purchase.customerId == user._id &&
+        isAuthorizedOpener(purchase, user._id) &&
         ["PaymentDone", "Processing"].includes(purchase.status)))
   )
     // sent to broker and wait for response to create event
@@ -211,7 +217,7 @@ const bluetoothMachineComplete = async (event, user) => {
   if (
     // machine &&
     purchase &&
-    purchase.customerId == user._id &&
+    isAuthorizedOpener(purchase, user._id) &&
     ["PaymentDone", "Processing"].includes(purchase.status)
   ) {
     purchase.status = "Completed";
@@ -275,6 +281,7 @@ module.exports = {
   controlAdmin,
   controlVendor,
   controlCustomer,
+  controlGuest,
   controlDirectMachine,
   updateConnection,
   controlBluetooth1Machine,

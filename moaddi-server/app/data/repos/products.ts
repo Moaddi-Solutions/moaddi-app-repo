@@ -139,7 +139,25 @@ const getActive = async (
   ];
   let products = await Products.aggregate(pipeline as never[]).exec();
   const pref = normCurrency(preferredCurrency);
-  products = products.map((p) => flattenForPreferredCurrency(p as unknown as ModelTypes.IProduct, pref));
+  products = products.map((p) => {
+    const row = p as Record<string, unknown>;
+    // Sellable stock = active, non-deleted boxes that sit in an active machine.
+    // Matches how the machine screen derives "available" (active boxes), but
+    // scoped to live machines so offline/disabled machines don't inflate the count.
+    const machines = Array.isArray(row.machines) ? (row.machines as Record<string, unknown>[]) : [];
+    const activeMachineIds = new Set(
+      machines
+        .filter((m) => m && m.isActive !== false && m.isDeleted !== true)
+        .map((m) => m._id)
+    );
+    const boxes = Array.isArray(row.boxes) ? (row.boxes as Record<string, unknown>[]) : [];
+    const stock = boxes.filter(
+      (b) => b && b.isActive !== false && b.isDeleted !== true && activeMachineIds.has(b.machineId)
+    ).length;
+    // Drop the heavy join arrays; the client only needs the derived count.
+    const { boxes: _boxes, machines: _machines, ...rest } = row;
+    return { ...flattenForPreferredCurrency(rest as unknown as ModelTypes.IProduct, pref), stock };
+  });
   return { data: products, total: products.length, preferredCurrency: pref };
 };
 

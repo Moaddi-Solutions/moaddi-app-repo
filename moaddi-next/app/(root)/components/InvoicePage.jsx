@@ -1,22 +1,14 @@
-"use client";
-import {
-  CalendarDays,
-  Clock,
-  Phone,
-  PrinterIcon as Print,
-  Store,
-  User,
-  WashingMachine,
-} from "lucide-react";
+﻿"use client";
 
 import StrapiImage from "@/(root)/components/StrapiImage";
 import { useCart } from "@/(root)/context/cart-provider";
-import { Alert, AlertDescription } from "@/../components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/../components/ui/alert";
 import { Badge } from "@/../components/ui/badge";
 import { Button } from "@/../components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/../components/ui/card";
@@ -29,26 +21,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/../components/ui/table";
+import { getProductPricing } from "@/../lib/invoice-purchase";
 import {
-  computeInvoiceSubtotal,
-  getProductPricing,
-} from "@/../lib/invoice-purchase";
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  MapPin,
+  Package,
+  PrinterIcon as Print,
+  ReceiptText,
+  Store,
+  User,
+} from "lucide-react";
 import QRCode from "react-qr-code";
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case "Paid":
-      return "text-lg bg-green-100 text-green-800";
-    case "Pending":
-      return "text-lg bg-yellow-100 text-yellow-800";
-    // case "overdue":
-    //   return "text-lg bg-red-100 text-red-800";
-    case "Canceled":
-      return "text-lg bg-gray-100 text-gray-800";
-    default:
-      return "text-lg bg-gray-100 text-gray-800";
-  }
-};
+const sellerAddress = `6563 Al Makhzoumi Street
+Al Yarmouk
+Riyadh 13243
+SAU`;
 
 export default function InvoicePage({
   purchase,
@@ -66,308 +58,206 @@ export default function InvoicePage({
   },
 }) {
   const { user } = useCart();
-  // Prefer the buyer carried on the purchase (server lookup) so the invoice is
-  // correct for anyone viewing it — e.g. an admin — not just the logged-in cart.
   const purchaseCustomer = Array.isArray(purchase.customer)
     ? purchase.customer[0]
     : purchase.customer;
   const buyer = purchaseCustomer ?? user;
-  const address = `6563 Al Makhzoumi Street
-  Al Yarmouk
-  Riyadh 13243
-  SAU`;
-  // const address = null;
-
-  // Sample invoice data
-  // const invoice = {
-  //   number: "INV-2024-001",
-  //   status: "paid", // paid, pending, overdue, cancelled
-  //   date: "2024-01-15",
-  //   dueDate: "2024-02-15",
-  //   paymentId: "PAY-789123456",
-  //   customer: {
-  //     name: "John Smith",
-  //     email: "john.smith@example.com",
-  //     phone: "+1 (555) 123-4567",
-  //     address: "123 Business Street\nSuite 100\nNew York, NY 10001",
-  //   },
-  //   items: [
-  //     {
-  //       id: 1,
-  //       description: "Web Development Services",
-  //       quantity: 40,
-  //       unitPrice: 125.0,
-  //       vatRate: 0.2,
-  //     },
-  //     {
-  //       id: 2,
-  //       description: "UI/UX Design Consultation",
-  //       quantity: 8,
-  //       unitPrice: 150.0,
-  //       vatRate: 0.2,
-  //     },
-  //     {
-  //       id: 3,
-  //       description: "Project Management",
-  //       quantity: 20,
-  //       unitPrice: 100.0,
-  //       vatRate: 0.2,
-  //     },
-  //   ],
-  // };
-
-  const subtotal = computeInvoiceSubtotal(purchase);
-  const totalTax = Number(purchase.totalTax) || 0;
+  const currency = purchase.preferredCurrency ?? "SAR";
+  const lineItems = buildInvoiceItems(purchase, currency);
+  const chargedTotal = Number(purchase.price);
+  const subtotal = lineItems.reduce(
+    (sum, item) => sum + item.quantity * item.netUnitPrice,
+    0,
+  );
+  const totalTax = lineItems.reduce(
+    (sum, item) => sum + item.quantity * item.taxAmount,
+    0,
+  );
+  const computedTotal = subtotal + totalTax;
 
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="print-area mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Error Message */}
-        {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50">
-            <AlertDescription className="text-red-800">
-              <p className="font-bold">{error.status}</p>
+    <main className="bg-background py-6 sm:py-8 lg:py-10">
+      <div className="print-area mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+        {error ? (
+          <Alert variant="destructive">
+            <AlertTitle>{error.status}</AlertTitle>
+            <AlertDescription>
               {error.code} : {error.message}
             </AlertDescription>
           </Alert>
-        )}
+        ) : null}
 
-        {/* Invoice Header */}
-        <Card className="mb-6 gap-2">
-          <CardHeader className="gap-0">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-4">
-                <CardTitle className="text-2xl font-bold">
-                  Invoice {number}
-                </CardTitle>
-                <Badge className={getStatusColor(status)}>{status}</Badge>
-              </div>
-              <div className="non-print-area flex items-center gap-2">
-                <Button onClick={handlePrint} variant="outline" size="sm">
-                  <Print className="mr-2 h-4 w-4" />
-                  Print
-                </Button>
-                {/* <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button> */}
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {/* Customer Details */}
-          <Card className="gap-2 md:col-span-2">
-            <div className="flex justify-between px-6">
-              <div>
-                <StrapiImage className="w-48 min-w-48" src={logoUrl} />
-                <p>{process.env.NEXT_PUBLIC_SELLER_NAME}</p>
-                <p>{process.env.NEXT_PUBLIC_SELLER_VAT_NUMBER}</p>
-                {/* <br />
-              المتجر : قهوة - شاي - سكر */}
-              </div>
-              <QRCode className="size-30" value={qrCode} />
-              {/* {qrCode} */}
-            </div>
-            <CardContent className="mt-4 space-y-4">
-              <CardTitle className="mb-1 flex items-center gap-2 text-lg">
-                <User className="size-5" />
-                Customer Details
-              </CardTitle>
-              <div>
-                <h6 className="text-xl font-semibold">{buyer?.name}</h6>
-                <div className="text-muted-foreground mt-2 space-y-2 text-sm">
-                  {/* <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{invoice.customer.email}</span>
-                  </div> */}
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>
-                      Phone: {buyer?.phone ?? buyer?.username ?? buyer?._id}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-
-            <CardContent className="mt-4 space-y-4">
-              <Separator />
-              <CardTitle className="mb-1 flex items-center gap-2 text-lg">
-                <Store className="size-5" />
-                Shop Details
-              </CardTitle>
-              <div>
-                <div className="text-muted-foreground mt-2 space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Store className="h-4 w-4" />
-                    <span>
-                      {purchase.shop?.name ?? purchase.shop?.[0]?.name ?? "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <WashingMachine className="h-4 w-4" />
-                    <span>
-                      {purchase.machine?.name ??
-                        purchase.machine?.[0]?.name ??
-                        "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {address && (
-                <>
-                  <Separator />
-                  <div>
-                    <h6 className="mb-2 text-lg font-semibold">
-                      Billing Address
-                    </h6>
-                    <div className="text-muted-foreground text-sm whitespace-pre-line">
-                      {address}
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Invoice Summary */}
-          <Card className="gap-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Invoice Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="text-muted-foreground">Created Date</span>
-                </div>
-                <p className="font-medium">
-                  {new Date(createdDate).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <CalendarDays className="h-4 w-4" />
-                  <span className="text-muted-foreground">Expiry Date</span>
-                </div>
-                <p className="font-medium">
-                  {new Date(expiryDate).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="non-print-area space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-muted-foreground">Expiry Time</span>
-                </div>
-                <p className="font-medium">{expiryTime.split(".")[0]}</p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Payment ID</p>
-                <p className="rounded bg-gray-100 p-2 font-mono text-sm">
-                  {paymentId}
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <p className="text-muted-foreground text-sm">Total Amount</p>
-                <p className="text-2xl font-bold">{total}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Items Table */}
-        <Card className="gap-2">
+        <Card className="border-border/80 bg-card" size="sm">
           <CardHeader>
-            <CardTitle className="text-lg">Invoice Items</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]">#</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">TAX Rate</TableHead>
-                    <TableHead className="text-right">TAX Amount</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchase.products.map((product, i) => {
-                      const { _id, name } = product;
-                      const quantity = purchase.items.filter(
-                        ({ productId }) => productId == _id,
-                      ).length;
-                      const { price, tax } = getProductPricing(
-                        product,
-                        purchase.preferredCurrency,
-                      );
-                      const taxAmount = price * (tax / 100);
-                      return (
-                        <TableRow key={_id}>
-                          <TableCell className="font-medium">{i + 1}</TableCell>
-                          <TableCell>{name}</TableCell>
-                          <TableCell className="text-right">
-                            {quantity}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {(price - taxAmount).toFixed(2)} SAR
-                          </TableCell>
-                          <TableCell className="text-right">{tax}%</TableCell>
-                          <TableCell className="text-right">
-                            {taxAmount.toFixed(2)} SAR
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {(price * quantity).toFixed(2)} SAR
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Totals */}
-            <div className="mt-6 space-y-2">
-              <Separator className="mb-6" />
-              <div className="flex justify-end">
-                <div className="w-full max-w-xs space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{subtotal.toFixed(2)} SAR</span>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 flex-col gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="flex size-11 items-center justify-center rounded-lg bg-accent text-primary-text">
+                    <ReceiptText aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <CardDescription className="font-black uppercase tracking-[0.16em] text-primary-text">
+                      Invoice
+                    </CardDescription>
+                    <CardTitle className="truncate text-2xl font-black sm:text-3xl">
+                      {number}
+                    </CardTitle>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total Tax</span>
-                    <span>{totalTax.toFixed(2)} SAR</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>{(subtotal + totalTax).toFixed(2)} SAR</span>
-                  </div>
+                  <StatusBadge status={status} />
                 </div>
+                <p className="max-w-2xl text-sm font-semibold text-muted-foreground">
+                  Payment receipt for your Moaddi machine order.
+                </p>
+              </div>
+
+              <div className="non-print-area flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button
+                  type="button"
+                  onClick={handlePrint}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
+                  <Print data-icon="inline-start" aria-hidden="true" />
+                  Print Invoice
+                </Button>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="flex min-w-0 flex-col gap-5">
+            <Card className="border-border/80 bg-card" size="sm">
+              <CardContent className="grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-start">
+                <div className="min-w-0">
+                  <StrapiImage
+                    className="mb-4 h-14 w-auto max-w-44 object-contain rounded-2xl"
+                    src={logoUrl}
+                    alt="Moaddi"
+                  />
+                  <div className="grid gap-2 text-sm">
+                    <DetailLine
+                      icon={Building2}
+                      label="Seller"
+                      value={process.env.NEXT_PUBLIC_SELLER_NAME || "Moaddi"}
+                    />
+                    <DetailLine
+                      icon={ReceiptText}
+                      label="VAT"
+                      value={process.env.NEXT_PUBLIC_SELLER_VAT_NUMBER || "-"}
+                    />
+                    <DetailLine
+                      icon={MapPin}
+                      label="Address"
+                      value={sellerAddress}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className="flex justify-center rounded-xl border border-border/80 bg-background p-4"
+                  aria-label="Invoice QR code"
+                >
+                  <QRCode className="size-28 sm:size-32" value={qrCode} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <InfoCard
+                title="Customer"
+                icon={User}
+                rows={[
+                  ["Name", buyer?.name ?? "Customer"],
+                  ["Phone", buyer?.phone ?? buyer?.username ?? buyer?._id ?? "-"],
+                ]}
+              />
+              <InfoCard
+                title="Machine"
+                icon={Store}
+                rows={[
+                  ["Shop", purchase.shop?.name ?? "-"],
+                  ["Machine", purchase.machine?.name ?? "-"],
+                  ["Location", purchase.machine?.location ?? "-"],
+                ]}
+              />
+            </div>
+
+            <ItemsCard
+              items={lineItems}
+              currency={currency}
+              subtotal={subtotal}
+              totalTax={totalTax}
+              total={Number.isFinite(chargedTotal) ? chargedTotal : computedTotal}
+            />
+          </div>
+
+          <aside className="flex min-w-0 flex-col gap-5">
+            <Card className="border-border/80 bg-card" size="sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg font-black">
+                  <CreditCard aria-hidden="true" />
+                  Payment Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <SummaryLine
+                  icon={CalendarDays}
+                  label="Created"
+                  value={formatDate(createdDate)}
+                />
+                <SummaryLine
+                  icon={CalendarDays}
+                  label="Expires"
+                  value={formatDate(expiryDate)}
+                />
+                <SummaryLine
+                  icon={Clock}
+                  label="Expiry Time"
+                  value={formatTime(expiryTime)}
+                />
+                <Separator />
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">
+                    Payment ID
+                  </p>
+                  <p className="break-all rounded-lg bg-muted px-3 py-2 font-mono text-xs font-semibold">
+                    {paymentId ?? "-"}
+                  </p>
+                </div>
+                <Separator />
+                <div className="rounded-xl bg-accent p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">
+                    Total Amount
+                  </p>
+                  <p className="mt-1 text-3xl font-black tabular-nums">
+                    {total || formatMoney(computedTotal, currency)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/80 bg-card" size="sm">
+              <CardContent className="flex items-start gap-3 p-5">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
+                  <CheckCircle2 aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="font-black">Order Reference</p>
+                  <p className="mt-1 break-all text-sm font-semibold text-muted-foreground">
+                    {purchase._id}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
       </div>
 
-      {/* Print Styles */}
       <style jsx global>{`
         @media print {
           body * {
@@ -392,6 +282,279 @@ export default function InvoicePage({
           }
         }
       `}</style>
+    </main>
+  );
+}
+
+function StatusBadge({ status }) {
+  if (status === "Paid") {
+    return <Badge variant="default">{status}</Badge>;
+  }
+
+  if (status === "Pending") {
+    return <Badge variant="secondary">{status}</Badge>;
+  }
+
+  if (status === "Canceled") {
+    return <Badge variant="destructive">{status}</Badge>;
+  }
+
+  return <Badge variant="outline">{status}</Badge>;
+}
+
+function DetailLine({ icon: Icon, label, value }) {
+  return (
+    <div className="flex min-w-0 items-start gap-3">
+      <Icon aria-hidden="true" className="mt-0.5 shrink-0 text-primary-text" />
+      <div className="min-w-0">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="whitespace-pre-line break-words font-semibold">{value}</p>
+      </div>
     </div>
   );
+}
+
+function InfoCard({ title, icon: Icon, rows }) {
+  return (
+    <Card className="border-border/80 bg-card" size="sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg font-black">
+          <Icon aria-hidden="true" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {rows.map(([label, value]) => (
+          <div key={label} className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
+              {label}
+            </p>
+            <p className="mt-1 break-words font-semibold">{value}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function SummaryLine({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
+        <Icon aria-hidden="true" />
+      </span>
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-1 font-semibold">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function ItemsCard({ items, currency, subtotal, totalTax, total }) {
+  return (
+    <Card className="border-border/80 bg-card" size="sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg font-black">
+          <Package aria-hidden="true" />
+          Invoice Items
+        </CardTitle>
+        <CardDescription>
+          Products included in this purchase.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 md:hidden">
+          {items.map((item, index) => (
+            <Card key={item.key} className="border-border/80 bg-background" size="sm">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-primary-text">
+                      #{index + 1}
+                    </p>
+                    <p className="mt-1 truncate font-black">{item.name}</p>
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                      Qty {item.quantity} Â· Tax {item.taxRate}%
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-black tabular-nums">
+                    {formatMoney(item.lineTotal, currency)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="hidden overflow-hidden rounded-xl border border-border/80 md:block">
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[56px] px-4 font-black">#</TableHead>
+                <TableHead className="font-black">Description</TableHead>
+                <TableHead className="text-end font-black">Qty</TableHead>
+                <TableHead className="text-end font-black">Unit Price</TableHead>
+                <TableHead className="text-end font-black">Tax Rate</TableHead>
+                <TableHead className="text-end font-black">Tax Amount</TableHead>
+                <TableHead className="px-4 text-end font-black">Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item, index) => (
+                <TableRow key={item.key} className="hover:bg-accent/40">
+                  <TableCell className="px-4 font-semibold">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="max-w-[260px]">
+                    <div className="truncate" title={item.name}>
+                      {item.name}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-end tabular-nums">
+                    {item.quantity}
+                  </TableCell>
+                  <TableCell className="text-end tabular-nums">
+                    {formatMoney(item.netUnitPrice, currency)}
+                  </TableCell>
+                  <TableCell className="text-end tabular-nums">
+                    {item.taxRate}%
+                  </TableCell>
+                  <TableCell className="text-end tabular-nums">
+                    {formatMoney(item.taxAmount, currency)}
+                  </TableCell>
+                  <TableCell className="px-4 text-end font-black tabular-nums">
+                    {formatMoney(item.lineTotal, currency)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <div className="w-full max-w-sm rounded-xl border border-border/80 bg-background p-4">
+            <TotalRow label="Subtotal" value={formatMoney(subtotal, currency)} />
+            <TotalRow label="Total Tax" value={formatMoney(totalTax, currency)} />
+            <Separator className="my-3" />
+            <TotalRow
+              label="Total"
+              value={formatMoney(total, currency)}
+              strong
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TotalRow({ label, value, strong = false }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-1">
+      <span className="text-sm font-semibold text-muted-foreground">{label}</span>
+      <span
+        className={
+          strong
+            ? "text-xl font-black tabular-nums"
+            : "font-semibold tabular-nums"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function buildInvoiceItems(purchase, currency) {
+  const products = getProductsFromPurchase(purchase);
+  const items = Array.isArray(purchase.items) ? purchase.items : [];
+  const boxes = Array.isArray(purchase.boxes) ? purchase.boxes : [];
+
+  const rows = products.map((product) => {
+    const quantityFromItems = items.filter(
+      ({ productId }) => String(productId) === String(product._id),
+    ).length;
+    const quantityFromBoxes = boxes.filter(
+      (box) => String(box?.product?._id ?? box?.productId) === String(product._id),
+    ).length;
+    const quantity = quantityFromItems || quantityFromBoxes || 1;
+    const { price, tax } = getProductPricing(product, currency);
+
+    return {
+      key: product._id ?? product.name,
+      name: product.name ?? "Product",
+      quantity,
+      taxRate: tax,
+      grossUnitPrice: price,
+    };
+  });
+
+  const catalogTotal = rows.reduce(
+    (sum, item) => sum + item.grossUnitPrice * item.quantity,
+    0,
+  );
+  const purchaseTotal = Number(purchase.price);
+  const scale =
+    Number.isFinite(purchaseTotal) && purchaseTotal > 0 && catalogTotal > 0
+      ? purchaseTotal / catalogTotal
+      : 1;
+
+  return rows.map((item) => {
+    const grossUnitPrice = item.grossUnitPrice * scale;
+    const taxAmount = grossUnitPrice * (item.taxRate / 100);
+    const netUnitPrice = grossUnitPrice - taxAmount;
+
+    return {
+      ...item,
+      taxAmount,
+      netUnitPrice,
+      lineTotal: grossUnitPrice * item.quantity,
+    };
+  });
+}
+
+function getProductsFromPurchase(purchase) {
+  if (Array.isArray(purchase.products) && purchase.products.length > 0) {
+    return purchase.products;
+  }
+
+  const products = [];
+  const seen = new Set();
+  for (const box of purchase.boxes ?? []) {
+    const product = box?.product;
+    const key = product?._id ?? box?.productId;
+    if (!product || !key || seen.has(String(key))) continue;
+    seen.add(String(key));
+    products.push(product);
+  }
+
+  return products;
+}
+
+function formatDate(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatTime(value) {
+  if (!value) return "-";
+  return String(value).split(".")[0] || "-";
+}
+
+function formatMoney(value, currency) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "-";
+  return `${number.toFixed(2)} ${String(currency).toUpperCase()}`;
 }

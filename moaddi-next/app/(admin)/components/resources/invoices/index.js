@@ -1,4 +1,4 @@
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import { ReceiptText as ReceiptLongIcon } from "lucide-react";
 import list from "./InvoiceList";
 import show from "./InvoiceShow";
 

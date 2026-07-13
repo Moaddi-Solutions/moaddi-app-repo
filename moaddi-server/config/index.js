@@ -13,6 +13,10 @@ module.exports = {
     uri: process.env.MONGODB_URI,
   },
 
+  /** Base URL used to build gift claim links (e.g. https://app.moaddi.com). */
+  giftClaimBaseUrl:
+    process.env.GIFT_CLAIM_BASE_URL || process.env.APP_WEB_URL || "",
+
   mqtt: {
     host: process.env.MQTT_HOST,
     port: parseInt(process.env.MQTT_PORT),

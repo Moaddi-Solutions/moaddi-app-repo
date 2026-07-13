@@ -1,4 +1,4 @@
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import { BellRing as NotificationsIcon } from "lucide-react";
 import list from "./NotificationList";
 
 const name = "notifications";

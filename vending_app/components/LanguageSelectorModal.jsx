@@ -7,6 +7,8 @@ import Modal from "react-native-modal";
 const languages = [
   { code: "en", name: "English" },
   { code: "ar", name: "العربية" },
+  { code: "zh", name: "中文" },
+  { code: "it", name: "Italiano" },
   // Add more languages as needed
 ];
 function LanguageSelectorModal({ isModalVisible = false, setModalVisible }) {

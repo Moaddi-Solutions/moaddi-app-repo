@@ -5,6 +5,7 @@ import { client } from "@/../services/contentClient";
 import * as events from "@/../services/events";
 import revalidateContent from "@/../services/revalidateContent";
 import {
+  activeMachinesAPI,
   addUserAPI,
   allPendingRequests,
   contentAPI,
@@ -88,6 +89,15 @@ export const Fit = {
   },
 };
 const Api = {
+  machinesActive: {
+    getList: (offset, limit) =>
+      getRequest(
+        `${activeMachinesAPI()}?${new URLSearchParams({
+          offset,
+          limit,
+        })}`,
+      ),
+  },
   machines: {
     create: (data) => postRequest(machinesAPI(), data),
     getList: (offset, limit) =>
@@ -147,7 +157,6 @@ const Api = {
     delete: (id) => deleteRequest(userAPI(id)),
   },
   customers: {
-    create: null,
     getList: (offset, limit) =>
       getRequest(
         `${getCustomerAPI()}?${new URLSearchParams({
@@ -408,53 +417,11 @@ const Api = {
         };
       }),
     Hero: {
-      getOne: (locale) =>
-        client(`${locale}HomeBlocks`, "Hero").then(
-          ({ features, background, ...rest }) => ({
-            background: {
-              src: contentAssetUrl(background.src),
-              prevSrc: background.src,
-            },
-            features: features.map(({ icon, ...rest }) => ({
-              icon: {
-                src: contentAssetUrl(icon.src),
-                prevSrc: icon.src,
-              },
-              ...rest,
-            })),
-            ...rest,
-          }),
-        ),
-      update: (
-        locale,
-        { features, background, foreground, image: ___, ...rest },
-      ) =>
-        Api.content
-          .upload(
-            ...features.map((feature) => feature.icon?.rawFile),
-            background?.rawFile,
-            foreground?.rawFile,
-          )
-          .then(({ files }) =>
-            putRequest(contentAPI(`${locale}HomeBlocks/Hero`), {
-              ...rest,
-              features: features.map((feature) => ({
-                ...feature,
-                icon: {
-                  src:
-                    files.find(
-                      ({ originalname }) => originalname == feature.icon.title,
-                    )?.filename ?? feature.icon.prevSrc,
-                },
-              })),
-              background: {
-                src:
-                  files.find(
-                    ({ originalname }) => originalname == background.title,
-                  )?.filename ?? background.prevSrc,
-              },
-            }),
-          ),
+      // Hero is now text/link-only (kicker, title, button, store links, stats,
+      // floatingCards). No images, so no upload/transform is needed.
+      getOne: (locale) => client(`${locale}HomeBlocks`, "Hero"),
+      update: (locale, { image: ___, ...rest }) =>
+        putRequest(contentAPI(`${locale}HomeBlocks/Hero`), rest),
     },
     Gallery: {
       getOne: (locale) =>
@@ -521,6 +488,20 @@ const Api = {
     create: (data) => ({}),
     delete: (id) => ({}),
   },
+  zhBlocks: {
+    getList: (offset, limit) => Api.block.getList("zh", offset, limit),
+    getOne: (id) => Api.block[id].getOne("zh"),
+    update: (id, data) => Api.block[id].update("zh", data),
+    create: (data) => ({}),
+    delete: (id) => ({}),
+  },
+  itBlocks: {
+    getList: (offset, limit) => Api.block.getList("it", offset, limit),
+    getOne: (id) => Api.block[id].getOne("it"),
+    update: (id, data) => Api.block[id].update("it", data),
+    create: (data) => ({}),
+    delete: (id) => ({}),
+  },
   site: {
     getOne: (locale, id) =>
       client(`${locale}Site`).then((data) => ({ id, ...data })),
@@ -537,6 +518,14 @@ const Api = {
   arSite: {
     getOne: (id) => Api.site.getOne("ar", id),
     update: (id, data) => Api.site.update("ar", id, data),
+  },
+  zhSite: {
+    getOne: (id) => Api.site.getOne("zh", id),
+    update: (id, data) => Api.site.update("zh", id, data),
+  },
+  itSite: {
+    getOne: (id) => Api.site.getOne("it", id),
+    update: (id, data) => Api.site.update("it", id, data),
   },
   seo: {
     getOne: (locale, id) =>
@@ -571,6 +560,14 @@ const Api = {
     getOne: (id) => Api.seo.getOne("ar", id),
     update: (id, data) => Api.seo.update("ar", id, data),
   },
+  zhSeo: {
+    getOne: (id) => Api.seo.getOne("zh", id),
+    update: (id, data) => Api.seo.update("zh", id, data),
+  },
+  itSeo: {
+    getOne: (id) => Api.seo.getOne("it", id),
+    update: (id, data) => Api.seo.update("it", id, data),
+  },
   footerBody: {
     getOne: (locale, id) =>
       client(`${locale}FooterBody`).then((data) => ({
@@ -590,6 +587,14 @@ const Api = {
   arFooterBody: {
     getOne: (id) => Api.footerBody.getOne("ar", id),
     update: (id, data) => Api.footerBody.update("ar", id, data),
+  },
+  zhFooterBody: {
+    getOne: (id) => Api.footerBody.getOne("zh", id),
+    update: (id, data) => Api.footerBody.update("zh", id, data),
+  },
+  itFooterBody: {
+    getOne: (id) => Api.footerBody.getOne("it", id),
+    update: (id, data) => Api.footerBody.update("it", id, data),
   },
   headerLinks: {
     getOne: (locale, id) => client(`${locale}HeaderLinks`, id),
@@ -625,6 +630,20 @@ const Api = {
     update: (id, data) => Api.headerLinks.update("ar", id, data),
     delete: (id) => Api.headerLinks.delete("ar", id),
   },
+  zhHeaderLinks: {
+    create: (data) => Api.headerLinks.create("zh", data),
+    getList: (offset, limit) => Api.headerLinks.getList("zh", offset, limit),
+    getOne: (id) => Api.headerLinks.getOne("zh", id),
+    update: (id, data) => Api.headerLinks.update("zh", id, data),
+    delete: (id) => Api.headerLinks.delete("zh", id),
+  },
+  itHeaderLinks: {
+    create: (data) => Api.headerLinks.create("it", data),
+    getList: (offset, limit) => Api.headerLinks.getList("it", offset, limit),
+    getOne: (id) => Api.headerLinks.getOne("it", id),
+    update: (id, data) => Api.headerLinks.update("it", id, data),
+    delete: (id) => Api.headerLinks.delete("it", id),
+  },
   pages: {
     getOne: (locale, id) => client(`${locale}Pages`, id),
     update: (locale, id, { image, id: _, ...data }) =>
@@ -652,6 +671,20 @@ const Api = {
     getOne: (id) => Api.pages.getOne("ar", id),
     update: (id, data) => Api.pages.update("ar", id, data),
     delete: (id) => Api.pages.delete("ar", id),
+  },
+  zhPages: {
+    create: (data) => Api.pages.create("zh", data),
+    getList: (offset, limit) => Api.pages.getList("zh", offset, limit),
+    getOne: (id) => Api.pages.getOne("zh", id),
+    update: (id, data) => Api.pages.update("zh", id, data),
+    delete: (id) => Api.pages.delete("zh", id),
+  },
+  itPages: {
+    create: (data) => Api.pages.create("it", data),
+    getList: (offset, limit) => Api.pages.getList("it", offset, limit),
+    getOne: (id) => Api.pages.getOne("it", id),
+    update: (id, data) => Api.pages.update("it", id, data),
+    delete: (id) => Api.pages.delete("it", id),
   },
   wallets: {
     getList: (offset, limit, filter = {}) => {
@@ -749,21 +782,33 @@ const contentArray = [
   "docs",
   "enBlocks",
   "arBlocks",
+  "zhBlocks",
+  "itBlocks",
   "site",
   "enSite",
   "arSite",
+  "zhSite",
+  "itSite",
   "seo",
   "enSeo",
   "arSeo",
+  "zhSeo",
+  "itSeo",
   "footerBody",
   "enFooterBody",
   "arFooterBody",
+  "zhFooterBody",
+  "itFooterBody",
   "headerLinks",
   "enHeaderLinks",
   "arHeaderLinks",
+  "zhHeaderLinks",
+  "itHeaderLinks",
   "pages",
   "enPages",
   "arPages",
+  "zhPages",
+  "itPages",
 ];
 
 export const dataProviderGenerator = (serverEvents) => {

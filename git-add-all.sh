@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 # Stage all workspace files in the root repo without nested .git metadata.
 # Each project keeps its own .git — we hide it briefly so root git add works.

@@ -1,154 +1,180 @@
-import { Link, useNavigation, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { Briefcase } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    KeyboardAvoidingView,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import PhoneInput from "~/components/PhoneInput";
-import { Text } from "~/components/ui/text";
+import { Button, Card, PhoneInput } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
 import { getSignInErrorMessage } from "~/lib/signInErrors";
 import { getItem, setItem } from "~/lib/utils";
 import { getRequest, postRequest } from "~/services/httpClient";
 import { signInAddress, userAPI } from "~/services/serverAddresses";
+import { colors, space, type as typo } from "~/theme/moaddi";
 
 const SigninAsStaffScreen = () => {
-    const [formData, setFormData] = useState({
-        phone: "",
-        password: "",
+  const [formData, setFormData] = useState({ phone: "", password: "" });
+  const { t } = useTranslation();
+  const { setUser } = useUser() as any;
+  const router = useRouter();
+
+  useEffect(() => {
+    getItem("user").then((user) => {
+      if (!user) return;
+      if (router.canDismiss()) router.dismissAll();
+      else router.replace("/staff");
     });
-    const { t } = useTranslation();
+  }, []);
 
-    const { setUser } = useUser() as any;
-    const router = useRouter();
+  const handleSignin = async () => {
+    try {
+      if (!formData.phone || !formData.password)
+        return alert("error", t("pleaseFillInAllFields"));
+      if (formData.password.length < 6)
+        return alert("error", t("passwordMinLength"));
 
-    useEffect(() => {
-        getItem("user").then((user) => {
-            if (!user) return;
-            router.dismissAll();
-            // console.log("replace from Signin");
-        });
-    }, []);
+      const user = {
+        _id: formData.phone,
+        password: formData.password,
+        rememberMe: false,
+      };
+      const response = await postRequest(signInAddress, user as any);
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-    };
-
-    const handleSignin = async () => {
-        try {
-            if (!formData.phone || !formData.password)
-                return alert("error", "Please fill in all fields");
-            if (formData.password.length < 6)
-                return alert("error", "Password must be at least 6 characters long");
-
-            const user = {
-                _id: formData.phone,
-                password: formData.password,
-                rememberMe: false,
-            };
-
-            const response = await postRequest(signInAddress, user as any);
-
-            if (response.message) {
-                alert("error", getSignInErrorMessage(response.message, t));
-                if ("User not Active." == response.message) {
-                    await setItem("otp", user);
-                    router.navigate("/OTP");
-                }
-                return;
-            }
-
-            setUser(response);
-            await setItem("user", response);
-            alert("success", "Logged in successfully!");
-
-            getRequest(userAPI(response._id)).then(async (response) => {
-                setUser((prev: any) => ({ ...prev, ...response }));
-                router.dismissAll();
-            });
-        } catch (error) {
-            console.log({ error });
-            alert(
-                "error",
-                error instanceof Error ? error.message : t("loginFailed"),
-            );
+      if (response.message) {
+        alert("error", getSignInErrorMessage(response.message, t));
+        if ("User not Active." == response.message) {
+          await setItem("otp", user);
+          router.navigate("/OTP");
         }
-    };
+        return;
+      }
 
-    const phoneInput = {
-        formData,
-        setFormData,
-    };
-    const passwordInput = {
-        formData,
-        setFormData,
-    };
+      setUser(response);
+      await setItem("user", response);
+      alert("success", t("loggedInSuccessfully"));
 
-    return (
-        <View className="flex-1 px-6">
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    <View className="items-center mb-10">
-                        <Text className="text-foreground text-2xl font-bold">
-                            {t("login")}
-                        </Text>
-                        <Text className="text-muted-foreground text-sm">
-                            {t("loginToYourAccount")}
-                        </Text>
-                    </View>
+      getRequest(userAPI(response._id)).then(async (r) => {
+        setUser((prev: any) => ({ ...prev, ...r }));
+        if (router.canDismiss()) router.dismissAll();
+        else router.replace("/staff");
+      });
+    } catch (error) {
+      alert("error", error instanceof Error ? error.message : t("loginFailed"));
+    }
+  };
 
-                    <View className="border border-muted rounded-2xl p-8">
-                        <View className="mb-5">
-                            <Text className="mb-2">{t("phone")}</Text>
-                            <PhoneInput {...phoneInput} />
-                        </View>
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DetailHeader
+        title={t("signInAsStaff")}
+        onBack={router.canGoBack() ? () => router.back() : undefined}
+      />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: space.gutter,
+            paddingVertical: 32,
+            gap: 24,
+          }}
+        >
+          <View style={{ alignItems: "center", gap: 10 }}>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 20,
+                backgroundColor: colors.surfaceInverse,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Briefcase size={30} color="#fff" />
+            </View>
+            <Text style={{ ...typo.caption, color: colors.textMuted }}>
+              {t("forVendorsAndOperators")}
+            </Text>
+          </View>
 
-                        <View className="mb-5">
-                            <Text className="mb-2">{t("password")}</Text>
-                            <PasswordInput {...passwordInput} />
-                        </View>
+          <Card raised radius="xl" style={{ padding: 24 }}>
+            <View style={{ gap: 16 }}>
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    ...typo.bodyStrong,
+                    fontSize: 13,
+                    color: colors.textHeading,
+                  }}
+                >
+                  {t("phone")}
+                </Text>
+                <PhoneInput
+                  value={formData.phone}
+                  onChangeText={(full) =>
+                    setFormData((p) => ({ ...p, phone: full }))
+                  }
+                />
+              </View>
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    ...typo.bodyStrong,
+                    fontSize: 13,
+                    color: colors.textHeading,
+                  }}
+                >
+                  {t("password")}
+                </Text>
+                <PasswordInput formData={formData} setFormData={setFormData} />
+              </View>
 
-                        <TouchableOpacity
-                            className="bg-foreground rounded-xl p-3 mt-2 items-center "
-                            onPress={handleSignin}
-                        >
-                            <Text className="text-lg font-bold text-background">
-                                {t("login")}
-                            </Text>
-                        </TouchableOpacity>
+              <Button fullWidth onPress={handleSignin}>
+                {t("login")}
+              </Button>
 
-                        <View className="mt-5 flex items-center">
-                            <Text>{t("dontHaveAnAccount")} </Text>
-                            <Link href="/Signup">
-                                <Text className="text-indigo-500">{t("signUp")}</Text>
-                            </Link>
-                        </View>
-                        <View className="mt-5 flex items-center">
-                            <Text>{t("areYouCustomer")} </Text>
-                            <TouchableOpacity onPress={() => router.replace("/Signin")}>
-                                <Text className="text-indigo-500">{t("signInAsCustomer")}</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </View>
-    );
+              <View
+                style={{
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 4,
+                }}
+              >
+                <Text
+                  onPress={() => router.replace("/Signin")}
+                  style={{
+                    ...typo.caption,
+                    color: colors.textBrand,
+                    fontWeight: "600",
+                  }}
+                >
+                  {t("signInAsCustomer")}
+                </Text>
+                <Text style={{ ...typo.caption, color: colors.textMuted }}>
+                  {t("areYouCustomer")}
+                </Text>
+              </View>
+            </View>
+          </Card>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
 };
-
-const styles = StyleSheet.create({
-    scrollContainer: {
-        flexGrow: 1,
-        justifyContent: "center",
-        padding: 20,
-    },
-});
 
 export default SigninAsStaffScreen;

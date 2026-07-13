@@ -1,40 +1,28 @@
-import { Box } from "@mui/material";
+import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
+import AdminList from "@/(admin)/components/kit/AdminList";
 import {
-  CreateButton,
-  Datagrid,
-  DeleteButton,
-  EditButton,
-  List,
-  ShowButton,
-  TextField,
-  TopToolbar,
-  useTranslate,
-} from "react-admin";
+  AdminCreateButton,
+  AdminDeleteButton,
+  AdminEditButton,
+} from "@/(admin)/components/kit/AdminUI";
 
-const ListActions = () => {
-  return <TopToolbar>{<CreateButton />}</TopToolbar>;
-};
+const ListActions = () => <AdminCreateButton />;
 
-export const docsListItems = [<TextField source="id" key="id" label="Slug" />];
+export const docsListItems = [{ key: "id", label: "Slug" }];
 
-const DocsList = () => {
-  const t = useTranslate();
-
-  return (
-    <List
-      // filters={filters}
-      sort={{ field: "name", order: "DESC" }}
-      actions={<ListActions />}
-    >
-      <Datagrid rowClick="show" bulkActionButtons={false}>
-        {docsListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-    </List>
-  );
-};
+const DocsList = () => (
+  <AdminList sort={{ field: "name", order: "DESC" }} actions={<ListActions />}>
+    <AdminShadcnTable
+      columns={docsListItems}
+      rowClick="show"
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+  </AdminList>
+);
 
 export default DocsList;

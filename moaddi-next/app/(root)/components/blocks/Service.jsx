@@ -1,4 +1,4 @@
-import { Button } from "@/../components/ui/button";
+﻿import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
 import Link from "next/link";
 
@@ -40,7 +40,7 @@ const Service = ({
           {/* <Blocks content={header} /> */}
           <h5>{heading[0]}</h5>
           <h6>{heading[1]}</h6>
-          <ul className="text-primary ms-5 mt-2 list-disc">
+          <ul className="text-primary-text ms-5 mt-2 list-disc">
             {services.map(({ title, page: { url } }, i) => (
               <li key={i}>
                 <Link href={url ?? ""}>{title}</Link>

@@ -1,4 +1,4 @@
-import HolidayVillageIcon from "@mui/icons-material/HolidayVillage";
+import { Refrigerator } from "lucide-react";
 import create from "./MachineCreate";
 import edit from "./MachineEdit";
 import list from "./MachineList";
@@ -10,6 +10,6 @@ export default ({
   list,
   show,
   edit,
-  icon: HolidayVillageIcon,
+  icon: Refrigerator,
   recordRepresentation: "name",
 });

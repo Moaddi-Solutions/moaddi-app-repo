@@ -90,6 +90,19 @@ export interface IPurchaseItem {
   boxStatus: boolean;
 }
 
+/**
+ * Gift-a-purchase: bearer claim link so the buyer or a recipient can open the
+ * box. `authorizedOpeners` holds ids allowed to open besides `customerId`.
+ */
+export interface IGift {
+  isGift?: boolean;
+  claimToken?: string | null;
+  sharedAt?: Date;
+  expiresAt?: Date;
+  authorizedOpeners?: string[];
+  claimedAt?: Date;
+}
+
 export interface IPurchase {
   _id: string;
   customerId: string;
@@ -108,6 +121,8 @@ export interface IPurchase {
   stripeNotified?: boolean;
   /** true after /purchases/moyasarIsPaymentDone completed client-side notifications */
   moyasarNotified?: boolean;
+  /** Gift-a-purchase claim link + authorized openers (see IGift). */
+  gift?: IGift;
   created: Date;
   updated?: Date;
 }
@@ -200,6 +215,10 @@ export interface IUser {
   preferredCurrency?: string;
   /** Additional registered numbers; `_id` is the primary login key. */
   phoneNumbers?: string[];
+  /** Guest checkout: guests get a synthetic `_id`; `phone` holds the collected number (normalized) for merge-by-phone. */
+  isGuest?: boolean;
+  phone?: string;
+  email?: string;
   isActive: boolean;
   isDeleted: boolean;
   created: Date;

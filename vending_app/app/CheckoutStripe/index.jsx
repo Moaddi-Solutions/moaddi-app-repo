@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { ActivityIndicator, ScrollView, View, Text } from "react-native";
+import { Loader } from "~/components/moaddi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -12,6 +13,9 @@ import {
 import { postRequestPayment } from "~/services/httpClient";
 import { purchaseAPI } from "~/services/serverAddresses";
 import alert from "~/lib/alert";
+import { goToOpenAfterPayment } from "~/lib/goToOpenAfterPayment";
+import { useUser } from "~/context/UserContext";
+import { useMachine } from "~/context/MachineContext";
 import { Button } from "~/components/ui/button";
 
 import {
@@ -23,6 +27,8 @@ import {
 export default function CheckoutStripeScreen({ user, finalizePayment: finalizePaymentProp }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { setUser } = useUser();
+  const { setMachine } = useMachine();
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
@@ -106,8 +112,8 @@ export default function CheckoutStripeScreen({ user, finalizePayment: finalizePa
       alert("success", t("paymentConfirmed"), t("orderBeingPrepared"));
 
       setTimeout(() => {
-        console.log("🔐 [STRIPE] Redirecting to success...");
-        router.navigate("/CheckoutStripe/success");
+        console.log("🔐 [STRIPE] Opening box screen...");
+        goToOpenAfterPayment(response, { setUser, setMachine, router });
       }, 1500);
     } catch (error) {
       console.error("🔐 [STRIPE] Payment finalization error:", error);
@@ -137,12 +143,7 @@ export default function CheckoutStripeScreen({ user, finalizePayment: finalizePa
   };
 
   if (loading || !paymentConfig) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-600">{t("loadingPaymentForm")}</Text>
-      </View>
-    );
+    return <Loader flex message={t("loadingPaymentForm")} />;
   }
 
   const publishableKey = paymentConfig.publishableKey || getStripePublishableKey();

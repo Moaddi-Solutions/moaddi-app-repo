@@ -24,6 +24,15 @@ export function signUpAddress() {
 export function otpAddress() {
   return `${address()}users/otp`;
 }
+export function socialSignInAddress() {
+  return `${address()}users/social`;
+}
+export function guestSignInAddress() {
+  return `${address()}users/guest`;
+}
+export function guestMeAddress() {
+  return `${address()}users/guest/me`;
+}
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }
@@ -44,6 +53,9 @@ export function groupsAPI() {
 }
 export function unassignedMachinesAPI() {
   return `${machinesAPI()}/all`;
+}
+export function activeMachinesAPI() {
+  return `${machinesAPI()}/active`;
 }
 export function productAPI() {
   return `${address()}products`;
@@ -95,6 +107,14 @@ export const boxUpdateAPI = (id) =>
 export const unassignBoxAPI = (id) =>
   `${address()}boxes/machine/${enc(id)}/unassign`;
 export const productsAPI = (id) => `${address()}products/${enc(id)}`;
+
+// Gift-a-purchase (see moaddi-server/app/routes/controllers/gifts.ts).
+export const giftEnableAPI = (purchaseId) =>
+  `${address()}purchases/${enc(purchaseId)}/gift`;
+export const giftPreviewAPI = (claimToken) =>
+  `${address()}gifts/${enc(claimToken)}`;
+export const giftClaimAPI = (claimToken) =>
+  `${address()}gifts/${enc(claimToken)}/claim`;
 
 export function paymentProvidersAPI() {
   return `${address()}paymentProviders`;

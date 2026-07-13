@@ -1853,12 +1853,6 @@
         "url": "/"
       },
       {
-        "id": "twitter",
-        "platform": "twitter",
-        "__typename": "ComponentSharedSocialMedia",
-        "url": "/"
-      },
-      {
         "id": "snapchat",
         "platform": "snapchat",
         "__typename": "ComponentSharedSocialMedia",

@@ -1,63 +1,34 @@
-import { Box } from "@mui/material";
-import {
-  BooleanField,
-  ChipField,
-  CreateButton,
-  Datagrid,
-  DeleteButton,
-  EditButton,
-  ImageField,
-  List,
-  ReferenceManyField,
-  SingleFieldList,
-  TextField,
-  TextInput,
-  TopToolbar,
-  useTranslate,
-} from "react-admin";
-
-const filters = [<TextInput source="q" label="Search" alwaysOn />];
-
-const ListActions = () => {
-  return (
-    <TopToolbar>
-      <CreateButton />
-    </TopToolbar>
-  );
-};
+import AdminList from "@/(admin)/components/kit/AdminList";
+import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
+import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
 
 export const GroupListItems = [
-  <TextField source="name" key="name" />,
-  <ReferenceManyField
-    key="groupId"
-    reference="machines"
-    label="Machines"
-    target="groupId"
-  >
-    <SingleFieldList linkType="show">
-      <ChipField source="name" key="name" />
-    </SingleFieldList>
-  </ReferenceManyField>,
+  { key: "name", label: "Name" },
+  {
+    key: "machines",
+    label: "Machines",
+    render: (record) => formatRelated(record.machines),
+  },
 ];
 
-const GroupList = () => {
-  const t = useTranslate();
+const GroupList = () => (
+  <AdminList sort={{ field: "name", order: "DESC" }}>
+    <AdminShadcnTable
+      columns={GroupListItems}
+      rowClick="show"
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+  </AdminList>
+);
 
-  return (
-    <List
-      // filters={filters}
-      sort={{ field: "name", order: "DESC" }}
-      actions={<ListActions />}
-    >
-      <Datagrid rowClick="show" bulkActionButtons={false}>
-        {GroupListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-    </List>
-  );
-};
+function formatRelated(items) {
+  if (!Array.isArray(items) || !items.length) return "-";
+  return items.map((item) => item.name ?? item.id ?? item._id).join(", ");
+}
 
 export default GroupList;

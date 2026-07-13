@@ -1,4 +1,4 @@
-import VibrationIcon from "@mui/icons-material/Vibration";
+import { Layers } from "lucide-react";
 import create from "./GroupCreate";
 import edit from "./GroupEdit";
 import list from "./GroupList";
@@ -10,6 +10,6 @@ export default {
   list,
   show,
   edit,
-  icon: VibrationIcon,
+  icon: Layers,
   recordRepresentation: "name",
 };

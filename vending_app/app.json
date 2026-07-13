@@ -19,11 +19,18 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.moaddi",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "We use Bluetooth to connect to vending locks.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
       },
-      "buildNumber": "7"
+      "buildNumber": "7",
+      "associatedDomains": [
+        "applinks:server.moaddi-app.com"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -38,6 +45,23 @@
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
         "android.permission.BLUETOOTH_CONNECT"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "server.moaddi-app.com",
+              "pathPrefix": "/gift"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {
@@ -59,6 +83,13 @@
       ],
       "expo-localization",
       "expo-router",
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.779636724237-ka2k6s87pglg66rmiqv8gehjru9kevf3"
+        }
+      ],
       [
         "expo-camera",
         {
@@ -74,7 +105,14 @@
             "minSdkVersion": 26,
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0"
+            "buildToolsVersion": "35.0.0",
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "extraPods": [
+              { "name": "GoogleUtilities", "modular_headers": true },
+              { "name": "RecaptchaInterop", "modular_headers": true }
+            ]
           }
         }
       ],

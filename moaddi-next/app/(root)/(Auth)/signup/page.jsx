@@ -1,7 +1,5 @@
 import { SignUpForm } from "@/(root)/components/UserAuthForm";
-import { Container } from "@/../components/ui/container";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
 export const metadata = {
   title: "Authentication",
@@ -12,40 +10,32 @@ export default async function SignUpPage() {
   const t = await getTranslations("");
 
   return (
-    <>
-      <Container className="relative container my-40 flex-col items-center justify-center">
-        <div className="lg:p-8">
-          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-            <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                {t("SignUp.create")}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {t("SignUp.input")}
-              </p>
-            </div>
-            <SignUpForm />
-            <p className="text-muted-foreground px-8 text-center text-sm">
-              {t("Auth.agree")}
-              <Link
-                href="/terms"
-                className="hover:text-primary underline underline-offset-4"
-              >
-                {" "}
-                {t("Auth.terms")}
-              </Link>{" "}
-              {t("Auth.and")}{" "}
-              <Link
-                href="/privacy"
-                className="hover:text-primary underline underline-offset-4"
-              >
-                {t("Auth.privacy")}
-              </Link>
-              .
-            </p>
-          </div>
+    <main className="flex min-h-[calc(100vh-9rem)] items-start justify-center px-4 py-10 sm:py-14">
+      <section className="w-full max-w-[440px] rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-[0_18px_50px_rgba(16,40,46,0.10)] sm:p-7 dark:shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+        <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+          <svg
+            aria-hidden="true"
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
         </div>
-      </Container>
-    </>
+        <div className="mb-5 flex flex-col gap-2">
+          <h1 className="text-[1.35rem] leading-tight font-extrabold tracking-normal">
+            {t("SignUp.create")}
+          </h1>
+          <p className="max-w-[34ch] text-sm leading-6 text-muted-foreground">
+            {t("SignUp.input")}
+          </p>
+        </div>
+        <SignUpForm variant="card" />
+      </section>
+    </main>
   );
 }

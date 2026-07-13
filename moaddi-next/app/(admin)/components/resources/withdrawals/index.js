@@ -1,4 +1,4 @@
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { Landmark as AccountBalanceIcon } from "lucide-react";
 import create from "./WithdrawalCreate";
 import list from "./WithdrawalList";
 import show from "./WithdrawalShow";

@@ -1,21 +1,16 @@
 "use client";
 
-import { normalizeDashboardRole } from "@/../lib/dashboard-role";
-import { getLocalStorageItem } from "@/../lib/utils";
-import { Box, Typography } from "@mui/material";
+import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { AdminCreateButton } from "@/(admin)/components/kit/AdminUI";
 import {
   AutocompleteInput,
-  Create,
-  CreateButton,
-  minValue,
   NumberInput,
   ReferenceInput,
-  required,
-  SimpleForm,
   TextInput,
-} from "react-admin";
-
-const Title = () => <span>Request withdrawal</span>;
+} from "@/(admin)/components/kit/inputs/AdminInputs";
+import { normalizeDashboardRole } from "@/../lib/dashboard-role";
+import { getLocalStorageItem } from "@/../lib/utils";
+import { minValue, required } from "ra-core";
 
 export default function WithdrawalCreate() {
   const raw = JSON.parse(
@@ -27,8 +22,8 @@ export default function WithdrawalCreate() {
   const isStaffAdmin = role === "Admin" || role === "SuperAdmin";
 
   return (
-    <Create title={<Title />} redirect="show">
-      <SimpleForm>
+    <AdminCreate title="Request withdrawal" redirect="show">
+      <AdminSimpleForm>
         {isStaffAdmin ? (
           <ReferenceInput source="vendorId" reference="vendors" perPage={100}>
             <AutocompleteInput
@@ -67,20 +62,20 @@ export default function WithdrawalCreate() {
           label="SWIFT (optional)"
           fullWidth
         />
-      </SimpleForm>
-    </Create>
+      </AdminSimpleForm>
+    </AdminCreate>
   );
 }
 
 /** Shown on empty withdrawal list (vendors get a clear CTA). */
 export function WithdrawalEmpty() {
   return (
-    <Box sx={{ textAlign: "center", py: 4 }}>
-      <Typography color="text.secondary" gutterBottom>
+    <div className="rounded-2xl bg-card p-8 text-center ring-1 ring-border/70">
+      <p className="mx-auto mb-4 max-w-xl text-sm font-semibold text-muted-foreground">
         No withdrawal requests yet. Submit a request; it stays Pending until an
         admin approves or rejects it.
-      </Typography>
-      <CreateButton label="Request withdrawal" />
-    </Box>
+      </p>
+      <AdminCreateButton label="Request withdrawal" />
+    </div>
   );
 }

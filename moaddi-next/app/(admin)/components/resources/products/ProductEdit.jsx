@@ -1,21 +1,14 @@
-import { Box, Typography } from "@mui/material";
-import React from "react";
 import {
   BooleanInput,
-  Edit,
-  ImageField,
   ImageInput,
   NumberInput,
   SelectInput,
-  SimpleForm,
   TextInput,
-  useRecordContext,
-  useGetList,
-} from "react-admin";
+} from "@/(admin)/components/kit/inputs/AdminInputs";
+import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import { useGetList, useRecordContext } from "ra-core";
 
-const CurrencyInput = ({
-  defaultValue,
-}) => {
+const CurrencyInput = ({ defaultValue }) => {
   const { data, isLoading } = useGetList("currencies", {
     pagination: { page: 1, perPage: 500 },
   });
@@ -38,19 +31,12 @@ const StoredUsdHint = () => {
   const u = record?.usdPrice;
   if (!u || typeof u !== "object") return null;
   return (
-    <Box sx={{ mt: 1, mb: 2 }}>
-      <Typography variant="caption" color="text.secondary" component="div">
-        Stored USD (updates when you save): original {u.originalPrice ?? "—"},
-        tax {u.tax ?? "—"}, sale {u.salePrice ?? "—"}
-        {u.campaignPrice != null ? `, campaign ${u.campaignPrice}` : ""}
-      </Typography>
-    </Box>
+    <p className="text-xs font-medium text-muted-foreground sm:col-span-2">
+      Stored USD (updates when you save): original {u.originalPrice ?? "—"},
+      tax {u.tax ?? "—"}, sale {u.salePrice ?? "—"}
+      {u.campaignPrice != null ? `, campaign ${u.campaignPrice}` : ""}
+    </p>
   );
-};
-
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Edit Product {record ? `"${record.name}"` : ""}</span>;
 };
 
 export const ProductEditItems = [
@@ -71,27 +57,16 @@ export const ProductEditItems = [
     min={0}
     step={0.01}
   />,
-  <ImageInput
-    sx={{
-      ".previews": {
-        display: "flex",
-        justifyContent: "center",
-      },
-    }}
-    key="image"
-    source="image"
-  >
-    <ImageField source="src" title="title" />
-  </ImageInput>,
+  <ImageInput key="image" source="image" />,
   <BooleanInput key="isActive" source="isActive" label="Active" />,
   <BooleanInput key="isFeatured" source="isFeatured" label="Featured" />,
   <StoredUsdHint key="usdHint" />,
 ];
 
 const ProductEdit = () => (
-  <Edit title={<Title />}>
-    <SimpleForm>{ProductEditItems}</SimpleForm>
-  </Edit>
+  <AdminEdit>
+    <AdminSimpleForm showDelete>{ProductEditItems}</AdminSimpleForm>
+  </AdminEdit>
 );
 
 export default ProductEdit;

@@ -1,17 +1,10 @@
-// screens/SettingsScreen.tsx
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { Bell, Globe, Info, Moon, Shield, UserX } from "lucide-react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Linking,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Linking, ScrollView, TextInput, View } from "react-native";
+import { Card, ListItem, listItemIconColor, Separator, Switch } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import {
   AlertDialog,
@@ -23,94 +16,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
+import i18n from "~/lib/i18n";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { removeItem, setItem } from "~/lib/utils";
-import { deleteRequest } from "~/services/httpClient";
-import { userAPI } from "~/services/serverAddresses";
-
-const SettingItem = ({
-  title,
-  subtitle,
-  onPress,
-  rightComponent,
-  showBorder = false,
-}: any) => (
-  <TouchableOpacity
-    className={`${showBorder ? "border-b border-b-muted-foreground" : ""}`}
-    style={styles.settingItem}
-    onPress={onPress}
-  >
-    <View style={styles.settingContent}>
-      <Text>{title}</Text>
-      {subtitle && <Text>{subtitle}</Text>}
-    </View>
-    {rightComponent || <Text className="text-2xl">›</Text>}
-  </TouchableOpacity>
-);
-
-const Preferences = () => {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const { setColorScheme, isDarkColorScheme } = useColorScheme();
-  const { t } = useTranslation();
-  const [isEnabled, setIsEnabled] = useState(isDarkColorScheme);
-
-  const handleColorChange = (value: boolean) => {
-    setIsEnabled(value);
-    const newTheme = isDarkColorScheme ? "light" : "dark";
-    setColorScheme(newTheme);
-    setAndroidNavigationBar(newTheme);
-    setItem("theme", newTheme);
-  };
-
-  const languageSelectorModal = {
-    isModalVisible,
-    setModalVisible,
-  };
-  return (
-    <View style={styles.section}>
-      <LanguageSelectorModal {...languageSelectorModal} />
-
-      <Text>{t("preferences")}</Text>
-      {/* <SettingItem
-        title="Dark Mode"
-        subtitle="Switch to dark theme"
-        rightComponent={
-          <Switch
-            value={isEnabled}
-            onValueChange={handleColorChange}
-            trackColor={{ false: "#e0e0e0", true: "#b149de" }}
-            thumbColor={isDarkColorScheme ? "#fff" : "#f4f3f4"}
-          />
-        }
-      /> */}
-      <SettingItem
-        title={t("language")}
-        subtitle={t("selectYouLanguage")}
-        onPress={() => setModalVisible(true)}
-      />
-    </View>
-  );
-};
+import { putRequest } from "~/services/httpClient";
+import { userToggleAPI } from "~/services/serverAddresses";
+import { colors, space } from "~/theme/moaddi";
 
 const SettingsScreen = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { user, clearUser } = useUser();
   const { clearMachine } = useMachine();
+  const { setColorScheme, isDarkColorScheme } = useColorScheme();
+
+  const [isModalVisible, setModalVisible] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [deletable, setDeletable] = useState(false);
-  const handleInputChange = (value: string) => {
-    if (value == "Delete") setDeletable(true);
-    else setDeletable(false);
+  const [confirmable, setConfirmable] = useState(false);
+
+  const handleColorChange = (value: boolean) => {
+    const newTheme = value ? "dark" : "light";
+    setColorScheme(newTheme);
+    setAndroidNavigationBar(newTheme);
+    setItem("theme", newTheme);
   };
-  const deleteAccount = () => {
+
+  const deactivateAccount = () => {
     // @ts-ignore
-    deleteRequest(userAPI(user._id)).then(async (response) => {
+    putRequest(userToggleAPI(user._id)).then(async (response) => {
       if (response) {
         // @ts-ignore
         await clearUser();
@@ -121,130 +58,101 @@ const SettingsScreen = () => {
       }
     });
   };
-  // useEffect(() => {
-  //   getItem("user").then((user) => {
-  //     if (user) return;
-  //     router.dismissAll();
-  //     // console.log("replace from SettingScreen");
-  //   });
-  // }, []);
-  const openPrivacyPolicy = () => {
-    Linking.openURL("https://moaddi-app.com/privacy-policy");
-  };
+
+  const currentLang = i18n.language?.startsWith("ar") ? "العربية" : "English";
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content}>
-        {/* Account Section */}
-        {user && (
-          <View style={styles.section}>
-            <Text>{t("account")}</Text>
-            <SettingItem
-              title={t("profile")}
-              subtitle={t("editYourPersonalInformation")}
-              onPress={() => router.navigate("/ProfileSetting")}
-            />
-          </View>
-        )}
-        {/* Preferences Section */}
-        <Preferences />
-        {/* Support Section */}
-        <View style={styles.section}>
-          <Text>{t("support")}</Text>
-          <SettingItem
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <LanguageSelectorModal isModalVisible={isModalVisible} setModalVisible={setModalVisible} />
+      <DetailHeader
+        title={t("settings")}
+        onBack={() => (router.canGoBack() ? router.back() : router.navigate("/"))}
+      />
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: space.gutter, gap: 16 }}
+      >
+        <Card padded={false} style={{ paddingHorizontal: 12 }}>
+          <ListItem
+            icon={<Globe size={18} color={listItemIconColor()} />}
+            title={t("language")}
+            subtitle={currentLang}
+            onPress={() => setModalVisible(true)}
+          />
+          <Separator />
+          <ListItem
+            icon={<Moon size={18} color={listItemIconColor()} />}
+            title={t("darkMode")}
+            chevron={false}
+            trailing={<Switch checked={isDarkColorScheme} onChange={handleColorChange} />}
+          />
+          <Separator />
+          <ListItem
+            icon={<Bell size={18} color={listItemIconColor()} />}
+            title={t("notifications")}
+            subtitle={t("orderUpdatesViaWhatsapp")}
+            chevron={false}
+          />
+        </Card>
+
+        <Card padded={false} style={{ paddingHorizontal: 12 }}>
+          <ListItem
+            icon={<Shield size={18} color={listItemIconColor()} />}
             title={t("privacyPolicy")}
-            subtitle={t("readOurPrivacyPolicy")}
-            onPress={openPrivacyPolicy}
-            showBorder
+            onPress={() => Linking.openURL("https://moaddi-app.com/privacy-policy")}
           />
-          <SettingItem
-            title={t("termsOfService")}
-            subtitle={t("readOurTermsOfService")}
-            onPress={() =>
-              Alert.alert(t("terms"), t("navigateToTermsOfService"))
-            }
+          <Separator />
+          <ListItem
+            icon={<Info size={18} color={listItemIconColor()} />}
+            title={t("aboutMoaddi")}
+            subtitle={t("versionLabel", { version: "4.3.0" })}
+            chevron={false}
           />
-        </View>
-        <View className=" px-6 mt-4">
-          <Button
-            variant="outline"
-            className="my-4"
-            onPress={() => setAlertOpen(true)}
-          >
-            <Text className="text-lg">{t("deleteAccount")}</Text>
-          </Button>
-          <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t("areYouSureToDeleteAccount")}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("typeDelete")}
-                </AlertDialogDescription>
-                <TextInput
-                  className="rounded-lg bg-muted text-foreground px-4 py-3 text-sm"
-                  // value={formData[name]}
-                  onChangeText={(value) => handleInputChange(value)}
-                  // {...rest}
-                />
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>
-                  <Text>{t("cancel")}</Text>
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onPress={deleteAccount}
-                  variant={deletable ? "destructive" : "secondary"}
-                  disabled={!deletable}
-                >
-                  <Text>{t("delete")}</Text>
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </View>
+        </Card>
+
+        {user ? (
+          <Card padded={false} style={{ paddingHorizontal: 12 }}>
+            <ListItem
+              icon={<UserX size={18} color={listItemIconColor(true)} />}
+              title={t("deactivateAccount")}
+              subtitle={t("deactivateAccountHint")}
+              destructive
+              chevron={false}
+              onPress={() => setAlertOpen(true)}
+            />
+          </Card>
+        ) : null}
       </ScrollView>
-    </SafeAreaView>
+
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("areYouSureToDeactivateAccount")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("typeDeactivate")}</AlertDialogDescription>
+            <TextInput
+              className="rounded-lg bg-muted text-foreground px-4 py-3 text-sm"
+              onChangeText={(value) => setConfirmable(value === "Deactivate")}
+            />
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>{t("cancel")}</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onPress={deactivateAccount}
+              variant={confirmable ? "destructive" : "secondary"}
+              disabled={!confirmable}
+            >
+              <Text>{t("deactivate")}</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    marginTop: 20,
-    marginHorizontal: 20,
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  minSection: {
-    marginTop: 5,
-    marginHorizontal: 20,
-    // borderRadius: 10,
-    overflow: "hidden",
-  },
-  settingItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    // borderBottomColor: "#f0f0f0",
-  },
-  settingContent: {
-    flex: 1,
-  },
-});
 
 export default SettingsScreen;

@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-import { Badge } from "@/../components/ui/badge";
-import { formatProductPrice } from "@/../constants/currency";
+import { Avatar, AvatarFallback } from "@/../components/ui/avatar";
+import { Button } from "@/../components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,218 +9,315 @@ import {
   CardHeader,
   CardTitle,
 } from "@/../components/ui/card";
-import { useSearchParams } from "next/navigation";
-
 import { useCart } from "@/(root)/context/cart-provider";
 import { useGetManyReference } from "@/(root)/hook/ra/useGetManyReference";
+import rtlRules from "@/../i18n/rtl";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/../components/ui/tabs";
-import { CreditCard, Package, Settings, ShoppingBag, User } from "lucide-react";
-import { useState } from "react";
+  ChevronLeft,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  LogOut,
+  Pencil,
+  ReceiptText,
+} from "lucide-react";
+import Cookies from "js-cookie";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import PurchaseHistory from "./purchase-history";
 import UserProfileSettings from "./user-profile-settings";
 
 export default function SettingsPage({ preferredCurrency }) {
-  const { user } = useCart();
-  const currency = preferredCurrency ?? user?.preferredCurrency ?? "SAR";
+  const { user, setUser } = useCart();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState(
-    searchParams.get("tab") ?? "overview",
-  );
-  const settingsCards = [
-    {
-      id: "profile",
-      title: "Profile Settings",
-      description: "Manage your personal information and account details",
-      icon: User,
-      badge: null,
-      action: () => setActiveTab("profile"),
-    },
-    {
-      id: "purchases",
-      title: "Purchase History",
-      description: "View your order history and track purchases",
-      icon: ShoppingBag,
-      badge: "6 Orders",
-      action: () => setActiveTab("purchases"),
-    },
-  ];
+  const initialTab = normalizeTab(searchParams.get("tab"));
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const currency = preferredCurrency ?? user?.preferredCurrency ?? "SAR";
+  const locale = useLocale();
+  const t = useTranslations("Profile");
+  const BackChevron = rtlRules[locale] ? ChevronRight : ChevronLeft;
+
+  const openDetail = (tab) => {
+    setActiveTab(tab);
+    router.replace(`/profile${tab === "overview" ? "" : `?tab=${tab}`}`, {
+      scroll: false,
+    });
+  };
+
+  const signOut = () => {
+    Cookies.remove("user");
+    localStorage.removeItem("user");
+    setUser(null);
+    router.replace("/signin");
+  };
+
+  if (!user) {
+    return (
+      <main className="mx-auto flex min-h-[55vh] max-w-3xl items-center px-4 py-16">
+        <Card className="w-full border-border/80 bg-card">
+          <CardHeader>
+            <CardTitle>{t("title")}</CardTitle>
+            <CardDescription>
+              {t("signedOutDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/signin">{t("signIn")}</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
 
   return (
-    <div className="container mx-auto max-w-6xl p-6">
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-2"
-      >
-        <div className="mb-3 flex items-center gap-2">
-          <Settings className="h-6 w-6" />
-          <h1 className="text-3xl font-bold">Settings</h1>
-        </div>
-
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="purchases">Purchases</TabsTrigger>
-          {/* <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger> */}
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <Card className="pb-6">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">
-                Account Overview
-              </CardTitle>
-              <CardDescription>
-                Quick access to your account settings and information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {settingsCards.map((card) => {
-                  const IconComponent = card.icon;
-                  return (
-                    <Card
-                      onClick={card.action}
-                      key={card.id}
-                      className="cursor-pointer transition-shadow hover:shadow-md"
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex flex-1 items-start gap-3">
-                            <div className="bg-primary/10 rounded-lg p-2">
-                              <IconComponent className="text-primary h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="text-sm font-semibold">
-                                {card.title}
-                              </h3>
-                              <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
-                                {card.description}
-                              </p>
-                              {card.badge && (
-                                <Badge
-                                  variant="secondary"
-                                  className="mt-2 text-xs"
-                                >
-                                  {card.badge}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          {/* <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-1"
-                            onClick={card.action}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button> */}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-          {/* Quick Stats */}
-          {user && <QuickStats user={user} preferredCurrency={currency} />}
-        </TabsContent>
-
-        <TabsContent value="profile">
-          <UserProfileSettings />
-        </TabsContent>
-
-        <TabsContent value="purchases">
-          <PurchaseHistory preferredCurrency={currency} />
-        </TabsContent>
-
-        <TabsContent value="payment">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>
-                Manage your payment methods and billing information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Payment methods management coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Configure how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Notification settings coming soon...
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    <main className="mx-auto w-full max-w-[1120px] px-4 py-8 sm:px-6 lg:py-10">
+      {activeTab === "overview" ? (
+        <ProfileOverview
+          user={user}
+          onOpenDetail={openDetail}
+          onSignOut={signOut}
+        />
+      ) : (
+        <section className="flex flex-col gap-5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-fit gap-1 rounded-full font-bold text-muted-foreground hover:text-foreground"
+            onClick={() => openDetail("overview")}
+          >
+            <BackChevron className="size-4" aria-hidden="true" />
+            {t("backToProfile")}
+          </Button>
+          {activeTab === "profile" ? (
+            <UserProfileSettings />
+          ) : (
+            <PurchaseHistory preferredCurrency={currency} />
+          )}
+        </section>
+      )}
+    </main>
   );
 }
 
-const QuickStats = ({ user, preferredCurrency = "SAR" }) => {
-  const { isPending, data, total } = useGetManyReference("purchases", {
+function ProfileOverview({ user, onOpenDetail, onSignOut }) {
+  const t = useTranslations("Profile");
+  const { isPending, data = [], total = 0 } = useGetManyReference("purchases", {
     id: user._id,
     target: "customerId",
     pagination: { page: 1, perPage: 100 },
   });
-  const totalSpent = !isPending
-    ? data
-        .reduce((sum, purchase) => parseFloat(purchase.price) + sum, 0)
-        .toFixed(2)
-    : null;
+
+  const orders = data.length > 0 ? data : user.purchase ? [user.purchase] : [];
+  const lastOrder = useMemo(() => getLastOrder(orders, user.purchase), [orders, user.purchase]);
+  const orderCount = total || orders.length;
+  const location = lastOrder?.machine?.location;
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-green-100 p-2">
-              <Package className="h-5 w-5 text-green-600" />
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black leading-tight text-pretty sm:text-4xl">
+          {t("title")}
+        </h1>
+      </div>
+
+      <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Card className="overflow-hidden rounded-xl border-primary/20 bg-primary text-primary-foreground shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <Avatar className="size-16 border border-white/45 bg-white/10">
+              <AvatarFallback className="bg-white/15 text-lg font-black text-white">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 className="truncate text-lg font-black">{displayName(user, t)}</h2>
+              <p className="truncate text-xs font-bold text-white/85" dir="ltr">
+                {user._id}
+                {location ? ` - ${location}` : ""}
+              </p>
             </div>
-            <div>
-              <div className="text-2xl font-bold">{total}</div>
-              <p className="text-muted-foreground text-xs">Total Orders</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <CreditCard className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-2xl font-bold">
-                {totalSpent != null
-                  ? formatProductPrice(totalSpent, preferredCurrency)
-                  : null}
-              </div>
-              <p className="text-muted-foreground text-xs">Total Spent</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            <Button
+              type="button"
+              size="xs"
+              variant="secondary"
+              onClick={() => onOpenDetail("profile")}
+            >
+              <Pencil data-icon="inline-start" aria-hidden="true" />
+              {t("editProfile")}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card className="overflow-hidden rounded-xl border-border/80 bg-card" size="sm">
+            <CardHeader className="pb-0">
+              <CardDescription className="font-black uppercase tracking-[0.16em] text-primary-text">
+                {t("orders")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ProfileRow
+                icon={Clock3}
+                title={t("lastOrder")}
+                detail={
+                  lastOrder
+                    ? `${shortOrderId(lastOrder, t)} - ${formatStatus(lastOrder.status, t)}`
+                  : isPending
+                      ? t("loading")
+                      : t("noOrdersYet")
+                }
+                showChevron={false}
+                href={
+                  lastOrder
+                    ? `/invoice/success?invoiceId=${encodeURIComponent(
+                        String(lastOrder.invoiceId ?? lastOrder._id),
+                      )}&show=1`
+                    : null
+                }
+              />
+              <ProfileRow
+                icon={ReceiptText}
+                title={t("orderHistory")}
+                detail={
+                  isPending
+                    ? t("loading")
+                    : t("ordersCount", { count: orderCount })
+                }
+                onClick={() => onOpenDetail("purchases")}
+              />
+              <ProfileRow
+                icon={CircleHelp}
+                title={t("helpSupport")}
+                detail={t("helpSupportDetail")}
+                href="/contact"
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/80 bg-card" size="sm">
+            <CardContent className="p-3">
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start font-black text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+                onClick={onSignOut}
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                  <LogOut aria-hidden="true" />
+                </span>
+                {t("signOut")}
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </section>
   );
-};
+}
+
+function ProfileRow({
+  icon: Icon,
+  title,
+  detail,
+  href,
+  onClick,
+  showChevron = true,
+}) {
+  const content = (
+    <>
+      <div className="flex min-w-0 items-center gap-3">
+        <IconTile>
+          <Icon aria-hidden="true" />
+        </IconTile>
+        <span className="min-w-0">
+          <span className="block truncate font-black">{title}</span>
+        </span>
+      </div>
+      <span className="ms-auto flex min-w-0 shrink-0 items-center gap-2">
+        {detail ? (
+          <span className="max-w-[220px] truncate text-xs font-black text-primary-text">
+            {detail}
+          </span>
+        ) : null}
+        {showChevron ? (
+          <ChevronRight
+            aria-hidden="true"
+            className="shrink-0 text-muted-foreground"
+          />
+        ) : null}
+      </span>
+    </>
+  );
+
+  const className =
+    "flex min-h-[68px] w-full items-center justify-between gap-3 border-b border-border/80 px-4 py-3 text-start transition-colors last:border-b-0 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/35";
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" className={className} onClick={onClick}>
+      {content}
+    </button>
+  );
+}
+
+function IconTile({ children }) {
+  return (
+    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
+      {children}
+    </span>
+  );
+}
+
+function normalizeTab(tab) {
+  return tab === "profile" || tab === "purchases" ? tab : "overview";
+}
+
+function displayName(user, t) {
+  return user?.name?.trim() || t("moaddiCustomer");
+}
+
+function getInitials(name) {
+  if (typeof name !== "string" || !name.trim()) return "MC";
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.[0]?.toUpperCase())
+    .join("");
+}
+
+function shortOrderId(purchase, t) {
+  const id = String(purchase?.invoiceId ?? purchase?._id ?? "");
+  if (!id) return t("currentOrder");
+  if (id.startsWith("purchase_")) return `#${id.replace("purchase_", "")}`;
+  return `#${id.slice(0, 8)}`;
+}
+
+function getLastOrder(orders, fallbackOrder) {
+  const allOrders = [...orders, fallbackOrder].filter(Boolean);
+  if (allOrders.length === 0) return null;
+
+  return allOrders.sort((a, b) => {
+    const aTime = new Date(a?.created ?? 0).getTime();
+    const bTime = new Date(b?.created ?? 0).getTime();
+    return bTime - aTime;
+  })[0];
+}
+
+function formatStatus(status, t) {
+  if (!status || status === "PaymentDone") return t("status.opening");
+  if (status === "PaymentDoneRequest") return t("status.initiate");
+  if (status === "Completed") return t("status.completed");
+  return String(status).replace(/([a-z])([A-Z])/g, "$1 $2");
+}

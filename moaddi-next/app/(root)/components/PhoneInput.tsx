@@ -33,7 +33,7 @@ const PhoneInput: React.ForwardRefExoticComponent<PhoneInputProps> =
       return (
         <RPNInput.default
           ref={ref}
-          className={cn("flex", className)}
+          className={cn("flex ", className)}
           flagComponent={FlagComponent}
           countrySelectComponent={CountrySelect}
           inputComponent={InputComponent}
@@ -65,7 +65,7 @@ const InputComponent = React.forwardRef<
       css`
         direction: ltr;
       `,
-      "rounded-s-none rounded-e-lg",
+      "-ms-px rounded-s-none rounded-e-lg focus-visible:z-10",
       className,
     )}
     {...props}
@@ -95,13 +95,16 @@ const CountrySelect = ({
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen} modal>
-      <PopoverTrigger asChild>
-        <Button
+      <PopoverTrigger
+        render={
+          <Button
           type="button"
           variant="outline"
-          className="flex gap-1 rounded-s-lg rounded-e-none border-r-0 px-3 focus:z-10"
+          className="flex gap-1 rounded-s-lg rounded-e-none border-e-0 px-3 focus:z-10"
           disabled={disabled}
-        >
+          />
+        }
+      >
           <FlagComponent
             country={selectedCountry}
             countryName={selectedCountry}
@@ -112,7 +115,6 @@ const CountrySelect = ({
               disabled ? "hidden" : "opacity-100",
             )}
           />
-        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="p-0">
         <Command>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { ActivityIndicator, ScrollView, View, Text } from "react-native";
+import { Loader } from "~/components/moaddi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,9 @@ import {
 import { postRequestPayment } from "~/services/httpClient";
 import { purchaseAPI } from "~/services/serverAddresses";
 import alert from "~/lib/alert";
+import { goToOpenAfterPayment } from "~/lib/goToOpenAfterPayment";
+import { useUser } from "~/context/UserContext";
+import { useMachine } from "~/context/MachineContext";
 
 import {
   buildPaymentConfig,
@@ -27,6 +31,8 @@ export default function CheckoutMoyasarScreen({
   const router = useRouter();
   const params = useLocalSearchParams();
   const { t } = useTranslation();
+  const { setUser } = useUser();
+  const { setMachine } = useMachine();
   const machineQr = params.machineQr;
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -114,10 +120,10 @@ export default function CheckoutMoyasarScreen({
       console.log(" Payment completed successfully!");
       alert("success", t("paymentConfirmed"), t("orderBeingPrepared"));
 
-      // Redirect to home after 1.5 seconds
+      // Open the box/gift screen after 1.5 seconds
       setTimeout(() => {
-        console.log(" Redirecting to success...");
-        router.navigate("/CheckoutMoyasar/success");
+        console.log(" Opening box screen...");
+        goToOpenAfterPayment(response, { setUser, setMachine, router });
       }, 1500);
 
     } catch (error) {
@@ -157,12 +163,7 @@ export default function CheckoutMoyasarScreen({
 
   // Show loading while fetching payment config
   if (loading || !paymentConfig) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-600">{t("loadingPaymentForm")}</Text>
-      </View>
-    );
+    return <Loader flex message={t("loadingPaymentForm")} />;
   }
 
   // Show loading while finalizing payment

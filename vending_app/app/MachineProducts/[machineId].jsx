@@ -2,11 +2,22 @@ import { router, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Bluetooth, Minus, Plus, Wifi, WifiOff } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text as RNText,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
+import { Badge, Button as MButton, Loader, Stepper } from "~/components/moaddi";
+import GuestCheckoutModal from "~/components/GuestCheckoutModal";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
+import { colors, radius, shadow, space, type as typo } from "~/theme/moaddi";
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
@@ -33,129 +44,166 @@ function DefaultView({
   totalPrice,
   payButton,
   isPurchasing,
+  connectivity = "online",
+  connected = true,
 }) {
   const { t } = useTranslation();
-  console.log("💳 [DEFAULT VIEW] Rendering with machine:", machine);
-  return (
-    <ScrollView>
-      <View className="m-3 gap-4">
-        {machine.products?.map((product, i) => (
-          <MachineProductCard {...product} setTotal={setTotal} key={i} />
-        ))}
-      </View>
-      <View className="m-4 flex flex-row justify-center items-center gap-4">
-        <Button
-          size={"default"}
-          variant="outline"
-          onPress={onPurchaseHandler}
-          disabled={isPurchasing}
-          {...payButton}
-        >
-          <Text>{isPurchasing ? t("loading") : t("checkoutAndPay")}</Text>
-        </Button>
-        <Text>
-          {totalPrice.toFixed(2)} {t(machine.products?.[0]?.preferredCurrency)}
-        </Text>
-      </View>
-    </ScrollView>
-  );
-}
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [qty, setQty] = useState({});
 
-function MachineProductCard({
-  _id,
-  productName,
-  name,
-  boxes,
-  image,
-  salePrice,
-  campaignPrice,
-  setTotal,
-  preferredCurrency,
-}) {
-  const [quantity, setQuantity] = useState(0);
-  const { t } = useTranslation();
-  const available = boxes.filter(({ isActive }) => isActive).length;
-  const title = productName ?? name ?? "";
-  const imageUri = productImageUrl(image);
-  // const available = 10;
+  // Keep the parent purchase map (`total`) in sync with local quantities.
   useEffect(() => {
-    setTotal((total) => ({ ...total, [_id]: quantity }));
-  }, [quantity]);
-  // console.log(b aseUrl + image);
+    setTotal(qty);
+  }, [qty]);
+
+  const products = (machine.products ?? []).filter(
+    (p) => p.boxes?.filter(({ isActive }) => isActive).length > 0
+  );
+  const currency = machine.products?.[0]?.preferredCurrency;
+  const count = Object.values(qty).reduce((a, b) => a + b, 0);
+
+  const badgeTone =
+    connectivity === "bluetooth"
+      ? connected
+        ? "brand"
+        : "danger"
+      : connected
+      ? "success"
+      : "danger";
+  const badgeLabel =
+    connectivity === "bluetooth"
+      ? "Bluetooth"
+      : connected
+      ? "Online"
+      : "Offline";
+
+  const payDisabled = isPurchasing || count === 0 || payButton?.disabled;
 
   return (
-    available > 0 && (
-      <Card className="rounded-xl border overflow-hidden">
-        <View style={styles.productImageWrap}>
-          <Image
-            style={styles.productImage}
-            source={{ uri: imageUri }}
-            alt={title}
-            resizeMode="cover"
-          />
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DetailHeader
+        title={machine.name}
+        subtitle={machine.location}
+        onBack={() => (router.canGoBack() ? router.back() : router.navigate("/"))}
+        trailing={
+          <Badge tone={badgeTone} dot>
+            {badgeLabel}
+          </Badge>
+        }
+      />
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: space.card,
+          padding: space.gutter,
+          paddingBottom: 24,
+        }}
+      >
+        {products.map((product) => {
+          const id = product._id;
+          const available = product.boxes.filter(({ isActive }) => isActive).length;
+          return (
+            <MachineProductCard
+              key={id}
+              product={product}
+              currency={currency}
+              available={available}
+              qty={qty[id] || 0}
+              onQty={(v) => setQty((p) => ({ ...p, [id]: v }))}
+            />
+          );
+        })}
+      </ScrollView>
+
+      {/* Sticky pay bar */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 14,
+          backgroundColor: colors.surfaceCard,
+          paddingHorizontal: space.gutter,
+          paddingTop: 14,
+          paddingBottom: 14 + insets.bottom,
+          borderTopWidth: 1,
+          borderTopColor: colors.borderDefault,
+          ...shadow.nav,
+        }}
+      >
+        <View>
+          <RNText style={{ ...typo.caption, color: colors.textMuted }}>
+            {count} {count === 1 ? "item" : "items"}
+          </RNText>
+          <RNText style={{ ...typo.price, color: colors.textPrice }}>
+            {totalPrice.toFixed(2)} {t(currency)}
+          </RNText>
         </View>
-        <View className="grid gap-1 px-4 pb-4 pt-2">
-          <Text className="font-semibold text-center">{title}</Text>
-          <View className="flex flex-row justify-between">
-            <Text>
-              {campaignPrice?.toFixed(2) ?? salePrice?.toFixed(2)} {t(preferredCurrency)}
-            </Text>
-            <Text>
-              {"available"} {available - quantity}
-            </Text>
-          </View>
-          <View className="my-2 flex flex-row items-center justify-center gap-1">
-            <Button
-              variant="outline"
-              className={
-                quantity >= 0 && quantity < available
-                  ? ""
-                  : "pointer-events-none"
-              }
-              onPress={(e) =>
-                setQuantity((prev) =>
-                  prev >= 0 && prev < available ? ++prev : prev
-                )
-              }
-            >
-              <Plus
-                className={
-                  quantity >= 0 && quantity < available ? "" : "opacity-40"
-                }
-              />
-            </Button>
-            <Button variant={"secondary"} disabled>
-              <Text>{quantity}</Text>
-            </Button>
-            <Button
-              variant="outline"
-              className={quantity > 0 ? "" : "pointer-events-none"}
-              onPress={(e) => setQuantity((prev) => (prev > 0 ? --prev : prev))}
-            >
-              <Minus className={quantity > 0 ? "" : "opacity-40"} />
-            </Button>
-          </View>
-        </View>
-      </Card>
-    )
+        <MButton
+          fullWidth
+          disabled={payDisabled}
+          onPress={onPurchaseHandler}
+          style={{ flex: 1 }}
+        >
+          {isPurchasing ? t("loading") : t("checkoutAndPay")}
+        </MButton>
+      </View>
+    </View>
   );
 }
 
-function StackScreen({ name, icon }) {
+function MachineProductCard({ product, currency, available, qty, onQty }) {
+  const { t } = useTranslation();
+  const title = product.productName ?? product.name ?? "";
+  const imageUri = productImageUrl(product.image);
+  const price = product.campaignPrice ?? product.salePrice;
+
   return (
-    <Stack.Screen
-      options={{
-        headerTitle: () => {
-          return (
-            <View className="flex-row items-center gap-2">
-              <Text className="text-xl mt-2">{name}</Text>
-              {icon}
-            </View>
-          );
-        },
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        backgroundColor: colors.surfaceCard,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderDefault,
+        padding: 12,
       }}
-    />
+    >
+      <Image
+        source={{ uri: imageUri }}
+        alt={title}
+        resizeMode="cover"
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: radius.md,
+          backgroundColor: colors.surfaceSunken,
+        }}
+      />
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <RNText numberOfLines={1} style={{ ...typo.title3, color: colors.textHeading }}>
+          {title}
+        </RNText>
+        <RNText style={{ ...typo.price, color: colors.textPrice }}>
+          {price?.toFixed(2)} {t(currency)}
+        </RNText>
+        <RNText style={{ ...typo.caption, color: colors.textMuted }}>
+          available {available - qty}
+        </RNText>
+      </View>
+      <Stepper value={qty} max={available} onChange={onQty} />
+    </View>
   );
+}
+
+// Native header is hidden — DefaultView renders the design DetailHeader instead.
+function StackScreen() {
+  return <Stack.Screen options={{ headerShown: false }} />;
 }
 
 export default function MachineProducts() {
@@ -164,6 +212,7 @@ export default function MachineProducts() {
     useMachine();
   const [total, setTotal] = useState({});
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [guestModalVisible, setGuestModalVisible] = useState(false);
   const { user, setUser } = useUser();
   const router = useRouter();
   const { t } = useTranslation();
@@ -219,16 +268,20 @@ export default function MachineProducts() {
     })();
   }, []);
 
-  const onPurchaseHandler = async(e) => {
+  const onPurchaseHandler = async(activeUserArg) => {
+    // Callers: onPress passes an event (no `_id`); the guest modal passes the
+    // freshly-created guest so we don't wait for `user` state to re-render.
+    const activeUser = activeUserArg && activeUserArg._id ? activeUserArg : user;
     console.log("\n=== [PURCHASE FLOW] Purchase Handler Started ===");
     console.log(" Total from machine:", totalPrice);
-    console.log(" User ID:", user?._id);
+    console.log(" User ID:", activeUser?._id);
     console.log(" Machine ID:", machine?._id);
     console.log("  Machine Type:", machine?.type);
-    
-    if (!user) {
-      console.log("  [PURCHASE FLOW] No user found, redirecting to signin");
-      return router.navigate("/Signin");
+
+    if (!activeUser) {
+      console.log("  [PURCHASE FLOW] No user — opening guest/login modal");
+      setGuestModalVisible(true);
+      return;
     }
 
     if (
@@ -249,47 +302,52 @@ export default function MachineProducts() {
     }
     
     setIsPurchasing(true);
-    console.log(" [PURCHASE FLOW] Building items array from cart...");
-    
-    const items = [];
-    Object.entries(total).forEach(([id, number]) => {
-      const product = machine.products.find(({ _id }) => _id == id);
-      if (!product) {
-        console.warn(`⚠️  [PURCHASE FLOW] Product ${id} not found in machine`);
-        return;
-      }
-      
-      console.log(`   Product: ${product.productName}, Quantity: ${number}`);
-      
-      for (let i = 0; i < number; i++)
-        items.push({
-          productId: id,
-          boxId: product.boxes[i]._id,
-          boxStatus: false,
-        });
-    });
-    
-    console.log(" [PURCHASE FLOW] Items array built, count:", items.length);
-    console.log(" [PURCHASE FLOW] Sending purchase request with data:", {
-      customerId: user._id,
-      machine: machine._id,
-      machineId: machine._id,
-      price: totalPrice,
-      items,
-    });
 
     try {
+      console.log(" [PURCHASE FLOW] Building items array from cart...");
+
+      const items = [];
+      Object.entries(total).forEach(([id, number]) => {
+        const product = machine.products.find(({ _id }) => _id == id);
+        if (!product) {
+          console.warn(`⚠️  [PURCHASE FLOW] Product ${id} not found in machine`);
+          return;
+        }
+
+        console.log(`   Product: ${product.name}, Quantity: ${number}`);
+
+        for (let i = 0; i < number; i++)
+          items.push({
+            productId: id,
+            boxId: product.boxes[i]._id,
+            boxStatus: false,
+          });
+      });
+
+      console.log(" [PURCHASE FLOW] Items array built, count:", items.length);
+      // Use activeUser (not context user): after guest checkout, `user` is still
+      // stale until the next render — reading user._id threw and left
+      // isPurchasing stuck true (button shows Arabic "تحميل" forever).
+      console.log(" [PURCHASE FLOW] Sending purchase request with data:", {
+        customerId: activeUser._id,
+        machine: machine._id,
+        machineId: machine._id,
+        price: totalPrice,
+        items,
+      });
+
       console.log("[PURCHASE FLOW] Awaiting backend  request to:", purchasesAPI);
       console.log("Timeout: 30 seconds");
       
       const purchaseResponse = await postRequest(purchasesAPI, {
-        customerId: user._id,
+        customerId: activeUser._id,
         machine,
         machineId: machine._id,
         price: totalPrice,
         items,
         preferredCurrency:
-          user?.preferredCurrency || machine?.products?.[0]?.preferredCurrency,
+          activeUser?.preferredCurrency ||
+          machine?.products?.[0]?.preferredCurrency,
       });
       
       console.log(" [PURCHASE FLOW] Backend response received:", purchaseResponse);
@@ -315,8 +373,8 @@ export default function MachineProducts() {
       
       if (!purchase?._id) {
         console.log("  [PURCHASE FLOW] Purchase ID not in response, fetching user to sync...");
-        console.log("   Calling userAPI for:", user._id);
-        const response = await getRequest(userAPI(user._id));
+        console.log("   Calling userAPI for:", activeUser._id);
+        const response = await getRequest(userAPI(activeUser._id));
         console.log(" [PURCHASE FLOW] User synced from backend:", response);
         
         const syncedPurchase = response?.data?.purchase ?? response?.purchase;
@@ -326,7 +384,6 @@ export default function MachineProducts() {
         }
         
         setUser((prev) => ({ ...prev, ...(response?.data ?? response), purchase: { ...syncedPurchase, boxes } }));
-        setIsPurchasing(false);
         console.log(" [PURCHASE FLOW] Navigating to checkout...");
         if (machine.paymentProvider == "moyasar") {
           return router.navigate({
@@ -347,8 +404,7 @@ export default function MachineProducts() {
       }
       
       setUser((prev) => ({ ...prev, purchase: { ...purchase, boxes } }));
-      console.log("[PURCHASE FLOW] User context updated with purchase",user);
-      setIsPurchasing(false);
+      console.log("[PURCHASE FLOW] User context updated with purchase", activeUser);
       console.log(" [PURCHASE FLOW] Navigating to checkout...");
       if (machine.paymentProvider == "moyasar") {
         return router.navigate({
@@ -370,8 +426,9 @@ export default function MachineProducts() {
         name: err?.name,
         ...err
       });
-      setIsPurchasing(false);
       alert("error", "Purchase Failed", err?.message ?? "An error occurred while creating purchase");
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
@@ -397,14 +454,34 @@ export default function MachineProducts() {
           {machine?.type == 5 && <MachineBluetooth3 {...machineTools} />}
         </>
       ) : (
-        <Text className="text-xl mx-auto my-6">{t("loading")}</Text>
+        <Loader />
       )}
+      <GuestCheckoutModal
+        isVisible={guestModalVisible}
+        onClose={() => setGuestModalVisible(false)}
+        onLogin={() => {
+          setGuestModalVisible(false);
+          router.navigate("/Signin");
+        }}
+        onComplete={(guest) => {
+          setGuestModalVisible(false);
+          onPurchaseHandler(guest);
+        }}
+      />
     </>
   );
 }
 
 function MachineDirect({ machine, setTotal, onPurchaseHandler, totalPrice, isPurchasing }) {
-  const defaultView = { machine, setTotal, onPurchaseHandler, totalPrice, isPurchasing };
+  const defaultView = {
+    machine,
+    setTotal,
+    onPurchaseHandler,
+    totalPrice,
+    isPurchasing,
+    connectivity: "online",
+    connected: machine.isConnected,
+  };
   const stackScreen = {
     name: machine.name,
     icon: machine.isConnected ? (
@@ -458,6 +535,8 @@ function MachineBluetooth2({
     onPurchaseHandler,
     totalPrice,
     isPurchasing,
+    connectivity: "bluetooth",
+    connected: bleReady,
     payButton: {
       disabled: !bleReady || isPurchasing,
     },
@@ -498,6 +577,8 @@ function MachineBluetooth3({
     onPurchaseHandler,
     totalPrice,
     isPurchasing,
+    connectivity: "bluetooth",
+    connected: !connectRetryCount,
     payButton: {
       disabled: !!connectRetryCount || isPurchasing,
     },
@@ -529,6 +610,8 @@ function MachineBluetooth4({
     onPurchaseHandler,
     totalPrice,
     isPurchasing,
+    connectivity: "bluetooth",
+    connected: !connectRetryCount,
     payButton: {
       disabled: !!connectRetryCount || isPurchasing,
     },

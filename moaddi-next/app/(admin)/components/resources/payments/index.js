@@ -1,4 +1,4 @@
-import PaymentIcon from "@mui/icons-material/Payment";
+import { CreditCard as PaymentIcon } from "lucide-react";
 import list from "./PaymentList";
 import show from "./PaymentShow";
 

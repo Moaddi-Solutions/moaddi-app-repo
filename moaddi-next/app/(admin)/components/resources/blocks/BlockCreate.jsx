@@ -1,3 +1,3 @@
-const create = () => {};
+const create = () => null;
 
 export default create;

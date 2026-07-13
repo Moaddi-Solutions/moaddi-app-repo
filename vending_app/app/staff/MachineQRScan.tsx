@@ -95,8 +95,7 @@ export default function App() {
         <View style={styles.container}>
           <View style={styles.permissionContainer}>
             <UIText className="text-xl mb-4 text-center">
-              {t("cameraPermissionRequired") ||
-                "Camera permission is required to scan QR codes"}
+              {t("cameraPermissionRequired")}
             </UIText>
             {permission.canAskAgain ? (
               <TouchableOpacity
@@ -115,14 +114,13 @@ export default function App() {
                 <Text
                   style={{ color: "white", fontSize: 16, fontWeight: "600" }}
                 >
-                  {t("grantPermission") || "Grant Permission"}
+                  {t("grantPermission")}
                 </Text>
               </TouchableOpacity>
             ) : (
               <>
                 <UIText className="text-base mb-4 text-center text-muted-foreground">
-                  {t("permissionPermanentlyDenied") ||
-                    "Camera permission was permanently denied. Please enable it in your device settings."}
+                  {t("permissionPermanentlyDenied")}
                 </UIText>
                 <TouchableOpacity
                   onPress={handleRequestPermission}
@@ -140,7 +138,7 @@ export default function App() {
                   <Text
                     style={{ color: "white", fontSize: 16, fontWeight: "600" }}
                   >
-                    {t("openSettings") || "Open Settings"}
+                    {t("openSettings")}
                   </Text>
                 </TouchableOpacity>
               </>

@@ -1,28 +1,15 @@
-import {
-  BooleanField,
-  DateField,
-  Show,
-  SimpleShowLayout,
-  useRecordContext,
-} from "react-admin";
+import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminDetailFromColumns } from "@/(admin)/components/AdminDetail";
 import { CustomerListItems } from "./CustomerList";
 
-const Title = () => {
-  const record = useRecordContext();
-  return <span>Customer {record ? `"${record.name}"` : ""}</span>;
-};
+const extraColumns = [
+  { key: "updated", label: "Updated", render: (r) => (r.updated ? new Date(r.updated).toLocaleString() : "—") },
+];
 
-const CustomerShow = () => {
-  const customerListItems = [
-    ...CustomerListItems,
-    // <BooleanField label="Deleted" source="isDeleted" />,
-    <DateField source="updated" />,
-  ];
-  return (
-    <Show title={<Title />}>
-      <SimpleShowLayout>{customerListItems}</SimpleShowLayout>
-    </Show>
-  );
-};
+const CustomerShow = () => (
+  <AdminShow>
+    <AdminDetailFromColumns columns={CustomerListItems} extra={extraColumns} />
+  </AdminShow>
+);
 
 export default CustomerShow;

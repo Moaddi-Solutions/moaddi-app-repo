@@ -1,3 +1,3 @@
-const SiteList = () => {};
+const SiteList = () => null;
 
 export default SiteList;

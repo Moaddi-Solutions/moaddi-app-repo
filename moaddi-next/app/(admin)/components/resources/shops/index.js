@@ -1,4 +1,4 @@
-import StoreIcon from '@mui/icons-material/Store';
+import { Store } from "lucide-react";
 import create from "./ShopCreate";
 import edit from "./ShopEdit";
 import list from "./ShopList";
@@ -10,6 +10,6 @@ export default ({
   list,
   show,
   edit,
-  icon: StoreIcon,
+  icon: Store,
   recordRepresentation: "name",
 });

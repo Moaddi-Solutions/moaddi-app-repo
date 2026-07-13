@@ -1,58 +1,46 @@
-import { Box } from "@mui/material";
-import {
-  BooleanField,
-  ChipField,
-  CreateButton,
-  Datagrid,
-  DatagridConfigurable,
-  DateField,
-  DeleteButton,
-  EditButton,
-  List,
-  ReferenceManyField,
-  SingleFieldList,
-  TextField,
-  TextInput,
-  TopToolbar,
-  useTranslate,
-} from "react-admin";
-
-const filters = [<TextInput source="q" label="Search" alwaysOn />];
-
-const ListActions = () => {
-  return <TopToolbar>{<CreateButton />}</TopToolbar>;
-};
+import AdminList from "@/(admin)/components/kit/AdminList";
+import AdminShadcnTable, {
+  AdminBooleanBadge,
+} from "@/(admin)/components/AdminShadcnTable";
+import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
 
 export const CustomerListItems = [
-  <TextField source="id" key="id" />,
-  <TextField source="name" key="name" />,
-  <TextField
-    source="preferredCurrency"
-    key="preferredCurrency"
-    label="Preferred currency"
-  />,
-  <BooleanField label="Active" source="isActive" key="isActive" />,
-  <DateField label="Joined" source="created" key="created" />,
+  { key: "id", label: "ID" },
+  { key: "name", label: "Name" },
+  { key: "preferredCurrency", label: "Preferred currency" },
+  {
+    key: "isActive",
+    label: "Active",
+    render: (record) => <AdminBooleanBadge value={record.isActive} />,
+  },
+  {
+    key: "created",
+    label: "Joined",
+    render: (record) => formatDate(record.created),
+  },
 ];
 
-const CustomerList = () => {
-  const t = useTranslate();
+const CustomerList = () => (
+  <AdminList sort={{ field: "name", order: "DESC" }} actions={null}>
+    <AdminShadcnTable
+      columns={CustomerListItems}
+      rowClick="show"
+      actions={(record) => (
+        <>
+          <AdminEditButton record={record} />
+          <AdminDeleteButton record={record} />
+        </>
+      )}
+    />
+  </AdminList>
+);
 
-  return (
-    <List
-      // filters={filters}
-      sort={{ field: "name", order: "DESC" }}
-      actions={<ListActions />}
-    >
-      <Datagrid rowClick="show" bulkActionButtons={false}>
-        {CustomerListItems}
-        <Box sx={{ display: "flex", gap: 1 }} label={"Action"}>
-          <EditButton />
-          <DeleteButton />
-        </Box>
-      </Datagrid>
-    </List>
-  );
-};
+function formatDate(value) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
 export default CustomerList;

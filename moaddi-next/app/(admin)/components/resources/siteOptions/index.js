@@ -1,5 +1,4 @@
-import PaymentIcon from "@mui/icons-material/Payment";
-import TuneIcon from "@mui/icons-material/Tune";
+import { CreditCard as PaymentIcon, SlidersHorizontal as TuneIcon } from "lucide-react";
 import paymentProvidersList from "./PaymentProvidersList";
 import platformFeesEdit from "./PlatformFeesEdit";
 import platformFeesShow from "./PlatformFeesShow";

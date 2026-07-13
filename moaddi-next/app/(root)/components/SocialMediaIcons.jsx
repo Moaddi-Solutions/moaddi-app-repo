@@ -108,6 +108,8 @@ const socialMediaClasses = cva(
       variant: {
         contained: null,
         outlined: "border-2",
+        // Footer style: uniform translucent square tiles with white glyphs.
+        tile: "!rounded-lg bg-white/10 hover:bg-white/20",
       },
       size: {
         sm: "size-5",

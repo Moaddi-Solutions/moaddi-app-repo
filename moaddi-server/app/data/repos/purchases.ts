@@ -1,5 +1,6 @@
 import moment = require("moment");
 import shortId = require("shortid");
+import crypto = require("crypto");
 import mongoose = require("mongoose");
 import type { ClientSession, Model } from "mongoose";
 import type ModelTypes = require("../models/types");
@@ -755,6 +756,102 @@ const update = async (
 };
 
 // ---------------------------------------------------------------------------
+// Gift a purchase — share link + authorized openers
+// ---------------------------------------------------------------------------
+
+/** Statuses in which a box can still be opened (paid, not yet fully collected). */
+const GIFT_OPENABLE_STATUSES = [
+  PURCHASE_STATUS.PAYMENT_DONE,
+  PURCHASE_STATUS.PROCESSING,
+];
+
+const generateClaimToken = (): string => crypto.randomBytes(24).toString("hex");
+
+/** Optional link TTL from GIFT_LINK_TTL_HOURS; unset = valid until completion. */
+const giftTtlHours = (): number | null => {
+  const raw = process.env.GIFT_LINK_TTL_HOURS;
+  const n = raw != null && raw !== "" ? Number(raw) : Number.NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+/**
+ * Enable gift sharing on a paid purchase. Idempotent: re-enabling returns the
+ * same claim token and preserves any recipients who already claimed.
+ */
+const enableGift = async (
+  purchaseId: string,
+): Promise<ModelTypes.IPurchase> => {
+  const purchase = await Purchases.findOne({ _id: purchaseId });
+  if (!purchase) throw repoError(404, "Purchase not found.");
+  if (!GIFT_OPENABLE_STATUSES.includes(String(purchase.status))) {
+    throw repoError(409, "Purchase must be paid before it can be gifted.");
+  }
+  const existing = (purchase.get("gift") || {}) as ModelTypes.IGift;
+  const claimToken = existing.claimToken || generateClaimToken();
+  const ttl = giftTtlHours();
+  purchase.set("gift", {
+    isGift: true,
+    claimToken,
+    sharedAt: now(),
+    expiresAt: ttl ? moment(now()).add(ttl, "hours").toDate() : undefined,
+    authorizedOpeners: existing.authorizedOpeners || [],
+    claimedAt: existing.claimedAt,
+  });
+  purchase.updated = now();
+  const saved = await purchase.save();
+  return saved.toJSON() as ModelTypes.IPurchase;
+};
+
+const getByClaimToken = async (
+  claimToken: string,
+): Promise<ModelTypes.IPurchase | null> => {
+  if (!claimToken) return null;
+  const purchase = await Purchases.findOne({ "gift.claimToken": claimToken });
+  return purchase ? (purchase.toJSON() as ModelTypes.IPurchase) : null;
+};
+
+/** Record a recipient (or the signed-in buyer) as an authorized opener. */
+const recordGiftClaim = async (
+  purchaseId: string,
+  openerId: string,
+): Promise<void> => {
+  await Purchases.updateOne(
+    { _id: purchaseId },
+    {
+      $addToSet: { "gift.authorizedOpeners": openerId },
+      $set: { "gift.claimedAt": now(), updated: now() },
+    },
+  );
+};
+
+/** Machine + boxes + item summary for the recipient's claim screen. */
+const giftView = async (
+  purchase: ModelTypes.IPurchase,
+  preferredCurrency?: string,
+): Promise<unknown> => {
+  const machine = purchase.machineId
+    ? await machinesRepo.getById(purchase.machineId, false)
+    : null;
+  const boxes = await Promise.all(
+    purchase.items.map(async (item) => {
+      const box = await boxesRepo.getById(item.boxId, preferredCurrency);
+      (box as unknown as Record<string, unknown>).boxStatus = item.boxStatus;
+      return box;
+    }),
+  );
+  return {
+    _id: purchase._id,
+    machineId: purchase.machineId,
+    machine,
+    boxes,
+    items: purchase.items,
+    price: purchase.price,
+    preferredCurrency: purchase.preferredCurrency,
+    status: purchase.status,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Wallet credit pipeline
 // ---------------------------------------------------------------------------
 
@@ -1403,6 +1500,10 @@ export = {
   listAll,
   update,
   setProviderFields,
+  enableGift,
+  getByClaimToken,
+  recordGiftClaim,
+  giftView,
   applyStripePaymentIntentSucceeded,
   applyStripePaymentIntentFailed,
   tryReserveStripeClientNotification,

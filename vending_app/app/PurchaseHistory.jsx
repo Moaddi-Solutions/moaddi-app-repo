@@ -1,158 +1,188 @@
-import { Link } from "expo-router";
-import { Eye } from "lucide-react-native";
+import { Stack, useRouter } from "expo-router";
+import { ReceiptText } from "lucide-react-native";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
-import { Text } from "~/components/ui/text";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { Badge, Loader } from "~/components/moaddi";
+import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import { useManyReference } from "~/hook/useManyReference";
+import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
-const GetStatusBadge = ({ status }) => {
-  const { t } = useTranslation();
-
-  switch (status) {
-    case "Completed":
-      return (
-        <Badge variant="default" className="bg-green-100  hover:bg-green-100">
-          <Text className="text-green-800">{t("completed")}</Text>
-        </Badge>
-      );
-    case "PaymentDoneRequest":
-      return (
-        <Badge variant="default" className="bg-yellow-100  hover:bg-yellow-100">
-          <Text className="text-yellow-800">{t("initiate")}</Text>
-        </Badge>
-      );
-    case "PaymentDone":
-      return (
-        <Badge variant="default" className="bg-blue-100  hover:bg-blue-100">
-          <Text className="text-blue-800">{t("paymentDone")}</Text>
-        </Badge>
-      );
-    // case "Cancelled":
-    //   return <Badge variant="destructive">{ t('cancelled') }</Badge>;
-    default:
-      return (
-        <Badge variant="secondary">
-          <Text>{status}</Text>
-        </Badge>
-      );
-  }
+const STATUS_TONE = {
+  Completed: "success",
+  PaymentDone: "info",
+  PaymentDoneRequest: "warning",
+  Failed: "danger",
+  Cancelled: "danger",
 };
 
-const PurchaseHistoryData = () => {
+function statusTone(status) {
+  return STATUS_TONE[status] ?? "neutral";
+}
+
+function PurchaseHistoryData() {
   const { user } = useUser();
   const { t } = useTranslation();
+  const router = useRouter();
+  const [filter, setFilter] = useState("All");
 
   const { isPending, items } = useManyReference("purchases", {
     target: "customerId",
     id: user._id,
   });
 
+  const filters = useMemo(() => {
+    const set = new Set(items.map((o) => o.status).filter(Boolean));
+    return ["All", ...Array.from(set)];
+  }, [items]);
+
+  const orders = items.filter((o) => filter === "All" || o.status === filter);
+
+  const openInvoice = (o) =>
+    router.push({
+      pathname: `/Invoice/${o.invoiceId}`,
+      params: {
+        purchaseData: JSON.stringify({
+          _id: o._id,
+          products: o.products,
+          items: o.items,
+          created: o.created,
+          price: o.price,
+          status: o.status,
+          invoiceId: o.invoiceId,
+        }),
+      },
+    });
 
   return (
-    !isPending && (
-      <ScrollView
-        className="rounded-md border border-border"
-        showsHorizontalScrollIndicator={false}
-      >
-        <Table>
-          <TableHeader>
-            <TableRow className="justify-around">
-              <TableHead>
-                <Text>{t("date")}</Text>
-              </TableHead>
-              {/* <TableHead className="hidden md:table-cell">Items</TableHead> */}
-              {/* <TableHead className="hidden sm:table-cell">Qty</TableHead> */}
-              <TableHead className="w-24">
-                <Text>{t("total")}</Text>
-              </TableHead>
-              <TableHead>
-                <Text>{t("status")}</Text>
-              </TableHead>
-              <TableHead className="px-8 text-end">
-                <Text>{t("view")}</Text>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+    <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <DetailHeader
+        title={t("PurchaseHistory")}
+        onBack={() => (router.canGoBack() ? router.back() : router.navigate("/"))}
+      />
 
-          <TableBody>
-            {items.map(
-              ({ _id, products, items, created, price, status, invoiceId }) => {
-                const productsString = products
-                  .map(({ name }) => name)
-                  .join(", ");
-                return (
-                  <TableRow className="justify-around items-center" key={_id}>
-                    <TableCell>
-                      <Text>
-                        {new Date(created).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          //   year: "numeric",
-                        })}
+      {isPending ? (
+        <Loader flex />
+      ) : (
+        <>
+          {/* Filter chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+              flexGrow: 0,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.borderDefault,
+            }}
+            contentContainerStyle={{
+              gap: 8,
+              paddingHorizontal: space.gutter,
+              
+              paddingTop: 16,
+              paddingBottom: 12,
+              alignItems: "center",
+            }}
+          >
+            {filters.map((f) => {
+              const active = f === filter;
+              return (
+                <Pressable
+                  key={f}
+                  onPress={() => setFilter(f)}
+                  style={{
+                    height: 36,
+                    paddingHorizontal: 16,
+                    borderRadius: radius.pill,
+                    borderWidth: 1,
+                    borderColor: active ? colors.interactivePrimary : colors.borderDefault,
+                    backgroundColor: active ? colors.interactivePrimary : colors.surfaceCard,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      ...typo.bodyStrong,
+                      color: active ? colors.textOnBrand : colors.textBody,
+                    }}
+                  >
+                    {t(f.toLowerCase?.() ?? f) || f}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: space.card, paddingHorizontal: space.gutter, paddingTop: space.card, paddingBottom: 24 }}
+          >
+            {orders.map((o) => {
+              const currency = o.products?.[0]?.preferredCurrency;
+              const productsString = (o.products ?? []).map((p) => p.name).join(", ");
+              const date = new Date(o.created).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              });
+              return (
+                <Pressable
+                  key={o._id}
+                  onPress={() => openInvoice(o)}
+                  android_ripple={{ color: "rgba(0,0,0,0.05)" }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    backgroundColor: colors.surfaceCard,
+                    borderRadius: radius.lg,
+                    borderWidth: 1,
+                    borderColor: colors.borderDefault,
+                    padding: 14,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: radius.md,
+                      backgroundColor: colors.surfaceBrandSoft,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ReceiptText size={18} color={palette.teal[600]} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                    <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>
+                      {o.price?.toFixed(2)} {t(currency)}
+                    </Text>
+                    {productsString ? (
+                      <Text numberOfLines={1} style={{ ...typo.caption, color: colors.textMuted }}>
+                        {productsString}
                       </Text>
-                    </TableCell>
-                    <TableCell className="hidden max-w-[200px] md:table-cell">
-                      <View className="truncate">
-                        <Text>{productsString}</Text>
-                      </View>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Text>{items.length}</Text>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Text>
-                        {price.toFixed(2)} {t(products[0]?.preferredCurrency )}
-                      </Text>
-                    </TableCell>
-                    <TableCell>
-                      <GetStatusBadge status={status} />
-                    </TableCell>
-                    {/* <TableCell className="text-muted-foreground hidden lg:table-cell">
-                        {purchase.paymentMethod}
-                      </TableCell> */}
-                    <Link
-                      asChild
-                      href={{
-                        pathname: `/Invoice/${invoiceId}`,
-                        params: {
-                          purchaseData: JSON.stringify({
-                            _id,
-                            products,
-                            items,
-                            created,
-                            price,
-                            status,
-                            invoiceId
-                          }),
-                        },
-                      }}
-                    >
-                      <Button variant="ghost" size="icon">
-                        <Eye color="#4d4d4d" strokeWidth={1.25} />
-                      </Button>
-                    </Link>
-                  </TableRow>
-                );
-              }
-            )}
-          </TableBody>
-        </Table>
-      </ScrollView>
-    )
+                    ) : null}
+                    <Text style={{ ...typo.caption, color: colors.textMuted }}>
+                      {date} · {o.items?.length ?? 0} {t("items")}
+                    </Text>
+                  </View>
+                  <Badge tone={statusTone(o.status)} dot>
+                    {t(o.status?.toLowerCase?.()) || o.status}
+                  </Badge>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
+    </View>
   );
-};
+}
+
 export default function PurchaseHistory() {
   const { user } = useUser();
-  return user && <PurchaseHistoryData />;
+  return user ? <PurchaseHistoryData /> : null;
 }
