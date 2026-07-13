@@ -147,8 +147,38 @@ function MobileNav({ items, onNavigate }) {
             {title}
           </Link>
         ))}
+        <MobileLocale />
       </div>
     </nav>
+  );
+}
+
+// The header LocaleToggle is hidden on mobile (no room in the top bar), so the
+// language switcher lives inside the hamburger menu on small screens instead.
+function MobileLocale() {
+  const { setLocale } = useContext(themeContext);
+  const locale = useLocale();
+
+  return (
+    <div className="moaddi-mobile-lang">
+      <span className="moaddi-mobile-lang-label">
+        <Languages aria-hidden="true" className="size-4" />
+      </span>
+      <div className="moaddi-mobile-lang-options">
+        {LOCALES.map(({ code, label }) => (
+          <button
+            key={code}
+            type="button"
+            lang={code}
+            dir={rtlRules[code] ? "rtl" : "ltr"}
+            data-active={code === locale}
+            onClick={() => setLocale(code)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

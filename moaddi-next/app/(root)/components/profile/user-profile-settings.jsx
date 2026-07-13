@@ -66,7 +66,7 @@ export default function UserProfileSettings() {
       .then(({ data }) => {
         setIsLoading(0);
         setIsEditing(false);
-        setUser((prev) => ({ ...prev, ...data }));
+        setUser((prev) => (prev ? { ...prev, ...data } : prev));
         setUserInfo((prev) => ({
           ...prev,
           newPassword: "",

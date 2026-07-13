@@ -56,17 +56,21 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
   const [done, setDone] = useState(false);
   const [sharing, setSharing] = useState(false);
   useEffect(() => {
-    setUser((prev) => ({
-      ...(prev ?? {}),
-      purchase: {
-        ...(prev?.purchase ?? {}),
-        ...(_id != null && { _id }),
-        ...(machineId != null && { machineId }),
-        ...(machine != null && { machine }),
-        status,
-        boxes,
-      },
-    }));
+    setUser((prev) =>
+      prev
+        ? {
+            ...prev,
+            purchase: {
+              ...(prev.purchase ?? {}),
+              ...(_id != null && { _id }),
+              ...(machineId != null && { machineId }),
+              ...(machine != null && { machine }),
+              status,
+              boxes,
+            },
+          }
+        : prev,
+    );
   }, [boxes, status, _id, machineId, machine, setUser]);
   useEffect(() => {
     if (!machineEvents) return;
@@ -84,9 +88,11 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
   useEffect(() => {
     if (!user?.purchase?.boxes) return;
     if (!user.purchase.boxes.find(({ boxStatus }) => !boxStatus)) {
-      setUser(({ purchase, ...prev }) => ({
-        ...prev,
-      }));
+      setUser((prev) => {
+        if (!prev) return prev;
+        const { purchase, ...rest } = prev;
+        return { ...rest };
+      });
       // router.push("/");
       setDone(true);
     }

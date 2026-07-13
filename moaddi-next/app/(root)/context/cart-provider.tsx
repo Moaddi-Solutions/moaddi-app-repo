@@ -2,14 +2,18 @@
 
 import type React from "react";
 
-import { hasDashboardSession } from "@/../lib/auth-session";
-import { normalizeDashboardRole } from "@/../lib/dashboard-role";
-import { getLocalStorageItem } from "@/../lib/utils";
+import { hasDashboardSession, notifyAdminLogout } from "@/../lib/auth-session";
+import { isDashboardRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
+import { getLocalStorageItem, removeLocalStorageItem } from "@/../lib/utils";
 import axios from "axios";
-// Suppress missing type declarations for js-cookie
-// @ts-ignore
 import Cookies from "js-cookie";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type Product = {
   id: number;
@@ -34,6 +38,7 @@ type CartContextType = {
   setUser: (user: object | null) => void;
   machine: object | null;
   setMachine: (user: object | null) => void;
+  logout: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -44,23 +49,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [machine, setMachine] = useState<object | null>(null);
   const [isPending, setIsPending] = useState<boolean>(true);
 
-  /** Restore shopper session from cookie / localStorage so pages are not stuck on isPending. */
+  /**
+   * Restore shopper session on mount. The cookie is the auth source of truth
+   * (it carries the token); localStorage only mirrors the richer profile
+   * (name, etc.). So: no cookie => logged out, and a stale localStorage
+   * "user" is ignored — this prevents a resurrected session from reappearing
+   * after logout. Staff/dashboard cookies are skipped so they never populate
+   * the shopper header as a nameless "?" avatar.
+   */
   useEffect(() => {
     try {
       const cookie = Cookies.get("user");
       if (cookie) {
-        const parsed = JSON.parse(cookie) as Record<string, unknown>;
-        parsed.role = normalizeDashboardRole(parsed.role as string);
-        setUser(parsed);
-        if (typeof parsed.token === "string") {
-          axios.defaults.headers.common.Authorization = `Bearer ${parsed.token}`;
-        }
-      } else {
-        const stored = getLocalStorageItem("user");
-        if (stored) {
-          const parsed = JSON.parse(stored) as Record<string, unknown>;
-          parsed.role = normalizeDashboardRole(parsed.role as string);
-          if (!hasDashboardSession()) setUser(parsed);
+        const cookieUser = JSON.parse(cookie) as Record<string, unknown>;
+        const role = normalizeDashboardRole(cookieUser.role as string);
+        if (!isDashboardRole(role)) {
+          const stored = getLocalStorageItem("user");
+          const storedUser = stored
+            ? (JSON.parse(stored) as Record<string, unknown>)
+            : null;
+          // Prefer the stored profile for display, but keep the authoritative
+          // token + role from the cookie.
+          const merged = { ...cookieUser, ...(storedUser ?? {}) };
+          merged.token = cookieUser.token;
+          merged.role = role;
+          setUser(merged);
+          if (typeof merged.token === "string") {
+            axios.defaults.headers.common.Authorization = `Bearer ${merged.token}`;
+          }
         }
       }
 
@@ -134,6 +150,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("cart");
   };
 
+  /**
+   * Authoritative shopper logout. Clears the auth cookie, the mirrored
+   * `user`/`machine` storage and the axios header, drops in-memory state,
+   * and notifies listeners (e.g. the socket) to tear down. Keeping this in
+   * one place stops stale, in-flight `setUser(...)` calls from silently
+   * re-persisting the session after the user has signed out.
+   */
+  const logout = useCallback(() => {
+    Cookies.remove("user");
+    removeLocalStorageItem("user");
+    removeLocalStorageItem("machine");
+    delete axios.defaults.headers.common.Authorization;
+    setUser(null);
+    setMachine(null);
+    notifyAdminLogout();
+  }, []);
+
   const totalItems = cartItems.reduce(
     (total, item) => total + (item.quantity || 1),
     0,
@@ -152,6 +185,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setUser,
         machine,
         setMachine,
+        logout,
         cartItems,
         addToCart,
         removeFromCart,

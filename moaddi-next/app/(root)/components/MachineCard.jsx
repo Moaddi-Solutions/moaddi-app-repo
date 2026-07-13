@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export default function MachineCard({ _id, name, qrCode, ...rest }) {
   const router = useRouter();
-  const { user, setUser, setMachine } = useCart();
+  const { setUser, setMachine } = useCart();
   const t = useTranslations("QR");
   const handleClick = async (e) => {
     let response = await getRequest(machineQRScan(qrCode));
@@ -21,7 +21,7 @@ export default function MachineCard({ _id, name, qrCode, ...rest }) {
       if (!response.isActive) return toast.error(t("machineIsNotActive"));
     }
     toast.success(t("machineDetected"));
-    if (user) setUser((prev) => ({ ...prev, machines: [response] }));
+    setUser((prev) => (prev ? { ...prev, machines: [response] } : prev));
     setMachine(response);
     router.push(
       `/machine-products?qr=${encodeURIComponent(String(response.qrCode ?? qrCode))}`,
@@ -40,7 +40,7 @@ export default function MachineCard({ _id, name, qrCode, ...rest }) {
       <div className="mt-3 flex items-center justify-between">
         <span className="text-primary-text text-sm font-bold">{t("open")}</span>
         <Link
-          title="QR Scan"
+          title={t("scanMachine")}
           href="/machine-scan"
           onClick={(e) => e.stopPropagation()}
           className="bg-primary text-primary-foreground grid size-8 shrink-0 place-items-center rounded-[10px] transition-colors hover:bg-primary-600"

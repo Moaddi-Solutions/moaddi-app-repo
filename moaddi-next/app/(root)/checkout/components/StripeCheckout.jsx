@@ -60,7 +60,7 @@ function StripePaymentForm({ purchaseId }) {
         const uid = user?._id;
         if (uid) {
           const fresh = await getRequest(userAPI(uid));
-          setUser(fresh);
+          setUser((prev) => (prev ? fresh : prev));
         }
         router.push("/checkout/success");
       } catch (err) {

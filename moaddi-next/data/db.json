@@ -3,49 +3,42 @@
     {
       "id": "Hero",
       "__typename": "ComponentComponentsHero",
-      "heading": "Moaddi Platform | E-commerce platform",
-      "features": [
+      "order": 1,
+      "kicker": "240+ machines across World",
+      "title": "Shop smarter from|every Moaddi machine",
+      "button": {
+        "title": "Scan a machine",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "24/7 Support",
-          "icon": {
-            "url": "images/hero/2.png"
-          },
-          "title": "24/7 Support"
+          "value": "12+",
+          "label": "machines online"
         },
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "free and fast shipping",
-          "icon": {
-            "url": "images/hero/3.png"
-          },
-          "title": "Free and fast shipping"
+          "value": "19",
+          "label": "products"
         },
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "Refund within 48 hours\n",
-          "icon": {
-            "url": "images/hero/1.png"
-          },
-          "title": "Refund within 48 hours\n"
+          "value": "<30s",
+          "label": "scan to get Product"
         }
       ],
-      "description": "Lorem ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
-      "button": {
-        "__typename": "ComponentSharedButton",
-        "title": "Shop now",
-        "page": {
-          "__typename": "Page",
-          "url": "/products"
+      "floatingCards": [
+        {
+          "title": "M-014 Olaya",
+          "subtitle": "Online - 46 products"
+        },
+        {
+          "title": "Paid $13.95",
+          "subtitle": "Opening..."
         }
-      },
-      "background": {
-        "url": "/uploads/hero_bg_c3e3dcb124.webp"
-      },
-      "foreground": {
-        "url": "/uploads/hero_30f549460c.webp"
-      },
-      "order": 1
+      ]
     },
     {
       "id": "Shops",
@@ -176,550 +169,74 @@
   },
   "enHeaderLinks": [
     {
+      "id": "1",
       "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Vera Runolfsdottir",
-      "url": "Gerardo-Kuvalis",
+      "title": "Home",
+      "url": "/",
       "type": 1,
-      "icon": {
-        "url": "images/header/1.svg"
-      },
-      "article": {
-        "__typename": "Article",
-        "slug": "home"
-      }
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Manuel Harris",
-      "url": "Dana-Kerluke",
-      "type": 1,
-      "icon": {
-        "url": "images/header/2.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Harriet Dach",
-      "url": "Wilma-Jast",
-      "type": 1,
-      "icon": {
-        "url": "images/header/3.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Allen Gleichner",
-      "url": "Eleanor-King-I",
-      "type": 1,
-      "icon": {
-        "url": "images/header/4.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Joe Erdman",
-      "url": "Anna-Wolf-MD",
-      "type": 1,
-      "icon": {
-        "url": "images/header/5.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Nina Thiel",
-      "url": "Rodolfo-Bechtelar",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Rudy Herzog",
-      "url": "Dr--Carmen-Halvorson",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Pamela Olson DVM",
-      "url": "Geneva-McLaughlin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Sally Bogisich",
-      "url": "Nichole-Gutkowski-Ritchie",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Trevor Grady",
-      "url": "Kayla-Rippin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Ruby Dietrich",
-      "url": "Ellis-Brekke",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "James Hettinger",
-      "url": "Darryl-Harber-MD",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Horace Streich PhD",
-      "url": "Amos-Wintheiser",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Belinda Donnelly",
-      "url": "Gladys-Donnelly",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Ryan Lubowitz",
-      "url": "Dora-Haag",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Toni Hilpert",
-      "url": "Tomas-Gottlieb",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Shari Pouros DDS",
-      "url": "Carolyn-Schmitt",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Ramona Klocko",
-      "url": "Gerald-Rempel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Henrietta O'Hara",
-      "url": "Sergio-Rosenbaum",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Erik Pfannerstill V",
-      "url": "Cecil-Luettgen",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Brendan Schinner",
-      "url": "Tommie-Kozey",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Mrs. Leigh Bechtelar",
-      "url": "Beverly-Ryan",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Dr. Clifford Raynor",
-      "url": "Bert-Reichel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Eva Olson DDS",
-      "url": "Edwin-Effertz",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Lonnie Stiedemann DVM",
-      "url": "Violet-Doyle",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Alfred Schmidt-O'Keefe",
-      "url": "Evelyn-Ziemann",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Marie Lesch",
-      "url": "Bruce-Boyle",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Marvin Reynolds",
-      "url": "Byron-Cole",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Tammy Boehm MD",
-      "url": "Loren-Schmidt-Buckridge",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Nelson Marvin",
-      "title": "Ms. Casey Cummings",
-      "url": "Pamela-Bergstrom-Jr-",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Nelson Marvin",
-      "title": "Mabel Bradtke DDS",
-      "url": "Dr--Joshua-Steuber",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Carole Bogan",
-      "url": "Marie-Larkin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Chris Bogan",
-      "url": "Mr--Harvey-Hammes",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Joshua Moen III",
-      "url": "Angel-Walter",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ian Douglas-Hoeger",
-      "url": "Veronica-Torp",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ms. Gladys Labadie",
-      "url": "Kyle-Becker",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Dr. Tabitha Wiegand",
-      "url": "Bobbie-Yost",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Caleb Lindgren",
-      "url": "Mrs--Winifred-Schaefer",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ralph McCullough Sr.",
-      "url": "Terence-Rath",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Cory Willms",
-      "url": "Marcella-Kassulke",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Terrance Zboncak V",
-      "url": "Kayla-Thompson",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Mr. Andres Cassin",
-      "url": "Vincent-Lehner",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Tommie Abbott",
-      "url": "Malcolm-Mohr",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Joyce Auer",
-      "url": "Darin-Huel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Edward Brekke",
-      "url": "Allison-Schneider",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Dr. Colin Streich",
-      "url": "Sammy-Bashirian",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Enrique Jones",
-      "url": "Jamie-Rohan",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "George Casper",
-      "url": "Duane-Fisher-DDS",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Mr. Nick Jones",
-      "url": "Jimmy-Nikolaus",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Jenny Luettgen",
-      "url": "Wendell-Gleichner-V",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Sophie Hegmann V",
-      "url": "Olivia-Schuppe",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Jerome Funk",
-      "url": "Felix-Nolan",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Simple Link",
+      "category": null,
       "subCategory": null,
-      "title": "Simple Link",
-      "url": "/a",
-      "type": 3,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "Shops",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "Machines",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
       "icon": null,
       "article": null
     }
   ],
-  "enFooterBody": "",
+  "enFooterBody": {
+    "id": "fortis",
+    "title": "Moaddi",
+    "body": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    "links": [
+      {
+        "category": "Shop",
+        "title": "Products",
+        "url": "/products"
+      },
+      {
+        "category": "Shop",
+        "title": "Machines",
+        "url": "/machines"
+      },
+      {
+        "category": "Legal",
+        "title": "Privacy policy",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "Legal",
+        "title": "Terms and conditions",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 Moaddi. All rights reserved."
+      },
+      {
+        "title": "Payments secured by Moyasar · مودي للبيع الذاتي"
+      }
+    ]
+  },
   "enFooterLinks": [
     {
       "__typename": "ComponentFooterLinks",
@@ -846,49 +363,42 @@
     {
       "id": "Hero",
       "__typename": "ComponentComponentsHero",
-      "heading": "منصه معدي | للمتاجره الالكترونيه",
-      "description": "منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك  منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك ",
-      "features": [
+      "order": 1,
+      "kicker": "أكثر من 12 ماكينة حول العالم",
+      "title": "تسوق بذكاء من|كل ماكينة معدي",
+      "button": {
+        "title": "امسح الماكينة",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "دعم على مدار الساعة طوال أيام الأسبوع",
-          "icon": {
-            "url": "images/hero/2.png"
-          },
-          "title": "24/7 دعم"
+          "value": "+12",
+          "label": "ماكينة متصلة"
         },
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "شحن مجاني وسريع",
-          "icon": {
-            "url": "images/hero/3.png"
-          },
-          "title": "شحن مجاني وسريع"
+          "value": "19",
+          "label": "منتج"
         },
         {
-          "__typename": "ComponentSharedFeature",
-          "description": "استرداد الأموال خلال 48 ساعة",
-          "icon": {
-            "url": "images/hero/1.png"
-          },
-          "title": "استرداد الأموال خلال 48 ساعة"
+          "value": "<30 ث",
+          "label": "من المسح إلى المنتج"
         }
       ],
-      "button": {
-        "__typename": "ComponentSharedButton",
-        "title": "تسوق الان",
-        "page": {
-          "__typename": "Page",
-          "url": "/appointment"
+      "floatingCards": [
+        {
+          "title": "M-014 العليا",
+          "subtitle": "متصلة - 46 منتج"
+        },
+        {
+          "title": "تم الدفع 13.95 ريال",
+          "subtitle": "جاري الفتح..."
         }
-      },
-      "background": {
-        "url": "/uploads/hero_bg_c3e3dcb124.webp"
-      },
-      "foreground": {
-        "url": "/uploads/hero_30f549460c.webp"
-      },
-      "order": 1
+      ]
     },
     {
       "id": "Shops",
@@ -1148,550 +658,74 @@
   },
   "arHeaderLinks": [
     {
+      "id": "1",
       "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Vera Runolfsdottir",
-      "url": "Gerardo-Kuvalis",
+      "title": "الرئيسية",
+      "url": "/",
       "type": 1,
-      "icon": {
-        "url": "images/header/1.svg"
-      },
-      "article": {
-        "__typename": "Article",
-        "slug": "home"
-      }
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Manuel Harris",
-      "url": "Dana-Kerluke",
-      "type": 1,
-      "icon": {
-        "url": "images/header/2.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Harriet Dach",
-      "url": "Wilma-Jast",
-      "type": 1,
-      "icon": {
-        "url": "images/header/3.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Allen Gleichner",
-      "url": "Eleanor-King-I",
-      "type": 1,
-      "icon": {
-        "url": "images/header/4.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Joe Erdman",
-      "url": "Anna-Wolf-MD",
-      "type": 1,
-      "icon": {
-        "url": "images/header/5.svg"
-      },
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Jessie Cormier",
-      "title": "Nina Thiel",
-      "url": "Rodolfo-Bechtelar",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Rudy Herzog",
-      "url": "Dr--Carmen-Halvorson",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Pamela Olson DVM",
-      "url": "Geneva-McLaughlin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Sally Bogisich",
-      "url": "Nichole-Gutkowski-Ritchie",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Trevor Grady",
-      "url": "Kayla-Rippin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Ruby Dietrich",
-      "url": "Ellis-Brekke",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "James Hettinger",
-      "url": "Darryl-Harber-MD",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Horace Streich PhD",
-      "url": "Amos-Wintheiser",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Mrs. Nicole Quitzon",
-      "subCategory": "Marcos Ankunding",
-      "title": "Belinda Donnelly",
-      "url": "Gladys-Donnelly",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Ryan Lubowitz",
-      "url": "Dora-Haag",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Toni Hilpert",
-      "url": "Tomas-Gottlieb",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Shari Pouros DDS",
-      "url": "Carolyn-Schmitt",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Ramona Klocko",
-      "url": "Gerald-Rempel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Henrietta O'Hara",
-      "url": "Sergio-Rosenbaum",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Henry Schimmel-Schumm",
-      "title": "Erik Pfannerstill V",
-      "url": "Cecil-Luettgen",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Brendan Schinner",
-      "url": "Tommie-Kozey",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Mrs. Leigh Bechtelar",
-      "url": "Beverly-Ryan",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Dr. Clifford Raynor",
-      "url": "Bert-Reichel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Eva Olson DDS",
-      "url": "Edwin-Effertz",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Teri Ullrich",
-      "title": "Lonnie Stiedemann DVM",
-      "url": "Violet-Doyle",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Alfred Schmidt-O'Keefe",
-      "url": "Evelyn-Ziemann",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Marie Lesch",
-      "url": "Bruce-Boyle",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Marvin Reynolds",
-      "url": "Byron-Cole",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Kurt Fay",
-      "title": "Tammy Boehm MD",
-      "url": "Loren-Schmidt-Buckridge",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Nelson Marvin",
-      "title": "Ms. Casey Cummings",
-      "url": "Pamela-Bergstrom-Jr-",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Kristi Cassin",
-      "subCategory": "Nelson Marvin",
-      "title": "Mabel Bradtke DDS",
-      "url": "Dr--Joshua-Steuber",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Carole Bogan",
-      "url": "Marie-Larkin",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Chris Bogan",
-      "url": "Mr--Harvey-Hammes",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Joshua Moen III",
-      "url": "Angel-Walter",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ian Douglas-Hoeger",
-      "url": "Veronica-Torp",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ms. Gladys Labadie",
-      "url": "Kyle-Becker",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Dr. Tabitha Wiegand",
-      "url": "Bobbie-Yost",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Caleb Lindgren",
-      "url": "Mrs--Winifred-Schaefer",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Sue Wilkinson",
-      "title": "Ralph McCullough Sr.",
-      "url": "Terence-Rath",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Cory Willms",
-      "url": "Marcella-Kassulke",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Terrance Zboncak V",
-      "url": "Kayla-Thompson",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Mr. Andres Cassin",
-      "url": "Vincent-Lehner",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Tommie Abbott",
-      "url": "Malcolm-Mohr",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Joyce Auer",
-      "url": "Darin-Huel",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Edward Brekke",
-      "url": "Allison-Schneider",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Dr. Colin Streich",
-      "url": "Sammy-Bashirian",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Vicki Schoen DDS",
-      "title": "Enrique Jones",
-      "url": "Jamie-Rohan",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "George Casper",
-      "url": "Duane-Fisher-DDS",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Mr. Nick Jones",
-      "url": "Jimmy-Nikolaus",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Jenny Luettgen",
-      "url": "Wendell-Gleichner-V",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Sophie Hegmann V",
-      "url": "Olivia-Schuppe",
-      "type": 1,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Jimmie Kiehn",
-      "subCategory": "Jaime Schowalter",
-      "title": "Jerome Funk",
-      "url": "Felix-Nolan",
-      "type": 2,
-      "icon": null,
-      "article": null
-    },
-    {
-      "__typename": "ComponentFooterLinks",
-      "category": "Simple Link",
+      "category": null,
       "subCategory": null,
-      "title": "Simple Link",
-      "url": "/a",
-      "type": 3,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "المتاجر",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "الماكينات",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
       "icon": null,
       "article": null
     }
   ],
-  "arFooterBody": "",
+  "arFooterBody": {
+    "id": "fortis",
+    "title": "معدي",
+    "body": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    "links": [
+      {
+        "category": "المتجر",
+        "title": "المنتجات",
+        "url": "/products"
+      },
+      {
+        "category": "المتجر",
+        "title": "الماكينات",
+        "url": "/machines"
+      },
+      {
+        "category": "قانوني",
+        "title": "سياسة الخصوصية",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "قانوني",
+        "title": "الشروط والأحكام",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 معدي. جميع الحقوق محفوظة."
+      },
+      {
+        "title": "المدفوعات مؤمنة بواسطة ميسر · مودي للبيع الذاتي"
+      }
+    ]
+  },
   "arFooterLinks": [
     {
       "__typename": "ComponentFooterLinks",
@@ -1857,6 +891,230 @@
         "platform": "snapchat",
         "__typename": "ComponentSharedSocialMedia",
         "url": "/"
+      }
+    ]
+  },
+  "zhHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "order": 1,
+      "kicker": "全球 240+ 台机器",
+      "title": "从每台 Moaddi 机器|更智能地购物",
+      "button": {
+        "title": "扫描机器",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
+        {
+          "value": "12+",
+          "label": "台在线机器"
+        },
+        {
+          "value": "19",
+          "label": "件产品"
+        },
+        {
+          "value": "<30秒",
+          "label": "从扫描到取货"
+        }
+      ],
+      "floatingCards": [
+        {
+          "title": "M-014 欧莱亚",
+          "subtitle": "在线 - 46 件产品"
+        },
+        {
+          "title": "已支付 ¥13.95",
+          "subtitle": "正在打开..."
+        }
+      ]
+    }
+  ],
+  "zhHeaderLinks": [
+    {
+      "id": "1",
+      "__typename": "ComponentFooterLinks",
+      "title": "首页",
+      "url": "/",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "商店",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "机器",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    }
+  ],
+  "zhFooterBody": {
+    "id": "fortis",
+    "title": "Moaddi",
+    "body": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    "links": [
+      {
+        "category": "商店",
+        "title": "产品",
+        "url": "/products"
+      },
+      {
+        "category": "商店",
+        "title": "机器",
+        "url": "/machines"
+      },
+      {
+        "category": "法律",
+        "title": "隐私政策",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "法律",
+        "title": "条款和条件",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 Moaddi。保留所有权利。"
+      },
+      {
+        "title": "支付由 Moyasar 提供安全保障 · مودي للبيع الذاتي"
+      }
+    ]
+  },
+  "itHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "order": 1,
+      "kicker": "Oltre 240 macchine nel mondo",
+      "title": "Acquista in modo più intelligente|da ogni macchina Moaddi",
+      "button": {
+        "title": "Scansiona una macchina",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
+        {
+          "value": "12+",
+          "label": "macchine online"
+        },
+        {
+          "value": "19",
+          "label": "prodotti"
+        },
+        {
+          "value": "<30s",
+          "label": "dalla scansione al prodotto"
+        }
+      ],
+      "floatingCards": [
+        {
+          "title": "M-014 Olaya",
+          "subtitle": "Online - 46 prodotti"
+        },
+        {
+          "title": "Pagato €13,95",
+          "subtitle": "Apertura in corso..."
+        }
+      ]
+    }
+  ],
+  "itHeaderLinks": [
+    {
+      "id": "1",
+      "__typename": "ComponentFooterLinks",
+      "title": "Home",
+      "url": "/",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "Negozi",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "Macchine",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    }
+  ],
+  "itFooterBody": {
+    "id": "fortis",
+    "title": "Moaddi",
+    "body": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    "links": [
+      {
+        "category": "Negozio",
+        "title": "Prodotti",
+        "url": "/products"
+      },
+      {
+        "category": "Negozio",
+        "title": "Macchine",
+        "url": "/machines"
+      },
+      {
+        "category": "Legale",
+        "title": "Informativa sulla privacy",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "Legale",
+        "title": "Termini e condizioni",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 Moaddi. Tutti i diritti riservati."
+      },
+      {
+        "title": "Pagamenti protetti da Moyasar · مودي للبيع الذاتي"
       }
     ]
   }

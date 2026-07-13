@@ -67,7 +67,7 @@ const MachineCard = ({
   t,
 }) => {
   const router = useRouter();
-  const { user, setUser, setMachine } = useCart();
+  const { setUser, setMachine } = useCart();
 
   const handleClick = async () => {
     const response = await getRequest(machineQRScan(qrCode));
@@ -77,7 +77,7 @@ const MachineCard = ({
       if (!response.isActive) return toast.error(t("machineNotActive"));
     }
     toast.success(t("machineDetected"));
-    if (user) setUser((prev) => ({ ...prev, machines: [response] }));
+    setUser((prev) => (prev ? { ...prev, machines: [response] } : prev));
     setMachine(response);
     router.push(
       `/machine-products?qr=${encodeURIComponent(String(response.qrCode ?? qrCode))}`,

@@ -29,8 +29,8 @@ const HERO_FALLBACK = {
       title: "Scan a machine",
       page: { url: "/machine-scan" },
     },
-    appStoreUrl: "#home",
-    googlePlayUrl: "#home",
+    appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
     appGalleryUrl: "#home",
     stats: [
       { value: "12+", label: "machines online" },
@@ -39,7 +39,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 Olaya", subtitle: "Online - 46 products" },
-      { title: "Paid 13.95 SAR", subtitle: "Opening..." },
+      { title: "Paid $13.95", subtitle: "Opening..." },
     ],
   },
   ar: {
@@ -49,8 +49,8 @@ const HERO_FALLBACK = {
       title: "امسح الماكينة",
       page: { url: "/machine-scan" },
     },
-    appStoreUrl: "#home",
-    googlePlayUrl: "#home",
+    appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
     appGalleryUrl: "#home",
     stats: [
       { value: "+12", label: "ماكينة متصلة" },
@@ -69,8 +69,8 @@ const HERO_FALLBACK = {
       title: "扫描机器",
       page: { url: "/machine-scan" },
     },
-    appStoreUrl: "#home",
-    googlePlayUrl: "#home",
+    appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
     appGalleryUrl: "#home",
     stats: [
       { value: "12+", label: "台在线机器" },
@@ -79,7 +79,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 欧莱亚", subtitle: "在线 - 46 件产品" },
-      { title: "已支付 13.95 里亚尔", subtitle: "正在打开..." },
+      { title: "已支付 ¥13.95", subtitle: "正在打开..." },
     ],
   },
   it: {
@@ -89,8 +89,8 @@ const HERO_FALLBACK = {
       title: "Scansiona una macchina",
       page: { url: "/machine-scan" },
     },
-    appStoreUrl: "#home",
-    googlePlayUrl: "#home",
+    appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
     appGalleryUrl: "#home",
     stats: [
       { value: "12+", label: "macchine online" },
@@ -99,7 +99,7 @@ const HERO_FALLBACK = {
     ],
     floatingCards: [
       { title: "M-014 Olaya", subtitle: "Online - 46 prodotti" },
-      { title: "Pagato 13.95 SAR", subtitle: "Apertura in corso..." },
+      { title: "Pagato €13,95", subtitle: "Apertura in corso..." },
     ],
   },
 };
