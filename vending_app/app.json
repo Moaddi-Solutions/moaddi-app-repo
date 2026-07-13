@@ -29,7 +29,9 @@
       },
       "buildNumber": "7",
       "associatedDomains": [
-        "applinks:server.moaddi-app.com"
+        "applinks:server.moaddi-app.com",
+        "applinks:moaddi-app.com",
+        "applinks:www.moaddi-app.com"
       ]
     },
     "android": {
@@ -54,6 +56,16 @@
             {
               "scheme": "https",
               "host": "server.moaddi-app.com",
+              "pathPrefix": "/gift"
+            },
+            {
+              "scheme": "https",
+              "host": "moaddi-app.com",
+              "pathPrefix": "/gift"
+            },
+            {
+              "scheme": "https",
+              "host": "www.moaddi-app.com",
               "pathPrefix": "/gift"
             }
           ],

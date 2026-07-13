@@ -71,7 +71,7 @@ export function ProductCard({
         {image ? (
           <Image
             source={{ uri: image }}
-            resizeMode="cover"
+            resizeMode="contain"
             style={{ width: "100%", height: "100%" }}
           />
         ) : (

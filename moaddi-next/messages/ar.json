@@ -149,6 +149,31 @@
     "unavailable": "لم يعد رابط الهدية هذا متاحًا.",
     "claimError": "تعذر استلام هذه الهدية."
   },
+  "Gifts": {
+    "title": "هداياي",
+    "description": "تتبّع الهدايا التي شاركتها والهدايا التي وصلتك.",
+    "sentTab": "المرسلة ({count})",
+    "receivedTab": "المستلمة ({count})",
+    "loading": "جارٍ تحميل الهدايا...",
+    "noSentGifts": "لم تشارك أي هدية بعد.",
+    "noReceivedGifts": "لم تستلم أي هدية بعد.",
+    "moaddiGift": "هدية معدّي",
+    "moaddiMachine": "مكينة معدّي",
+    "from": "من",
+    "boxesOpened": "تم فتح {opened} من {total} صندوق",
+    "claimedOn": "تم الاستلام في",
+    "sharedOn": "تمت المشاركة في",
+    "shareAgain": "مشاركة رابط الهدية مجددًا",
+    "viewGift": "عرض الهدية",
+    "linkCopied": "تم نسخ رابط الهدية.",
+    "shareError": "تعذّرت مشاركة رابط الهدية.",
+    "status": {
+      "pending": "لم تُفتح بعد",
+      "claimed": "تم فتح الرابط",
+      "collected": "تم الاستلام",
+      "expired": "منتهية الصلاحية"
+    }
+  },
   "PurchaseNotice": {
     "dismiss": "ذكّرني لاحقًا",
     "kind": {
@@ -277,6 +302,8 @@
       "initiate": "بدء العملية",
       "completed": "مكتمل",
       "paymentDone": "تم الدفع"
-    }
+    },
+    "myGifts": "هداياي",
+    "myGiftsDetail": "تتبّع الهدايا المشتركة"
   }
 }

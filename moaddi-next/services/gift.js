@@ -1,5 +1,10 @@
 import { getRequest, postRequest } from "./events";
-import { giftClaimAPI, giftEnableAPI, giftPreviewAPI } from "./serverAddresses";
+import {
+  giftClaimAPI,
+  giftEnableAPI,
+  giftPreviewAPI,
+  giftsMineAPI,
+} from "./serverAddresses";
 
 /**
  * Web gift-a-purchase client. Calls the already-deployed server gift endpoints
@@ -52,5 +57,21 @@ export const claimGift = async (claimToken) => {
     return result;
   } catch (error) {
     throw withMessage(error, "Could not claim this gift.");
+  }
+};
+
+/**
+ * Gifts dashboard for the signed-in user: `{ sent, received }` lists with a
+ * derived `giftStatus` (pending | claimed | collected | expired) per item.
+ */
+export const listMyGifts = async () => {
+  try {
+    const result = await getRequest(giftsMineAPI());
+    return {
+      sent: Array.isArray(result?.sent) ? result.sent : [],
+      received: Array.isArray(result?.received) ? result.received : [],
+    };
+  } catch (error) {
+    throw withMessage(error, "Could not load your gifts.");
   }
 };

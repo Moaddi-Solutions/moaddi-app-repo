@@ -76,6 +76,31 @@ const controller = (): import('express').Router => {
     }
   );
 
+  // Gifts dashboard: gifts I shared (`sent`) and gifts I claimed (`received`).
+  // MUST be registered before /gifts/:claimToken or "mine" is read as a token.
+  router.get(
+    '/gifts/mine',
+    authenticate(),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const u = req.authenticatedUser;
+        if (!u) return res.status(401).json({ message: 'Unauthorized.' });
+
+        const { sent, received } = await purchasesRepo.listGiftsForUser(u._id);
+        // Senders get the shareable link back so they can re-share it.
+        const withUrls = (sent as { claimToken?: string | null }[]).map(
+          (item) => ({
+            ...item,
+            claimUrl: item.claimToken ? claimUrlFor(item.claimToken) : null,
+          })
+        );
+        return res.status(200).json({ sent: withUrls, received });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   // Public preview for the recipient's claim screen.
   router.get(
     '/gifts/:claimToken',

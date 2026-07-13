@@ -1,4 +1,3 @@
-import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { Check, Gift, PackageOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -12,6 +11,7 @@ import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
 import { compressBoxData } from "~/services/functions";
+import { WEBSITE_URL } from "~/config/socialMedia";
 import { enableGift } from "~/services/gift";
 import { productImageUrl } from "~/services/serverAddresses";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
@@ -95,7 +95,10 @@ const BoxGrid = () => {
     setSharing(true);
     try {
       const { claimToken, claimUrl } = await enableGift(user.purchase._id);
-      const link = claimUrl || Linking.createURL("gift/" + claimToken);
+      // Always share an https web URL: Universal/App Links open the app when
+      // installed, and the web claim page handles everyone else. A moaddi://
+      // scheme URL is untappable in WhatsApp and dead without the app.
+      const link = claimUrl || `${WEBSITE_URL}/gift/${claimToken}`;
       // Gift share: send ONLY the claim URL — no message/description text.
       // `message` carries the link on Android; `url` carries it on iOS.
       await Share.share({

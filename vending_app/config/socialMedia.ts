@@ -20,6 +20,9 @@ export const SOCIAL_LINKS: Record<SocialPlatform, string | null> = {
 
 export const CONTACT_EMAIL = "info@moaddi.net";
 
-/** Public marketing site linked from the home footer. */
-export const WEBSITE_URL = "https://moaddi-app.com";
+/**
+ * Public web app, also the gift claim link host. MUST be the `www` host: the
+ * apex `https://moaddi-app.com` has no TLS certificate and never connects.
+ */
+export const WEBSITE_URL = "https://www.moaddi-app.com";
 export const WEBSITE_LABEL = "moaddi-app.com";

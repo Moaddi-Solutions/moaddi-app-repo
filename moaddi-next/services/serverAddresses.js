@@ -115,6 +115,7 @@ export const giftPreviewAPI = (claimToken) =>
   `${address()}gifts/${enc(claimToken)}`;
 export const giftClaimAPI = (claimToken) =>
   `${address()}gifts/${enc(claimToken)}/claim`;
+export const giftsMineAPI = () => `${address()}gifts/mine`;
 
 export function paymentProvidersAPI() {
   return `${address()}paymentProviders`;

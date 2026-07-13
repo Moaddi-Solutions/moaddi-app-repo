@@ -23,6 +23,7 @@
  */
 
 const express = require("express");
+const config = require("../../config");
 
 const IOS_APP_ID = process.env.IOS_APP_ID || "TEAMID.com.moaddi";
 const ANDROID_PACKAGE = process.env.ANDROID_PACKAGE || "com.moaddi";
@@ -106,8 +107,17 @@ router.get("/.well-known/assetlinks.json", (req, res) => {
 });
 
 // Browser fallback for gift links (app-installed case is intercepted by the OS).
+// Legacy links point at THIS host; new links point at the web app. Redirect to
+// the web claim page when it lives elsewhere, otherwise serve the landing page.
 router.get("/gift/:token", (req, res) => {
-  res.type("html").send(landingHtml(req.params.token));
+  const token = String(req.params.token).replace(/[^a-zA-Z0-9._-]/g, "");
+  const base = (config.giftClaimBaseUrl || "").replace(/\/+$/, "");
+  const baseHost = base.replace(/^https?:\/\//i, "").toLowerCase();
+  const isThisHost = baseHost === String(req.get("host") || "").toLowerCase();
+  if (base && !isThisHost) {
+    return res.redirect(302, `${base}/gift/${token}`);
+  }
+  res.type("html").send(landingHtml(token));
 });
 
 module.exports = router;

@@ -275,5 +275,20 @@
   "passwordMinLength": "密码长度至少为 6 个字符",
   "loggedInSuccessfully": "登录成功！",
   "passwordsDoNotMatch": "两次输入的密码不一致",
-  "accountCreatedSuccessfully": "账户创建成功！"
+  "accountCreatedSuccessfully": "账户创建成功！",
+  "myGifts": "我的礼物",
+  "myGiftsSubtitle": "跟踪您分享或收到的礼物",
+  "giftsSentTab": "已送出",
+  "giftsReceivedTab": "已收到",
+  "noSentGifts": "您还没有分享过礼物。",
+  "noReceivedGifts": "您还没有收到过礼物。",
+  "giftFrom": "来自",
+  "giftBoxesOpened": "已打开 {{opened}}/{{total}} 个货格",
+  "giftClaimedOn": "领取于",
+  "giftSharedOn": "分享于",
+  "giftStatusPending": "尚未打开",
+  "giftStatusClaimed": "已打开链接",
+  "giftStatusCollected": "已取货",
+  "giftStatusExpired": "已过期",
+  "giftListError": "无法加载您的礼物。"
 }

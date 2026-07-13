@@ -177,7 +177,7 @@ function MachineProductCard({ product, currency, available, qty, onQty }) {
       <Image
         source={{ uri: imageUri }}
         alt={title}
-        resizeMode="cover"
+        resizeMode="contain"
         style={{
           width: 64,
           height: 64,

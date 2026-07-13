@@ -851,6 +851,120 @@ const giftView = async (
   };
 };
 
+/** Derived lifecycle of a gifted purchase for the "My Gifts" list. */
+const giftStatusOf = (p: {
+  status?: string;
+  items?: ModelTypes.IPurchaseItem[];
+  gift?: ModelTypes.IGift;
+}): "pending" | "claimed" | "collected" | "expired" => {
+  const items = p.items || [];
+  const opened = items.filter((i) => i.boxStatus).length;
+  if (
+    p.status === PURCHASE_STATUS.COMPLETED ||
+    (items.length > 0 && opened === items.length)
+  ) {
+    return "collected";
+  }
+  const exp = p.gift?.expiresAt;
+  if (exp != null && new Date(exp).getTime() < Date.now()) return "expired";
+  if (p.gift?.claimedAt) return "claimed";
+  return "pending";
+};
+
+interface GiftListDoc {
+  _id: string;
+  machineId?: string;
+  items?: ModelTypes.IPurchaseItem[];
+  price?: number;
+  preferredCurrency?: string;
+  status?: string;
+  gift?: ModelTypes.IGift;
+  machine?: { name?: string }[];
+  products?: { name?: string }[];
+  buyer?: { name?: string }[];
+}
+
+/** One row of the gifts list. `claimToken` only for the sender's own gifts. */
+const shapeGiftListItem = (doc: GiftListDoc, includeToken: boolean) => {
+  const items = doc.items || [];
+  return {
+    _id: doc._id,
+    machineId: doc.machineId ?? null,
+    machineName: doc.machine?.[0]?.name ?? null,
+    productNames: (doc.products || []).map((p) => p.name).filter(Boolean),
+    price: doc.price ?? null,
+    preferredCurrency: doc.preferredCurrency ?? null,
+    status: doc.status,
+    boxesTotal: items.length,
+    boxesOpened: items.filter((i) => i.boxStatus).length,
+    giftStatus: giftStatusOf(doc),
+    sharedAt: doc.gift?.sharedAt ?? null,
+    claimedAt: doc.gift?.claimedAt ?? null,
+    expiresAt: doc.gift?.expiresAt ?? null,
+    claimToken: includeToken ? (doc.gift?.claimToken ?? null) : null,
+    buyerName: includeToken ? null : (doc.buyer?.[0]?.name ?? null),
+  };
+};
+
+/**
+ * Gifts dashboard: purchases the user shared as a gift (`sent`) and gifts
+ * shared with them that they claimed (`received`).
+ */
+const listGiftsForUser = async (
+  userId: string,
+): Promise<{ sent: unknown[]; received: unknown[] }> => {
+  const shapeStages = [
+    { $sort: { "gift.sharedAt": -1 as const, created: -1 as const } },
+    { $limit: 100 },
+    {
+      $lookup: {
+        from: "machines",
+        localField: "machineId",
+        foreignField: "_id",
+        as: "machine",
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "products",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "customerId",
+        foreignField: "_id",
+        as: "buyer",
+      },
+    },
+  ];
+  const [sent, received] = await Promise.all([
+    Purchases.aggregate([
+      { $match: { customerId: userId, "gift.isGift": true } },
+      ...shapeStages,
+    ] as never[]).exec(),
+    Purchases.aggregate([
+      {
+        $match: {
+          "gift.isGift": true,
+          "gift.authorizedOpeners": userId,
+          customerId: { $ne: userId },
+        },
+      },
+      ...shapeStages,
+    ] as never[]).exec(),
+  ]);
+  return {
+    sent: (sent as GiftListDoc[]).map((d) => shapeGiftListItem(d, true)),
+    received: (received as GiftListDoc[]).map((d) =>
+      shapeGiftListItem(d, false),
+    ),
+  };
+};
+
 // ---------------------------------------------------------------------------
 // Wallet credit pipeline
 // ---------------------------------------------------------------------------
@@ -1504,6 +1618,7 @@ export = {
   getByClaimToken,
   recordGiftClaim,
   giftView,
+  listGiftsForUser,
   applyStripePaymentIntentSucceeded,
   applyStripePaymentIntentFailed,
   tryReserveStripeClientNotification,

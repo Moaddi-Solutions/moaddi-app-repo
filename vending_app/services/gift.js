@@ -1,5 +1,10 @@
 import { getRequest, postRequest } from "./httpClient";
-import { giftClaimAPI, giftEnableAPI, giftPreviewAPI } from "./serverAddresses";
+import {
+  giftClaimAPI,
+  giftEnableAPI,
+  giftPreviewAPI,
+  giftsMineAPI,
+} from "./serverAddresses";
 
 /**
  * Gift a purchase: the buyer enables a bearer claim link so either they or a
@@ -35,4 +40,19 @@ export const claimGift = async (claimToken) => {
     throw new Error(result?.message || "Could not claim this gift.");
   }
   return result;
+};
+
+/**
+ * Gifts dashboard for the signed-in user: `{ sent, received }` lists with a
+ * derived `giftStatus` (pending | claimed | collected | expired) per item.
+ */
+export const listMyGifts = async () => {
+  const result = await getRequest(giftsMineAPI());
+  if (!result || result.statusCode) {
+    throw new Error(result?.message || "Could not load your gifts.");
+  }
+  return {
+    sent: Array.isArray(result.sent) ? result.sent : [],
+    received: Array.isArray(result.received) ? result.received : [],
+  };
 };
