@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/../components/ui/table";
 import { Fit } from "@/../services/data-provider";
+import { formatMoneyValue } from "@/../lib/formatMoney";
 import { Check, PackageOpen, Radio, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useListContext } from "ra-core";
@@ -128,7 +129,7 @@ const NotificationTable = ({ refetchRef }) => {
               <Info label="Customer" value={customerLabel(row.record)} />
               <Info label="Box" value={row.box.name} />
               <Info label="Machine" value={row.record.machineId} />
-              <Info label="Price" value={productPrice(row.product)} />
+              <Info label="Price" value={productPrice(row)} />
               <ActionButtons
                 onApprove={() => approveHandler(row)}
                 onReject={() => rejectHandler(row)}
@@ -184,7 +185,7 @@ const NotificationTable = ({ refetchRef }) => {
                     <span className="break-all font-mono text-xs">{row.record.machineId}</span>
                   </TableCell>
                   <TableCell className="px-4 py-3.5 text-end text-sm font-extrabold tabular-nums text-foreground">
-                    {productPrice(row.product)}
+                    {productPrice(row)}
                   </TableCell>
                   <TableCell className="px-4 py-3.5">
                     <ActionButtons
@@ -281,8 +282,24 @@ function customerLabel(record) {
   return record?.customer?.[0]?.name ?? record?.customer?.[0]?._id ?? "-";
 }
 
-function productPrice(product) {
-  return `${product.campaignPrice ?? product.salePrice} SAR`;
+function productPrice({ product, record }) {
+  const value =
+    product?.campaignPrice ??
+    product?.salePrice ??
+    product?.price ??
+    product?.productPrice ??
+    record?.price;
+  const currency =
+    record?.preferredCurrency ??
+    product?.preferredCurrency ??
+    product?.currency ??
+    record?.currency ??
+    record?.customer?.[0]?.preferredCurrency ??
+    "SAR";
+
+  return value == null || value === ""
+    ? "-"
+    : `${formatMoneyValue(value)} ${String(currency).toUpperCase()}`;
 }
 
 export default NotificationList;
