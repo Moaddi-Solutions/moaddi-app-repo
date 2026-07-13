@@ -620,5 +620,282 @@
       "id": "Kaisijin 24",
       "body": "<h3 dir=\"ltr\" data-pm-slice=\"0 0 []\">The machine has one MAC, 12 lock</h3><hr><h3 dir=\"ltr\">Content</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>vending machine hardware body</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\"><u>Bluetooth mini program body (expo)</u></p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">vending machine management background system. (back-end)</p>  </li></ol><hr><h3 dir=\"ltr\">Plan</h3><ol>  <li dir=\"ltr\">    <p dir=\"ltr\">The terminal user scans the QR code (Bluetooth MAC address)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Automatically jumps to the docking APP purchase interface</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Connect to the BLE Bluetoothof the hardware</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">Handshake protocol (app send a string codes to machine)</p>  </li>  <li dir=\"ltr\">    <p dir=\"ltr\">unlocking, power acquisition, charging Settings</p>  </li></ol><hr><h3 dir=\"ltr\">Instructions</h3><h3 dir=\"ltr\">[← Send] Unlocking instruction: (10 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 7th byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0×00 (0) is invalid</p></li>      <li dir=\"ltr\">        <p dir=\"ltr\">          0x01(1) to 0x0c (12) indicates that 1 to 12 locks are opened        </p>      </li>      <li dir=\"ltr\">        <p dir=\"ltr\">0×0d (13) all of 12 locks open for testing</p>      </li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock status feedback: (14 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">    after change of the lock status the device takes the initiative to report  </summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">  [← Send] Device Information or Lock Status Information: (4 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">The 2nd byte is the important one</summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (Queries device information)</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf1: (Queries the lock status)</p></li>    </ul>  </div></details><h3 dir=\"ltr\">[→ Receive] Device Info returns: (8 bytes)</h3><details opendetails=\"false\">  <summary dir=\"ltr\">Only first 4 bytes are important</summary>  <div class=\"details-content\">    <ol>      <li dir=\"ltr\"><p dir=\"ltr\">Head</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Version</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Battery operated or not</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">Percentage of battery</p></li>    </ol>  </div></details><h3 dir=\"ltr\">[→ Receive] Lock Status returns: (14 bytes)</h3><details opendetails=\"false\">  <summary></summary>  <div class=\"details-content\">    <ul>      <li dir=\"ltr\">        <p dir=\"ltr\">1 byte (head), 1 byte (tail), 12 bytes (status)</p>      </li>      <li dir=\"ltr\"><p dir=\"ltr\">0xf0 (240): On</p></li>      <li dir=\"ltr\"><p dir=\"ltr\">0x0f (15): Off</p></li>    </ul>  </div></details><h3 dir=\"ltr\">Charging related additions: (3 bytes)</h3><p></p>"
     }
+  ],
+  "zhHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "order": 1,
+      "kicker": "全球 230+ 台机器",
+      "title": "从每台 Moaddi 机器|更智能地购物",
+      "button": {
+        "title": "扫描机器",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
+        {
+          "value": "12+",
+          "label": "台在线机器"
+        },
+        {
+          "value": "19",
+          "label": "件产品"
+        },
+        {
+          "value": "<30秒",
+          "label": "从扫描到取货"
+        }
+      ],
+      "floatingCards": [
+        {
+          "title": "M-014 欧莱亚",
+          "subtitle": "在线 - 46 件产品"
+        },
+        {
+          "title": "已支付 ¥13.95",
+          "subtitle": "正在打开..."
+        }
+      ]
+    }
+  ],
+  "zhHeaderLinks": [
+    {
+      "id": "1",
+      "__typename": "ComponentFooterLinks",
+      "title": "首页",
+      "url": "/",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "商店",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "机器",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "title": "test",
+      "url": "test",
+      "id": "478kU4f"
+    }
+  ],
+  "zhFooterBody": {
+    "id": "fortis",
+    "title": "Moaddi",
+    "body": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    "links": [
+      {
+        "category": "商店",
+        "title": "产品",
+        "url": "/products"
+      },
+      {
+        "category": "商店",
+        "title": "机器",
+        "url": "/machines"
+      },
+      {
+        "category": "法律",
+        "title": "隐私政策",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "法律",
+        "title": "条款和条件",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 Moaddi。保留所有权利。"
+      },
+      {
+        "title": "支付由 Moyasar 提供安全保障 · مودي للبيع الذاتي"
+      }
+    ]
+  },
+  "itHomeBlocks": [
+    {
+      "id": "Hero",
+      "__typename": "ComponentComponentsHero",
+      "order": 1,
+      "kicker": "Oltre 240 macchine nel mondo",
+      "title": "Acquista in modo più intelligente|da ogni macchina Moaddi",
+      "button": {
+        "title": "Scansiona una macchina",
+        "page": {
+          "url": "/machine-scan"
+        }
+      },
+      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+      "appGalleryUrl": "#home",
+      "stats": [
+        {
+          "value": "12+",
+          "label": "macchine online"
+        },
+        {
+          "value": "19",
+          "label": "prodotti"
+        },
+        {
+          "value": "<30s",
+          "label": "dalla scansione al prodotto"
+        }
+      ],
+      "floatingCards": [
+        {
+          "title": "M-014 Olaya",
+          "subtitle": "Online - 46 prodotti"
+        },
+        {
+          "title": "Pagato €13,95",
+          "subtitle": "Apertura in corso..."
+        }
+      ]
+    }
+  ],
+  "itHeaderLinks": [
+    {
+      "id": "1",
+      "__typename": "ComponentFooterLinks",
+      "title": "Home",
+      "url": "/",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "2",
+      "__typename": "ComponentFooterLinks",
+      "title": "Negozi",
+      "url": "/shops",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    },
+    {
+      "id": "3",
+      "__typename": "ComponentFooterLinks",
+      "title": "Macchine",
+      "url": "/machines",
+      "type": 1,
+      "category": null,
+      "subCategory": null,
+      "icon": null,
+      "article": null
+    }
+  ],
+  "itFooterBody": {
+    "id": "fortis",
+    "title": "Moaddi",
+    "body": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    "links": [
+      {
+        "category": "Negozio",
+        "title": "Prodotti",
+        "url": "/products"
+      },
+      {
+        "category": "Negozio",
+        "title": "Macchine",
+        "url": "/machines"
+      },
+      {
+        "category": "Legale",
+        "title": "Informativa sulla privacy",
+        "url": "/privacy-policy"
+      },
+      {
+        "category": "Legale",
+        "title": "Termini e condizioni",
+        "url": "/terms-and-conditions"
+      }
+    ],
+    "bottomLinks": [
+      {
+        "title": "© 2026 Moaddi. Tutti i diritti riservati."
+      },
+      {
+        "title": "Pagamenti protetti da Moyasar · مودي للبيع الذاتي"
+      }
+    ]
+  },
+  "zhSite": {
+    "id": "fortis",
+    "name": "Moaddi",
+    "description": "vending machines platform"
+  },
+  "zhSeo": {
+    "shareImage": {
+      "src": "1752170007047_logo-(2)2.png"
+    },
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Vending Machines Platform",
+    "metaTitle": "Moaddi"
+  },
+  "zhPages": [
+    {
+      "body": "<p></p><p>At <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>, your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you visit or use our website. By accessing or using <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, you agree to the terms of this Privacy Policy.</p><h2>1. Information We Collect</h2><p>We may collect the following types of information:</p><ul><li><p><strong>Personal Information</strong>: such as your name, email address, phone number, or any details you provide when contacting us or filling out forms.</p></li><li><p><strong>Non-Personal Information</strong>: including browser type, device information, IP address, and usage data through cookies and analytics tools.</p></li></ul><h2>2. How We Use Your Information</h2><p>We use the information we collect to:</p><ul><li><p>Provide, operate, and maintain our website.</p></li><li><p>Improve user experience and personalize content.</p></li><li><p>Communicate with you, respond to inquiries, and provide customer support.</p></li><li><p>Send updates, newsletters, or marketing communications (if you have opted in).</p></li><li><p>Ensure website security and prevent fraudulent activity.</p></li></ul><h2>3. Sharing of Information</h2><p>We do not sell, trade, or rent your personal information to third parties. We may share information only in the following cases:</p><ul><li><p>With trusted service providers who assist us in operating our website or services.</p></li><li><p>If required by law, regulation, or legal process.</p></li><li><p>To protect the rights, property, or safety of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, our users, or others.</p></li></ul><h2>4. Cookies and Tracking Technologies</h2><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> uses cookies and similar technologies to enhance user experience, analyze traffic, and understand user behavior. You can manage or disable cookies in your browser settings.</p><h2>5. Data Security</h2><p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p><h2>6. Your Rights</h2><p>Depending on your location, you may have the right to:</p><ul><li><p>Access the personal information we hold about you.</p></li><li><p>Request correction or deletion of your data.</p></li><li><p>Opt out of receiving marketing communications.</p></li><li><p>Withdraw consent where processing is based on consent.</p></li></ul><h2>7. Third-Party Links</h2><p>Our website may contain links to external websites. We are not responsible for the privacy practices or content of third-party sites.</p><h2>8. Changes to This Policy</h2><p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with the updated effective date.</p><h2>9. Contact Us</h2><p>If you have any questions about this Privacy Policy, please contact us at:</p><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a><br>Email: info@moaddi-app.com</p>",
+      "id": "privacy-policy"
+    },
+    {
+      "body": "<p>Welcome to <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>.<br>By accessing or using our website and services, you agree to comply with the following Terms and Conditions. Please read them carefully before using the site.</p><h6>1. Acceptance of Terms</h6><ul><li><p>By using this website, you agree to these Terms and Conditions.</p></li><li><p>If you do not agree, please discontinue using the site.</p></li></ul><h6>2. Business Activity</h6><ul><li><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> provides e-commerce services for vending machines and related products.</p></li></ul><h6>3. Accounts</h6><ul><li><p>When registering, you must provide accurate and complete information.</p></li><li><p>You are responsible for maintaining the confidentiality of your login credentials and any unauthorized use of your account.</p></li></ul><h6>4. Orders and Payment</h6><ul><li><p>All orders are subject to confirmation and product availability.</p></li><li><p>Payments must be made through the payment methods available on the site.</p></li><li><p>We reserve the right to refuse or cancel any order in case of error or unavailability.</p></li></ul><h6>5. Shipping and Delivery</h6><ul><li><p>Orders are shipped to the address provided during checkout.</p></li><li><p>Estimated delivery times are approximate and may vary depending on the shipping provider.</p></li></ul><h6>6. Returns and Exchanges</h6><ul><li><p>Returns or exchanges are subject to our \"Return Policy.\"</p></li><li><p>Products must be unused and in their original condition.</p></li></ul><h6>7. Intellectual Property Rights</h6><ul><li><p>All content (text, images, logos, design) is the property of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> and may not be used without prior written consent.</p></li></ul><h6>8. Limitation of Liability</h6><ul><li><p>We are not liable for any direct or indirect damages resulting from the use of our products or website.</p></li><li><p>We are not responsible for third-party failures (such as shipping or payment providers).</p></li></ul><h6>9. Modifications</h6><ul><li><p>We reserve the right to update or modify these Terms at any time.</p></li><li><p>Continued use of the website after changes implies acceptance of the revised Terms.</p></li></ul><h6>10. Governing Law</h6><ul><li><p>These Terms are governed by the laws of Saudi Arabia (or the relevant jurisdiction where your business operates).</p></li></ul><h6>11. Contact Us</h6><p>For inquiries regarding these Terms and Conditions:<br>📧 <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"mailto:support@moaddi-app.com\"><strong>support@moaddi-app.com</strong></a></p>",
+      "id": "terms-and-conditions"
+    }
+  ],
+  "itSite": {
+    "id": "fortis",
+    "name": "Moaddi",
+    "description": "vending machines platform"
+  },
+  "itSeo": {
+    "shareImage": {
+      "src": "1752170007047_logo-(2)2.png"
+    },
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Vending Machines Platform",
+    "metaTitle": "Moaddi"
+  },
+  "itPages": [
+    {
+      "body": "<p></p><p>At <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>, your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you visit or use our website. By accessing or using <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, you agree to the terms of this Privacy Policy.</p><h2>1. Information We Collect</h2><p>We may collect the following types of information:</p><ul><li><p><strong>Personal Information</strong>: such as your name, email address, phone number, or any details you provide when contacting us or filling out forms.</p></li><li><p><strong>Non-Personal Information</strong>: including browser type, device information, IP address, and usage data through cookies and analytics tools.</p></li></ul><h2>2. How We Use Your Information</h2><p>We use the information we collect to:</p><ul><li><p>Provide, operate, and maintain our website.</p></li><li><p>Improve user experience and personalize content.</p></li><li><p>Communicate with you, respond to inquiries, and provide customer support.</p></li><li><p>Send updates, newsletters, or marketing communications (if you have opted in).</p></li><li><p>Ensure website security and prevent fraudulent activity.</p></li></ul><h2>3. Sharing of Information</h2><p>We do not sell, trade, or rent your personal information to third parties. We may share information only in the following cases:</p><ul><li><p>With trusted service providers who assist us in operating our website or services.</p></li><li><p>If required by law, regulation, or legal process.</p></li><li><p>To protect the rights, property, or safety of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a>, our users, or others.</p></li></ul><h2>4. Cookies and Tracking Technologies</h2><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\">moaddi-app.com</a> uses cookies and similar technologies to enhance user experience, analyze traffic, and understand user behavior. You can manage or disable cookies in your browser settings.</p><h2>5. Data Security</h2><p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p><h2>6. Your Rights</h2><p>Depending on your location, you may have the right to:</p><ul><li><p>Access the personal information we hold about you.</p></li><li><p>Request correction or deletion of your data.</p></li><li><p>Opt out of receiving marketing communications.</p></li><li><p>Withdraw consent where processing is based on consent.</p></li></ul><h2>7. Third-Party Links</h2><p>Our website may contain links to external websites. We are not responsible for the privacy practices or content of third-party sites.</p><h2>8. Changes to This Policy</h2><p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with the updated effective date.</p><h2>9. Contact Us</h2><p>If you have any questions about this Privacy Policy, please contact us at:</p><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a><br>Email: info@moaddi-app.com</p>",
+      "id": "privacy-policy"
+    },
+    {
+      "body": "<p>Welcome to <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a>.<br>By accessing or using our website and services, you agree to comply with the following Terms and Conditions. Please read them carefully before using the site.</p><h6>1. Acceptance of Terms</h6><ul><li><p>By using this website, you agree to these Terms and Conditions.</p></li><li><p>If you do not agree, please discontinue using the site.</p></li></ul><h6>2. Business Activity</h6><ul><li><p><a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> provides e-commerce services for vending machines and related products.</p></li></ul><h6>3. Accounts</h6><ul><li><p>When registering, you must provide accurate and complete information.</p></li><li><p>You are responsible for maintaining the confidentiality of your login credentials and any unauthorized use of your account.</p></li></ul><h6>4. Orders and Payment</h6><ul><li><p>All orders are subject to confirmation and product availability.</p></li><li><p>Payments must be made through the payment methods available on the site.</p></li><li><p>We reserve the right to refuse or cancel any order in case of error or unavailability.</p></li></ul><h6>5. Shipping and Delivery</h6><ul><li><p>Orders are shipped to the address provided during checkout.</p></li><li><p>Estimated delivery times are approximate and may vary depending on the shipping provider.</p></li></ul><h6>6. Returns and Exchanges</h6><ul><li><p>Returns or exchanges are subject to our \"Return Policy.\"</p></li><li><p>Products must be unused and in their original condition.</p></li></ul><h6>7. Intellectual Property Rights</h6><ul><li><p>All content (text, images, logos, design) is the property of <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"http://moaddi-app.com\"><strong>moaddi-app.com</strong></a> and may not be used without prior written consent.</p></li></ul><h6>8. Limitation of Liability</h6><ul><li><p>We are not liable for any direct or indirect damages resulting from the use of our products or website.</p></li><li><p>We are not responsible for third-party failures (such as shipping or payment providers).</p></li></ul><h6>9. Modifications</h6><ul><li><p>We reserve the right to update or modify these Terms at any time.</p></li><li><p>Continued use of the website after changes implies acceptance of the revised Terms.</p></li></ul><h6>10. Governing Law</h6><ul><li><p>These Terms are governed by the laws of Saudi Arabia (or the relevant jurisdiction where your business operates).</p></li></ul><h6>11. Contact Us</h6><p>For inquiries regarding these Terms and Conditions:<br>📧 <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"mailto:support@moaddi-app.com\"><strong>support@moaddi-app.com</strong></a></p>",
+      "id": "terms-and-conditions"
+    }
   ]
 }
