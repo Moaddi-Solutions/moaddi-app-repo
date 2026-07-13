@@ -457,6 +457,7 @@
 
 .moaddi-store-row {
   display: grid;
+  flex-basis: 100%;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.18fr);
   align-items: center;
   width: min(100%, 430px);
