@@ -18,6 +18,7 @@ import {
   purchasesAPI,
 } from "@/../services/serverAddresses";
 import { ChevronRight, Boxes } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -82,6 +83,8 @@ const productPrice = (product) => {
 };
 
 function GroupProductsContent() {
+  const t = useTranslations("GroupProducts");
+  const tShop = useTranslations("MachineShopping");
   const router = useRouter();
   const searchParams = useSearchParams();
   const groupId = searchParams.get("group")?.trim() || "";
@@ -111,16 +114,16 @@ function GroupProductsContent() {
         if (group?.statusCode || !Array.isArray(group?.machines) || !group.machines.length) {
           setMachines([]);
           setError("notFound");
-          toast.error("Group not found.");
+          toast.error(t("toastGroupNotFound"));
           return;
         }
-        setGroupName(group.name || "Group products");
+        setGroupName(group.name || t("defaultName"));
         setMachines(group.machines);
         setMachine(null);
       } catch {
         if (!cancelled) {
           setError("fetch");
-          toast.error("Could not load group.");
+          toast.error(t("toastCouldNotLoadGroup"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -183,7 +186,7 @@ function GroupProductsContent() {
   const createPurchase = useCallback(
     (forUser) => {
       if (!canPay) {
-        toast.error("Select at least one product.");
+        toast.error(tShop("toastSelectAtLeastOne"));
         return;
       }
 
@@ -194,7 +197,7 @@ function GroupProductsContent() {
 
         const boxes = activeProductBoxes(rawProduct);
         if (quantity > boxes.length) {
-          toast.error("Not enough stock for one or more products. Refresh and try again.");
+          toast.error(tShop("toastNotEnoughStock"));
           return;
         }
 
@@ -209,7 +212,7 @@ function GroupProductsContent() {
       }
 
       if (!items.length) {
-        toast.error("Could not build order.");
+        toast.error(t("toastCouldNotBuildOrder"));
         return;
       }
 
@@ -226,7 +229,7 @@ function GroupProductsContent() {
       })
         .then((createRes) => {
           if (!createRes?._id) {
-            toast.error("Invalid server response.");
+            toast.error(tShop("toastInvalidServerResponse"));
             return;
           }
 
@@ -258,11 +261,11 @@ function GroupProductsContent() {
             },
           }));
 
-          toast.success("Order created. Complete payment from checkout.");
+          toast.success(t("toastOrderCreated"));
           router.push("/checkout");
         })
         .catch(() => {
-          toast.error("Could not create order. Try again.");
+          toast.error(tShop("toastCouldNotCreateOrder"));
         });
     },
     [canPay, rows, total, machines, totalPrice, checkoutCurrency, setUser, router],
@@ -291,9 +294,9 @@ function GroupProductsContent() {
   if (error || !rows.length) {
     return (
       <Container className="my-16 space-y-4 text-center">
-        <p className="text-destructive">Could not open this group.</p>
+        <p className="text-destructive">{t("couldNotOpenGroup")}</p>
         <Button asChild className="font-bold">
-          <Link href="/machine-scan">Scan again</Link>
+          <Link href="/machine-scan">{tShop("scanAgain")}</Link>
         </Button>
       </Container>
     );
@@ -321,16 +324,18 @@ function GroupProductsContent() {
           </span>
           <div className="min-w-50 flex-1 leading-snug">
             <h1 className="text-xl font-extrabold">
-              {groupName || "Group products"}
+              {groupName || t("defaultName")}
             </h1>
             <p className="text-muted-foreground text-[12.5px] font-bold">
-              {machines.length} {machines.length === 1 ? "machine" : "machines"} -{" "}
-              {rows.length} {rows.length === 1 ? "product" : "products"} available
+              {t("machinesProductsAvailable", {
+                machineCount: machines.length,
+                productCount: rows.length,
+              })}
             </p>
           </div>
           <Badge variant="outline" className="shrink-0 font-bold">
             <span className="bg-primary size-1.5 rounded-full" />
-            Group
+            {t("groupBadge")}
           </Badge>
         </div>
       </Container>
@@ -344,7 +349,7 @@ function GroupProductsContent() {
 
         <aside className="bg-card ring-foreground/10 grid gap-3 rounded-2xl p-5 ring-1 lg:sticky lg:top-24">
           <h3 className="flex items-baseline justify-between text-base font-extrabold">
-            Your selection
+            {tShop("yourSelection")}
             <small className="text-muted-foreground truncate ps-2 text-xs font-bold">
               {groupName}
             </small>
@@ -352,7 +357,7 @@ function GroupProductsContent() {
 
           {selectedItems.length === 0 ? (
             <p className="text-muted-foreground text-[13px]">
-              No items selected yet - tap + on a product.
+              {tShop("noItemsSelected")}
             </p>
           ) : (
             selectedItems.map(({ key, product, count, unit, isOffer, lineTotal }) => (
@@ -385,7 +390,7 @@ function GroupProductsContent() {
           )}
 
           <div className="border-border flex items-baseline justify-between border-t border-dashed pt-3 font-extrabold">
-            <span>Total</span>
+            <span>{tShop("total")}</span>
             <span className="text-primary-text text-xl tabular-nums">
               {formatProductPrice(totalPrice, checkoutCurrency)}
             </span>
@@ -400,12 +405,12 @@ function GroupProductsContent() {
               "disabled:pointer-events-none disabled:opacity-50",
             )}
           >
-            Checkout
+            {tShop("checkout")}
             <ChevronRight className="size-4" />
           </button>
 
           <span className="text-muted-foreground text-center text-[11.5px] font-bold">
-            Items reserved on the machine while you pay
+            {tShop("itemsReserved")}
           </span>
         </aside>
       </Container>

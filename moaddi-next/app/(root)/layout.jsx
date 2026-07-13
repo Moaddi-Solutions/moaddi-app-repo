@@ -26,21 +26,55 @@ const cairo = Cairo({
 //   ar: websiteAr,
 // };
 
+/**
+ * Fallback site/SEO metadata, used when the dashboard ({locale}Site /
+ * {locale}Seo) returns nothing for a locale (e.g. an empty Italian entry).
+ * Keeps the browser-tab title, meta description and social share text from
+ * going blank. Mirrors the Hero / Header / Footer fallback pattern.
+ */
+const SITE_META_FALLBACK = {
+  en: {
+    title: "Moaddi",
+    description:
+      "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+  },
+  ar: {
+    title: "معدي",
+    description:
+      "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+  },
+  zh: {
+    title: "Moaddi",
+    description: "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+  },
+  it: {
+    title: "Moaddi",
+    description:
+      "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+  },
+};
+
 export async function generateMetadata() {
   const locale = await getLocale();
-  const { name: title, description } = await client(`${locale}Site`).then(
-    (data) => (Array.isArray(data) ? {} : data),
-  );
+  const metaFallback = SITE_META_FALLBACK[locale] ?? SITE_META_FALLBACK.en;
+  const { name: siteName, description: siteDescription } = await client(
+    `${locale}Site`,
+  ).then((data) => (Array.isArray(data) ? {} : data));
   const {
     shareImage: { src: shareImageUrl } = {},
-    metaTitle,
-    metaDescription,
+    metaTitle: seoTitle,
+    metaDescription: seoDescription,
   } = await client(`${locale}Seo`).then((data) =>
     Array.isArray(data) ? {} : data,
   );
   const {
     favicon: { src: faviconUrl } = {},
   } = await client("site");
+
+  const title = siteName || metaFallback.title;
+  const description = siteDescription || metaFallback.description;
+  const metaTitle = seoTitle || title;
+  const metaDescription = seoDescription || description;
 
   return {
     title,

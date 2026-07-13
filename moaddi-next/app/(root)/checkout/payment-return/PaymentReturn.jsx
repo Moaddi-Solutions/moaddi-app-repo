@@ -78,7 +78,7 @@ export default function PaymentReturn() {
           let fresh = user;
           if (uid) {
             fresh = await getRequest(userAPI(uid));
-            setUser(fresh);
+            setUser((prev) => (prev ? fresh : prev));
           }
           const invoiceKey =
             fresh?.purchase?.invoiceId || paymentId || purchaseId;

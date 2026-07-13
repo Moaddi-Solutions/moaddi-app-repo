@@ -9,10 +9,13 @@ import { Container } from "@/../components/ui/container";
 import { getRequest } from "@/../services/events";
 import { machineQRScan } from "@/../services/serverAddresses";
 import { MapPin, Radar, Refrigerator, ScanQrCode, ShoppingBasket } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const MachinesPage = () => {
+  const t = useTranslations("MachinesListPage");
+  const tCard = useTranslations("Home.machinesNearYou");
   const { isPending, error, data } = useGetList("machinesActive", {
     pagination: { page: 1, perPage: 100 },
     sort: { field: "name", order: "ASC" },
@@ -24,13 +27,13 @@ const MachinesPage = () => {
       <Container>
         <div className="flex flex-col gap-2">
           <Badge variant="secondary" className="w-fit font-extrabold">
-            Active machines
+            {t("badge")}
           </Badge>
           <h1 className="text-3xl font-extrabold tracking-tight">
-            Machines
+            {t("heading")}
           </h1>
           <p className="text-muted-foreground max-w-2xl text-sm font-semibold">
-            Pick an online machine to view products currently available on its shelves.
+            {t("subtitle")}
           </p>
         </div>
       </Container>
@@ -43,38 +46,36 @@ const MachinesPage = () => {
         {!isPending &&
           !error &&
           machines.map((machine) => (
-            <MachineCard key={machine._id} {...machine} />
+            <MachineCard key={machine._id} {...machine} t={tCard} />
           ))}
       </Container>
 
       {!isPending && error && (
         <Container className="mt-6">
-          <p className="text-destructive font-semibold">
-            Machines could not be loaded.
-          </p>
+          <p className="text-destructive font-semibold">{t("loadError")}</p>
         </Container>
       )}
-      {!isPending && !error && machines.length === 0 && <EmptyState />}
+      {!isPending && !error && machines.length === 0 && <EmptyState t={t} />}
     </main>
   );
 };
 
-const MachineCard = ({ name, location, qrCode, isActive, productsOnShelf }) => {
+const MachineCard = ({ name, location, qrCode, isActive, productsOnShelf, t }) => {
   const router = useRouter();
-  const { user, setUser, setMachine } = useCart();
+  const { setUser, setMachine } = useCart();
 
   const handleClick = async () => {
     const response = await getRequest(machineQRScan(qrCode));
-    if (response.statusCode) return toast.error("Machine Not Found!");
+    if (response.statusCode) return toast.error(t("machineNotFound"));
     if (process.env.NODE_ENV === "production") {
-      if (!response.isConnected) return toast.error("Machine Is Offline!");
-      if (!response.isActive) return toast.error("Machine Is Not Active!");
+      if (!response.isConnected) return toast.error(t("machineOffline"));
+      if (!response.isActive) return toast.error(t("machineNotActive"));
     }
-    toast.success("Machine Detected!");
+    toast.success(t("machineDetected"));
     // Only attach the scanned machine to an existing shopper session — an
-    // anonymous click must not create a fake truthy `user` (see
-    // machine-products' guarded QR-scan effect for the same pattern).
-    if (user) setUser((prev) => ({ ...prev, machines: [response] }));
+    // anonymous click (or a session cleared mid-flight) must not create a
+    // fake truthy `user` (see machine-products' guarded QR-scan effect).
+    setUser((prev) => (prev ? { ...prev, machines: [response] } : prev));
     setMachine(response);
     router.push(
       `/machine-products?qr=${encodeURIComponent(String(response.qrCode ?? qrCode))}`,
@@ -113,25 +114,23 @@ const MachineCard = ({ name, location, qrCode, isActive, productsOnShelf }) => {
               isActive ? "bg-green-600" : "bg-destructive"
             }`}
           />
-          {isActive ? "Online" : "Offline"}
+          {isActive ? t("online") : t("offline")}
         </Badge>
       </div>
       <div className="text-muted-foreground flex items-center gap-1 text-xs font-semibold">
         <ShoppingBasket className="size-3.5" />
         {productsOnShelf > 0
-          ? `${productsOnShelf} ${
-              productsOnShelf === 1 ? "product" : "products"
-            } on shelf`
-          : "No products on shelf"}
+          ? t("productsOnShelf", { count: productsOnShelf })
+          : t("noProductsOnShelf")}
       </div>
       {isActive ? (
         <Button size="sm" className="font-bold" onClick={handleClick}>
           <ScanQrCode className="size-4" />
-          View products
+          {t("viewProducts")}
         </Button>
       ) : (
         <Button size="sm" variant="ghost" disabled className="font-bold">
-          Currently unavailable
+          {t("currentlyUnavailable")}
         </Button>
       )}
     </Card>
@@ -152,14 +151,14 @@ const MachineCardSkeleton = () => (
   </Card>
 );
 
-const EmptyState = () => (
+const EmptyState = ({ t }) => (
   <Container className="mt-2 flex flex-col items-center gap-2 py-14 text-center">
     <div className="bg-accent text-accent-foreground grid size-14 place-items-center rounded-full">
       <Radar className="size-7" />
     </div>
-    <p className="text-[15px] font-extrabold">No active machines</p>
+    <p className="text-[15px] font-extrabold">{t("emptyTitle")}</p>
     <p className="text-muted-foreground max-w-xs text-sm font-semibold">
-      Active vending machines will appear here when they are available.
+      {t("emptyBody")}
     </p>
   </Container>
 );

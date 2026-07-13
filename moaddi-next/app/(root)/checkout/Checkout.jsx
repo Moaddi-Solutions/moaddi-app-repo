@@ -80,7 +80,9 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
     putRequest(purchaseAPI(user.purchase._id), {
       items,
     }).then((response) => {
-      getRequest(userAPI(user._id)).then((response) => setUser(response));
+      getRequest(userAPI(user._id)).then((response) =>
+        setUser((prev) => (prev ? response : prev)),
+      );
       getRequest(machineQRScan(machine.qrCode)).then((response) =>
         setMachine(response),
       );
@@ -104,7 +106,7 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
     if (!products.length)
       remove(user.purchase._id).then((response) =>
         getRequest(userAPI(user._id)).then((response) => {
-          setUser(response);
+          setUser((prev) => (prev ? response : prev));
           router.push("/machine-scan");
         }),
       );
@@ -130,7 +132,9 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
         })),
     }).then((response) => {
       setProducts((prev) => prev.filter(({ _id }) => _id != id));
-      getRequest(userAPI(user._id)).then((response) => setUser(response));
+      getRequest(userAPI(user._id)).then((response) =>
+        setUser((prev) => (prev ? response : prev)),
+      );
     });
   const remove = (id) => deleteRequest(purchaseAPI(id));
   const lastRow = (

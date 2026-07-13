@@ -68,7 +68,7 @@ const MachineScan = () => {
       typeof window !== "undefined" &&
       (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)
     ) {
-      toast.error("Camera requires HTTPS or localhost.");
+      toast.error(t("cameraRequiresHttps"));
       return;
     }
     setShowScan(true);
@@ -146,7 +146,7 @@ const MachineScan = () => {
           {t("scanMachine")}
         </h1>
         <p className="text-muted-foreground mt-1 text-[13.5px] font-semibold">
-          Point your camera at the QR on the machine&apos;s screen or sticker.
+          {t("pointCamera")}
         </p>
       </div>
 
@@ -166,7 +166,7 @@ const MachineScan = () => {
         </span>
         {isLoader && (
           <span className="absolute inset-0 grid place-items-center bg-black/60 text-sm font-bold text-white">
-            Checking machine…
+            {t("checkingMachine")}
           </span>
         )}
       </button>
@@ -186,8 +186,7 @@ const MachineScan = () => {
           </label>
         </Button>
         <span className="text-muted-foreground text-[12px] font-semibold">
-          Group QR codes work here too — you&apos;ll see every machine in the
-          group.
+          {t("groupQrHint")}
         </span>
       </div>
     </Container>
@@ -195,17 +194,18 @@ const MachineScan = () => {
 };
 
 const CameraScan = ({ setText }) => {
+  const t = useTranslations("QR");
   const { ref } = useZxing({
     constraints: { video: true },
     onDecodeResult(text) {
       const result = text.getText();
       setText((prev) => {
-        if (prev == result) toast.error("Same code");
+        if (prev == result) toast.error(t("sameCode"));
         return result;
       });
     },
     onError(error) {
-      toast.error(error?.message || "Could not open camera.");
+      toast.error(error?.message || t("couldNotOpenCamera"));
     },
   });
   return (

@@ -18,6 +18,7 @@ import {
   purchasesAPI,
 } from "@/../services/serverAddresses";
 import { ChevronRight, Refrigerator, ScanQrCode } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 function resolveImage(image) {
@@ -78,6 +79,8 @@ import {
 import { toast } from "sonner";
 
 function MachineProductsContent() {
+  const t = useTranslations("MachineProducts");
+  const tShop = useTranslations("MachineShopping");
   const router = useRouter();
   const searchParams = useSearchParams();
   const qrFromUrl = searchParams.get("qr")?.trim() || null;
@@ -133,7 +136,7 @@ function MachineProductsContent() {
       if (cancelled) return;
       setQrError("fetch");
       setQrLoading(false);
-      toast.error("Machine lookup timed out. Try again.");
+      toast.error(t("toastLookupTimeout"));
     }, 20_000);
 
     (async () => {
@@ -143,20 +146,20 @@ function MachineProductsContent() {
         if (response?.statusCode) {
           setQrError("machineNotFound");
           setMachine(null);
-          toast.error("Machine not found for this QR code.");
+          toast.error(t("toastMachineNotFoundQr"));
           return;
         }
         if (process.env.NODE_ENV === "production") {
           if (!response.isConnected) {
             setQrError("offline");
             setMachine(null);
-            toast.error("Machine is offline.");
+            toast.error(t("toastMachineOffline"));
             return;
           }
           if (!response.isActive) {
             setQrError("inactive");
             setMachine(null);
-            toast.error("Machine is not active.");
+            toast.error(t("toastMachineInactive"));
             return;
           }
         }
@@ -169,7 +172,7 @@ function MachineProductsContent() {
         if (!cancelled) {
           setQrError("fetch");
           setMachine(null);
-          toast.error("Could not load machine.");
+          toast.error(t("toastCouldNotLoadMachine"));
         }
       } finally {
         window.clearTimeout(timeoutId);
@@ -196,11 +199,11 @@ function MachineProductsContent() {
   const createPurchase = useCallback(
     (forUser) => {
       if (!machine?.products?.length) {
-        toast.error("No products on this machine.");
+        toast.error(t("toastNoProductsOnMachine"));
         return;
       }
       if (totalPrice <= 0 || !Object.keys(total).length) {
-        toast.error("Select at least one product.");
+        toast.error(tShop("toastSelectAtLeastOne"));
         return;
       }
 
@@ -210,9 +213,7 @@ function MachineProductsContent() {
         if (!product) continue;
         const activeBoxes = activeProductBoxes(product);
         if (number > activeBoxes.length) {
-          toast.error(
-            "Not enough stock for one or more products. Refresh and try again.",
-          );
+          toast.error(tShop("toastNotEnoughStock"));
           return;
         }
         for (let i = 0; i < number; i++)
@@ -224,7 +225,7 @@ function MachineProductsContent() {
       }
 
       if (!items.length) {
-        toast.error("Could not build order - check product availability.");
+        toast.error(t("toastCouldNotBuildOrder"));
         return;
       }
 
@@ -243,7 +244,7 @@ function MachineProductsContent() {
       })
         .then((createRes) => {
           if (!createRes?._id) {
-            toast.error("Invalid server response.");
+            toast.error(tShop("toastInvalidServerResponse"));
             return;
           }
           const boxes = items.map((item) => {
@@ -271,12 +272,10 @@ function MachineProductsContent() {
             },
           }));
           persistMachineInCart(machine);
-          toast.success(
-            "Order created. Use the order button to complete payment when you are ready.",
-          );
+          toast.success(t("toastOrderCreated"));
         })
         .catch(() => {
-          toast.error("Could not create order. Try again.");
+          toast.error(tShop("toastCouldNotCreateOrder"));
         });
     },
     [machine, totalPrice, total, setUser, persistMachineInCart],
@@ -308,9 +307,9 @@ function MachineProductsContent() {
   if (qrFromUrl && qrError && !machine) {
     return (
       <Container className="my-16 space-y-4 text-center">
-        <p className="text-destructive">Could not open this machine.</p>
+        <p className="text-destructive">{t("couldNotOpenMachine")}</p>
         <Button asChild>
-          <Link href="/machine-scan">Scan again</Link>
+          <Link href="/machine-scan">{tShop("scanAgain")}</Link>
         </Button>
       </Container>
     );
@@ -320,13 +319,13 @@ function MachineProductsContent() {
     return (
       <Container className="my-16 space-y-4 text-center">
         <p className="text-muted-foreground">
-          Scan a machine QR or open a link with the machine code, e.g.{" "}
+          {t("scanPrompt")}{" "}
           <code className="rounded bg-muted px-1 py-0.5 text-sm">
             /machine-products?qr=M001
           </code>
         </p>
         <Button asChild>
-          <Link href="/machine-scan">Scan machine QR</Link>
+          <Link href="/machine-scan">{t("scanMachineQr")}</Link>
         </Button>
       </Container>
     );
@@ -362,8 +361,7 @@ function MachineProductsContent() {
           <div className="min-w-50 flex-1 leading-snug">
             <h1 className="text-xl font-extrabold">{machine.name}</h1>
             <p className="text-muted-foreground text-[12.5px] font-bold">
-              Scanned just now - {shelfCount}{" "}
-              {shelfCount === 1 ? "product" : "products"} on shelf
+              {t("scannedJustNow", { count: shelfCount })}
             </p>
           </div>
           <Badge
@@ -377,12 +375,12 @@ function MachineProductsContent() {
             <span
               className={`size-1.5 rounded-full ${machine.isConnected ? "bg-green-600" : "bg-destructive"}`}
             />
-            {machine.isConnected ? "Online" : "Offline"}
+            {machine.isConnected ? t("online") : t("offline")}
           </Badge>
           <Button asChild variant="outline" size="sm" className="font-bold">
             <Link href="/machine-scan">
               <ScanQrCode aria-hidden="true" />
-              Scan another
+              {t("scanAnother")}
             </Link>
           </Button>
         </div>
@@ -397,7 +395,7 @@ function MachineProductsContent() {
 
         <aside className="bg-card ring-foreground/10 grid gap-3 rounded-2xl p-5 ring-1 lg:sticky lg:top-24">
           <h3 className="flex items-baseline justify-between text-base font-extrabold">
-            Your selection
+            {tShop("yourSelection")}
             <small className="text-muted-foreground truncate ps-2 text-xs font-bold">
               {machine.name}
             </small>
@@ -405,7 +403,7 @@ function MachineProductsContent() {
 
           {selectedItems.length === 0 ? (
             <p className="text-muted-foreground text-[13px]">
-              No items selected yet - tap + on a product.
+              {tShop("noItemsSelected")}
             </p>
           ) : (
             selectedItems.map(({ id, product, count, unit, isOffer, lineTotal }) => (
@@ -438,7 +436,7 @@ function MachineProductsContent() {
           )}
 
           <div className="border-border flex items-baseline justify-between border-t border-dashed pt-3 font-extrabold">
-            <span>Total</span>
+            <span>{tShop("total")}</span>
             <span className="text-primary-text text-xl tabular-nums">
               {formatProductPrice(totalPrice, checkoutCurrency)}
             </span>
@@ -453,12 +451,12 @@ function MachineProductsContent() {
               "disabled:pointer-events-none disabled:opacity-50",
             )}
           >
-            Checkout
+            {tShop("checkout")}
             <ChevronRight className="size-4" />
           </button>
 
           <span className="text-muted-foreground text-center text-[11.5px] font-bold">
-            Items reserved on the machine while you pay
+            {tShop("itemsReserved")}
           </span>
         </aside>
       </Container>

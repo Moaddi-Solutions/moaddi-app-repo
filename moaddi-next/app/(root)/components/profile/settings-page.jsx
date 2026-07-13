@@ -21,7 +21,6 @@ import {
   Pencil,
   ReceiptText,
 } from "lucide-react";
-import Cookies from "js-cookie";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,7 +29,7 @@ import PurchaseHistory from "./purchase-history";
 import UserProfileSettings from "./user-profile-settings";
 
 export default function SettingsPage({ preferredCurrency }) {
-  const { user, setUser } = useCart();
+  const { user, logout } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = normalizeTab(searchParams.get("tab"));
@@ -48,9 +47,7 @@ export default function SettingsPage({ preferredCurrency }) {
   };
 
   const signOut = () => {
-    Cookies.remove("user");
-    localStorage.removeItem("user");
-    setUser(null);
+    logout();
     router.replace("/signin");
   };
 

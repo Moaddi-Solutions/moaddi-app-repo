@@ -13,9 +13,11 @@ import {
   Store,
   Zap,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 const ShopsPage = () => {
+  const t = useTranslations("ShopsPage");
   const { isPending, error, data = [] } = useGetList("shopsActive", {
     pagination: { page: 1, perPage: 100 },
     sort: { field: "created", order: "DESC" },
@@ -31,22 +33,21 @@ const ShopsPage = () => {
           <div className="grid gap-0 lg:grid-cols-[1fr_360px]">
             <div className="p-5 sm:p-7">
               <Badge variant="secondary" className="font-extrabold">
-                Active shops
+                {t("badge")}
               </Badge>
               <h1 className="mt-4 max-w-2xl text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Choose a shop with live machines and stocked products.
+                {t("heading")}
               </h1>
               <p className="text-muted-foreground mt-3 max-w-2xl text-sm font-semibold sm:text-base">
-                Each shop card is built from the active-shops response: machines,
-                boxes, products, payment providers, and current machine status.
+                {t("subtitle")}
               </p>
             </div>
             <div className="border-t bg-muted/30 p-5 sm:p-7 lg:border-s lg:border-t-0">
               <div className="grid grid-cols-2 gap-3">
-                <HeaderMetric label="Shops" value={shops.length} />
-                <HeaderMetric label="Machines" value={totals.machines} />
-                <HeaderMetric label="Online" value={totals.online} />
-                <HeaderMetric label="Products" value={totals.products} />
+                <HeaderMetric label={t("metricShops")} value={shops.length} />
+                <HeaderMetric label={t("metricMachines")} value={totals.machines} />
+                <HeaderMetric label={t("metricOnline")} value={totals.online} />
+                <HeaderMetric label={t("metricProducts")} value={totals.products} />
               </div>
             </div>
           </div>
@@ -56,23 +57,21 @@ const ShopsPage = () => {
       <Container className="mt-6">
         {isPending && <ShopsSkeleton />}
         {!isPending && error && (
-          <p className="text-destructive font-semibold">
-            Shops could not be loaded.
-          </p>
+          <p className="text-destructive font-semibold">{t("loadError")}</p>
         )}
         {!isPending && !error && shops.length === 0 && (
           <Card className="p-6 text-center">
             <Store className="text-muted-foreground mx-auto size-8" />
-            <p className="mt-3 font-extrabold">No active shops</p>
+            <p className="mt-3 font-extrabold">{t("emptyTitle")}</p>
             <p className="text-muted-foreground mt-1 text-sm font-semibold">
-              Active shops with machines will appear here.
+              {t("emptyBody")}
             </p>
           </Card>
         )}
         {!isPending && !error && shops.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-2">
             {shops.map((shop) => (
-              <ShopCard key={shop._id ?? shop.id} shop={shop} />
+              <ShopCard key={shop._id ?? shop.id} shop={shop} t={t} />
             ))}
           </div>
         )}
@@ -81,7 +80,7 @@ const ShopsPage = () => {
   );
 };
 
-const ShopCard = ({ shop }) => {
+const ShopCard = ({ shop, t }) => {
   const machines = activeItems(shop.machines);
   const onlineMachines = machines.filter(({ isConnected }) => isConnected);
   const products = activeItems(shop.products);
@@ -98,7 +97,7 @@ const ShopCard = ({ shop }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
         <Badge className="absolute inset-s-3 top-3 gap-1.5 font-extrabold">
           <span className="size-1.5 rounded-full bg-green-300" />
-          Open
+          {t("open")}
         </Badge>
       </div>
 
@@ -109,8 +108,7 @@ const ShopCard = ({ shop }) => {
               {shop.name}
             </h2>
             <p className="text-muted-foreground mt-1 line-clamp-2 text-sm font-semibold">
-              {shop.description ||
-                "Shop products available through Moaddi machines."}
+              {shop.description || t("defaultDescription")}
             </p>
           </div>
           <Store className="text-primary-text size-5 shrink-0" />
@@ -119,17 +117,17 @@ const ShopCard = ({ shop }) => {
         <div className="grid grid-cols-3 gap-2">
           <ShopStat
             icon={Refrigerator}
-            label="Machines"
+            label={t("metricMachines")}
             value={machines.length}
           />
           <ShopStat
             icon={Zap}
-            label="Online"
+            label={t("metricOnline")}
             value={`${onlineMachines.length}/${machines.length}`}
           />
           <ShopStat
             icon={ShoppingBasket}
-            label="Products"
+            label={t("metricProducts")}
             value={products.length}
           />
         </div>
@@ -138,14 +136,12 @@ const ShopCard = ({ shop }) => {
           <p className="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs font-semibold">
             <MapPin className="size-3.5 shrink-0" />
             <span className="truncate">
-              {firstMachine?.location ||
-                firstMachine?.qrCode ||
-                "Machine location available after scan"}
+              {firstMachine?.location || firstMachine?.qrCode || t("locationFallback")}
             </span>
           </p>
           <Button asChild size="sm" className="font-extrabold">
             <Link href={`/shop/${shop._id ?? shop.id}`}>
-              View shop
+              {t("viewShop")}
               <ArrowRight className="size-4 rtl:-scale-x-100" />
             </Link>
           </Button>

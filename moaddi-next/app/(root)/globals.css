@@ -241,12 +241,52 @@
   text-decoration: none;
 }
 
-.moaddi-mobile-nav a:last-child {
-  border-bottom: 0;
-}
-
 .moaddi-mobile-nav a[data-active="true"] {
   color: var(--accent-foreground);
+}
+
+.moaddi-mobile-lang {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 4px 4px;
+}
+
+.moaddi-mobile-lang-label {
+  display: inline-flex;
+  align-items: center;
+  color: var(--site-header-muted);
+}
+
+.moaddi-mobile-lang-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.moaddi-mobile-lang-options button {
+  border: 1px solid var(--site-header-line);
+  border-radius: 999px;
+  background: var(--site-header-surface);
+  color: var(--site-header-muted);
+  padding: 7px 15px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.moaddi-mobile-lang-options button[data-active="true"] {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* The in-menu language switcher is only needed while the header pill is hidden. */
+@media (min-width: 641px) {
+  .moaddi-mobile-lang {
+    display: none;
+  }
 }
 
 .moaddi-site-head.menu-open .moaddi-mobile-nav {
@@ -710,6 +750,68 @@
 
 @media (prefers-reduced-motion: reduce) {
   .moaddi-scanline {
+    animation: none;
+  }
+}
+
+/* 404 page */
+.moaddi-404-badge {
+  animation:
+    moaddi-404-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both,
+    moaddi-404-float 3.6s ease-in-out 0.5s infinite;
+}
+
+.moaddi-404-rise {
+  animation: moaddi-404-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.moaddi-404-rise-1 {
+  animation-delay: 0.08s;
+}
+
+.moaddi-404-rise-2 {
+  animation-delay: 0.16s;
+}
+
+.moaddi-404-rise-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes moaddi-404-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes moaddi-404-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes moaddi-404-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moaddi-404-badge,
+  .moaddi-404-rise {
     animation: none;
   }
 }

@@ -15,6 +15,7 @@ import {
 } from "@/../services/serverAddresses";
 import { getRequest, postRequest } from "@/../services/serverDataProvider";
 import { createQRData } from "@zatca/qr";
+import { getTranslations } from "next-intl/server";
 
 // const successExample = {
 //   IsSuccess: true,
@@ -271,19 +272,20 @@ const getData = async ({ paymentId, invoiceId }) => {
 };
 
 const page = async ({ params, searchParams }) => {
+  const t = await getTranslations("Invoice");
   const { status } = await params;
   const { paymentId, invoiceId, show } = await searchParams;
-  if (!paymentId && !invoiceId) return <h1>Payment ID is missing.</h1>;
+  if (!paymentId && !invoiceId) return <h1>{t("paymentIdMissing")}</h1>;
 
   let data;
   try {
     data = await getData({ paymentId, invoiceId });
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "Could not load invoice data.";
+      err instanceof Error ? err.message : t("loadError");
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <h1 className="mb-2 text-xl font-semibold">Invoice unavailable</h1>
+        <h1 className="mb-2 text-xl font-semibold">{t("unavailableTitle")}</h1>
         <p className="text-muted-foreground text-sm">{message}</p>
       </div>
     );

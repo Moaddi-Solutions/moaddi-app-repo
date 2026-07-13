@@ -35,6 +35,7 @@ import {
   Store,
   User,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import QRCode from "react-qr-code";
 
 const sellerAddress = `6563 Al Makhzoumi Street
@@ -57,13 +58,15 @@ export default function InvoicePage({
     error,
   },
 }) {
+  const t = useTranslations("Invoice");
+  const locale = useLocale();
   const { user } = useCart();
   const purchaseCustomer = Array.isArray(purchase.customer)
     ? purchase.customer[0]
     : purchase.customer;
   const buyer = purchaseCustomer ?? user;
   const currency = purchase.preferredCurrency ?? "SAR";
-  const lineItems = buildInvoiceItems(purchase, currency);
+  const lineItems = buildInvoiceItems(purchase, currency, t("productFallback"));
   const chargedTotal = Number(purchase.price);
   const subtotal = lineItems.reduce(
     (sum, item) => sum + item.quantity * item.netUnitPrice,
@@ -101,7 +104,7 @@ export default function InvoicePage({
                   </span>
                   <div className="min-w-0">
                     <CardDescription className="font-black uppercase tracking-[0.16em] text-primary-text">
-                      Invoice
+                      {t("title")}
                     </CardDescription>
                     <CardTitle className="truncate text-2xl font-black sm:text-3xl">
                       {number}
@@ -110,7 +113,7 @@ export default function InvoicePage({
                   <StatusBadge status={status} />
                 </div>
                 <p className="max-w-2xl text-sm font-semibold text-muted-foreground">
-                  Payment receipt for your Moaddi machine order.
+                  {t("subtitle")}
                 </p>
               </div>
 
@@ -122,7 +125,7 @@ export default function InvoicePage({
                   className="w-full sm:w-auto"
                 >
                   <Print data-icon="inline-start" aria-hidden="true" />
-                  Print Invoice
+                  {t("printInvoice")}
                 </Button>
               </div>
             </div>
@@ -142,17 +145,17 @@ export default function InvoicePage({
                   <div className="grid gap-2 text-sm">
                     <DetailLine
                       icon={Building2}
-                      label="Seller"
+                      label={t("seller")}
                       value={process.env.NEXT_PUBLIC_SELLER_NAME || "Moaddi"}
                     />
                     <DetailLine
                       icon={ReceiptText}
-                      label="VAT"
+                      label={t("vat")}
                       value={process.env.NEXT_PUBLIC_SELLER_VAT_NUMBER || "-"}
                     />
                     <DetailLine
                       icon={MapPin}
-                      label="Address"
+                      label={t("address")}
                       value={sellerAddress}
                     />
                   </div>
@@ -160,7 +163,7 @@ export default function InvoicePage({
 
                 <div
                   className="flex justify-center rounded-xl border border-border/80 bg-background p-4"
-                  aria-label="Invoice QR code"
+                  aria-label={t("qrCodeAriaLabel")}
                 >
                   <QRCode className="size-28 sm:size-32" value={qrCode} />
                 </div>
@@ -169,20 +172,20 @@ export default function InvoicePage({
 
             <div className="grid gap-5 md:grid-cols-2">
               <InfoCard
-                title="Customer"
+                title={t("customer")}
                 icon={User}
                 rows={[
-                  ["Name", buyer?.name ?? "Customer"],
-                  ["Phone", buyer?.phone ?? buyer?.username ?? buyer?._id ?? "-"],
+                  [t("name"), buyer?.name ?? t("customerFallback")],
+                  [t("phone"), buyer?.phone ?? buyer?.username ?? buyer?._id ?? "-"],
                 ]}
               />
               <InfoCard
-                title="Machine"
+                title={t("machine")}
                 icon={Store}
                 rows={[
-                  ["Shop", purchase.shop?.name ?? "-"],
-                  ["Machine", purchase.machine?.name ?? "-"],
-                  ["Location", purchase.machine?.location ?? "-"],
+                  [t("shop"), purchase.shop?.name ?? "-"],
+                  [t("machine"), purchase.machine?.name ?? "-"],
+                  [t("location"), purchase.machine?.location ?? "-"],
                 ]}
               />
             </div>
@@ -193,6 +196,7 @@ export default function InvoicePage({
               subtotal={subtotal}
               totalTax={totalTax}
               total={Number.isFinite(chargedTotal) ? chargedTotal : computedTotal}
+              t={t}
             />
           </div>
 
@@ -201,29 +205,29 @@ export default function InvoicePage({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-black">
                   <CreditCard aria-hidden="true" />
-                  Payment Summary
+                  {t("paymentSummary")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <SummaryLine
                   icon={CalendarDays}
-                  label="Created"
-                  value={formatDate(createdDate)}
+                  label={t("created")}
+                  value={formatDate(createdDate, locale)}
                 />
                 <SummaryLine
                   icon={CalendarDays}
-                  label="Expires"
-                  value={formatDate(expiryDate)}
+                  label={t("expires")}
+                  value={formatDate(expiryDate, locale)}
                 />
                 <SummaryLine
                   icon={Clock}
-                  label="Expiry Time"
+                  label={t("expiryTime")}
                   value={formatTime(expiryTime)}
                 />
                 <Separator />
                 <div className="flex flex-col gap-2">
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">
-                    Payment ID
+                    {t("paymentId")}
                   </p>
                   <p className="break-all rounded-lg bg-muted px-3 py-2 font-mono text-xs font-semibold">
                     {paymentId ?? "-"}
@@ -232,7 +236,7 @@ export default function InvoicePage({
                 <Separator />
                 <div className="rounded-xl bg-accent p-4">
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-muted-foreground">
-                    Total Amount
+                    {t("totalAmount")}
                   </p>
                   <p className="mt-1 text-3xl font-black tabular-nums">
                     {total || formatMoney(computedTotal, currency)}
@@ -247,7 +251,7 @@ export default function InvoicePage({
                   <CheckCircle2 aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="font-black">Order Reference</p>
+                  <p className="font-black">{t("orderReference")}</p>
                   <p className="mt-1 break-all text-sm font-semibold text-muted-foreground">
                     {purchase._id}
                   </p>
@@ -355,17 +359,15 @@ function SummaryLine({ icon: Icon, label, value }) {
   );
 }
 
-function ItemsCard({ items, currency, subtotal, totalTax, total }) {
+function ItemsCard({ items, currency, subtotal, totalTax, total, t }) {
   return (
     <Card className="border-border/80 bg-card" size="sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg font-black">
           <Package aria-hidden="true" />
-          Invoice Items
+          {t("invoiceItems")}
         </CardTitle>
-        <CardDescription>
-          Products included in this purchase.
-        </CardDescription>
+        <CardDescription>{t("invoiceItemsDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-3 md:hidden">
@@ -379,7 +381,7 @@ function ItemsCard({ items, currency, subtotal, totalTax, total }) {
                     </p>
                     <p className="mt-1 truncate font-black">{item.name}</p>
                     <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                      Qty {item.quantity} Â· Tax {item.taxRate}%
+                      {t("qtyTaxLine", { qty: item.quantity, tax: item.taxRate })}
                     </p>
                   </div>
                   <p className="shrink-0 text-sm font-black tabular-nums">
@@ -395,13 +397,13 @@ function ItemsCard({ items, currency, subtotal, totalTax, total }) {
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[56px] px-4 font-black">#</TableHead>
-                <TableHead className="font-black">Description</TableHead>
-                <TableHead className="text-end font-black">Qty</TableHead>
-                <TableHead className="text-end font-black">Unit Price</TableHead>
-                <TableHead className="text-end font-black">Tax Rate</TableHead>
-                <TableHead className="text-end font-black">Tax Amount</TableHead>
-                <TableHead className="px-4 text-end font-black">Total</TableHead>
+                <TableHead className="w-[56px] px-4 font-black">{t("colIndex")}</TableHead>
+                <TableHead className="font-black">{t("colDescription")}</TableHead>
+                <TableHead className="text-end font-black">{t("colQty")}</TableHead>
+                <TableHead className="text-end font-black">{t("colUnitPrice")}</TableHead>
+                <TableHead className="text-end font-black">{t("colTaxRate")}</TableHead>
+                <TableHead className="text-end font-black">{t("colTaxAmount")}</TableHead>
+                <TableHead className="px-4 text-end font-black">{t("colTotal")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -438,11 +440,11 @@ function ItemsCard({ items, currency, subtotal, totalTax, total }) {
 
         <div className="mt-6 flex justify-end">
           <div className="w-full max-w-sm rounded-xl border border-border/80 bg-background p-4">
-            <TotalRow label="Subtotal" value={formatMoney(subtotal, currency)} />
-            <TotalRow label="Total Tax" value={formatMoney(totalTax, currency)} />
+            <TotalRow label={t("subtotal")} value={formatMoney(subtotal, currency)} />
+            <TotalRow label={t("totalTax")} value={formatMoney(totalTax, currency)} />
             <Separator className="my-3" />
             <TotalRow
-              label="Total"
+              label={t("total")}
               value={formatMoney(total, currency)}
               strong
             />
@@ -470,7 +472,7 @@ function TotalRow({ label, value, strong = false }) {
   );
 }
 
-function buildInvoiceItems(purchase, currency) {
+function buildInvoiceItems(purchase, currency, productFallback) {
   const products = getProductsFromPurchase(purchase);
   const items = Array.isArray(purchase.items) ? purchase.items : [];
   const boxes = Array.isArray(purchase.boxes) ? purchase.boxes : [];
@@ -487,7 +489,7 @@ function buildInvoiceItems(purchase, currency) {
 
     return {
       key: product._id ?? product.name,
-      name: product.name ?? "Product",
+      name: product.name ?? productFallback,
       quantity,
       taxRate: tax,
       grossUnitPrice: price,
@@ -536,12 +538,12 @@ function getProductsFromPurchase(purchase) {
   return products;
 }
 
-function formatDate(value) {
+function formatDate(value, locale) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",

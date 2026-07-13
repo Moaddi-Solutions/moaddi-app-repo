@@ -3,6 +3,7 @@ import { Card } from "@/../components/ui/card";
 import { formatProductPrice } from "@/../constants/currency";
 import { cn } from "@/../lib/utils";
 import { baseUrl } from "@/../services/serverAddresses";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 function resolveImage(image) {
@@ -22,6 +23,7 @@ export default function MachineProductCard({
   preferredCurrency,
   setTotal,
 }) {
+  const t = useTranslations("MachineProductCard");
   const [quantity, setQuantity] = useState(0);
   const available = boxes.filter(({ isActive }) => isActive).length;
   const remaining = available - quantity;
@@ -76,11 +78,7 @@ export default function MachineProductCard({
           remaining <= 1 ? "text-secondary-700" : "text-muted-foreground",
         )}
       >
-        {remaining <= 0
-          ? "0 left"
-          : remaining === 1
-            ? "Only 1 left"
-            : `${remaining} left`}
+        {t("left", { count: Math.max(remaining, 0) })}
       </span>
       <div className="mt-2 flex items-baseline gap-1.5">
         <p className="text-primary-text truncate text-[15px] font-extrabold tabular-nums">
@@ -95,7 +93,7 @@ export default function MachineProductCard({
       <div className="bg-accent text-accent-foreground mt-2 grid grid-cols-3 items-center rounded-[11px]">
         <button
           type="button"
-          aria-label="Remove one"
+          aria-label={t("removeOne")}
           onClick={decrement}
           disabled={quantity <= 0}
           className="grid h-8 place-items-center rounded-s-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"
@@ -107,7 +105,7 @@ export default function MachineProductCard({
         </span>
         <button
           type="button"
-          aria-label="Add one"
+          aria-label={t("addOne")}
           onClick={increment}
           disabled={remaining <= 0}
           className="grid h-8 place-items-center rounded-e-[11px] text-base transition-colors hover:bg-black/5 disabled:opacity-40 dark:hover:bg-white/10"

@@ -81,6 +81,9 @@ export function isNoticeTargetPath(pathname, href) {
 }
 
 export function mergeServerUser(prev, next) {
+  // Never resurrect a signed-out session: a background refetch that resolves
+  // after logout has nothing to merge into, so keep `prev` (null) as-is.
+  if (!prev) return prev;
   if (!next || typeof next !== "object") return prev ?? next;
   const prevP = prev?.purchase;
   const nextP = next.purchase;
