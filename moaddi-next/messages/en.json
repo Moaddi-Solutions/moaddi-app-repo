@@ -161,6 +161,31 @@
     "unavailable": "This gift link is no longer available.",
     "claimError": "Could not claim this gift."
   },
+  "Gifts": {
+    "title": "My Gifts",
+    "description": "Track the gifts you shared and the ones shared with you.",
+    "sentTab": "Sent ({count})",
+    "receivedTab": "Received ({count})",
+    "loading": "Loading gifts...",
+    "noSentGifts": "You haven't shared any gifts yet.",
+    "noReceivedGifts": "You haven't received any gifts yet.",
+    "moaddiGift": "Moaddi gift",
+    "moaddiMachine": "Moaddi machine",
+    "from": "from",
+    "boxesOpened": "{opened} of {total} boxes opened",
+    "claimedOn": "Claimed on",
+    "sharedOn": "Shared on",
+    "shareAgain": "Share the gift link again",
+    "viewGift": "View gift",
+    "linkCopied": "Gift link copied.",
+    "shareError": "Could not share the gift link.",
+    "status": {
+      "pending": "Not opened yet",
+      "claimed": "Link opened",
+      "collected": "Collected",
+      "expired": "Expired"
+    }
+  },
   "PurchaseNotice": {
     "dismiss": "Remind me later",
     "kind": {
@@ -397,6 +422,8 @@
       "initiate": "Initiate",
       "completed": "Completed",
       "paymentDone": "Payment Done"
-    }
+    },
+    "myGifts": "My Gifts",
+    "myGiftsDetail": "Track shared gifts"
   }
 }

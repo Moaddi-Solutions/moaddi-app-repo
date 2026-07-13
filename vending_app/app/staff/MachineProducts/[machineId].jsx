@@ -33,7 +33,7 @@ function StaffProductRow({ product, currency, t }) {
     >
       <Image
         source={{ uri: productImageUrl(product.image) }}
-        resizeMode="cover"
+        resizeMode="contain"
         style={{
           width: 64,
           height: 64,

@@ -289,5 +289,20 @@
   "passwordsDoNotMatch": "Passwords do not match",
   "accountCreatedSuccessfully": "Account created successfully!",
   "orContinueWith": "or continue with",
-  "continueWithGoogle": "Continue with Google"
+  "continueWithGoogle": "Continue with Google",
+  "myGifts": "My Gifts",
+  "myGiftsSubtitle": "Track gifts you shared or received",
+  "giftsSentTab": "Sent",
+  "giftsReceivedTab": "Received",
+  "noSentGifts": "You haven't shared any gifts yet.",
+  "noReceivedGifts": "You haven't received any gifts yet.",
+  "giftFrom": "from",
+  "giftBoxesOpened": "{{opened}} of {{total}} boxes opened",
+  "giftClaimedOn": "Claimed on",
+  "giftSharedOn": "Shared on",
+  "giftStatusPending": "Not opened yet",
+  "giftStatusClaimed": "Link opened",
+  "giftStatusCollected": "Collected",
+  "giftStatusExpired": "Expired",
+  "giftListError": "Could not load your gifts."
 }

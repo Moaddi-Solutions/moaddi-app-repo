@@ -115,7 +115,7 @@ function MachineProductCard({
             style={styles.productImage}
             source={{ uri: imageUri }}
             alt={title}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         </View>
         <View className="grid gap-1 px-4 pb-4 pt-2">

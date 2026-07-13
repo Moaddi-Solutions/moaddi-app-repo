@@ -17,6 +17,7 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
+  Gift,
   LogOut,
   Pencil,
   ReceiptText,
@@ -25,6 +26,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import GiftsPanel from "./gifts-panel";
 import PurchaseHistory from "./purchase-history";
 import UserProfileSettings from "./user-profile-settings";
 
@@ -93,6 +95,8 @@ export default function SettingsPage({ preferredCurrency }) {
           </Button>
           {activeTab === "profile" ? (
             <UserProfileSettings />
+          ) : activeTab === "gifts" ? (
+            <GiftsPanel preferredCurrency={currency} />
           ) : (
             <PurchaseHistory preferredCurrency={currency} />
           )}
@@ -188,6 +192,12 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
                 onClick={() => onOpenDetail("purchases")}
               />
               <ProfileRow
+                icon={Gift}
+                title={t("myGifts")}
+                detail={t("myGiftsDetail")}
+                onClick={() => onOpenDetail("gifts")}
+              />
+              <ProfileRow
                 icon={CircleHelp}
                 title={t("helpSupport")}
                 detail={t("helpSupportDetail")}
@@ -277,7 +287,9 @@ function IconTile({ children }) {
 }
 
 function normalizeTab(tab) {
-  return tab === "profile" || tab === "purchases" ? tab : "overview";
+  return tab === "profile" || tab === "purchases" || tab === "gifts"
+    ? tab
+    : "overview";
 }
 
 function displayName(user, t) {

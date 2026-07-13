@@ -55,6 +55,7 @@ export const purchaseAPI = (id) => address + "purchases/" + id;
 export const giftEnableAPI = (id) => address + "purchases/" + id + "/gift";
 export const giftPreviewAPI = (token) => address + "gifts/" + token;
 export const giftClaimAPI = (token) => address + "gifts/" + token + "/claim";
+export const giftsMineAPI = () => address + "gifts/mine";
 export const MachinesByVendor = (id) => address + "machines/vendor/" + id;
 export const ShopsByVendor = (id) => address + "shops/vendor/" + id;
 export const purchaseByCustomer = (id) =>

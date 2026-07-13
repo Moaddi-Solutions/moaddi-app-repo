@@ -16,6 +16,21 @@ const nextConfig: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Universal/App Links association files: the OS fetches these from the gift
+  // link's host to decide whether to open the Moaddi app instead of the browser.
+  // App-router folders can't start with a dot, hence the rewrite to /api.
+  async rewrites() {
+    return [
+      {
+        source: "/.well-known/apple-app-site-association",
+        destination: "/api/well-known/apple-app-site-association",
+      },
+      {
+        source: "/.well-known/assetlinks.json",
+        destination: "/api/well-known/assetlinks",
+      },
+    ];
+  },
   images: {
     // loader: "custom",
     // loaderFile: "./image/loader.js",

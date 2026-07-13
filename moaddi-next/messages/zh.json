@@ -161,6 +161,31 @@
     "unavailable": "此礼物链接已失效。",
     "claimError": "无法领取该礼物。"
   },
+  "Gifts": {
+    "title": "我的礼物",
+    "description": "跟踪您分享的礼物以及收到的礼物。",
+    "sentTab": "已送出 ({count})",
+    "receivedTab": "已收到 ({count})",
+    "loading": "正在加载礼物...",
+    "noSentGifts": "您还没有分享过礼物。",
+    "noReceivedGifts": "您还没有收到过礼物。",
+    "moaddiGift": "Moaddi 礼物",
+    "moaddiMachine": "Moaddi 售货机",
+    "from": "来自",
+    "boxesOpened": "已打开 {opened}/{total} 个货格",
+    "claimedOn": "领取于",
+    "sharedOn": "分享于",
+    "shareAgain": "再次分享礼物链接",
+    "viewGift": "查看礼物",
+    "linkCopied": "礼物链接已复制。",
+    "shareError": "无法分享礼物链接。",
+    "status": {
+      "pending": "尚未打开",
+      "claimed": "已打开链接",
+      "collected": "已取货",
+      "expired": "已过期"
+    }
+  },
   "PurchaseNotice": {
     "dismiss": "稍后提醒我",
     "kind": {
@@ -397,6 +422,8 @@
       "initiate": "已发起",
       "completed": "已完成",
       "paymentDone": "已支付"
-    }
+    },
+    "myGifts": "我的礼物",
+    "myGiftsDetail": "跟踪分享的礼物"
   }
 }

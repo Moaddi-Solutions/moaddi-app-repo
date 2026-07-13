@@ -289,5 +289,20 @@
   "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
   "accountCreatedSuccessfully": "تم إنشاء الحساب بنجاح!",
   "orContinueWith": "أو تابع باستخدام",
-  "continueWithGoogle": "المتابعة باستخدام Google"
+  "continueWithGoogle": "المتابعة باستخدام Google",
+  "myGifts": "هداياي",
+  "myGiftsSubtitle": "تتبّع الهدايا التي شاركتها أو استلمتها",
+  "giftsSentTab": "المرسلة",
+  "giftsReceivedTab": "المستلمة",
+  "noSentGifts": "لم تشارك أي هدية بعد.",
+  "noReceivedGifts": "لم تستلم أي هدية بعد.",
+  "giftFrom": "من",
+  "giftBoxesOpened": "تم فتح {{opened}} من {{total}} صندوق",
+  "giftClaimedOn": "تم الاستلام في",
+  "giftSharedOn": "تمت المشاركة في",
+  "giftStatusPending": "لم تُفتح بعد",
+  "giftStatusClaimed": "تم فتح الرابط",
+  "giftStatusCollected": "تم الاستلام",
+  "giftStatusExpired": "منتهية الصلاحية",
+  "giftListError": "تعذّر تحميل هداياك."
 }

@@ -36,7 +36,7 @@ export default function ProductCard({
         <Image
           style={{ width: "100%", height: "100%" }}
           source={{ uri: productImageUrl(image) }}
-          resizeMode="cover"
+          resizeMode="contain"
           alt={name}
         />
         {campaignPrice && (

@@ -161,6 +161,31 @@
     "unavailable": "Questo link regalo non è più disponibile.",
     "claimError": "Impossibile riscattare questo regalo."
   },
+  "Gifts": {
+    "title": "I miei regali",
+    "description": "Tieni traccia dei regali che hai condiviso e di quelli ricevuti.",
+    "sentTab": "Inviati ({count})",
+    "receivedTab": "Ricevuti ({count})",
+    "loading": "Caricamento dei regali...",
+    "noSentGifts": "Non hai ancora condiviso nessun regalo.",
+    "noReceivedGifts": "Non hai ancora ricevuto nessun regalo.",
+    "moaddiGift": "Regalo Moaddi",
+    "moaddiMachine": "Distributore Moaddi",
+    "from": "da",
+    "boxesOpened": "{opened} di {total} box aperti",
+    "claimedOn": "Riscattato il",
+    "sharedOn": "Condiviso il",
+    "shareAgain": "Condividi di nuovo il link del regalo",
+    "viewGift": "Vedi regalo",
+    "linkCopied": "Link del regalo copiato.",
+    "shareError": "Impossibile condividere il link del regalo.",
+    "status": {
+      "pending": "Non ancora aperto",
+      "claimed": "Link aperto",
+      "collected": "Ritirato",
+      "expired": "Scaduto"
+    }
+  },
   "PurchaseNotice": {
     "dismiss": "Ricordamelo più tardi",
     "kind": {
@@ -397,6 +422,8 @@
       "initiate": "Avviato",
       "completed": "Completato",
       "paymentDone": "Pagamento effettuato"
-    }
+    },
+    "myGifts": "I miei regali",
+    "myGiftsDetail": "Traccia i regali condivisi"
   }
 }

@@ -275,5 +275,20 @@
   "passwordMinLength": "La password deve contenere almeno 6 caratteri",
   "loggedInSuccessfully": "Accesso effettuato con successo!",
   "passwordsDoNotMatch": "Le password non corrispondono",
-  "accountCreatedSuccessfully": "Account creato con successo!"
+  "accountCreatedSuccessfully": "Account creato con successo!",
+  "myGifts": "I miei regali",
+  "myGiftsSubtitle": "Traccia i regali condivisi o ricevuti",
+  "giftsSentTab": "Inviati",
+  "giftsReceivedTab": "Ricevuti",
+  "noSentGifts": "Non hai ancora condiviso nessun regalo.",
+  "noReceivedGifts": "Non hai ancora ricevuto nessun regalo.",
+  "giftFrom": "da",
+  "giftBoxesOpened": "{{opened}} di {{total}} box aperti",
+  "giftClaimedOn": "Riscattato il",
+  "giftSharedOn": "Condiviso il",
+  "giftStatusPending": "Non ancora aperto",
+  "giftStatusClaimed": "Link aperto",
+  "giftStatusCollected": "Ritirato",
+  "giftStatusExpired": "Scaduto",
+  "giftListError": "Impossibile caricare i tuoi regali."
 }

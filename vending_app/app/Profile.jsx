@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { BadgeCheck, Globe, LogOut, ReceiptText, User, UserX } from "lucide-react-native";
+import { BadgeCheck, Gift, Globe, LogOut, ReceiptText, User, UserX } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -109,6 +109,13 @@ function Profile() {
             title={t("PurchaseHistory")}
             trailing={<Badge tone="brand">{total ?? 0}</Badge>}
             onPress={() => router.navigate("/PurchaseHistory")}
+          />
+          <Separator />
+          <ListItem
+            icon={<Gift size={18} color={listItemIconColor()} />}
+            title={t("myGifts")}
+            subtitle={t("myGiftsSubtitle")}
+            onPress={() => router.navigate("/Gifts")}
           />
           <Separator />
           <ListItem
