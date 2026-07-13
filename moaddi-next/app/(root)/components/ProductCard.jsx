@@ -81,7 +81,7 @@ export default function ProductCard({
         alt={name}
         width="220"
         height="168"
-        className="bg-muted h-42 w-full rounded-2xl object-contain"
+        className="bg-white h-42 w-full rounded-2xl object-contain"
       />
       <p className="mt-3 truncate text-base font-extrabold">{name}</p>
       <div className="mt-2 flex items-center justify-between">
