@@ -3,7 +3,7 @@ import Hero from "@/(root)/components/blocks/Hero";
 // import Service from "@/(root)/components/blocks/Service";
 import React from "react";
 
-const PageBlocks = ({ blocks, ...rest }) => {
+const PageBlocks = ({ blocks, storeUrls, ...rest }) => {
   const list = Array.isArray(blocks) ? blocks : [];
 
   // When a locale has no CMS blocks (e.g. the Italian dashboard is empty), the
@@ -15,11 +15,11 @@ const PageBlocks = ({ blocks, ...rest }) => {
 
   return (
     <>
-      {!hasHero && <Hero />}
+      {!hasHero && <Hero {...storeUrls} />}
       {list.map(({ __typename, ...data }, i) => {
         switch (__typename) {
           case "ComponentComponentsHero":
-            return <Hero key={i} {...data} />;
+            return <Hero key={i} {...data} {...storeUrls} />;
           // Gallery ("Free and fast delivery" band) intentionally hidden on home.
           // case "ComponentComponentsGallery":
           //   return <Gallery key={i} {...data} />;

@@ -39,7 +39,7 @@ const SITE_META_FALLBACK = {
       "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
   },
   ar: {
-    title: "معدي",
+    title: "Moaddi",
     description:
       "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
   },
@@ -122,12 +122,15 @@ export default async function RootLayout({ children }) {
   const locale = await getLocale();
   const headerLinksRaw = await client(`${locale}HeaderLinks`);
   const headerLinks = Array.isArray(headerLinksRaw) ? headerLinksRaw : [];
-  const { body, title, links, bottomLinks } = await client(
-    `${locale}FooterBody`,
-  ).then((data) => (Array.isArray(data) ? {} : data));
+  const { body, title, links } = await client(`${locale}FooterBody`).then(
+    (data) => (Array.isArray(data) ? {} : data),
+  );
   const {
     logo: { src: logoUrl },
     socialMedia,
+    appStoreUrl,
+    googlePlayUrl,
+    appGalleryUrl,
   } = await client("site");
   const header = {
     items: headerLinks,
@@ -138,8 +141,11 @@ export default async function RootLayout({ children }) {
     body,
     title,
     links,
-    bottomLinks,
+    logo: logoUrl,
     socialMedia,
+    appStoreUrl,
+    googlePlayUrl,
+    appGalleryUrl,
   };
 
   return (

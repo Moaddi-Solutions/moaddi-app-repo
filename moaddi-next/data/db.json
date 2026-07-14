@@ -12,9 +12,6 @@
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181",
       "stats": [
         {
           "value": "12+",
@@ -156,16 +153,18 @@
     }
   ],
   "enSite": {
-    "name": "Anthony",
-    "description": "null"
+    "name": "Moaddi",
+    "description": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    "id": "fortis"
   },
   "enSeo": {
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
-    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]",
+    "metaDescription": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    "metaTitle": "Moaddi",
     "shareImage": {
       "src": "/uploads/images_93c95c497c.jpeg"
-    }
+    },
+    "id": "fortis"
   },
   "enHeaderLinks": [
     {
@@ -205,7 +204,7 @@
   "enFooterBody": {
     "id": "fortis",
     "title": "Moaddi",
-    "body": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    "body": "Smart vending machines across World. Scan, pick, pay — and Collect your product in seconds.",
     "links": [
       {
         "category": "Shop",
@@ -226,14 +225,6 @@
         "category": "Legal",
         "title": "Terms and conditions",
         "url": "/terms-and-conditions"
-      }
-    ],
-    "bottomLinks": [
-      {
-        "title": "© 2026 Moaddi. All rights reserved."
-      },
-      {
-        "title": "Payments secured by Moyasar · مودي للبيع الذاتي"
       }
     ]
   },
@@ -365,16 +356,13 @@
       "__typename": "ComponentComponentsHero",
       "order": 1,
       "kicker": "أكثر من 12 ماكينة حول العالم",
-      "title": "تسوق بذكاء من|كل ماكينة معدي",
+      "title": "تسوق بذكاء من|كل ماكينة Moaddi",
       "button": {
         "title": "امسح الماكينة",
         "page": {
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181",
       "stats": [
         {
           "value": "+12",
@@ -645,16 +633,18 @@
     }
   ],
   "arSite": {
-    "name": "Anthony",
-    "description": "null"
+    "name": "Moaddi",
+    "description": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    "id": "fortis"
   },
   "arSeo": {
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
-    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]",
+    "metaDescription": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    "metaTitle": "Moaddi",
     "shareImage": {
       "url": "/uploads/images_93c95c497c.jpeg"
-    }
+    },
+    "id": "fortis"
   },
   "arHeaderLinks": [
     {
@@ -693,8 +683,8 @@
   ],
   "arFooterBody": {
     "id": "fortis",
-    "title": "معدي",
-    "body": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    "title": "Moaddi",
+    "body": "ماكينات بيع ذاتي ذكية حول العالم. امسح، اختر، ادفع — واحصل على منتجك في ثوانٍ.",
     "links": [
       {
         "category": "المتجر",
@@ -715,14 +705,6 @@
         "category": "قانوني",
         "title": "الشروط والأحكام",
         "url": "/terms-and-conditions"
-      }
-    ],
-    "bottomLinks": [
-      {
-        "title": "© 2026 معدي. جميع الحقوق محفوظة."
-      },
-      {
-        "title": "المدفوعات مؤمنة بواسطة ميسر · مودي للبيع الذاتي"
       }
     ]
   },
@@ -892,7 +874,10 @@
         "__typename": "ComponentSharedSocialMedia",
         "url": "/"
       }
-    ]
+    ],
+    "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+    "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181"
   },
   "zhHomeBlocks": [
     {
@@ -907,9 +892,6 @@
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181",
       "stats": [
         {
           "value": "12+",
@@ -974,7 +956,7 @@
   "zhFooterBody": {
     "id": "fortis",
     "title": "Moaddi",
-    "body": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    "body": "遍布全球的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的商品。",
     "links": [
       {
         "category": "商店",
@@ -996,14 +978,6 @@
         "title": "条款和条件",
         "url": "/terms-and-conditions"
       }
-    ],
-    "bottomLinks": [
-      {
-        "title": "© 2026 Moaddi。保留所有权利。"
-      },
-      {
-        "title": "支付由 Moyasar 提供安全保障 · مودي للبيع الذاتي"
-      }
     ]
   },
   "itHomeBlocks": [
@@ -1019,9 +993,6 @@
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181",
       "stats": [
         {
           "value": "12+",
@@ -1086,7 +1057,7 @@
   "itFooterBody": {
     "id": "fortis",
     "title": "Moaddi",
-    "body": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    "body": "Distributori automatici intelligenti in tutto il mondo. Scansiona, scegli, paga — e ritira il tuo prodotto in pochi secondi.",
     "links": [
       {
         "category": "Negozio",
@@ -1108,14 +1079,28 @@
         "title": "Termini e condizioni",
         "url": "/terms-and-conditions"
       }
-    ],
-    "bottomLinks": [
-      {
-        "title": "© 2026 Moaddi. Tutti i diritti riservati."
-      },
-      {
-        "title": "Pagamenti protetti da Moyasar · مودي للبيع الذاتي"
-      }
     ]
+  },
+  "zhSite": {
+    "id": "fortis",
+    "name": "Moaddi",
+    "description": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。"
+  },
+  "zhSeo": {
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    "metaTitle": "Moaddi"
+  },
+  "itSite": {
+    "id": "fortis",
+    "name": "Moaddi",
+    "description": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi."
+  },
+  "itSeo": {
+    "id": "fortis",
+    "__typename": "ComponentSharedSeo",
+    "metaDescription": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    "metaTitle": "Moaddi"
   }
 }

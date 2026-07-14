@@ -64,14 +64,14 @@ const HowItWorks = async () => {
   return (
     <section className="py-3" aria-label={t("title")}>
       <Container>
-        <h6 className="text-[22px] font-extrabold tracking-tight text-foreground">
+        <h6 className="text-center text-[22px] font-extrabold tracking-tight text-foreground lg:text-left">
           {t("title")}
         </h6>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stepKeys.map((key) => (
             <div
               key={key}
-              className="grid justify-items-start gap-1.5 rounded-2xl border border-border bg-card p-5"
+              className="grid justify-items-center gap-1.5 rounded-2xl border border-border bg-card p-5 text-center lg:justify-items-start lg:text-left"
             >
               <span className="text-[11px] font-extrabold tracking-[0.14em] text-primary-700 uppercase">
                 {t(`steps.${key}.label`)}

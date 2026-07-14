@@ -194,7 +194,7 @@
   "enSite": {
     "id": "fortis",
     "name": "Moaddi",
-    "description": "vending machines platform"
+    "description": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds."
   },
   "enSeo": {
     "shareImage": {
@@ -202,7 +202,7 @@
     },
     "id": "fortis",
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Vending Machines Platform",
+    "metaDescription": "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
     "metaTitle": "Moaddi"
   },
   "enHeaderLinks": [
@@ -223,7 +223,7 @@
   ],
   "enFooterBody": {
     "body": "E-commerce platfor | Lorem 8 ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
-    "title": "Copyright 2025 © Dr. Moaddi - All Rights Reserved",
+    "title": "Moaddi",
     "bottomLinks": [
       {
         "title": "Privacy Policy",
@@ -254,7 +254,7 @@
     {
       "id": "Hero",
       "__typename": "ComponentComponentsHero",
-      "heading": "منصه معدي | للبيع الذاتي",
+      "heading": "منصه Moaddi | للبيع الذاتي",
       "description": "منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك  منصه معدي | للمتاجره الالكترونيه هي منصه سعوديه رائده في التجاره الالكترونيه - نعمل بجد في هذه المنصه سوف تجد ما يسرك ",
       "button": {
         "__typename": "ComponentSharedButton",
@@ -464,8 +464,8 @@
   ],
   "arSite": {
     "id": "fortis",
-    "name": "معدي",
-    "description": "null"
+    "name": "Moaddi",
+    "description": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ."
   },
   "arSeo": {
     "shareImage": {
@@ -473,8 +473,8 @@
     },
     "id": "fortis",
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Welcome to [Clinic Name], your trusted family dentist offering comprehensive dental care for all ages. Schedule your appointment today!",
-    "metaTitle": "Your Trusted Family Dentist | [Clinic Name]"
+    "metaDescription": "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    "metaTitle": "Moaddi"
   },
   "arHeaderLinks": [
     {
@@ -527,7 +527,7 @@
   ],
   "arFooterBody": {
     "body": "E-commerce platform | Lorem 8 ipsum dolor sit amet erat, consectetuer adipiscing elit, sed diam nonummy nostrud euismod quis nostrud exercitation ad minim veniam, quis nostrud exercitation ullamcorper suscipit la- bortis nisi ut aliquip ex lorem ipsum.",
-    "title": "Copyright 2025 © منصه معدي جميع الحقوق محفوظه",
+    "title": "Moaddi",
     "bottomLinks": [
       {
         "title": "سياسه الخصوصيه",
@@ -605,7 +605,10 @@
         "__typename": "ComponentSharedSocialMedia",
         "url": "/"
       }
-    ]
+    ],
+    "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
+    "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+    "appGalleryUrl": "https://appgallery.huawei.com/app/C115473181"
   },
   "docs": [
     {
@@ -634,9 +637,6 @@
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "#home",
       "stats": [
         {
           "value": "12+",
@@ -751,9 +751,6 @@
           "url": "/machine-scan"
         }
       },
-      "appStoreUrl": "https://apps.apple.com/us/app/moaddi/id6753565231",
-      "googlePlayUrl": "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
-      "appGalleryUrl": "#home",
       "stats": [
         {
           "value": "12+",
@@ -853,7 +850,7 @@
   "zhSite": {
     "id": "fortis",
     "name": "Moaddi",
-    "description": "vending machines platform"
+    "description": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。"
   },
   "zhSeo": {
     "shareImage": {
@@ -861,7 +858,7 @@
     },
     "id": "fortis",
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Vending Machines Platform",
+    "metaDescription": "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
     "metaTitle": "Moaddi"
   },
   "zhPages": [
@@ -877,7 +874,7 @@
   "itSite": {
     "id": "fortis",
     "name": "Moaddi",
-    "description": "vending machines platform"
+    "description": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi."
   },
   "itSeo": {
     "shareImage": {
@@ -885,7 +882,7 @@
     },
     "id": "fortis",
     "__typename": "ComponentSharedSeo",
-    "metaDescription": "Vending Machines Platform",
+    "metaDescription": "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
     "metaTitle": "Moaddi"
   },
   "itPages": [

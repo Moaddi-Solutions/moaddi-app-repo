@@ -25,6 +25,21 @@ const FormIteratorItems = () => {
 export const WebsiteEditItems = [
   <ImageInput key="favicon" source="favicon" />,
   <ImageInput key="logo" source="logo" />,
+  <TextInput
+    key="appStoreUrl"
+    source="appStoreUrl"
+    label="App Store link"
+  />,
+  <TextInput
+    key="googlePlayUrl"
+    source="googlePlayUrl"
+    label="Google Play link"
+  />,
+  <TextInput
+    key="appGalleryUrl"
+    source="appGalleryUrl"
+    label="AppGallery link"
+  />,
   <ArrayInput key="socialMedia" source="socialMedia" className="sm:col-span-2">
     <SimpleFormIterator
       disableAdd
