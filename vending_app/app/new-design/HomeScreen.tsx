@@ -5,6 +5,7 @@ import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import { SocialLinks } from "~/components/moaddi";
 import { colors } from "~/theme/moaddi";
 import { HeroHeader } from "./home/HeroHeader";
+import { ProductsSection } from "./home/ProductsSection";
 import { ServiceGrid } from "./home/ServiceGrid";
 import { ShopsList } from "./home/ShopsList";
 import { SpecialProducts } from "./home/SpecialProducts";
@@ -38,8 +39,9 @@ function HomeScreen() {
           onProducts={() => router.push("/Products" as never)}
           onOrders={() => router.push("/PurchaseHistory" as never)}
         />
-        <SpecialProducts />
         <ShopsList />
+        <SpecialProducts />
+        <ProductsSection />
         <SocialLinks />
       </ScrollView>
     </View>

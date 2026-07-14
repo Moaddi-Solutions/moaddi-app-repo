@@ -1,5 +1,6 @@
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Constants from "expo-constants";
-import { Facebook, Globe, Instagram, Linkedin, Twitter, Youtube } from "lucide-react-native";
+import { Globe } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Pressable, Text, View } from "react-native";
@@ -13,11 +14,11 @@ import { colors, type } from "~/theme/moaddi";
 import { IconButton } from "./IconButton";
 
 const SOCIAL_ICONS: Record<SocialPlatform, (color: string) => ReactNode> = {
-  facebook: (color) => <Facebook size={18} color={color} />,
-  instagram: (color) => <Instagram size={18} color={color} />,
-  twitter: (color) => <Twitter size={18} color={color} />,
-  youtube: (color) => <Youtube size={18} color={color} />,
-  linkedin: (color) => <Linkedin size={18} color={color} />,
+  x: (color) => <FontAwesome6 name="x-twitter" size={18} color={color} iconStyle="brand" />,
+  facebook: (color) => <FontAwesome6 name="facebook" size={18} color={color} iconStyle="brand" />,
+  youtube: (color) => <FontAwesome6 name="youtube" size={18} color={color} iconStyle="brand" />,
+  tiktok: (color) => <FontAwesome6 name="tiktok" size={18} color={color} iconStyle="brand" />,
+  snapchat: (color) => <FontAwesome6 name="snapchat" size={18} color={color} iconStyle="brand" />,
 };
 
 const APP_VERSION =

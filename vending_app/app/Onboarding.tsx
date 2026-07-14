@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { CreditCard, PackageOpen, QrCode, ShoppingBag } from "lucide-react-native";
+import { CreditCard, Globe, PackageOpen, QrCode, ShoppingBag } from "lucide-react-native";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import { Button } from "~/components/moaddi";
 import { ONBOARDING_FLAG } from "~/lib/onboarding";
 import { colors, gradients, space, type as typo } from "~/theme/moaddi";
@@ -30,6 +31,7 @@ export default function Onboarding() {
   const router = useRouter();
   const listRef = useRef<FlatList>(null);
   const [index, setIndex] = useState(0);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   const slides = [
     { key: "scan", title: t("onboardScanTitle"), body: t("onboardScanBody") },
@@ -56,12 +58,35 @@ export default function Onboarding() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surfacePage }}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Skip */}
-      <View style={{ alignItems: "flex-end", paddingHorizontal: space.gutter, paddingTop: 8 }}>
+      {/* Language + Skip */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: space.gutter,
+          paddingTop: 8,
+        }}
+      >
+        <Pressable
+          onPress={() => setLanguageModalVisible(true)}
+          hitSlop={12}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        >
+          <Globe size={20} color={colors.textMuted} strokeWidth={1.8} />
+          <Text style={{ ...typo.bodyStrong, color: colors.textMuted }}>
+            {t("language")}
+          </Text>
+        </Pressable>
         <Pressable onPress={finish} hitSlop={12}>
           <Text style={{ ...typo.bodyStrong, color: colors.textMuted }}>{t("skip")}</Text>
         </Pressable>
       </View>
+
+      <LanguageSelectorModal
+        isModalVisible={languageModalVisible}
+        setModalVisible={setLanguageModalVisible}
+      />
 
       <FlatList
         ref={listRef}

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Moaddi",
     "slug": "moaddi-app",
-    "version": "4.3.0",
+    "version": "4.4.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon-new.jpg",
     "scheme": "moaddi",
@@ -27,7 +27,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "7",
+      "buildNumber": "11",
       "associatedDomains": [
         "applinks:server.moaddi-app.com",
         "applinks:moaddi-app.com",
@@ -74,7 +74,8 @@
             "DEFAULT"
           ]
         }
-      ]
+      ],
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",
@@ -122,8 +123,14 @@
           },
           "ios": {
             "extraPods": [
-              { "name": "GoogleUtilities", "modular_headers": true },
-              { "name": "RecaptchaInterop", "modular_headers": true }
+              {
+                "name": "GoogleUtilities",
+                "modular_headers": true
+              },
+              {
+                "name": "RecaptchaInterop",
+                "modular_headers": true
+              }
             ]
           }
         }
@@ -145,7 +152,15 @@
         "projectId": "d21a7b3f-c67d-4971-aa87-b828fc5bec6c"
       }
     },
-    "runtimeVersion": "4.3.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d21a7b3f-c67d-4971-aa87-b828fc5bec6c",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "owner": "moaddiexpo"
   }
 }

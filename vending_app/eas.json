@@ -27,6 +27,10 @@
         "appleId": "alhuthailimoaddi@gmail.com",
         "appleTeamId": "VYHX753Y3N",
         "ascAppId": "6753565231"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./moaddi-2e568-61ea631f6c3c.json",
+        "track": "internal"
       }
     }
   }

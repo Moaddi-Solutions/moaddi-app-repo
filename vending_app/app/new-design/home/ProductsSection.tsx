@@ -17,8 +17,8 @@ interface ProductItem {
   stock?: number;
 }
 
-/** Horizontal carousel of campaign/special products. */
-export function SpecialProducts() {
+/** Horizontal carousel of all active products, mirroring SpecialProducts. */
+export function ProductsSection() {
   const router = useRouter();
   const { t } = useTranslation();
   const [items, setItems] = useState<ProductItem[]>([]);
@@ -32,17 +32,9 @@ export function SpecialProducts() {
         filter: {
           machines: { $ne: [] },
           "machines.isActive": true,
-          // Special = carries a campaign (discount) price.
-          $or: [
-            { campaignPrice: { $ne: null } },
-            { "localPrice.campaignPrice": { $ne: null } },
-            { "usdPrice.campaignPrice": { $ne: null } },
-          ],
         },
       })
-      .then(({ data }: { data: ProductItem[] }) =>
-        setItems(data.filter((p) => p.campaignPrice != null))
-      )
+      .then(({ data }: { data: ProductItem[] }) => setItems(data))
       .catch(() => setItems([]));
   }, []);
 
@@ -51,9 +43,9 @@ export function SpecialProducts() {
   return (
     <View style={{ marginTop: space.section }}>
       <SectionHeader
-        title={t("specialProducts")}
+        title={t("products")}
         actionLabel={t("viewAll")}
-        onAction={() => router.push("/SpecialProducts" as never)}
+        onAction={() => router.push("/Products" as never)}
       />
       <ScrollView
         horizontal
@@ -85,4 +77,4 @@ export function SpecialProducts() {
   );
 }
 
-export default SpecialProducts;
+export default ProductsSection;
