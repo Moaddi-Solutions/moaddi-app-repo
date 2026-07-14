@@ -3,7 +3,7 @@ import { Search as SearchIcon, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { ProductCard } from "~/components/moaddi";
+import { ProductCard, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { colors, palette, radius, sizes, space, type } from "~/theme/moaddi";
 import dataProvider from "~/services/dataProvider";
@@ -112,33 +112,41 @@ export function ProductsScreen({ specialOnly = false }: ProductsScreenProps) {
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: space.gutter, paddingBottom: 24 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "space-between",
+          padding: space.gutter,
+          paddingBottom: 24,
+        }}
       >
-        {results.length === 0 ? (
-          <Text
-            style={{ ...type.body, color: colors.textMuted, textAlign: "center", marginTop: 32 }}
-          >
-            {query ? t("noProductsMatchSearch") : ""}
-          </Text>
-        ) : (
-          <View style={{ gap: space.card }}>
-            {results.map((item, i) => {
-              const id = item._id ?? item.id ?? i;
-              return (
-                <ProductCard
-                  key={id}
-                  name={item.name}
-                  image={item.image?.src}
-                  salePrice={item.salePrice}
-                  campaignPrice={item.campaignPrice}
-                  currency={item.preferredCurrency ?? "SAR"}
-                  stock={item.stock}
-                  onAction={() => router.push(`/Machines/${id}` as never)}
-                />
-              );
-            })}
-          </View>
-        )}
+        <View>
+          {results.length === 0 ? (
+            <Text
+              style={{ ...type.body, color: colors.textMuted, textAlign: "center", marginTop: 32 }}
+            >
+              {query ? t("noProductsMatchSearch") : ""}
+            </Text>
+          ) : (
+            <View style={{ gap: space.card }}>
+              {results.map((item, i) => {
+                const id = item._id ?? item.id ?? i;
+                return (
+                  <ProductCard
+                    key={id}
+                    name={item.name}
+                    image={item.image?.src}
+                    salePrice={item.salePrice}
+                    campaignPrice={item.campaignPrice}
+                    currency={item.preferredCurrency ?? "SAR"}
+                    stock={item.stock}
+                    onAction={() => router.push(`/Machines/${id}` as never)}
+                  />
+                );
+              })}
+            </View>
+          )}
+        </View>
+        <SocialLinks />
       </ScrollView>
     </View>
   );

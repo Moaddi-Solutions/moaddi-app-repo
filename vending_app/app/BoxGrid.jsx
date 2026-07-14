@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { Check, Gift, PackageOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, Share, Text, View } from "react-native";
+import { AppState, Image, ScrollView, Share, Text, View } from "react-native";
 import { routes } from "~/app/CheckoutMoyasar";
 import { Badge, Button, Card, Progress } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
@@ -13,7 +13,8 @@ import alert from "~/lib/alert";
 import { compressBoxData } from "~/services/functions";
 import { WEBSITE_URL } from "~/config/socialMedia";
 import { enableGift } from "~/services/gift";
-import { productImageUrl } from "~/services/serverAddresses";
+import { getRequest } from "~/services/httpClient";
+import { productImageUrl, purchaseAPI } from "~/services/serverAddresses";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
@@ -53,6 +54,63 @@ const BoxGrid = () => {
       },
     }));
   }, [machineEvents]);
+
+  // Fallback sync: the "Waiting" → "Opened" flip normally arrives as a live
+  // socket event, but if the app was backgrounded or the socket dropped when
+  // the box was approved/opened, that event is lost and the box shows
+  // "Waiting" forever. Poll the purchase and re-sync on foreground so the
+  // server state always wins.
+  useEffect(() => {
+    const purchaseId = user?.purchase?._id;
+    if (!purchaseId || done) return;
+
+    let cancelled = false;
+
+    const syncFromServer = async () => {
+      try {
+        const purchase = await getRequest(purchaseAPI(purchaseId));
+        if (cancelled || !Array.isArray(purchase?.items)) return;
+        const openedByBoxId = {};
+        purchase.items.forEach(({ boxId, boxStatus }) => {
+          openedByBoxId[boxId] = !!boxStatus;
+        });
+        setUser((prev) => {
+          const boxes = prev?.purchase?.boxes;
+          if (!boxes) return prev;
+          let changed = false;
+          const nextBoxes = boxes.map((box) => {
+            const opened = openedByBoxId[box._id];
+            if (opened === undefined || opened === !!box.boxStatus) return box;
+            changed = true;
+            return { ...box, boxStatus: opened };
+          });
+          if (!changed) return prev;
+          return {
+            ...prev,
+            purchase: {
+              ...prev.purchase,
+              status: purchase.status ?? prev.purchase.status,
+              boxes: nextBoxes,
+            },
+          };
+        });
+      } catch (err) {
+        log("BoxGrid purchase sync failed", err?.message ?? String(err));
+      }
+    };
+
+    syncFromServer();
+    const interval = setInterval(syncFromServer, 5000);
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active") syncFromServer();
+    });
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      appStateSub.remove();
+    };
+  }, [user?.purchase?._id, done]);
 
   // set Done after all boxes opened
   useEffect(() => {

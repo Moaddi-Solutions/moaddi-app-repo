@@ -3,7 +3,7 @@ import { ChevronRight, Gift, Share2 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, RefreshControl, ScrollView, Share, Text, View } from "react-native";
-import { Badge, Loader } from "~/components/moaddi";
+import { Badge, Loader, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { WEBSITE_URL } from "~/config/socialMedia";
 import { useMachine } from "~/context/MachineContext";
@@ -301,6 +301,7 @@ function GiftsData() {
               />
             ))
           )}
+          <SocialLinks />
         </ScrollView>
       )}
     </View>

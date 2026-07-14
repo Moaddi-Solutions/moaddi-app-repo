@@ -17,6 +17,7 @@ import { goToOpenAfterPayment } from "~/lib/goToOpenAfterPayment";
 import { useUser } from "~/context/UserContext";
 import { useMachine } from "~/context/MachineContext";
 import { Button } from "~/components/ui/button";
+import { SocialLinks } from "~/components/moaddi";
 
 import {
   buildStripePaymentConfig,
@@ -252,32 +253,41 @@ function CheckoutStripePaymentForm({
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
-      <View>
-        <Text className="mb-2 font-semibold text-gray-700">{t("cardDetails")}</Text>
-        <CardField
-          postalCodeEnabled={true}
-          onCardChange={(details) => {
-            console.log("🔐 [STRIPE] Card details changed:", details);
-            setCardDetails(details);
-          }}
-          style={{
-            height: 50,
-          }}
-        />
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "space-between", padding: 16, gap: 20 }}>
+      <View style={{ gap: 20 }}>
+        <Text className="text-sm text-gray-500 text-center">
+          {t("paidVia", { gateway: "Stripe" })}
+        </Text>
+
+        <View>
+          <Text className="mb-2 font-semibold text-gray-700">{t("cardDetails")}</Text>
+          <CardField
+            // Postal code uses an alphanumeric keyboard; disable so card/expiry/CVC stay numeric-only
+            postalCodeEnabled={false}
+            onCardChange={(details) => {
+              console.log("🔐 [STRIPE] Card details changed:", details);
+              setCardDetails(details);
+            }}
+            style={{
+              height: 50,
+            }}
+          />
+        </View>
+
+        <Button
+          onPress={processPayment}
+          disabled={processingPayment}
+          className="mt-4 bg-blue-500"
+        >
+          {processingPayment ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text className="text-white font-semibold">{t("payNow")}</Text>
+          )}
+        </Button>
       </View>
 
-      <Button
-        onPress={processPayment}
-        disabled={processingPayment}
-        className="mt-4 bg-blue-500"
-      >
-        {processingPayment ? (
-          <ActivityIndicator color="#ffffff" />
-        ) : (
-          <Text className="text-white font-semibold">{t("payNow")}</Text>
-        )}
-      </Button>
+      <SocialLinks />
     </ScrollView>
   );
 }

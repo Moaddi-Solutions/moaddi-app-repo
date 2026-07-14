@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, TextInput, View } from "react-native";
 import { Button } from "~/components/ui/button";
+import { SocialLinks } from "~/components/moaddi";
 import { Text } from "~/components/ui/text";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
@@ -79,6 +80,8 @@ const SettingForm = () => {
       <Button onPress={handleUpdate} disabled={loading}>
         <Text>{loading ? t("updating") : t("update")}</Text>
       </Button>
+
+      <SocialLinks />
     </ScrollView>
   );
 };

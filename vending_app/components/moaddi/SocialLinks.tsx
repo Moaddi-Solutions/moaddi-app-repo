@@ -14,11 +14,21 @@ import { colors, type } from "~/theme/moaddi";
 import { IconButton } from "./IconButton";
 
 const SOCIAL_ICONS: Record<SocialPlatform, (color: string) => ReactNode> = {
-  x: (color) => <FontAwesome6 name="x-twitter" size={18} color={color} iconStyle="brand" />,
-  facebook: (color) => <FontAwesome6 name="facebook" size={18} color={color} iconStyle="brand" />,
-  youtube: (color) => <FontAwesome6 name="youtube" size={18} color={color} iconStyle="brand" />,
-  tiktok: (color) => <FontAwesome6 name="tiktok" size={18} color={color} iconStyle="brand" />,
-  snapchat: (color) => <FontAwesome6 name="snapchat" size={18} color={color} iconStyle="brand" />,
+  x: (color) => (
+    <FontAwesome6 name="x-twitter" size={18} color={color} iconStyle="brand" />
+  ),
+  facebook: (color) => (
+    <FontAwesome6 name="facebook" size={18} color={color} iconStyle="brand" />
+  ),
+  youtube: (color) => (
+    <FontAwesome6 name="youtube" size={18} color={color} iconStyle="brand" />
+  ),
+  tiktok: (color) => (
+    <FontAwesome6 name="tiktok" size={18} color={color} iconStyle="brand" />
+  ),
+  snapchat: (color) => (
+    <FontAwesome6 name="snapchat" size={18} color={color} iconStyle="brand" />
+  ),
 };
 
 const APP_VERSION =
@@ -37,6 +47,7 @@ export function SocialLinks() {
         alignItems: "center",
         gap: 12,
         paddingVertical: 20,
+        marginTop: "auto",
       }}
     >
       <View
@@ -72,7 +83,9 @@ export function SocialLinks() {
         })}
       >
         <Globe size={16} color={colors.textBrand} />
-        <Text style={{ ...type.caption, color: colors.textBrand }}>{WEBSITE_LABEL}</Text>
+        <Text style={{ ...type.caption, color: colors.textBrand }}>
+          {WEBSITE_LABEL}
+        </Text>
       </Pressable>
 
       <Text style={{ ...type.caption, color: colors.textMuted }}>

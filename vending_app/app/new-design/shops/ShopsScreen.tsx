@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Loader, ShopCard } from "~/components/moaddi";
+import { Loader, ShopCard, SocialLinks } from "~/components/moaddi";
 import { colors, palette, space, type } from "~/theme/moaddi";
 import dataProvider from "~/services/dataProvider";
 
@@ -66,23 +66,27 @@ export function ShopsScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            gap: space.card,
+            flexGrow: 1,
+            justifyContent: "space-between",
             padding: space.gutter,
             paddingBottom: 24,
           }}
         >
-          {shops.map((shop, i) => {
-            const id = shop._id ?? shop.id ?? i;
-            return (
-              <ShopCard
-                key={id}
-                name={shop.name}
-                description={shop.description}
-                icon={<Store size={20} color={palette.teal[600]} />}
-                onPress={() => router.push(`/Shop/${id}` as never)}
-              />
-            );
-          })}
+          <View style={{ gap: space.card }}>
+            {shops.map((shop, i) => {
+              const id = shop._id ?? shop.id ?? i;
+              return (
+                <ShopCard
+                  key={id}
+                  name={shop.name}
+                  description={shop.description}
+                  icon={<Store size={20} color={palette.teal[600]} />}
+                  onPress={() => router.push(`/Shop/${id}` as never)}
+                />
+              );
+            })}
+          </View>
+          <SocialLinks />
         </ScrollView>
       )}
     </View>

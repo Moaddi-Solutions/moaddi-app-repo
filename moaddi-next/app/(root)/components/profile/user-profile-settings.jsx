@@ -102,13 +102,15 @@ export default function UserProfileSettings() {
           </Avatar>
           <div className="flex min-w-0 flex-col gap-1.5">
             <p className="truncate text-lg font-black">{userInfo.name || "â€”"}</p>
-            <Badge
-              variant="outline"
-              className="w-fit border-green-200 bg-green-50 font-bold text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
-            >
-              <span className="size-1.5 rounded-full bg-green-600" />
-              {t("verifiedAccount")}
-            </Badge>
+            {!(user?.isGuest || user?.role === "Guest") && (
+              <Badge
+                variant="outline"
+                className="w-fit border-green-200 bg-green-50 font-bold text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
+              >
+                <span className="size-1.5 rounded-full bg-green-600" />
+                {t("verifiedAccount")}
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>

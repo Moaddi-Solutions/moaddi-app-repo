@@ -1,9 +1,11 @@
-import { CameraView, useCameraPermissions, Camera } from "expo-camera";
+import { Camera, CameraView, scanFromURLAsync, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { Stack, usePathname, useRouter } from "expo-router";
-import { SquareDashed } from "lucide-react-native";
-import { useEffect } from "react";
+import { Image as ImageIcon, SquareDashed } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   Linking,
   Platform,
   StyleSheet,
@@ -12,9 +14,13 @@ import {
   View,
 } from "react-native";
 import { Text as UIText } from "~/components/ui/text";
+import alert from "~/lib/alert";
+import { getRequest } from "~/services/httpClient";
+import { machineQRScan } from "~/services/serverAddresses";
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
+  const [scanningGallery, setScanningGallery] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useTranslation();
@@ -153,6 +159,48 @@ export default function App() {
 
     router.replace(`/staff/MachineProducts/${data}` as any);
   }
+
+  function goHomeWithError(message: string) {
+    alert("error", message);
+    router.replace("/staff");
+  }
+
+  async function validateGalleryQr(data: string) {
+    try {
+      const machine = await getRequest(machineQRScan(data));
+      if (machine?.statusCode || !(machine?._id || machine?.qrCode)) {
+        goHomeWithError(t("invalidMachineQr"));
+        return;
+      }
+      router.replace(`/staff/MachineProducts/${data}` as any);
+    } catch {
+      goHomeWithError(t("invalidMachineQr"));
+    }
+  }
+
+  async function pickFromGallery() {
+    if (scanningGallery) return;
+    setScanningGallery(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+
+      const codes = await scanFromURLAsync(result.assets[0].uri, ["qr"]);
+      if (!codes.length) {
+        goHomeWithError(t("noQrCodeFound"));
+        return;
+      }
+      await validateGalleryQr(codes[0].data);
+    } catch {
+      goHomeWithError(t("noQrCodeFound"));
+    } finally {
+      setScanningGallery(false);
+    }
+  }
+
   return (
     <>
       <Stack.Screen
@@ -171,6 +219,19 @@ export default function App() {
         >
           <SquareDashed style={styles.icon} width={200} height={200} />
         </CameraView>
+        <TouchableOpacity
+          onPress={pickFromGallery}
+          disabled={scanningGallery}
+          activeOpacity={0.7}
+          style={styles.galleryButton}
+        >
+          {scanningGallery ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <ImageIcon size={20} color="white" />
+          )}
+          <Text style={styles.galleryButtonText}>{t("uploadFromGallery")}</Text>
+        </TouchableOpacity>
       </View>
     </>
   );
@@ -198,5 +259,22 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     color: "white",
+  },
+  galleryButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  galleryButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

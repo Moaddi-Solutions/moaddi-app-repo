@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import MachineCard from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
-import { Loader } from "~/components/moaddi";
+import { Loader, SocialLinks } from "~/components/moaddi";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
 import { useManyReferences } from "~/hook/useManyReferences";
@@ -59,6 +59,7 @@ const Machines = () => {
         ) : (
           <Loader />
         )}
+        <SocialLinks />
       </ScrollView>
     </View>
   );

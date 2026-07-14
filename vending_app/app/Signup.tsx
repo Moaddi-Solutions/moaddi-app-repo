@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import { Button, Card, PhoneInput, SocialAuthButtons } from "~/components/moaddi";
+import { Button, Card, PhoneInput, SocialAuthButtons, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import alert from "~/lib/alert";
 import { getItem, setItem } from "~/lib/utils";
@@ -137,6 +137,8 @@ const SignupScreen = () => {
               </View>
             </View>
           </Card>
+
+          <SocialLinks />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

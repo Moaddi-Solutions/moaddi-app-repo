@@ -27,7 +27,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "11",
+      "buildNumber": "13",
       "associatedDomains": [
         "applinks:server.moaddi-app.com",
         "applinks:moaddi-app.com",
@@ -75,7 +75,7 @@
           ]
         }
       ],
-      "versionCode": 2
+      "versionCode": 4
     },
     "web": {
       "bundler": "metro",
@@ -109,6 +109,12 @@
           "cameraPermission": "$(PRODUCT_NAME) use your camera to scan the QR codes on our vending machines to facilitate your purchase.",
           "microphonePermission": "$(PRODUCT_NAME) use your camera to scan the QR codes on our vending machines to facilitate your purchase.",
           "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "$(PRODUCT_NAME) needs access to your photos so you can upload a QR code image from your gallery."
         }
       ],
       [

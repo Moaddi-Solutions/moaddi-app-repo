@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, View, Text } from "react-native";
-import { Loader } from "~/components/moaddi";
+import { Loader, SocialLinks } from "~/components/moaddi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -178,12 +178,19 @@ export default function CheckoutMoyasarScreen({
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 20 }}>
-      {/* Credit Card */}
-      <CreditCard
-        paymentConfig={paymentConfig}
-        onPaymentResult={onPaymentResult}
-      />   
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "space-between", padding: 16, gap: 20 }}>
+      <View style={{ gap: 20 }}>
+        <Text className="text-sm text-gray-500 text-center">
+          {t("paidVia", { gateway: "Moyasar" })}
+        </Text>
+
+        <CreditCard
+          paymentConfig={paymentConfig}
+          onPaymentResult={onPaymentResult}
+        />
+      </View>
+
+      <SocialLinks />
     </ScrollView>
   );
 }

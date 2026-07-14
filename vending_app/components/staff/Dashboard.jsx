@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { Receipt, ScanQrCode, Store, Wallet } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
-import { SectionHeader, ServiceTile, serviceTileIconColor, ShopCard } from "~/components/moaddi";
+import { SectionHeader, ServiceTile, serviceTileIconColor, ShopCard, SocialLinks } from "~/components/moaddi";
 import { TopBar } from "~/components/moaddi/TopBar";
 import { useUser } from "~/context/UserContext";
 import { useManyReference } from "~/hook/useManyReference";
@@ -138,6 +138,8 @@ export function Dashboard() {
           </Text>
         </View>
       )}
+
+      <SocialLinks />
     </ScrollView>
   );
 }

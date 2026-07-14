@@ -8,6 +8,7 @@ import {
   MachineCard,
   ProductCard,
   SectionHeader,
+  SocialLinks,
   connectivityColor,
 } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
@@ -102,53 +103,61 @@ const ShopDetail = () => {
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "space-between",
+            paddingTop: 16,
+            paddingBottom: 24,
+          }}
         >
-          {/* Machines */}
-          <View style={{ marginBottom: 8 }}>
-            <SectionHeader title={t("machines")} />
-            <View style={{ gap: space.card, paddingHorizontal: space.gutter }}>
-              {machines.map((machine) => {
-                const connectivity = machineConnectivity(machine);
-                const goToMachine = () =>
-                  router.navigate(`/MachineProducts/${machine.qrCode}`);
-                return (
-                  <MachineCard
-                    key={machine._id}
-                    name={machine.name}
-                    location={machine.location}
-                    connectivity={connectivity}
-                    connectivityIcon={<ConnectivityIcon connectivity={connectivity} />}
-                    scanIcon={<ScanQrCode size={20} color={colors.textHeading} />}
-                    onOpen={goToMachine}
-                    onScan={goToMachine}
-                  />
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Products */}
-          {products.length > 0 && (
-            <View style={{ marginTop: 16 }}>
-              <SectionHeader title={t("products")} />
+          <View>
+            {/* Machines */}
+            <View style={{ marginBottom: 8 }}>
+              <SectionHeader title={t("machines")} />
               <View style={{ gap: space.card, paddingHorizontal: space.gutter }}>
-                {products.map((product) => (
-                  <ProductCard
-                    key={product._id}
-                    name={product.name}
-                    image={product.image?.src}
-                    salePrice={product.salePrice}
-                    campaignPrice={product.campaignPrice}
-                    currency={product.preferredCurrency ?? "SAR"}
-                    stock={(product.boxes ?? []).filter((b) => b?.isActive).length}
-                    actionLabel={t("showMachines")}
-                    onAction={() => router.navigate(`/Machines/${product._id}`)}
-                  />
-                ))}
+                {machines.map((machine) => {
+                  const connectivity = machineConnectivity(machine);
+                  const goToMachine = () =>
+                    router.navigate(`/MachineProducts/${machine.qrCode}`);
+                  return (
+                    <MachineCard
+                      key={machine._id}
+                      name={machine.name}
+                      location={machine.location}
+                      connectivity={connectivity}
+                      connectivityIcon={<ConnectivityIcon connectivity={connectivity} />}
+                      scanIcon={<ScanQrCode size={20} color={colors.textHeading} />}
+                      onOpen={goToMachine}
+                      onScan={goToMachine}
+                    />
+                  );
+                })}
               </View>
             </View>
-          )}
+
+            {/* Products */}
+            {products.length > 0 && (
+              <View style={{ marginTop: 16 }}>
+                <SectionHeader title={t("products")} />
+                <View style={{ gap: space.card, paddingHorizontal: space.gutter }}>
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product._id}
+                      name={product.name}
+                      image={product.image?.src}
+                      salePrice={product.salePrice}
+                      campaignPrice={product.campaignPrice}
+                      currency={product.preferredCurrency ?? "SAR"}
+                      stock={(product.boxes ?? []).filter((b) => b?.isActive).length}
+                      actionLabel={t("showMachines")}
+                      onAction={() => router.navigate(`/Machines/${product._id}`)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+          <SocialLinks />
         </ScrollView>
       )}
     </View>

@@ -3,7 +3,7 @@ import { BadgeCheck, Gift, Globe, LogOut, ReceiptText, User, UserX } from "lucid
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
-import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator } from "~/components/moaddi";
+import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import {
@@ -145,6 +145,8 @@ function Profile() {
             onPress={() => router.navigate("/Settings")}
           />
         </Card>
+
+        <SocialLinks />
       </ScrollView>
 
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>

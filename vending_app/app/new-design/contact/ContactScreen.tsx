@@ -2,7 +2,7 @@ import { Mail } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { Linking, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card } from "~/components/moaddi";
+import { Button, Card, SocialLinks } from "~/components/moaddi";
 import { CONTACT_EMAIL } from "~/config/socialMedia";
 import { colors, palette, space, type } from "~/theme/moaddi";
 
@@ -56,6 +56,7 @@ export function ContactScreen() {
           </Button>
         </Card>
       </View>
+      <SocialLinks />
     </View>
   );
 }

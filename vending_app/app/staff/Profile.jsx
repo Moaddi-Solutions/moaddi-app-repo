@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { Text as UIText } from "~/components/ui/text";
-import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator } from "~/components/moaddi";
+import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
@@ -86,6 +86,8 @@ function Profile() {
             onPress={() => setAlertOpen(true)}
           />
         </Card>
+
+        <SocialLinks />
       </ScrollView>
 
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>

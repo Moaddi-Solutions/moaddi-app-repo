@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
-import { Badge, Button as MButton, Loader, Stepper } from "~/components/moaddi";
+import { Badge, Button as MButton, Loader, SocialLinks, Stepper } from "~/components/moaddi";
 import GuestCheckoutModal from "~/components/GuestCheckoutModal";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { colors, radius, shadow, space, type as typo } from "~/theme/moaddi";
@@ -101,6 +101,8 @@ function DefaultView({
           gap: space.card,
           padding: space.gutter,
           paddingBottom: 24,
+          flexGrow: 1,
+          justifyContent: "space-between",
         }}
       >
         {products.map((product) => {
@@ -117,6 +119,7 @@ function DefaultView({
             />
           );
         })}
+        <SocialLinks />
       </ScrollView>
 
       {/* Sticky pay bar */}

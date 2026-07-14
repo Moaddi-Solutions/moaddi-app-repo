@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import MachineCard from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
-import { Loader } from "~/components/moaddi";
+import { Loader, SocialLinks } from "~/components/moaddi";
 import { useManyReference } from "~/hook/useManyReference";
 import { colors, space } from "~/theme/moaddi";
 
@@ -37,6 +37,7 @@ export default function Machines() {
         ) : (
           <Loader />
         )}
+        <SocialLinks />
       </ScrollView>
     </View>
   );
