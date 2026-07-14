@@ -304,5 +304,6 @@
   "giftStatusClaimed": "Link opened",
   "giftStatusCollected": "Collected",
   "giftStatusExpired": "Expired",
-  "giftListError": "Could not load your gifts."
+  "giftListError": "Could not load your gifts.",
+  "giftOpenError": "Could not open this gift."
 }

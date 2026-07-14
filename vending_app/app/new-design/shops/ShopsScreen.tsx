@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ShopCard } from "~/components/moaddi";
+import { Loader, ShopCard } from "~/components/moaddi";
 import { colors, palette, space, type } from "~/theme/moaddi";
 import dataProvider from "~/services/dataProvider";
 
@@ -22,6 +22,7 @@ export function ShopsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<ShopItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     dataProvider
@@ -35,7 +36,8 @@ export function ShopsScreen() {
         },
       })
       .then(({ data }: { data: ShopItem[] }) => setItems(data))
-      .catch(() => setItems([]));
+      .catch(() => setItems([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const shops = items.filter((s) => s.isActive !== false);
@@ -58,27 +60,31 @@ export function ShopsScreen() {
         </Text>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          gap: space.card,
-          padding: space.gutter,
-          paddingBottom: 24,
-        }}
-      >
-        {shops.map((shop, i) => {
-          const id = shop._id ?? shop.id ?? i;
-          return (
-            <ShopCard
-              key={id}
-              name={shop.name}
-              description={shop.description}
-              icon={<Store size={20} color={palette.teal[600]} />}
-              onPress={() => router.push(`/Shop/${id}` as never)}
-            />
-          );
-        })}
-      </ScrollView>
+      {isLoading ? (
+        <Loader flex message={t("loading")} />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            gap: space.card,
+            padding: space.gutter,
+            paddingBottom: 24,
+          }}
+        >
+          {shops.map((shop, i) => {
+            const id = shop._id ?? shop.id ?? i;
+            return (
+              <ShopCard
+                key={id}
+                name={shop.name}
+                description={shop.description}
+                icon={<Store size={20} color={palette.teal[600]} />}
+                onPress={() => router.push(`/Shop/${id}` as never)}
+              />
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }

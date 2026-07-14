@@ -211,6 +211,7 @@ export default function MachineProducts() {
   const { machine, setMachine, setBluFeedback, setMachines, connectedDevice } =
     useMachine();
   const [total, setTotal] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [guestModalVisible, setGuestModalVisible] = useState(false);
   const { user, setUser } = useUser();
@@ -227,7 +228,9 @@ export default function MachineProducts() {
   useEffect(() => {
     console.log(" [MACHINE LOAD] Loading machine data...");
     console.log("   Machine QR Code:", machineId);
-    
+
+    let cancelled = false;
+    setIsLoading(true);
     setBluFeedback(null);
     setMachines([]);
     // if (!user) return router.navigate("/Signin");
@@ -236,14 +239,15 @@ export default function MachineProducts() {
       try {
         console.log(" [MACHINE LOAD] Fetching machine from QR code...");
         const response = await getRequest(machineQRScan(machineId));
-        
+        if (cancelled) return;
+
         if (response.statusCode) {
           console.error(" [MACHINE LOAD] Machine not found, status code:", response.statusCode);
           return alert("error", t("machineNotFound"));
         }
-        
+
         console.log("✅ [MACHINE LOAD] Machine data received:", response);
-        
+
         // TESTING: Only check connectivity in production (not during development without physical machines)
         if (process.env.NODE_ENV == "production") {
           console.log(" [MACHINE LOAD] Production mode - checking connectivity...");
@@ -259,14 +263,20 @@ export default function MachineProducts() {
         } else {
           console.log("[MACHINE LOAD] Development mode - skipping connectivity check (testing mode)");
         }
-        
+
         // alert("success", `machineDetected`);
         setMachine(response);
       } catch (err) {
         console.error(" [MACHINE LOAD] Error loading machine:", err);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     })();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [machineId]);
 
   const onPurchaseHandler = async(activeUserArg) => {
     // Callers: onPress passes an event (no `_id`); the guest modal passes the
@@ -440,22 +450,33 @@ export default function MachineProducts() {
     isPurchasing,
   };
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Loader flex message={t("loading")} />
+      </View>
+    );
+  }
+
+  if (machine?.qrCode != machineId) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+        <Stack.Screen options={{ headerShown: false }} />
+      </View>
+    );
+  }
+
   return (
     <>
-      {machine?.qrCode == machineId ? (
-        <>
-          {machine?.type == 0 && <MachineDirect {...machineTools} />}
-          {machine?.type == 1 && <MachineDirect {...machineTools} />}
-          {machine?.type == 2 && <MachineDirect {...machineTools} />}
-          {/* {machine?.type == 1 && <MachineMQTT {...machineTools} />} */}
-          {/* {machine?.type == 2 && <MachineBluetooth1 {...machineTools} />} */}
-          {machine?.type == 3 && <MachineBluetooth2 {...machineTools} />}
-          {machine?.type == 4 && <MachineBluetooth4 {...machineTools} />}
-          {machine?.type == 5 && <MachineBluetooth3 {...machineTools} />}
-        </>
-      ) : (
-        <Loader />
-      )}
+      {machine?.type == 0 && <MachineDirect {...machineTools} />}
+      {machine?.type == 1 && <MachineDirect {...machineTools} />}
+      {machine?.type == 2 && <MachineDirect {...machineTools} />}
+      {/* {machine?.type == 1 && <MachineMQTT {...machineTools} />} */}
+      {/* {machine?.type == 2 && <MachineBluetooth1 {...machineTools} />} */}
+      {machine?.type == 3 && <MachineBluetooth2 {...machineTools} />}
+      {machine?.type == 4 && <MachineBluetooth4 {...machineTools} />}
+      {machine?.type == 5 && <MachineBluetooth3 {...machineTools} />}
       <GuestCheckoutModal
         isVisible={guestModalVisible}
         onClose={() => setGuestModalVisible(false)}

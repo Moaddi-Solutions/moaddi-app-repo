@@ -3,7 +3,7 @@
   "main": "index.js",
   "version": "1.0.0",
   "scripts": {
-    "dev": "node scripts/start-local.mjs",
+    "dev": "node scripts/start-online.mjs",
     "dev:local": "node scripts/start-local.mjs",
     "dev:emu": "node scripts/start-local.mjs --emu",
     "dev:online": "node scripts/start-online.mjs",

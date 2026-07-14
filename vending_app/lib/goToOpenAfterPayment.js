@@ -22,6 +22,9 @@ export function goToOpenAfterPayment(response, { setUser, setMachine, router }) 
     purchase: {
       ...(prev?.purchase || {}),
       _id: response?._id ?? prev?.purchase?._id,
+      // Buyer id when the payload carries it; BoxGrid treats an unknown
+      // customerId as "current user is the buyer" (true for checkout).
+      customerId: response?.customerId ?? prev?.purchase?.customerId,
       machineId: response?.machineId ?? prev?.purchase?.machineId,
       status: response?.status,
       boxes,

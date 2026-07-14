@@ -3,6 +3,7 @@ import {
   giftClaimAPI,
   giftEnableAPI,
   giftPreviewAPI,
+  giftPurchaseAPI,
   giftsMineAPI,
 } from "./serverAddresses";
 
@@ -46,6 +47,19 @@ export const claimGift = async (claimToken) => {
  * Gifts dashboard for the signed-in user: `{ sent, received }` lists with a
  * derived `giftStatus` (pending | claimed | collected | expired) per item.
  */
+/**
+ * Openable purchase view for a gift the user can open (buyer or authorized
+ * opener): `{ _id, customerId, machineId, machine, boxes, status, ... }` —
+ * the same shape the claim endpoint returns, ready for the box-open flow.
+ */
+export const getGiftPurchase = async (purchaseId) => {
+  const result = await getRequest(giftPurchaseAPI(purchaseId));
+  if (!result || result.statusCode || !result._id) {
+    throw new Error(result?.message || "Could not open this gift.");
+  }
+  return result;
+};
+
 export const listMyGifts = async () => {
   const result = await getRequest(giftsMineAPI());
   if (!result || result.statusCode) {

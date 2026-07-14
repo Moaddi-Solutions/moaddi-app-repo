@@ -20,7 +20,8 @@ const optionalAuthenticate = require('../middlewares/optionalAuthenticate') as (
 const { getCurrencyOfUser } = require('../../services/geo-currency') as {
   getCurrencyOfUser: (req: Request) => Promise<string>;
 };
-const { isStaffAdminRole } = require('../../lib/purchaseAccess') as typeof import('../../lib/purchaseAccess');
+const { isStaffAdminRole, canViewPurchase } = require('../../lib/purchaseAccess') as typeof import('../../lib/purchaseAccess');
+const machinesRepo = require('../../data/repos/machines') as typeof import('../../data/repos/machines');
 const config = require('../../../config') as { giftClaimBaseUrl?: string };
 
 const pathParam = (v: string | string[] | undefined): string => {
@@ -95,6 +96,31 @@ const controller = (): import('express').Router => {
           })
         );
         return res.status(200).json({ sent: withUrls, received });
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
+  // Openable purchase view for the gifts page: same shape the claim endpoint
+  // returns, so the client can hand off to the existing box-open flow. Allowed
+  // for the buyer, authorized gift openers, and staff (canViewPurchase).
+  router.get(
+    '/gifts/purchase/:purchaseId',
+    authenticate(),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const purchase = await purchasesRepo.getById(
+          pathParam(req.params.purchaseId)
+        );
+        if (
+          !(await canViewPurchase(purchase, req.authenticatedUser!, machinesRepo))
+        ) {
+          return res.status(403).json({ message: 'Forbidden.' });
+        }
+        const preferredCurrency = await getCurrencyOfUser(req);
+        const view = await purchasesRepo.giftView(purchase, preferredCurrency);
+        return res.status(200).json(view);
       } catch (err) {
         next(err);
       }

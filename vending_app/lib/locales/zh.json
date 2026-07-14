@@ -290,5 +290,6 @@
   "giftStatusClaimed": "已打开链接",
   "giftStatusCollected": "已取货",
   "giftStatusExpired": "已过期",
-  "giftListError": "无法加载您的礼物。"
+  "giftListError": "无法加载您的礼物。",
+  "giftOpenError": "无法打开此礼物。"
 }

@@ -117,6 +117,15 @@ const BoxGrid = () => {
   const allDone = done || (total > 0 && opened === total);
   const isDirect = user?.purchase?.machine?.type == 0;
 
+  // Only the buyer may share the gift link (the server 403s everyone else).
+  // Checkout-built purchases omit customerId — the current user IS the buyer
+  // there, so an unknown customerId still shows the button; a known, different
+  // one (gift claim / gifts page) hides it from recipients.
+  const purchaseCustomerId = user?.purchase?.customerId;
+  const isOwner =
+    purchaseCustomerId == null ||
+    String(purchaseCustomerId).toLowerCase() === String(user?._id).toLowerCase();
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
    
@@ -166,7 +175,7 @@ const BoxGrid = () => {
         </Card>
 
         {/* Let someone else open the box */}
-        {!allDone ? (
+        {!allDone && isOwner ? (
           <Button
             fullWidth
             variant="secondary"

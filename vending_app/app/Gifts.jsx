@@ -1,14 +1,16 @@
 import { Stack, useRouter } from "expo-router";
-import { Gift, Share2 } from "lucide-react-native";
+import { ChevronRight, Gift, Share2 } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, RefreshControl, ScrollView, Share, Text, View } from "react-native";
 import { Badge, Loader } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { WEBSITE_URL } from "~/config/socialMedia";
+import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
-import { listMyGifts } from "~/services/gift";
+import { machineControlRoutes } from "~/lib/machineControlRoutes";
+import { getGiftPurchase, listMyGifts } from "~/services/gift";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
 /**
@@ -41,7 +43,7 @@ function formatDate(value) {
   });
 }
 
-function GiftRow({ gift, kind, t }) {
+function GiftRow({ gift, kind, t, onOpen, opening }) {
   const [sharing, setSharing] = useState(false);
 
   const products =
@@ -71,7 +73,10 @@ function GiftRow({ gift, kind, t }) {
       : null;
 
   return (
-    <View
+    <Pressable
+      onPress={() => onOpen(gift)}
+      disabled={opening}
+      android_ripple={{ color: "rgba(0,0,0,0.05)" }}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -81,6 +86,7 @@ function GiftRow({ gift, kind, t }) {
         borderWidth: 1,
         borderColor: colors.borderDefault,
         padding: 14,
+        opacity: opening ? 0.6 : 1,
       }}
     >
       <View
@@ -137,14 +143,18 @@ function GiftRow({ gift, kind, t }) {
           </Pressable>
         ) : null}
       </View>
-    </View>
+      <ChevronRight size={18} color={colors.textMuted} />
+    </Pressable>
   );
 }
 
 function GiftsData() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { setUser } = useUser();
+  const { setMachine, setMachines } = useMachine();
   const [tab, setTab] = useState("sent");
+  const [openingId, setOpeningId] = useState(null);
   const [state, setState] = useState({
     loading: true,
     refreshing: false,
@@ -171,6 +181,36 @@ function GiftsData() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Hand off to the existing box-open flow (same as the claim screen):
+  // BoxGrid for direct/networked machines, BluetoothXControl for Bluetooth.
+  const openGift = async (gift) => {
+    if (openingId) return;
+    setOpeningId(gift._id);
+    try {
+      const purchase = await getGiftPurchase(gift._id);
+      const route = machineControlRoutes[purchase?.machine?.type] ?? "/BoxGrid";
+      setMachine(purchase.machine);
+      setMachines([]);
+      setUser((prev) => ({
+        ...(prev || {}),
+        purchase: {
+          _id: purchase._id,
+          customerId: purchase.customerId,
+          machineId: purchase.machineId,
+          machine: purchase.machine,
+          boxes: purchase.boxes,
+          status: purchase.status,
+          controlRoute: route,
+        },
+      }));
+      router.push(route);
+    } catch (e) {
+      alert("error", e?.message || t("giftOpenError"));
+    } finally {
+      setOpeningId(null);
+    }
+  };
 
   const gifts = tab === "sent" ? state.sent : state.received;
 
@@ -251,7 +291,14 @@ function GiftsData() {
             />
           ) : (
             gifts.map((gift) => (
-              <GiftRow key={gift._id} gift={gift} kind={tab} t={t} />
+              <GiftRow
+                key={gift._id}
+                gift={gift}
+                kind={tab}
+                t={t}
+                onOpen={openGift}
+                opening={openingId === gift._id}
+              />
             ))
           )}
         </ScrollView>

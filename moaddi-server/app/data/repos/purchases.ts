@@ -841,6 +841,8 @@ const giftView = async (
   );
   return {
     _id: purchase._id,
+    // Buyer id: clients gate owner-only actions (e.g. the share button) on it.
+    customerId: purchase.customerId,
     machineId: purchase.machineId,
     machine,
     boxes,

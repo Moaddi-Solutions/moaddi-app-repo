@@ -26,6 +26,13 @@ function getLanIp() {
 
 const host = process.argv.includes("--emu") ? "10.0.2.2" : getLanIp();
 const origin = `http://${host}:${port}/`;
+/** Product/shop uploads usually live on production; local `images/` is often incomplete. */
+const productionStatic = "https://server.moaddi-app.com/";
+const staticOrigin =
+  (typeof process.env.EXPO_PUBLIC_STATIC === "string" &&
+    process.env.EXPO_PUBLIC_STATIC.trim() !== "" &&
+    process.env.EXPO_PUBLIC_STATIC) ||
+  productionStatic;
 
 if (process.argv.includes("--emu")) {
   try {
@@ -37,6 +44,7 @@ if (process.argv.includes("--emu")) {
 }
 
 console.log(`\nUsing local backend: ${origin}`);
+console.log(`Using media/static origin: ${staticOrigin.replace(/\/?$/, "/")}`);
 console.log(`Ensure moaddi-server is running (npm run dev) on port ${port}.\n`);
 
 const child = spawn(process.execPath, [expoCli, "start", "--clear"], {
@@ -44,7 +52,8 @@ const child = spawn(process.execPath, [expoCli, "start", "--clear"], {
   env: {
     ...process.env,
     EXPO_PUBLIC_SERVER_ORIGIN: origin,
-    EXPO_PUBLIC_STATIC: origin,
+    // Keep media on production (or explicit EXPO_PUBLIC_STATIC) — do not force local.
+    EXPO_PUBLIC_STATIC: staticOrigin.replace(/\/?$/, "/"),
   },
   stdio: "inherit",
 });

@@ -8,18 +8,20 @@ function normalizeOrigin(value) {
   return value.trim().replace(/\/?$/, "/");
 }
 
+// Prefer EXPO_PUBLIC_* (inlined by Metro from the current `dev` / `dev:local` session).
+// Constants.expoConfig.extra can be stale from the native binary (last expo run / EAS build).
 const rawOrigin =
-  normalizeOrigin(Constants.expoConfig?.extra?.serverOrigin) ||
   normalizeOrigin(process.env.EXPO_PUBLIC_SERVER_ORIGIN) ||
+  normalizeOrigin(Constants.expoConfig?.extra?.serverOrigin) ||
   PRODUCTION_ORIGIN;
 
 if (__DEV__) {
-  console.log("[API] Server origin:", rawOrigin);
-  if (rawOrigin === PRODUCTION_ORIGIN) {
-    console.warn(
-      "[API] Still using production. Stop Metro, run `yarn dev` from vending_app, then reload the app.",
-    );
-  }
+  const fromEnv = normalizeOrigin(process.env.EXPO_PUBLIC_SERVER_ORIGIN);
+  const embedded = normalizeOrigin(Constants.expoConfig?.extra?.serverOrigin);
+  console.log("[API] Server origin:", rawOrigin, {
+    env: fromEnv || "(unset)",
+    embedded: embedded || "(unset)",
+  });
 }
 export const baseUrl = rawOrigin;
 export const socketAddress = baseUrl;
@@ -56,6 +58,7 @@ export const giftEnableAPI = (id) => address + "purchases/" + id + "/gift";
 export const giftPreviewAPI = (token) => address + "gifts/" + token;
 export const giftClaimAPI = (token) => address + "gifts/" + token + "/claim";
 export const giftsMineAPI = () => address + "gifts/mine";
+export const giftPurchaseAPI = (id) => address + "gifts/purchase/" + id;
 export const MachinesByVendor = (id) => address + "machines/vendor/" + id;
 export const ShopsByVendor = (id) => address + "shops/vendor/" + id;
 export const purchaseByCustomer = (id) =>
@@ -88,13 +91,9 @@ export const withdrawalCreateAPI = address + "withdrawals";
 
 /** Media origin for /images and other static assets (defaults to API origin). */
 export const mediaBaseUrl = () => {
+  const fromEnv = normalizeOrigin(process.env.EXPO_PUBLIC_STATIC);
   const fromExtra = normalizeOrigin(Constants.expoConfig?.extra?.staticOrigin);
-  const fromEnv =
-    typeof process.env.EXPO_PUBLIC_STATIC === "string" &&
-    process.env.EXPO_PUBLIC_STATIC.trim() !== ""
-      ? process.env.EXPO_PUBLIC_STATIC.trim()
-      : "";
-  const fromOrigin = fromExtra || fromEnv || rawOrigin;
+  const fromOrigin = fromEnv || fromExtra || rawOrigin;
   return fromOrigin.replace(/\/+$/, "");
 };
 

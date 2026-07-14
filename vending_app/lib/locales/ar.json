@@ -304,5 +304,6 @@
   "giftStatusClaimed": "تم فتح الرابط",
   "giftStatusCollected": "تم الاستلام",
   "giftStatusExpired": "منتهية الصلاحية",
-  "giftListError": "تعذّر تحميل هداياك."
+  "giftListError": "تعذّر تحميل هداياك.",
+  "giftOpenError": "تعذّر فتح هذه الهدية."
 }

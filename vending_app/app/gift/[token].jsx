@@ -65,6 +65,8 @@ export default function GiftClaim() {
         ...(session || prev || {}),
         purchase: {
           _id: purchase._id,
+          // Buyer id — BoxGrid hides the owner-only share button from recipients.
+          customerId: purchase.customerId,
           machineId: purchase.machineId,
           machine: purchase.machine,
           boxes: purchase.boxes,

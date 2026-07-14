@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
+import { productImageUrl } from "~/services/serverAddresses";
 import { colors, palette, radius, type } from "~/theme/moaddi";
 import { Badge, BadgeTone } from "./Badge";
 import { Button } from "./Button";
@@ -44,6 +45,7 @@ export function ProductCard({
 
   const hasStock = typeof stock === "number";
   const outOfStock = hasStock && stock! <= 0;
+  const imageUri = productImageUrl(image);
   const stockBadge: { tone: BadgeTone; label: string } | null = !hasStock
     ? null
     : stock! <= 0
@@ -66,21 +68,32 @@ export function ProductCard({
     >
       {/* Image */}
       <View
-        style={{ aspectRatio: 1, backgroundColor: colors.surfaceSunken, position: "relative" }}
+        style={{
+          aspectRatio: 1,
+          backgroundColor: colors.surfaceCard,
+          position: "relative",
+        }}
       >
-        {image ? (
+        {imageUri ? (
           <Image
-            source={{ uri: image }}
+            source={{ uri: imageUri }}
             resizeMode="contain"
             style={{ width: "100%", height: "100%" }}
           />
         ) : (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...type.caption, color: palette.ink[400] }}>{t("productPhoto")}</Text>
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <Text style={{ ...type.caption, color: palette.ink[400] }}>
+              {t("productPhoto")}
+            </Text>
           </View>
         )}
         {discount != null ? (
-          <Badge tone="danger" style={{ position: "absolute", left: 8, top: 8 }}>
+          <Badge
+            tone="danger"
+            style={{ position: "absolute", left: 8, top: 8 }}
+          >
             {`-${discount} %`}
           </Badge>
         ) : null}
@@ -97,7 +110,10 @@ export function ProductCard({
 
       {/* Info */}
       <View style={{ padding: 12, gap: 6, flex: 1 }}>
-        <Text numberOfLines={2} style={{ ...type.title3, color: colors.textHeading }}>
+        <Text
+          numberOfLines={2}
+          style={{ ...type.title3, color: colors.textHeading }}
+        >
           {name}
         </Text>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
@@ -124,7 +140,7 @@ export function ProductCard({
           onPress={onAction}
           style={{ marginTop: "auto" }}
         >
-          {outOfStock ? t("unavailable") : actionLabel ?? t("showMachines")}
+          {outOfStock ? t("unavailable") : (actionLabel ?? t("showMachines"))}
         </Button>
       </View>
     </View>
