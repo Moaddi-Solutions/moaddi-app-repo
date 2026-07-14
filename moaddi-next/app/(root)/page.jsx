@@ -9,6 +9,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 export default async function Home() {
   const locale = await getLocale();
   const blocks = await client(`${locale}HomeBlocks`);
+  const { appStoreUrl, googlePlayUrl, appGalleryUrl } = await client(
+    "site",
+  ).then((data) => (Array.isArray(data) ? {} : data));
 
   const t = await getTranslations("Home");
   const cardGrid = {
@@ -73,7 +76,10 @@ export default async function Home() {
   };
   return (
     <main className="pb-12">
-      <PageBlocks blocks={blocks} />
+      <PageBlocks
+        blocks={blocks}
+        storeUrls={{ appStoreUrl, googlePlayUrl, appGalleryUrl }}
+      />
       <div className="space-y-5">
         <section className="py-3">
           <BlockHeader title={t("specialShops")} href={"/shops"} />

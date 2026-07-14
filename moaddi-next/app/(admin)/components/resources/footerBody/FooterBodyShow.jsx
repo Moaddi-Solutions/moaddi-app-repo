@@ -24,14 +24,6 @@ const FooterFields = () => {
           { key: "url", label: "URL" },
         ]}
       />
-      <AdminDetailArrayTable
-        source="bottomLinks"
-        title="Bottom links"
-        columns={[
-          { key: "title", label: "Title" },
-          { key: "url", label: "URL" },
-        ]}
-      />
     </div>
   );
 };

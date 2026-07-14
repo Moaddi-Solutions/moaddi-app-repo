@@ -27,17 +27,6 @@ export const BlockEditItems = {
       source="button.page.url"
       label="Button link"
     />,
-    <TextInput key="appStoreUrl" source="appStoreUrl" label="App Store link" />,
-    <TextInput
-      key="googlePlayUrl"
-      source="googlePlayUrl"
-      label="Google Play link"
-    />,
-    <TextInput
-      key="appGalleryUrl"
-      source="appGalleryUrl"
-      label="AppGallery link"
-    />,
     <ArrayInput key="stats" source="stats" className="sm:col-span-2">
       <SimpleFormIterator disableReordering>
         <TextInput source="value" label="Value" />

@@ -8,7 +8,7 @@ import { Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import qrcodeParser from "qrcode-parser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useZxing } from "react-zxing";
 import { toast } from "sonner";
 
@@ -57,6 +57,7 @@ const MachineScan = () => {
   const router = useRouter();
   const t = useTranslations("QR");
   const [showScan, setShowScan] = useState(false);
+  const didAutoStartCamera = useRef(false);
 
   const [isLoader, setIsLoader] = useState(false);
   const [text, setText] = useState(null);
@@ -73,6 +74,12 @@ const MachineScan = () => {
     }
     setShowScan(true);
   };
+
+  useEffect(() => {
+    if (didAutoStartCamera.current) return;
+    didAutoStartCamera.current = true;
+    startCameraScan();
+  }, []);
 
   useEffect(() => {
     if (text) {
@@ -196,7 +203,11 @@ const MachineScan = () => {
 const CameraScan = ({ setText }) => {
   const t = useTranslations("QR");
   const { ref } = useZxing({
-    constraints: { video: true },
+    constraints: {
+      video: {
+        facingMode: { ideal: "environment" },
+      },
+    },
     onDecodeResult(text) {
       const result = text.getText();
       setText((prev) => {

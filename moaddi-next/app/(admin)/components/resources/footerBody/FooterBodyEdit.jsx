@@ -15,12 +15,6 @@ const footerBodyEditItems = [
       <TextInput source="url" label="Link (URL)" />
     </SimpleFormIterator>
   </ArrayInput>,
-  <ArrayInput key="bottomLinks" source="bottomLinks" className="sm:col-span-2">
-    <SimpleFormIterator disableClear disableReordering>
-      <TextInput source="title" label="Title" />
-      <TextInput source="url" label="Link (URL)" />
-    </SimpleFormIterator>
-  </ArrayInput>,
 ];
 
 const FooterBodyEdit = () => (

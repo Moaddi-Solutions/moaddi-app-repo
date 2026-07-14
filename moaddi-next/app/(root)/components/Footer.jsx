@@ -1,4 +1,10 @@
 import { SocialMediaIcons } from "@/(root)/components/SocialMediaIcons";
+import StrapiImage from "@/(root)/components/StrapiImage";
+import {
+  AppGalleryBadge,
+  AppStoreBadge,
+  GooglePlayBadge,
+} from "@/(root)/components/StoreBadges";
 import { Container } from "@/../components/ui/container";
 import { grouped } from "@/../lib/utils";
 import { useLocale } from "next-intl";
@@ -12,7 +18,7 @@ import Link from "next/link";
 const FOOTER_FALLBACK = {
   en: {
     title: "Moaddi",
-    body: "Smart vending machines across Saudi Arabia. Scan, pick, pay — and grab your snack in seconds.",
+    body: "Smart vending machines across World. Scan, pick, pay — and Collect your product in seconds.",
     // Grouped by `category` — each becomes a footer column.
     links: [
       { category: "Shop", title: "Products", url: "/products" },
@@ -24,14 +30,11 @@ const FOOTER_FALLBACK = {
         url: "/terms-and-conditions",
       },
     ],
-    bottomLinks: [
-      { title: "© 2026 Moaddi. All rights reserved." },
-      { title: "Payments secured by Moyasar · مودي للبيع الذاتي" },
-    ],
+    copyright: "© 2026 Moaddi. All rights reserved.",
   },
   ar: {
-    title: "معدي",
-    body: "ماكينات بيع ذاتي ذكية في جميع أنحاء المملكة العربية السعودية. امسح، اختر، ادفع — واحصل على وجبتك الخفيفة في ثوانٍ.",
+    title: "Moaddi",
+    body: "ماكينات بيع ذاتي ذكية حول العالم. امسح، اختر، ادفع — واحصل على منتجك في ثوانٍ.",
     links: [
       { category: "المتجر", title: "المنتجات", url: "/products" },
       { category: "المتجر", title: "الماكينات", url: "/machines" },
@@ -42,14 +45,11 @@ const FOOTER_FALLBACK = {
         url: "/terms-and-conditions",
       },
     ],
-    bottomLinks: [
-      { title: "© 2026 معدي. جميع الحقوق محفوظة." },
-      { title: "المدفوعات مؤمنة بواسطة ميسر · مودي للبيع الذاتي" },
-    ],
+    copyright: "© 2026 معدي. جميع الحقوق محفوظة.",
   },
   zh: {
     title: "Moaddi",
-    body: "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    body: "遍布全球的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的商品。",
     links: [
       { category: "商店", title: "产品", url: "/products" },
       { category: "商店", title: "机器", url: "/machines" },
@@ -60,14 +60,11 @@ const FOOTER_FALLBACK = {
         url: "/terms-and-conditions",
       },
     ],
-    bottomLinks: [
-      { title: "© 2026 Moaddi。保留所有权利。" },
-      { title: "支付由 Moyasar 提供安全保障 · مودي للبيع الذاتي" },
-    ],
+    copyright: "© 2026 Moaddi。保留所有权利。",
   },
   it: {
     title: "Moaddi",
-    body: "Distributori automatici intelligenti in tutta l'Arabia Saudita. Scansiona, scegli, paga — e prendi il tuo snack in pochi secondi.",
+    body: "Distributori automatici intelligenti in tutto il mondo. Scansiona, scegli, paga — e ritira il tuo prodotto in pochi secondi.",
     links: [
       { category: "Negozio", title: "Prodotti", url: "/products" },
       { category: "Negozio", title: "Macchine", url: "/machines" },
@@ -78,10 +75,7 @@ const FOOTER_FALLBACK = {
         url: "/terms-and-conditions",
       },
     ],
-    bottomLinks: [
-      { title: "© 2026 Moaddi. Tutti i diritti riservati." },
-      { title: "Pagamenti protetti da Moyasar · مودي للبيع الذاتي" },
-    ],
+    copyright: "© 2026 Moaddi. Tutti i diritti riservati.",
   },
 };
 
@@ -101,6 +95,15 @@ const FOOTER_GRID_CLASSES = {
 const footerGridClass = (count) =>
   FOOTER_GRID_CLASSES[count] ?? "md:grid-cols-[1.4fr_1fr_1fr_1fr]";
 
+// Same store links as the Hero section's CTA badges, shared across every
+// locale — only used when the "site" dashboard entry has none set.
+const STORE_URLS_FALLBACK = {
+  appStoreUrl: "https://apps.apple.com/us/app/moaddi/id6753565231",
+  googlePlayUrl:
+    "https://play.google.com/store/apps/details?id=com.moaddi&hl=ar",
+  appGalleryUrl: "https://appgallery.huawei.com/app/C115473181",
+};
+
 const normalizeHref = (url) => {
   if (!url) return "/";
   if (/^https?:\/\//.test(url)) return url;
@@ -108,7 +111,16 @@ const normalizeHref = (url) => {
   return url.startsWith("/") ? url : `/${url}`;
 };
 
-const Footer = ({ body, title, links, bottomLinks, socialMedia }) => {
+const Footer = ({
+  body,
+  title,
+  links,
+  logo,
+  socialMedia,
+  appStoreUrl,
+  googlePlayUrl,
+  appGalleryUrl,
+}) => {
   const locale = useLocale();
   const fallback = FOOTER_FALLBACK[locale] ?? FOOTER_FALLBACK.en;
   const brandTitle = title || fallback.title;
@@ -121,15 +133,21 @@ const Footer = ({ body, title, links, bottomLinks, socialMedia }) => {
     validLinks.length ? validLinks : fallback.links,
     "category",
   );
-  const bottom = bottomLinks?.length ? bottomLinks : fallback.bottomLinks;
 
   return (
     <footer className="bg-primary-900 mt-14 text-[#bcd8de]">
       <Container
         variant="breakpoint"
-        className={`grid grid-cols-1 gap-7.5 pt-11.5 pb-7.5 sm:grid-cols-2 ${footerGridClass(columns.length)}`}
+        className={`grid grid-cols-1 justify-items-center gap-7.5 pt-11.5 pb-7.5 text-center sm:grid-cols-2 md:justify-items-stretch md:text-start ${footerGridClass(columns.length)}`}
       >
-        <div>
+        <div className="flex flex-col items-center md:items-start">
+          <StrapiImage
+            src={logo || "/images/icon-new.jpg"}
+            alt="Moaddi"
+            width={50}
+            height={50}
+            className="mb-2.5 rounded-lg"
+          />
           <h4 className="mb-2.5 text-sm font-extrabold text-white">
             {brandTitle}
           </h4>
@@ -138,11 +156,22 @@ const Footer = ({ body, title, links, bottomLinks, socialMedia }) => {
             items={socialMedia}
             variant="tile"
             size="md"
-            className="mt-3.5 gap-2.5"
+            className="mt-3.5 justify-center gap-2.5 md:justify-start"
           />
+          <div className="moaddi-store-row mx-auto mt-3.5 max-w-70 md:mx-0">
+            <GooglePlayBadge
+              href={googlePlayUrl || STORE_URLS_FALLBACK.googlePlayUrl}
+            />
+            <AppStoreBadge
+              href={appStoreUrl || STORE_URLS_FALLBACK.appStoreUrl}
+            />
+            <AppGalleryBadge
+              href={appGalleryUrl || STORE_URLS_FALLBACK.appGalleryUrl}
+            />
+          </div>
         </div>
         {columns.map(([category, items]) => (
-          <div key={category}>
+          <div key={category} className="w-full">
             <h4 className="mb-2.5 text-sm font-extrabold text-white">
               {category}
             </h4>
@@ -164,21 +193,9 @@ const Footer = ({ body, title, links, bottomLinks, socialMedia }) => {
       <div className="border-t border-white/10">
         <Container
           variant="breakpoint"
-          className="flex flex-wrap justify-between gap-3.5 py-4 text-xs"
+          className="py-4 text-center text-xs"
         >
-          {bottom.map(({ title, url }, i) =>
-            url ? (
-              <Link
-                key={i}
-                href={normalizeHref(url)}
-                className="transition-colors hover:text-white"
-              >
-                {title}
-              </Link>
-            ) : (
-              <span key={i}>{title}</span>
-            ),
-          )}
+          {fallback.copyright}
         </Container>
       </div>
     </footer>

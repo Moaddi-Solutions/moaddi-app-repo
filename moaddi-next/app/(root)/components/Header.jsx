@@ -281,7 +281,12 @@ function Logo({ className, src }) {
 
   return (
     <Link href="/" prefetch={false} className={cn("moaddi-brand", className)}>
-      <StrapiImage src={src} alt="Moaddi" width={42} height={42} />
+      <StrapiImage
+        src={src || "/images/icon-new.jpg"}
+        alt="Moaddi"
+        width={42}
+        height={42}
+      />
       <span>
         Moaddi
         <small>{tagline[locale] ?? tagline.en}</small>

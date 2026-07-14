@@ -27,9 +27,17 @@ const heroFallback = readFallback(
   path.join(root, "app", "(root)", "components", "blocks", "Hero.jsx"),
   "HERO_FALLBACK",
 );
+const storeUrlsFallback = readFallback(
+  path.join(root, "app", "(root)", "components", "blocks", "Hero.jsx"),
+  "STORE_URLS_FALLBACK",
+);
 const footerFallback = readFallback(
   path.join(root, "app", "(root)", "components", "Footer.jsx"),
   "FOOTER_FALLBACK",
+);
+const siteMetaFallback = readFallback(
+  path.join(root, "app", "(root)", "layout.jsx"),
+  "SITE_META_FALLBACK",
 );
 const headerFallback = readFallback(
   path.join(root, "app", "(root)", "components", "Header.jsx"),
@@ -43,6 +51,7 @@ const db = JSON.parse(fs.readFileSync(dbPath, "utf8"));
 for (const locale of locales) {
   const hero = heroFallback[locale] ?? heroFallback.en;
   const footer = footerFallback[locale] ?? footerFallback.en;
+  const siteMeta = siteMetaFallback[locale] ?? siteMetaFallback.en;
   const header = headerFallback[locale] ?? headerFallback.en;
 
   const heroBlock = {
@@ -76,8 +85,25 @@ for (const locale of locales) {
     title: footer.title,
     body: footer.body,
     links: footer.links,
-    bottomLinks: footer.bottomLinks,
+  };
+
+  db[`${locale}Site`] = {
+    ...db[`${locale}Site`],
+    id: db[`${locale}Site`]?.id ?? "fortis",
+    name: siteMeta.title,
+    description: siteMeta.description,
+  };
+
+  db[`${locale}Seo`] = {
+    ...db[`${locale}Seo`],
+    id: db[`${locale}Seo`]?.id ?? "fortis",
+    __typename: db[`${locale}Seo`]?.__typename ?? "ComponentSharedSeo",
+    metaTitle: siteMeta.title,
+    metaDescription: siteMeta.description,
   };
 }
+
+// Store links are locale-independent — seeded once onto the shared "site" entry.
+db.site = { ...db.site, ...storeUrlsFallback };
 
 fs.writeFileSync(dbPath, `${JSON.stringify(db, null, 2)}\n`);
