@@ -25,7 +25,7 @@ export default function MachineProductCard({
 }) {
   const t = useTranslations("MachineProductCard");
   const [quantity, setQuantity] = useState(0);
-  const available = boxes.filter(({ isActive }) => isActive).length;
+  const available = (boxes ?? []).filter(({ isActive }) => isActive).length;
   const remaining = available - quantity;
   const currency = preferredCurrency ?? "SAR";
   const sale = Number(salePrice);

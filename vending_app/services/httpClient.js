@@ -75,17 +75,19 @@ export const postRequest = async (url, body = null) => {
     if (!res.ok) {
       const errorText = await res.text();
       console.error(" [HTTP POST] Error response:", errorText);
+      let message = `Request failed (${res.status})`;
       try {
         const parsed = JSON.parse(errorText);
-        if (parsed?.message) {
-          return { message: parsed.message, statusCode: res.status };
-        }
+        if (parsed?.message) message = parsed.message;
       } catch {
         // non-JSON error body
       }
+      // Keep both `error` and `message` so callers using either shape work.
       return {
-        message: `Request failed (${res.status})`,
+        error: true,
+        message,
         statusCode: res.status,
+        statusText: res.statusText,
       };
     }
 
@@ -125,15 +127,16 @@ export const postRequestPayment = async (url, body = null) => {
     if (!res.ok) {
       const errorText = await res.text();
       console.error(" [HTTP POST] Error response:", errorText);
-      // throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
-      console.log({
-        error: true,
-        statusCode: res.status,
-        statusText: res.statusText,
-      });
-
+      let message = res.statusText || `Request failed (${res.status})`;
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) message = parsed.message;
+      } catch {
+        // non-JSON error body
+      }
       return {
         error: true,
+        message,
         statusCode: res.status,
         statusText: res.statusText,
       };

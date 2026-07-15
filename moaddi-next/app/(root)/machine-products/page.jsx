@@ -273,12 +273,13 @@ function MachineProductsContent() {
           }));
           persistMachineInCart(machine);
           toast.success(t("toastOrderCreated"));
+          router.push("/checkout");
         })
         .catch(() => {
           toast.error(tShop("toastCouldNotCreateOrder"));
         });
     },
-    [machine, totalPrice, total, setUser, persistMachineInCart],
+    [machine, totalPrice, total, setUser, persistMachineInCart, router],
   );
 
   const onPurchaseHandler = useCallback(() => {
@@ -389,7 +390,11 @@ function MachineProductsContent() {
       <Container className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_320px]">
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
           {machine.products?.map((product, i) => (
-            <MachineProductCard {...product} setTotal={setTotal} key={i} />
+            <MachineProductCard
+              {...product}
+              setTotal={setTotal}
+              key={product._id ?? i}
+            />
           ))}
         </div>
 

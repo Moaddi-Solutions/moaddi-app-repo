@@ -129,6 +129,9 @@ export default function MachineCard({ _id, name, qrCode, type, shop }) {
             fullWidth
             onPress={() => {
               setSheetOpen(false);
+              // Fill reads the machine from context — set it before navigating.
+              const machine = info?.machines?.find(({ _id: id }) => _id == id);
+              if (machine) setMachine(machine);
               router.push({ pathname: "/staff/Fill", params: { machineId: _id, qrCode } });
             }}
           >

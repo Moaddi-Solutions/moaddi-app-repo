@@ -31,7 +31,7 @@ const Bluetooth3Control = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && {
+        ...(purchase?.boxes && {
           boxes: purchase.boxes.map((box) => {
             // if (feedback[box.boxNumber - 1]) box.boxStatus = true;
             if (toOpen.current.includes(box.boxNumber)) box.boxStatus = true;
@@ -44,7 +44,7 @@ const Bluetooth3Control = () => {
   const doneCallback = () => {
     bluetooth3MachineComplete({
       // machineId: user.purchase.machineId,
-      purchaseId: user.purchase._id,
+      purchaseId: user?.purchase?._id,
     });
     setTimeout(() => {
       setUser(({ purchase, ...prev }) => prev);
@@ -72,7 +72,7 @@ const Bluetooth3Control = () => {
   if (!machine) return null;
   const boxesContainer = {
     items:
-      user?.purchase?.boxes.filter((box) => box.machineId == machine._id) ?? [],
+      user?.purchase?.boxes?.filter((box) => box.machineId == machine?._id) ?? [],
     boxProps: (box) => {
       return {
         onPress: () => openOne(box._id, box.boxNumber),

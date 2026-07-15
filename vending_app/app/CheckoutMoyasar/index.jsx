@@ -72,6 +72,10 @@ export default function CheckoutMoyasarScreen({
 
       console.log("Checkout response:", res);
 
+      if (res?.error || res?.statusCode >= 400) {
+        throw new Error(res?.message || res?.statusText || t("checkoutError"));
+      }
+
       const config = buildPaymentConfig(res);
       setPaymentConfig(config);
     } catch (e) {

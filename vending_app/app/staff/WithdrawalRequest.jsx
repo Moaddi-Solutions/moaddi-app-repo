@@ -5,6 +5,7 @@ import { ScrollView, Text, View } from "react-native";
 import { Button, Card, Input } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
+import alert from "~/lib/alert";
 import { postRequest } from "~/services/httpClient";
 import { withdrawalCreateAPI } from "~/services/serverAddresses";
 import { colors, space, type as typo } from "~/theme/moaddi";
@@ -24,13 +25,18 @@ export default function WithdrawalRequest() {
 
   const isVendor = String(user?.role ?? "").toLowerCase().trim() === "vendor";
 
+  const fail = (message) => {
+    setErr(message);
+    alert("error", message);
+  };
+
   const submit = async () => {
     setMsg("");
     setErr("");
     const n = parseFloat(String(amount).replace(",", "."));
-    if (!Number.isFinite(n) || n <= 0) return setErr(`${t("amount")}: invalid`);
-    if (!accountHolder.trim() || !iban.trim() || !bankName.trim()) return setErr(t("error"));
-    if (!isVendor) return setErr(t("walletVendorOnly"));
+    if (!Number.isFinite(n) || n <= 0) return fail(`${t("amount")}: invalid`);
+    if (!accountHolder.trim() || !iban.trim() || !bankName.trim()) return fail(t("error"));
+    if (!isVendor) return fail(t("walletVendorOnly"));
 
     setBusy(true);
     try {
@@ -45,11 +51,14 @@ export default function WithdrawalRequest() {
         },
       };
       const res = await postRequest(withdrawalCreateAPI, body);
-      if (res?.error) return setErr(res?.statusText || t("error"));
+      if (res?.error || res?.statusCode >= 400 || (res?.message && !res?._id)) {
+        return fail(res?.message || res?.statusText || t("error"));
+      }
       setMsg(t("success"));
+      alert("success", t("success"));
       setTimeout(() => router.replace("/staff/Wallet"), 800);
     } catch (e) {
-      setErr(e?.message || String(e));
+      fail(e?.message || String(e));
     } finally {
       setBusy(false);
     }

@@ -44,17 +44,17 @@ const ShopDetail = () => {
   });
 
   const machines = !isPending
-    ? items
+    ? (items ?? [])
         .filter((machine) => machine.isActive)
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
     : [];
 
   const products = !isPending
     ? Array.from(
-        items
+        (items ?? [])
           .reduce((prev, curr) => {
             if (curr.isActive)
-              curr.products.forEach((product) => {
+              (curr.products ?? []).forEach((product) => {
                 if (product.isActive) prev.set(product._id, product);
               });
             return prev;
@@ -62,14 +62,14 @@ const ShopDetail = () => {
           .values()
       )
         .map(Fit.image)
-        .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
     : [];
 
   const shop = items?.[0]?.shop?.[0];
 
   useEffect(() => {
-    if (isPending || !items.length) return;
-    setInfo((prev) => ({ ...prev, shopName: items[0].shop[0].name }));
+    if (isPending || !items?.length) return;
+    setInfo((prev) => ({ ...prev, shopName: items[0]?.shop?.[0]?.name }));
   }, [items]);
 
   return (

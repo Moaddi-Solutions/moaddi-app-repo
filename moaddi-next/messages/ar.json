@@ -349,7 +349,7 @@
     "toastCouldNotLoadMachine": "تعذر تحميل الآلة.",
     "toastNoProductsOnMachine": "لا توجد منتجات على هذه الآلة.",
     "toastCouldNotBuildOrder": "تعذر إنشاء الطلب - تحقق من توفر المنتجات.",
-    "toastOrderCreated": "تم إنشاء الطلب. استخدم زر الطلب لإتمام الدفع عندما تكون جاهزًا."
+    "toastOrderCreated": "تم إنشاء الطلب. جارٍ تحويلك إلى صفحة الدفع..."
   },
   "GroupProducts": {
     "defaultName": "منتجات المجموعة",

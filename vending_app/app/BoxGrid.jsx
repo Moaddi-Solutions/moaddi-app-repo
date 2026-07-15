@@ -22,11 +22,13 @@ const boxUpdateHandler = (boxes, machineEvents) => {
     return boxes.map((box) => {
       if (
         box.machineId == machineEvents.machineId &&
-        box.boxNumber == machineEvents.boxes[0].slice(2)
+        box.boxNumber == machineEvents.boxes?.[0]?.slice(2)
       )
         box.boxStatus = !!machineEvents.value;
       return box;
     });
+  // Non-LOCKER events must not wipe the existing boxes.
+  return boxes;
 };
 
 const BoxGrid = () => {
@@ -40,7 +42,7 @@ const BoxGrid = () => {
   const { machine, machines, setMachines, setMachine, clearAll } = useMachine();
 
   const item =
-    user?.purchase?.boxes.filter((box) => box.machineId == machine._id) ?? [];
+    user?.purchase?.boxes?.filter((box) => box.machineId == machine?._id) ?? [];
 
   // update boxes status on machineEvents change
   useEffect(() => {
@@ -50,7 +52,9 @@ const BoxGrid = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && { boxes: boxUpdateHandler(purchase.boxes, machineEvents) }),
+        ...(purchase?.boxes && {
+          boxes: boxUpdateHandler(purchase.boxes, machineEvents),
+        }),
       },
     }));
   }, [machineEvents]);
@@ -139,8 +143,8 @@ const BoxGrid = () => {
   // send open signal to socket
   const openOne = (cabinNumber, boxNumber) =>
     publishData({
-      purchaseId: user.purchase._id,
-      machineId: user.purchase.machineId,
+      purchaseId: user?.purchase?._id,
+      machineId: user?.purchase?.machineId,
       type: "LOCKER",
       value: 1,
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
@@ -152,7 +156,7 @@ const BoxGrid = () => {
     if (sharing) return;
     setSharing(true);
     try {
-      const { claimToken, claimUrl } = await enableGift(user.purchase._id);
+      const { claimToken, claimUrl } = await enableGift(user?.purchase?._id);
       // Always share an https web URL: Universal/App Links open the app when
       // installed, and the web claim page handles everyone else. A moaddi://
       // scheme URL is untappable in WhatsApp and dead without the app.

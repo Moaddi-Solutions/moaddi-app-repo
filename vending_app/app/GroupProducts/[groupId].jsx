@@ -53,11 +53,11 @@ function DefaultView({
     <ScrollView>
       <View className="m-3 gap-4">
         {machines.map((machine) =>
-          machine.products.map((product, i) => (
+          (machine.products ?? []).map((product) => (
             <MachineProductCard
               machine={machine}
               setTotal={setTotal}
-              key={i}
+              key={`${machine._id}-${product._id}`}
               {...product}
             />
           ))
@@ -73,7 +73,7 @@ function DefaultView({
           <Text>{t("checkoutAndPay")}</Text>
         </Button>
         <Text>
-          {totalPrice.toFixed(2)} {t(machines[0]?.products[0]?.preferredCurrency)}
+          {totalPrice.toFixed(2)} {t(machines[0]?.products?.[0]?.preferredCurrency ?? "sar")}
         </Text>
       </View>
     </ScrollView>
@@ -93,7 +93,7 @@ function MachineProductCard({
 }) {
   const [quantity, setQuantity] = useState(0);
   const { t } = useTranslation();
-  const available = boxes.filter(({ isActive }) => isActive).length;
+  const available = (boxes ?? []).filter(({ isActive }) => isActive).length;
   const title = productName ?? name ?? "";
   const imageUri = productImageUrl(image);
   useEffect(() => {
@@ -122,7 +122,7 @@ function MachineProductCard({
           <Text className="font-semibold text-center">{title}</Text>
           <View className="flex flex-row justify-between">
             <Text>
-              {campaignPrice?.toFixed(2) ?? salePrice?.toFixed(2)} {t(machine.products[0]?.preferredCurrency)}
+              {campaignPrice?.toFixed(2) ?? salePrice?.toFixed(2)} {t(machine.products?.[0]?.preferredCurrency ?? "sar")}
             </Text>
             <Text>
               {"available"} {available - quantity}
@@ -208,10 +208,16 @@ export default function GroupProducts() {
     setMachine(null);
     // Guests can browse freely; auth is only required at checkout tap.
     (async () => {
-      const group = await getRequest(groupAPI(groupId));
-      if (!group.machines.length) return alert("error", t("machineNotFound"));
-      setGroupName(group.name);
-      setMachines(group.machines);
+      try {
+        const group = await getRequest(groupAPI(groupId));
+        if (!group?.machines?.length)
+          return alert("error", t("machineNotFound"));
+        setGroupName(group.name);
+        setMachines(group.machines);
+      } catch (err) {
+        console.error("[GROUP LOAD] Error loading group:", err);
+        alert("error", t("somethingWentWrong"));
+      }
     })();
   }, []);
 
@@ -224,19 +230,28 @@ export default function GroupProducts() {
     }
     if (!totalPrice) return;
     const items = [];
-    total.forEach(({ machineId, productId, number }) => {
+    for (const { machineId, productId, number } of total) {
+      if (!number) continue;
       const machine = machines.find(({ _id }) => _id == machineId);
-      if (!machine?.products?.length) return;
+      if (!machine?.products?.length) continue;
       const product = machine.products.find(({ _id }) => _id == productId);
-      if (!product) return;
+      if (!product) continue;
+      // Only active boxes are purchasable — inactive ones are empty/reserved.
+      const activeBoxes = (product.boxes ?? []).filter(
+        ({ isActive }) => isActive
+      );
+      if (number > activeBoxes.length) {
+        return alert("error", t("notEnoughStock"));
+      }
       for (let i = 0; i < number; i++)
         items.push({
           machineId: machineId,
           productId: productId,
-          boxId: product.boxes[i]._id,
+          boxId: activeBoxes[i]._id,
           boxStatus: false,
         });
-    });
+    }
+    if (!items.length) return alert("error", t("notEnoughStock"));
     // log(JSON.stringify(total));
     // log(JSON.stringify(items));
     postRequest(purchasesAPI, {
@@ -249,6 +264,9 @@ export default function GroupProducts() {
         activeUser?.preferredCurrency ||
         machines?.[0]?.products?.[0]?.preferredCurrency,
     }).then((r) => {
+      if (r?.error || r?.statusCode >= 400 || (r?.message && !r?.purchase && !r?._id)) {
+        return alert("error", r?.message || r?.statusText || t("error"));
+      }
       getRequest(userAPI(activeUser._id)).then((response) => {
         setUser((prev) => ({ ...prev, ...response }));
         // log(JSON.stringify(response));

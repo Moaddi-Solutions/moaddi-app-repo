@@ -21,7 +21,7 @@ const Machines = () => {
   const { isPending, items } = useManyReferences("machines", [
     // Don't change the order of this array
     { target: "shopId", id: shopId },
-    { target: "vendorId", id: user._id },
+    { target: "vendorId", id: user?._id },
   ]);
 
   useEffect(() => {

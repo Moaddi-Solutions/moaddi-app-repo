@@ -51,7 +51,7 @@ const Bluetooth5Control = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && {
+        ...(purchase?.boxes && {
           boxes: purchase.boxes.map((box) => {
             if (toOpen.current.includes(box.boxNumber)) box.boxStatus = true;
 
@@ -82,7 +82,7 @@ const Bluetooth5Control = () => {
     // navigate to next control page
     bluetooth5MachineComplete({
       // machineId: user.purchase.machineId,
-      purchaseId: user.purchase._id,
+      purchaseId: user?.purchase?._id,
     });
     setTimeout(() => {
       setUser(({ purchase, ...prev }) => prev);
@@ -111,7 +111,7 @@ const Bluetooth5Control = () => {
   if (!machine) return null;
   const boxesContainer = {
     items:
-      user?.purchase?.boxes.filter((box) => box.machineId == machine?._id) ??
+      user?.purchase?.boxes?.filter((box) => box.machineId == machine?._id) ??
       [],
     boxProps: (box) => {
       return {

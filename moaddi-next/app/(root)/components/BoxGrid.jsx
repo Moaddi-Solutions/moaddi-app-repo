@@ -162,9 +162,9 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
     }
   };
 
-  const opened = user?.purchase?.boxes.filter(
+  const opened = user?.purchase?.boxes?.filter(
     ({ boxStatus }) => boxStatus,
-  ).length;
+  ).length ?? 0;
   return done ? (
     <Container className="relative container my-40 flex-col items-center justify-center">
       <div className="lg:p-8">

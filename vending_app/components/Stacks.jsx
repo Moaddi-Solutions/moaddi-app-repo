@@ -50,7 +50,9 @@ const Stacks = () => {
     <>
       <LanguageSelectorModal {...languageSelectorModal} />
       <Stack>
-        <Stack.Protected guard={user?.role === "Admin"}>
+        <Stack.Protected
+          guard={user?.role === "Admin" || user?.role === "Vendor"}
+        >
           <Stack.Screen name="staff" options={{ headerShown: false }} />
         </Stack.Protected>
         {/* <Stack.Protected guard={user?.role !== "Admin"}> */}

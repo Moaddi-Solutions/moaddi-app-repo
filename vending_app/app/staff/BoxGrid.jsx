@@ -35,7 +35,9 @@ const BoxGrid = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && { boxes: boxUpdateHandler(purchase.boxes, machineEvents) }),
+        ...(purchase?.boxes && {
+          boxes: boxUpdateHandler(purchase.boxes, machineEvents),
+        }),
       },
     }));
   }, [machineEvents]);
@@ -50,14 +52,15 @@ const BoxGrid = () => {
 
   const openOne = (cabinNumber, boxNumber) =>
     publishData({
-      purchaseId: user.purchase._id,
-      machineId: user.purchase.machineId,
+      purchaseId: user?.purchase?._id,
+      machineId: user?.purchase?.machineId,
       type: "LOCKER",
       value: 1,
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
     });
 
-  const opened = user?.purchase?.boxes.filter(({ boxStatus }) => boxStatus).length;
+  const opened =
+    user?.purchase?.boxes?.filter(({ boxStatus }) => boxStatus).length ?? 0;
 
   if (done) {
     return (
@@ -129,7 +132,7 @@ const BoxGrid = () => {
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
         <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
           <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("readyToOpen")}</Text>
-          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes.length ?? 0) - (opened ?? 0)}</Text>
+          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes?.length ?? 0) - (opened ?? 0)}</Text>
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
           <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("opened")}</Text>
@@ -137,7 +140,7 @@ const BoxGrid = () => {
         </View>
         <View style={{ flex: 1, backgroundColor: colors.surfaceCard, borderRadius: radius.md, borderWidth: 1, borderColor: colors.borderDefault, padding: 10 }}>
           <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("remaining")}</Text>
-          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes.length ?? 0) - (opened ?? 0)}</Text>
+          <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>{(user?.purchase?.boxes?.length ?? 0) - (opened ?? 0)}</Text>
         </View>
       </View>
     </ScrollView>

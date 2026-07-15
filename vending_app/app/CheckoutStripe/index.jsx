@@ -54,6 +54,11 @@ export default function CheckoutStripeScreen({ user, finalizePayment: finalizePa
     });
 
     console.log("🔐 [STRIPE] Checkout response:", res);
+
+    if (res?.error || res?.statusCode >= 400) {
+      throw new Error(res?.message || res?.statusText || "Checkout failed");
+    }
+
     return buildStripePaymentConfig(res);
   };
 

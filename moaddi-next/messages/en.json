@@ -349,7 +349,7 @@
     "toastCouldNotLoadMachine": "Could not load machine.",
     "toastNoProductsOnMachine": "No products on this machine.",
     "toastCouldNotBuildOrder": "Could not build order - check product availability.",
-    "toastOrderCreated": "Order created. Use the order button to complete payment when you are ready."
+    "toastOrderCreated": "Order created. Taking you to checkout..."
   },
   "GroupProducts": {
     "defaultName": "Group products",

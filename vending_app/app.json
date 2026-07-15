@@ -2,7 +2,7 @@
   "expo": {
     "name": "Moaddi",
     "slug": "moaddi-app",
-    "version": "4.4.1",
+    "version": "4.4.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon-new.jpg",
     "scheme": "moaddi",
@@ -27,7 +27,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "13",
+      "buildNumber": "14",
       "associatedDomains": [
         "applinks:server.moaddi-app.com",
         "applinks:moaddi-app.com",

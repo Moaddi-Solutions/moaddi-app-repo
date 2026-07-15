@@ -45,7 +45,14 @@ function InvoicePage({ purchaseData }) {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { products, items, created, status, invoiceId, _id } = purchaseData;
+  const {
+    products = [],
+    items = [],
+    created,
+    status,
+    invoiceId,
+    _id,
+  } = purchaseData;
   const price = asNumber(purchaseData.price);
   const currency = purchasePreferredCurrency(purchaseData);
 
