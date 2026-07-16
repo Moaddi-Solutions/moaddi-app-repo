@@ -55,7 +55,7 @@ const ProductRow = ({
 }) => {
   const { data } = useListContext();
   return (
-    <div className="absolute inset-x-0 flex w-full gap-2 overflow-x-auto p-2">
+    <div className="flex w-full gap-3 overflow-x-auto p-1">
       {data?.map((product) => {
         const disabled = !(!loading && readyToSet && product.isActive);
         return (
@@ -65,23 +65,25 @@ const ProductRow = ({
               onClick={() => setSelectedProduct(product.id)}
               disabled={disabled}
               className={cn(
-                "relative flex min-w-[200px] flex-col justify-between gap-2 rounded-xl border border-border bg-card p-3 text-start shadow-sm transition hover:border-primary/50",
-                product.id === selectedProduct && "border-primary opacity-75 ring-2 ring-primary/25",
+                "relative flex w-48 shrink-0 flex-col gap-2 rounded-xl border border-border bg-card p-3 text-start shadow-sm transition hover:border-primary/50",
+                product.id === selectedProduct && "border-primary bg-(--primary)/6 ring-2 ring-primary/25",
                 disabled && "pointer-events-none opacity-30",
               )}
             >
               {!product.isActive ? (
                 <Lock className="absolute start-2 top-2 size-4 text-muted-foreground" />
               ) : null}
-              <p className="text-center text-sm font-bold text-foreground">{product.name}</p>
+              <p className="truncate text-center text-sm font-bold text-foreground">{product.name}</p>
               {product.image?.src ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={product.image.src}
                   alt=""
-                  className="mx-auto h-[150px] max-w-full object-contain"
+                  className="mx-auto h-28 max-w-full object-contain"
                 />
-              ) : null}
+              ) : (
+                <div className="h-28" />
+              )}
               <p className="text-center text-lg font-extrabold text-foreground">
                 {product.campaignPrice ?? product.salePrice} SAR
               </p>
@@ -115,6 +117,13 @@ const RowButton = ({ children, disabled, variant = "ghost", className, ...props 
   >
     {children}
   </Button>
+);
+
+const SectionHeading = ({ children }) => (
+  <h3 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.06em] text-foreground">
+    <span className="h-4 w-1 rounded-full bg-primary" />
+    {children}
+  </h3>
 );
 
 const BoxGrid = ({
@@ -190,15 +199,26 @@ const BoxGrid = ({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 p-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-      {boxes.current.map?.((box, i) => (
+    <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+      {boxes.current.map?.((box, i) => {
+        const selected = selectedBoxes.includes(box._id);
+        return (
         <RecordContextProvider key={box._id} value={box}>
-          <Card className="border-border bg-card shadow-sm">
+          <Card
+            className={cn(
+              "border border-border bg-card shadow-sm transition-colors",
+              selected && "border-primary bg-(--primary)/6 ring-1 ring-primary",
+            )}
+          >
             <CardContent className="flex flex-col items-center gap-3 p-3">
               <div className="flex w-full items-center justify-between gap-2">
+                <span className="flex size-6 items-center justify-center rounded-full bg-muted text-xs font-extrabold text-muted-foreground">
+                  {i + 1}
+                </span>
+                <p className="truncate text-sm font-extrabold text-foreground">{box.name}</p>
                 <input
                   type="checkbox"
-                  checked={selectedBoxes.includes(box._id)}
+                  checked={selected}
                   onChange={(event) => {
                     setSelectedBoxes((prev) =>
                       event.target.checked
@@ -208,8 +228,6 @@ const BoxGrid = ({
                   }}
                   className="size-4 accent-primary"
                 />
-                <p className="text-base font-extrabold text-foreground">{box.name}</p>
-                <p className="text-sm font-semibold text-muted-foreground">{i + 1}</p>
               </div>
 
               {loading ? (
@@ -222,7 +240,7 @@ const BoxGrid = ({
                   <img
                     src={`${baseUrl()}${box.product.image}`}
                     alt=""
-                    className="h-[122px] w-full object-contain px-2"
+                    className="h-30.5 w-full object-contain px-2"
                   />
                   <p className="text-center text-sm font-semibold text-foreground">
                     {`${box.product.name} - ${box.product.campaignPrice ?? box.product.salePrice} SAR`}
@@ -311,7 +329,8 @@ const BoxGrid = ({
             </CardContent>
           </Card>
         </RecordContextProvider>
-      ))}
+        );
+      })}
       <RealTime machine={machine} />
     </div>
   );
@@ -499,11 +518,15 @@ const MachineControl = ({ children }) => {
 
   return (
     <Card className="border-border bg-card shadow-sm">
-      <CardContent className="space-y-4 p-4">
-        <h2 className="text-lg font-extrabold text-foreground">Control Machine</h2>
-        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <div className="h-[220px] w-[220px] rounded-xl border-8 border-white bg-white p-2">
-            <QRCode value={machine.qrCode} className="h-full w-full" />
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <div className="h-50 w-50 rounded-xl border-8 border-white bg-white p-2 ring-1 ring-border">
+              <QRCode value={machine.qrCode} className="h-full w-full" />
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">
+              Scan to connect
+            </span>
           </div>
           {children}
           {!!machine.vendorId ? (
@@ -567,17 +590,22 @@ const MachineControl = ({ children }) => {
         </div>
         {!!machine.vendorId ? (
           <>
-            <h3 className="text-sm font-extrabold text-foreground">Products</h3>
-            <div className="relative mt-1 h-[220px] overflow-hidden rounded-xl border border-border bg-background">
-              <ListBase
-                resource="products"
-                sort={{ field: "name", order: "DESC" }}
-                perPage={100}
-              >
-                <ProductRow {...productRow} />
-              </ListBase>
+            <div className="border-t border-border/60 pt-4">
+              <SectionHeading>Products</SectionHeading>
+              <div className="mt-2 overflow-x-auto rounded-xl border border-border bg-muted/20 p-2">
+                <ListBase
+                  resource="products"
+                  sort={{ field: "name", order: "DESC" }}
+                  perPage={100}
+                >
+                  <ProductRow {...productRow} />
+                </ListBase>
+              </div>
             </div>
-            <BoxGrid {...boxGrid} />
+            <div className="border-t border-border/60 pt-4">
+              <SectionHeading>Boxes / Slots</SectionHeading>
+              <BoxGrid {...boxGrid} />
+            </div>
           </>
         ) : null}
       </CardContent>

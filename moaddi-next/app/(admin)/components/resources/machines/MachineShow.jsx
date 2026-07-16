@@ -1,6 +1,5 @@
 import MachineControl from "@/(admin)/components/resources/machines/MachineControl";
 import { useSocket } from "@/(root)/context/Socket";
-import { Card, CardContent } from "@/../components/ui/card";
 import { Spinner } from "@/(admin)/components/kit/AdminUI";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -19,18 +18,21 @@ const MachineDetails = () => {
   ];
 
   return (
-    <Card className="rounded-xl border-border/80 bg-card">
-      <CardContent className="grid grid-cols-[minmax(120px,max-content)_1fr] items-center gap-x-4 gap-y-3 p-5">
-        {rows.map((row) => (
-          <div key={row.key} className="contents">
-            <span className="text-muted-foreground text-xs font-bold tracking-[0.04em] uppercase">
-              {row.label}
-            </span>
-            <div>{row.render(record)}</div>
+    <div className="grid flex-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-3">
+      {rows.map((row) => (
+        <div
+          key={row.key}
+          className="grid gap-1 border-b border-border/50 pb-3 last:border-0"
+        >
+          <span className="text-[0.68rem] font-extrabold uppercase tracking-[0.09em] text-muted-foreground">
+            {row.label}
+          </span>
+          <div className="min-w-0 wrap-break-word text-sm font-bold text-foreground">
+            {row.render(record)}
           </div>
-        ))}
-      </CardContent>
-    </Card>
+        </div>
+      ))}
+    </div>
   );
 };
 

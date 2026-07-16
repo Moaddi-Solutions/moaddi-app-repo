@@ -5,20 +5,30 @@ import { Badge } from "@/../components/ui/badge";
 import { Button } from "@/../components/ui/button";
 import { Card } from "@/../components/ui/card";
 import { Container } from "@/../components/ui/container";
+import rtlRules from "@/../i18n/rtl";
 import { getRequest } from "@/../services/events";
 import { machineQRScan } from "@/../services/serverAddresses";
-import { MapPin, Refrigerator, ShoppingBasket } from "lucide-react";
-import { useTranslations } from "next-intl";
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Refrigerator,
+  ShoppingBasket,
+} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 const MachinesNearYou = () => {
   const t = useTranslations("Home.machinesNearYou");
+  const tHome = useTranslations("Home");
+  const locale = useLocale();
+  const Chevron = rtlRules[locale] ? ChevronLeft : ChevronRight;
   const { isPending, data } = useGetList("machinesActive", {
-    pagination: { page: 1, perPage: 8 },
+    pagination: { page: 1, perPage: 4 },
   });
-  const machines = data ?? [];
+  const machines = (data ?? []).slice(0, 4);
 
   if (!isPending && machines.length === 0) return null;
 
@@ -37,10 +47,11 @@ const MachinesNearYou = () => {
           </p>
         </div>
         <Link
-          href="/machine-scan"
+          href="/machines"
           className="text-primary-text hover:text-primary-700 flex shrink-0 items-center gap-1 text-[13.5px] font-extrabold whitespace-nowrap"
         >
-          {t("allMachines")}
+          {tHome("showMore")}
+          <Chevron className="size-3.5" />
         </Link>
       </Container>
       <Container className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(255px,1fr))] gap-4">

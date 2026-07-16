@@ -567,7 +567,11 @@ const Inputs = ({
           onBlur={handleBlur}
           className={cn(
             variant === "card" &&
-              "h-11 rounded-xl [&_[data-slot=button]]:h-11 [&_[data-slot=button]]:rounded-s-xl [&_[data-slot=button]]:border-border [&_[data-slot=button]]:bg-background [&_[data-slot=button]]:px-3 [&_[data-slot=input]]:h-11 [&_[data-slot=input]]:rounded-e-xl [&_[data-slot=input]]:border-border [&_[data-slot=input]]:bg-background [&_[data-slot=input]]:px-4 [&_[data-slot=input]]:font-semibold [&_[data-slot=input]]:focus-visible:border-primary [&_[data-slot=input]]:focus-visible:ring-primary/35 dark:[&_[data-slot=button]]:bg-background/40 dark:[&_[data-slot=input]]:bg-background/40",
+              // Radii use PHYSICAL edges (l/r) gated on page direction, because
+              // the phone input's number field is locked to `dir=ltr`, so logical
+              // `-s/-e` corners there don't follow the page. Button = outer start
+              // edge rounded; input = outer end edge rounded; they swap in RTL.
+              "h-11 rounded-xl [&_[data-slot=button]]:h-11 [&_[data-slot=button]]:rounded-l-xl [&_[data-slot=button]]:rounded-r-none [&_[data-slot=button]]:rtl:rounded-r-xl [&_[data-slot=button]]:rtl:rounded-l-none [&_[data-slot=button]]:border-border [&_[data-slot=button]]:bg-background [&_[data-slot=button]]:px-3 [&_[data-slot=input]]:h-11 [&_[data-slot=input]]:rounded-r-xl [&_[data-slot=input]]:rounded-l-none [&_[data-slot=input]]:rtl:rounded-l-xl [&_[data-slot=input]]:rtl:rounded-r-none [&_[data-slot=input]]:border-border [&_[data-slot=input]]:bg-background [&_[data-slot=input]]:px-4 [&_[data-slot=input]]:font-semibold [&_[data-slot=input]]:focus-visible:border-primary [&_[data-slot=input]]:focus-visible:ring-primary/35 dark:[&_[data-slot=button]]:bg-background/40 dark:[&_[data-slot=input]]:bg-background/40",
             !isValid &&
               (variant === "card"
                 ? "[&_[data-slot=button]]:border-destructive [&_[data-slot=input]]:border-destructive [&_[data-slot=input]]:ring-destructive/20"

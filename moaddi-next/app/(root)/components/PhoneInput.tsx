@@ -62,10 +62,19 @@ const InputComponent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <Input
     className={cn(
+      // The number/prefix must read left-to-right, so the element keeps
+      // `direction: ltr` (react-phone-number-input also forces this). That
+      // pins the input's *logical* radii to LTR, so they can't follow the
+      // page — instead we set PHYSICAL radii gated on the page direction via
+      // `rtl:`/`ltr:` (which read the ancestor <html dir>). Country button
+      // sits on the start side, input on the end side, so:
+      //   LTR → rounded right / flat left ; RTL → rounded left / flat right.
       css`
         direction: ltr;
       `,
-      "-ms-px rounded-s-none rounded-e-lg focus-visible:z-10",
+      "-ms-px focus-visible:z-10",
+      "rounded-l-none rounded-r-lg",
+      "rtl:rounded-r-none rtl:rounded-l-lg",
       className,
     )}
     {...props}
@@ -100,7 +109,20 @@ const CountrySelect = ({
           <Button
           type="button"
           variant="outline"
-          className="flex gap-1 rounded-s-lg rounded-e-none border-e-0 px-3 focus:z-10"
+          // `data-slot="button"` is set explicitly because base-ui's `render`
+          // prop doesn't forward the Button's default data-slot to the DOM,
+          // which is what the caller targets with `[&_[data-slot=button]]:*`.
+          // `h-full self-stretch` keeps the country button matched to the
+          // input's height regardless of which height the caller applies.
+          data-slot="button"
+          // Physical radii/border gated on page direction so the button stays a
+          // mirror of the input: rounded on the outer edge, flat + border removed
+          // on the edge that meets the input. LTR → button on the left; RTL → right.
+          className={cn(
+            "flex h-full gap-1 self-stretch px-3 focus:z-10",
+            "rounded-l-lg rounded-r-none border-r-0",
+            "rtl:rounded-r-lg rtl:rounded-l-none rtl:border-r rtl:border-l-0",
+          )}
           disabled={disabled}
           />
         }

@@ -220,77 +220,25 @@
   height: 20px;
 }
 
-.moaddi-mobile-nav {
-  display: none;
-  border-top: 1px solid var(--site-header-line);
-}
-
-.moaddi-mobile-nav-inner {
+.moaddi-mobile-nav-content {
   display: grid;
-  padding: 6px 0 10px;
+  min-width: 200px;
+  gap: 2px;
 }
 
-.moaddi-mobile-nav a {
-  min-height: 48px;
-  border-bottom: 1px solid var(--site-header-line);
+.moaddi-mobile-nav-content a {
+  min-height: 44px;
+  border-radius: 8px;
   color: var(--site-header-muted);
-  padding: 13px 4px;
+  padding: 11px 10px;
   font-size: 15px;
   font-weight: 700;
-  text-align: start;
   text-decoration: none;
 }
 
-.moaddi-mobile-nav a[data-active="true"] {
+.moaddi-mobile-nav-content a[data-active="true"] {
   color: var(--accent-foreground);
-}
-
-.moaddi-mobile-lang {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 4px 4px;
-}
-
-.moaddi-mobile-lang-label {
-  display: inline-flex;
-  align-items: center;
-  color: var(--site-header-muted);
-}
-
-.moaddi-mobile-lang-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.moaddi-mobile-lang-options button {
-  border: 1px solid var(--site-header-line);
-  border-radius: 999px;
-  background: var(--site-header-surface);
-  color: var(--site-header-muted);
-  padding: 7px 15px;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.moaddi-mobile-lang-options button[data-active="true"] {
-  border-color: var(--primary);
   background: var(--accent);
-  color: var(--accent-foreground);
-}
-
-/* The in-menu language switcher is only needed while the header pill is hidden. */
-@media (min-width: 641px) {
-  .moaddi-mobile-lang {
-    display: none;
-  }
-}
-
-.moaddi-site-head.menu-open .moaddi-mobile-nav {
-  display: block;
 }
 
 @media (max-width: 860px) {
@@ -324,8 +272,16 @@
     padding: 9px 11px;
   }
 
-  .moaddi-lang {
+  .moaddi-lang span {
     display: none;
+  }
+
+  .moaddi-lang {
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    border-radius: 50%;
   }
 
   .moaddi-brand small {

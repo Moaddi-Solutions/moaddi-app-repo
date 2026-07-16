@@ -107,7 +107,7 @@ const MachineList = () => (
   <AdminList sort={{ field: "name", order: "DESC" }} actions={<AdminCreateButton />}>
     <AdminShadcnTable
       columns={machineColumns}
-      rowClick={false}
+      rowClick="show"
       actions={(record) => (
         <>
           <AdminEditButton record={record} />

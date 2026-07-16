@@ -71,24 +71,17 @@ export default function Header({ items = [], logo }) {
         <Logo src={logo} />
         <MainNav items={navItems} />
         <div className="moaddi-head-actions">
-          <ThemeToggle />
-          <LocaleToggle />
           <ScanLink />
+          <LocaleToggle />
+          <ThemeToggle />
           <ProfileAvatar />
-          <button
-            id="menu-btn"
-            className="moaddi-menu-btn"
-            type="button"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav"
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <Menu aria-hidden="true" />
-          </button>
+          <MobileNavMenu
+            items={navItems}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+          />
         </div>
       </div>
-      <MobileNav items={navItems} onNavigate={() => setMenuOpen(false)} />
     </header>
   );
 }
@@ -131,54 +124,30 @@ function MainNav({ items }) {
   );
 }
 
-function MobileNav({ items, onNavigate }) {
+function MobileNavMenu({ items, open, onOpenChange }) {
   const pathname = usePathname();
 
   return (
-    <nav id="mobile-nav" className="moaddi-mobile-nav" aria-label="Site mobile">
-      <div className="moaddi-header-wrap moaddi-mobile-nav-inner">
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+      <DropdownMenuTrigger
+        id="menu-btn"
+        className="moaddi-menu-btn"
+        aria-label={open ? "Close menu" : "Open menu"}
+      >
+        <Menu aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="moaddi-mobile-nav-content">
         {items.map(({ title, href }) => (
-          <Link
+          <DropdownMenuItem
             key={`${title}-${href}`}
-            href={href}
+            render={<Link href={href} />}
             data-active={isActivePath(pathname, href)}
-            onClick={onNavigate}
           >
             {title}
-          </Link>
+          </DropdownMenuItem>
         ))}
-        <MobileLocale />
-      </div>
-    </nav>
-  );
-}
-
-// The header LocaleToggle is hidden on mobile (no room in the top bar), so the
-// language switcher lives inside the hamburger menu on small screens instead.
-function MobileLocale() {
-  const { setLocale } = useContext(themeContext);
-  const locale = useLocale();
-
-  return (
-    <div className="moaddi-mobile-lang">
-      <span className="moaddi-mobile-lang-label">
-        <Languages aria-hidden="true" className="size-4" />
-      </span>
-      <div className="moaddi-mobile-lang-options">
-        {LOCALES.map(({ code, label }) => (
-          <button
-            key={code}
-            type="button"
-            lang={code}
-            dir={rtlRules[code] ? "rtl" : "ltr"}
-            data-active={code === locale}
-            onClick={() => setLocale(code)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
