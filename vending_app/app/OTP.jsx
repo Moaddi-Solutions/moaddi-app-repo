@@ -5,6 +5,7 @@ import { OtpInput } from "react-native-otp-entry";
 import { useTranslation } from "react-i18next";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
+import { SocialLinks } from "~/components/moaddi";
 import alert from "~/lib/alert";
 import { getItem, removeItem } from "~/lib/utils";
 import { postRequest } from "~/services/httpClient";
@@ -103,6 +104,8 @@ const OTP = () => {
               {t("resend") || "Resend"}
             </Text>
           </Text>
+
+          <SocialLinks />
         </View>
       </KeyboardAvoidingView>
     </View>

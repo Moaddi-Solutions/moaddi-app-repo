@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
-import { Badge, Button as MButton, Loader, Stepper } from "~/components/moaddi";
+import { Badge, Button as MButton, Loader, SocialLinks, Stepper } from "~/components/moaddi";
 import GuestCheckoutModal from "~/components/GuestCheckoutModal";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { colors, radius, shadow, space, type as typo } from "~/theme/moaddi";
@@ -73,10 +73,10 @@ function DefaultView({
       : "danger";
   const badgeLabel =
     connectivity === "bluetooth"
-      ? "Bluetooth"
+      ? t("bluetooth")
       : connected
-      ? "Online"
-      : "Offline";
+      ? t("online")
+      : t("offline");
 
   const payDisabled = isPurchasing || count === 0 || payButton?.disabled;
 
@@ -101,6 +101,8 @@ function DefaultView({
           gap: space.card,
           padding: space.gutter,
           paddingBottom: 24,
+          flexGrow: 1,
+          justifyContent: "space-between",
         }}
       >
         {products.map((product) => {
@@ -117,6 +119,7 @@ function DefaultView({
             />
           );
         })}
+        <SocialLinks />
       </ScrollView>
 
       {/* Sticky pay bar */}
@@ -136,7 +139,7 @@ function DefaultView({
       >
         <View>
           <RNText style={{ ...typo.caption, color: colors.textMuted }}>
-            {count} {count === 1 ? "item" : "items"}
+            {count} {t("items")}
           </RNText>
           <RNText style={{ ...typo.price, color: colors.textPrice }}>
             {totalPrice.toFixed(2)} {t(currency)}
@@ -193,7 +196,7 @@ function MachineProductCard({ product, currency, available, qty, onQty }) {
           {price?.toFixed(2)} {t(currency)}
         </RNText>
         <RNText style={{ ...typo.caption, color: colors.textMuted }}>
-          available {available - qty}
+          {t("available")} {available - qty}
         </RNText>
       </View>
       <Stepper value={qty} max={available} onChange={onQty} />
@@ -212,6 +215,8 @@ export default function MachineProducts() {
     useMachine();
   const [total, setTotal] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [guestModalVisible, setGuestModalVisible] = useState(false);
   const { user, setUser } = useUser();
@@ -231,6 +236,7 @@ export default function MachineProducts() {
 
     let cancelled = false;
     setIsLoading(true);
+    setLoadError(null);
     setBluFeedback(null);
     setMachines([]);
     // if (!user) return router.navigate("/Signin");
@@ -243,6 +249,7 @@ export default function MachineProducts() {
 
         if (response.statusCode) {
           console.error(" [MACHINE LOAD] Machine not found, status code:", response.statusCode);
+          setLoadError("machineNotFound");
           return alert("error", t("machineNotFound"));
         }
 
@@ -253,10 +260,12 @@ export default function MachineProducts() {
           console.log(" [MACHINE LOAD] Production mode - checking connectivity...");
           if (!response.isConnected) {
             console.error(" [MACHINE LOAD] Machine is offline");
+            setLoadError("machineIsOffline");
             return alert("error", t("machineIsOffline"));
           }
           if (!response.isActive) {
             console.error(" [MACHINE LOAD] Machine is not active");
+            setLoadError("machineIsNotActive");
             return alert("error", t("machineIsNotActive"));
           }
           console.log(" [MACHINE LOAD] Machine connectivity verified");
@@ -268,6 +277,7 @@ export default function MachineProducts() {
         setMachine(response);
       } catch (err) {
         console.error(" [MACHINE LOAD] Error loading machine:", err);
+        if (!cancelled) setLoadError("somethingWentWrong");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -276,7 +286,7 @@ export default function MachineProducts() {
     return () => {
       cancelled = true;
     };
-  }, [machineId]);
+  }, [machineId, retryKey]);
 
   const onPurchaseHandler = async(activeUserArg) => {
     // Callers: onPress passes an event (no `_id`); the guest modal passes the
@@ -313,26 +323,54 @@ export default function MachineProducts() {
     
     setIsPurchasing(true);
 
+    // Server resolves the final provider (purchase response wins over machine).
+    const goToCheckout = (provider) => {
+      const p = String(provider ?? "").toLowerCase();
+      if (p === "moyasar")
+        return router.navigate({
+          pathname: "/CheckoutMoyasar",
+          params: { machineQr: String(machineId) },
+        });
+      if (p === "stripe") return router.navigate("/CheckoutStripe");
+      alert("error", t("paymentProviderUnset"));
+    };
+
     try {
       console.log(" [PURCHASE FLOW] Building items array from cart...");
 
       const items = [];
-      Object.entries(total).forEach(([id, number]) => {
+      for (const [id, number] of Object.entries(total)) {
+        if (!number) continue;
         const product = machine.products.find(({ _id }) => _id == id);
         if (!product) {
           console.warn(`⚠️  [PURCHASE FLOW] Product ${id} not found in machine`);
-          return;
+          continue;
         }
 
         console.log(`   Product: ${product.name}, Quantity: ${number}`);
 
+        // Only active boxes are purchasable — inactive ones are empty/reserved.
+        const activeBoxes = (product.boxes ?? []).filter(
+          ({ isActive }) => isActive
+        );
+        if (number > activeBoxes.length) {
+          console.warn(
+            `⚠️  [PURCHASE FLOW] Not enough stock for ${product.name}: wanted ${number}, active ${activeBoxes.length}`
+          );
+          return alert("error", t("notEnoughStock"));
+        }
+
         for (let i = 0; i < number; i++)
           items.push({
             productId: id,
-            boxId: product.boxes[i]._id,
+            boxId: activeBoxes[i]._id,
             boxStatus: false,
           });
-      });
+      }
+
+      if (!items.length) {
+        return alert("error", t("notEnoughStock"));
+      }
 
       console.log(" [PURCHASE FLOW] Items array built, count:", items.length);
       // Use activeUser (not context user): after guest checkout, `user` is still
@@ -363,6 +401,18 @@ export default function MachineProducts() {
       console.log(" [PURCHASE FLOW] Backend response received:", purchaseResponse);
       console.log("   Response type:", typeof purchaseResponse);
       console.log("   Response keys:", Object.keys(purchaseResponse || {}));
+
+      if (
+        purchaseResponse?.error ||
+        purchaseResponse?.statusCode >= 400 ||
+        (purchaseResponse?.message && !purchaseResponse?.purchase && !purchaseResponse?._id)
+      ) {
+        throw new Error(
+          purchaseResponse?.message ||
+            purchaseResponse?.statusText ||
+            "An error occurred while creating purchase",
+        );
+      }
       
       const purchase = purchaseResponse?.purchase ?? purchaseResponse;
       console.log("[PURCHASE FLOW] Purchase object:", purchase);
@@ -395,14 +445,9 @@ export default function MachineProducts() {
         
         setUser((prev) => ({ ...prev, ...(response?.data ?? response), purchase: { ...syncedPurchase, boxes } }));
         console.log(" [PURCHASE FLOW] Navigating to checkout...");
-        if (machine.paymentProvider == "moyasar") {
-          return router.navigate({
-            pathname: "/CheckoutMoyasar",
-            params: { machineQr: String(machineId) },
-          });
-        } else if (machine.paymentProvider == "stripe") {
-          return router.navigate("/CheckoutStripe");
-        }
+        return goToCheckout(
+          syncedPurchase?.paymentProvider ?? machine?.paymentProvider
+        );
       }
       
       console.log(" [PURCHASE FLOW] Purchase created with ID:", purchase?._id);
@@ -416,14 +461,9 @@ export default function MachineProducts() {
       setUser((prev) => ({ ...prev, purchase: { ...purchase, boxes } }));
       console.log("[PURCHASE FLOW] User context updated with purchase", activeUser);
       console.log(" [PURCHASE FLOW] Navigating to checkout...");
-      if (machine.paymentProvider == "moyasar") {
-        return router.navigate({
-          pathname: "/CheckoutMoyasar",
-          params: { machineQr: String(machineId) },
-        });
-      } else if (machine.paymentProvider == "stripe") {
-        return router.navigate("/CheckoutStripe");
-      }
+      return goToCheckout(
+        purchase?.paymentProvider ?? machine?.paymentProvider
+      );
     } catch (err) {
       console.error(" [PURCHASE FLOW] Purchase error:", err);
       console.error("   Error type:", err?.constructor?.name);
@@ -459,10 +499,47 @@ export default function MachineProducts() {
     );
   }
 
-  if (machine?.qrCode != machineId) {
+  // Load failed (not found / offline / inactive / network) or the context
+  // machine doesn't match this QR — show a recoverable error screen instead
+  // of a blank page.
+  if (loadError || machine?.qrCode != machineId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
         <Stack.Screen options={{ headerShown: false }} />
+        <DetailHeader
+          title={t("machineQrScan")}
+          onBack={() =>
+            router.canGoBack() ? router.back() : router.navigate("/")
+          }
+        />
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            padding: space.gutter,
+          }}
+        >
+          <RNText
+            style={{
+              ...typo.title3,
+              color: colors.textHeading,
+              textAlign: "center",
+            }}
+          >
+            {t(loadError ?? "machineNotFound")}
+          </RNText>
+          <MButton onPress={() => setRetryKey((k) => k + 1)}>
+            {t("tryAgain")}
+          </MButton>
+          <MButton
+            variant="outline"
+            onPress={() => router.navigate("/MachineQRScan")}
+          >
+            {t("scanQr")}
+          </MButton>
+        </View>
       </View>
     );
   }

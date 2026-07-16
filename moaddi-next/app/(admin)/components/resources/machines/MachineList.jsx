@@ -1,6 +1,6 @@
 import AdminList from "@/(admin)/components/kit/AdminList";
 import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
-import { AdminCreateButton, AdminDeleteButton, AdminEditButton, AdminReferenceField } from "@/(admin)/components/kit/AdminUI";
+import { AdminCreateButton, AdminDeleteButton, AdminEditButton, AdminReferenceField, AdminShowButton } from "@/(admin)/components/kit/AdminUI";
 import { useSocket } from "@/(root)/context/Socket";
 import { Badge } from "@/../components/ui/badge";
 import { Switch } from "@/../components/ui/switch";
@@ -110,6 +110,7 @@ const MachineList = () => (
       rowClick="show"
       actions={(record) => (
         <>
+          <AdminShowButton record={record} label="Fill" />
           <AdminEditButton record={record} />
           <AdminDeleteButton record={record} />
         </>

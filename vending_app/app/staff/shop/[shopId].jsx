@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import MachineCard from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
-import { Loader } from "~/components/moaddi";
+import { Loader, SocialLinks } from "~/components/moaddi";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
 import { useManyReferences } from "~/hook/useManyReferences";
@@ -21,7 +21,7 @@ const Machines = () => {
   const { isPending, items } = useManyReferences("machines", [
     // Don't change the order of this array
     { target: "shopId", id: shopId },
-    { target: "vendorId", id: user._id },
+    { target: "vendorId", id: user?._id },
   ]);
 
   useEffect(() => {
@@ -59,6 +59,7 @@ const Machines = () => {
         ) : (
           <Loader />
         )}
+        <SocialLinks />
       </ScrollView>
     </View>
   );

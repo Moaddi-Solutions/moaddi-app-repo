@@ -48,6 +48,7 @@ import {
 } from "~/components/ui/table";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
+import alert from "~/lib/alert";
 import { Fit } from "~/services/dataProvider";
 import { productImageUrl } from "~/services/serverAddresses";
 import {
@@ -64,9 +65,9 @@ import {
 } from "~/services/serverAddresses";
 
 const onError = (mfError) => {
-  const error = mfError.message;
-  // Alert.alert("Error", error?.toString() ?? "");
-  // console.error("error : " + error);
+  const message =
+    mfError?.message || mfError?.statusText || String(mfError ?? "Error");
+  alert("error", message);
 };
 
 function button(title, onPress, style) {
@@ -92,8 +93,9 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
   useEffect(() => {
     setTotalPrice(
       Object.entries(total).reduce((prev, [id, number]) => {
-        if (!machine.products) return prev;
+        if (!machine?.products) return prev;
         const product = machine.products.find(({ _id }) => _id == id);
+        if (!product) return prev;
         const price = (product.campaignPrice ?? product.salePrice) * number;
         return prev + price;
       }, 0)
@@ -102,8 +104,9 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
   useEffect(() => {
     const items = [];
     Object.entries(total).forEach(([id, number]) => {
-      const product = machine.products.find(({ _id }) => _id == id);
-      for (let i = 0; i < number; i++)
+      const product = machine?.products?.find(({ _id }) => _id == id);
+      if (!product?.boxes) return;
+      for (let i = 0; i < number && i < product.boxes.length; i++)
         items.push({
           productId: id,
           boxId: product.boxes[i]._id,
@@ -127,7 +130,7 @@ const CheckoutItems = ({ totalPrice, setTotalPrice }) => {
     // console.log(user);
 
     const products = Object.values(
-      user.purchase.boxes
+      (user.purchase.boxes ?? [])
         .map((box) => box.product)
         .map(Fit.image)
         .reduce((prev, curr) => {
@@ -429,7 +432,9 @@ const Checkout = () => {
             invoiceId: success.InvoiceId,
           });
           // console.log("isComplete", isComplete);
-          if (isComplete.error) return onError(isComplete);
+          if (isComplete?.error || isComplete?.statusCode >= 400 || (isComplete?.message && !isComplete?._id && !isComplete?.status)) {
+            return onError(isComplete);
+          }
           // pass
           const { status, boxes, machine } = isComplete;
           // console.log("isComplete", isComplete);

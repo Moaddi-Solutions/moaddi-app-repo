@@ -1,11 +1,15 @@
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, scanFromURLAsync, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { Stack, usePathname, useRouter } from "expo-router";
-import { Flashlight, X } from "lucide-react-native";
+import { Flashlight, Image as ImageIcon, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { palette, radius, space, type as typo } from "~/theme/moaddi";
+import alert from "~/lib/alert";
+import { getRequest } from "~/services/httpClient";
+import { groupAPI, machineQRScan } from "~/services/serverAddresses";
+import { palette, space, type as typo } from "~/theme/moaddi";
 
 const TEAL = palette.teal[400];
 
@@ -24,6 +28,7 @@ export default function MachineQRScan() {
   const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
+  const [scanningGallery, setScanningGallery] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -31,6 +36,11 @@ export default function MachineQRScan() {
   useEffect(() => {
     setTimeout(requestPermission, 500);
   }, []);
+
+  function goHomeWithError(message: string) {
+    alert("error", message);
+    router.replace("/");
+  }
 
   async function handleQRCodeScanned({ data }: { data: string }) {
     if (pathname != "/MachineQRScan") return;
@@ -41,6 +51,54 @@ export default function MachineQRScan() {
     }
     // @ts-ignore dynamic route
     router.replace(`/MachineProducts/${data}`);
+  }
+
+  async function validateGalleryQr(data: string) {
+    try {
+      if (data.startsWith("g_")) {
+        const group = await getRequest(groupAPI(data));
+        if (!group?.machines?.length) {
+          goHomeWithError(t("invalidMachineQr"));
+          return;
+        }
+        // @ts-ignore dynamic route
+        router.replace(`/GroupProducts/${data}`);
+        return;
+      }
+
+      const machine = await getRequest(machineQRScan(data));
+      if (machine?.statusCode || !(machine?._id || machine?.qrCode)) {
+        goHomeWithError(t("invalidMachineQr"));
+        return;
+      }
+      // @ts-ignore dynamic route
+      router.replace(`/MachineProducts/${data}`);
+    } catch {
+      goHomeWithError(t("invalidMachineQr"));
+    }
+  }
+
+  async function pickFromGallery() {
+    if (scanningGallery) return;
+    setScanningGallery(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 1,
+      });
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+
+      const codes = await scanFromURLAsync(result.assets[0].uri, ["qr"]);
+      if (!codes.length) {
+        goHomeWithError(t("noQrCodeFound"));
+        return;
+      }
+      await validateGalleryQr(codes[0].data);
+    } catch {
+      goHomeWithError(t("noQrCodeFound"));
+    } finally {
+      setScanningGallery(false);
+    }
   }
 
   const closeScanner = () => (router.canGoBack() ? router.back() : router.navigate("/"));
@@ -98,6 +156,39 @@ export default function MachineQRScan() {
         <Text style={{ ...typo.body, color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: 260 }}>
           {t("pointCameraAtQrCode")}
         </Text>
+      </View>
+
+      {/* Gallery upload */}
+      <View
+        style={{
+          paddingHorizontal: space.gutter,
+          paddingBottom: insets.bottom + 24,
+          alignItems: "center",
+        }}
+      >
+        <Pressable
+          onPress={pickFromGallery}
+          disabled={scanningGallery}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            backgroundColor: "rgba(255,255,255,0.12)",
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.18)",
+            opacity: scanningGallery ? 0.6 : 1,
+          }}
+        >
+          {scanningGallery ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ImageIcon size={22} color="#fff" />
+          )}
+          <Text style={{ ...typo.bodyStrong, color: "#fff" }}>{t("uploadFromGallery")}</Text>
+        </Pressable>
       </View>
     </View>
   );

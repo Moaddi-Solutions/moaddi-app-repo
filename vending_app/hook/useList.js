@@ -10,9 +10,7 @@ export const useList = (resource, options, filter) => {
   });
   return {
     ...rest,
-    ...(data && {
-      total: data.total,
-      items: data.data,
-    }),
+    total: data?.total ?? 0,
+    items: data?.data ?? [],
   };
 };

@@ -47,13 +47,15 @@ const MachinesAndProducts = ({ id }) => {
     target: "shopId",
     id,
   });
-  const data = !isPending ? rawData.filter(({ isActive }) => isActive) : [];
+  const data = !isPending
+    ? (rawData ?? []).filter(({ isActive }) => isActive)
+    : [];
   const products = !isPending
     ? Array.from(
         data
           .reduce((prev, curr) => {
             if (curr.isActive)
-              curr.products.forEach((product) => {
+              (curr.products ?? []).forEach((product) => {
                 if (product.isActive) prev.set(product._id, product);
               });
             return prev;
@@ -71,7 +73,7 @@ const MachinesAndProducts = ({ id }) => {
         </>
       ) : data.length ? (
         <>
-          <BlockHeader title={data[0].shop[0].name} />
+          <BlockHeader title={data[0]?.shop?.[0]?.name} />
           <Tabs defaultValue="machines" className="flex flex-col gap-0">
             <Container>
               <TabsList

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PasswordInput from "~/components/PasswordInput";
-import { Button, Card, PhoneInput } from "~/components/moaddi";
+import { Button, Card, PhoneInput, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
@@ -171,6 +171,8 @@ const SigninAsStaffScreen = () => {
               </View>
             </View>
           </Card>
+
+          <SocialLinks />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

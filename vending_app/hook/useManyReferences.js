@@ -10,9 +10,7 @@ export const useManyReferences = (resource, references) => {
   });
   return {
     ...rest,
-    ...(data && {
-      total: data.total,
-      items: data.data,
-    }),
+    total: data?.total ?? 0,
+    items: data?.data ?? [],
   };
 };

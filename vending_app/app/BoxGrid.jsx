@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { Check, Gift, PackageOpen } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, ScrollView, Share, Text, View } from "react-native";
+import { AppState, Image, ScrollView, Share, Text, View } from "react-native";
 import { routes } from "~/app/CheckoutMoyasar";
 import { Badge, Button, Card, Progress } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
@@ -13,7 +13,8 @@ import alert from "~/lib/alert";
 import { compressBoxData } from "~/services/functions";
 import { WEBSITE_URL } from "~/config/socialMedia";
 import { enableGift } from "~/services/gift";
-import { productImageUrl } from "~/services/serverAddresses";
+import { getRequest } from "~/services/httpClient";
+import { productImageUrl, purchaseAPI } from "~/services/serverAddresses";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
@@ -21,11 +22,13 @@ const boxUpdateHandler = (boxes, machineEvents) => {
     return boxes.map((box) => {
       if (
         box.machineId == machineEvents.machineId &&
-        box.boxNumber == machineEvents.boxes[0].slice(2)
+        box.boxNumber == machineEvents.boxes?.[0]?.slice(2)
       )
         box.boxStatus = !!machineEvents.value;
       return box;
     });
+  // Non-LOCKER events must not wipe the existing boxes.
+  return boxes;
 };
 
 const BoxGrid = () => {
@@ -39,7 +42,7 @@ const BoxGrid = () => {
   const { machine, machines, setMachines, setMachine, clearAll } = useMachine();
 
   const item =
-    user?.purchase?.boxes.filter((box) => box.machineId == machine._id) ?? [];
+    user?.purchase?.boxes?.filter((box) => box.machineId == machine?._id) ?? [];
 
   // update boxes status on machineEvents change
   useEffect(() => {
@@ -49,10 +52,69 @@ const BoxGrid = () => {
       ...prev,
       purchase: {
         ...purchase,
-        ...(purchase && { boxes: boxUpdateHandler(purchase.boxes, machineEvents) }),
+        ...(purchase?.boxes && {
+          boxes: boxUpdateHandler(purchase.boxes, machineEvents),
+        }),
       },
     }));
   }, [machineEvents]);
+
+  // Fallback sync: the "Waiting" → "Opened" flip normally arrives as a live
+  // socket event, but if the app was backgrounded or the socket dropped when
+  // the box was approved/opened, that event is lost and the box shows
+  // "Waiting" forever. Poll the purchase and re-sync on foreground so the
+  // server state always wins.
+  useEffect(() => {
+    const purchaseId = user?.purchase?._id;
+    if (!purchaseId || done) return;
+
+    let cancelled = false;
+
+    const syncFromServer = async () => {
+      try {
+        const purchase = await getRequest(purchaseAPI(purchaseId));
+        if (cancelled || !Array.isArray(purchase?.items)) return;
+        const openedByBoxId = {};
+        purchase.items.forEach(({ boxId, boxStatus }) => {
+          openedByBoxId[boxId] = !!boxStatus;
+        });
+        setUser((prev) => {
+          const boxes = prev?.purchase?.boxes;
+          if (!boxes) return prev;
+          let changed = false;
+          const nextBoxes = boxes.map((box) => {
+            const opened = openedByBoxId[box._id];
+            if (opened === undefined || opened === !!box.boxStatus) return box;
+            changed = true;
+            return { ...box, boxStatus: opened };
+          });
+          if (!changed) return prev;
+          return {
+            ...prev,
+            purchase: {
+              ...prev.purchase,
+              status: purchase.status ?? prev.purchase.status,
+              boxes: nextBoxes,
+            },
+          };
+        });
+      } catch (err) {
+        log("BoxGrid purchase sync failed", err?.message ?? String(err));
+      }
+    };
+
+    syncFromServer();
+    const interval = setInterval(syncFromServer, 5000);
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "active") syncFromServer();
+    });
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      appStateSub.remove();
+    };
+  }, [user?.purchase?._id, done]);
 
   // set Done after all boxes opened
   useEffect(() => {
@@ -81,8 +143,8 @@ const BoxGrid = () => {
   // send open signal to socket
   const openOne = (cabinNumber, boxNumber) =>
     publishData({
-      purchaseId: user.purchase._id,
-      machineId: user.purchase.machineId,
+      purchaseId: user?.purchase?._id,
+      machineId: user?.purchase?.machineId,
       type: "LOCKER",
       value: 1,
       boxes: compressBoxData([{ cabinNumber, boxNumbers: [boxNumber] }]),
@@ -94,7 +156,7 @@ const BoxGrid = () => {
     if (sharing) return;
     setSharing(true);
     try {
-      const { claimToken, claimUrl } = await enableGift(user.purchase._id);
+      const { claimToken, claimUrl } = await enableGift(user?.purchase?._id);
       // Always share an https web URL: Universal/App Links open the app when
       // installed, and the web claim page handles everyone else. A moaddi://
       // scheme URL is untappable in WhatsApp and dead without the app.

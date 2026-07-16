@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Loader, Plus } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -77,7 +78,7 @@ const ProductRow = ({
                   />
                 )}
                 <View className="flex flex-row justify-center">
-                  <Text>{`${(campaignPrice ?? salePrice).toFixed(2)} ${t(preferredCurrency ?? "sar")}`}</Text>
+                  <Text>{`${(campaignPrice ?? salePrice ?? 0).toFixed(2)} ${t(preferredCurrency ?? "sar")}`}</Text>
                 </View>
               </Card>
             </TouchableOpacity>
@@ -99,16 +100,23 @@ const MachineDetails = () => {
         setMachine((prev) => ({ ...prev, isActive: response.isActive }));
     });
   };
+  // Machines can come from different endpoints (vendor listing, QR scan) —
+  // `boxes` may be an array of box docs, a plain count, or absent.
+  const boxCount = Array.isArray(machine.boxes)
+    ? machine.boxes.length
+    : machine.boxes ?? "-";
   return (
     <View className="mx-2 mt-2">
-      <View className={"flex flex-row items-center gap-2 my-4 justify-center"}>
-        <QrCodeSvg
-          value={machine.qrCode}
-          size={200}
-          color="black"
-          backgroundColor="white"
-        />
-      </View>
+      {!!machine.qrCode && (
+        <View className={"flex flex-row items-center gap-2 my-4 justify-center"}>
+          <QrCodeSvg
+            value={machine.qrCode}
+            size={200}
+            color="black"
+            backgroundColor="white"
+          />
+        </View>
+      )}
 
       <View className={style.container}>
         <Text className={style.text}>Name</Text>
@@ -124,19 +132,19 @@ const MachineDetails = () => {
         <Text className={style.text}>Active</Text>
         <Switch
           disabled={disabled}
-          checked={machine.isActive}
+          checked={!!machine.isActive}
           onCheckedChange={handleToggle}
         />
       </View>
 
       <View className={style.container}>
         <Text className={style.text}>Boxes</Text>
-        <Text>{machine.boxes.length}</Text>
+        <Text>{boxCount}</Text>
       </View>
 
       <View className={style.container}>
         <Text className={style.text}>Shop</Text>
-        <Text>{machine.shop[0]?.name}</Text>
+        <Text>{machine.shop?.[0]?.name}</Text>
       </View>
 
       <View className={style.container}>
@@ -285,7 +293,7 @@ const BoxesList = ({
   };
 
   boxes.current = !isPending
-    ? item.machines.find(({ _id }) => _id == machine._id)?.boxes ?? []
+    ? item?.machines?.find(({ _id }) => _id == machine._id)?.boxes ?? []
     : [];
   return boxes.current.map(({ _id, name, product, status }, i) => (
     <View key={_id} className="flex gap-2">
@@ -295,7 +303,7 @@ const BoxesList = ({
             checked={selectedBoxes.includes(_id)}
             onCheckedChange={(checked) => {
               setSelectedBoxes((prev) =>
-                checked ? [...prev, _id] : prev.filter((_id) => _id != _id)
+                checked ? [...prev, _id] : prev.filter((id) => id != _id)
               );
             }}
           />
@@ -340,6 +348,8 @@ const BoxesList = ({
 };
 
 const Fill = (props) => {
+  const { t } = useTranslation();
+  const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedBoxes, setSelectedBoxes] = useState([]);
   const { machine, setMachine } = useMachine();
@@ -372,6 +382,19 @@ const Fill = (props) => {
     loading,
     setLoading,
   };
+  // Opened without a machine in context (e.g. dashboard "Fill" tile, or a
+  // stale deep link) — show a recoverable empty state instead of crashing.
+  if (!machine?._id) {
+    return (
+      <View className="flex-1 items-center justify-center gap-4 p-6">
+        <Text className="text-center">{t("noMachineSelected")}</Text>
+        <Button onPress={() => router.push("/staff/MachineQRScan")}>
+          <Text>{t("scanQr")}</Text>
+        </Button>
+      </View>
+    );
+  }
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="mx-4">
       <MachineDetails />

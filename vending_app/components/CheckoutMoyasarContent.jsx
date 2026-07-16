@@ -59,6 +59,10 @@ export default function CheckoutMoyasarContent({
 
       console.log("Checkout response:", res);
 
+      if (res?.error || res?.statusCode >= 400 || (res?.message && !res?.publishable_api_key && !res?.amount)) {
+        throw new Error(res?.message || res?.statusText || "Checkout failed");
+      }
+
       const config = buildPaymentConfig(res);
       setPaymentConfig(config);
     } catch (e) {

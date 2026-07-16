@@ -3,7 +3,7 @@ import { ReceiptText } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { Badge, Loader } from "~/components/moaddi";
+import { Badge, Loader, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import { useManyReference } from "~/hook/useManyReference";
@@ -29,7 +29,7 @@ function PurchaseHistoryData() {
 
   const { isPending, items } = useManyReference("purchases", {
     target: "customerId",
-    id: user._id,
+    id: user?._id,
   });
 
   const filters = useMemo(() => {
@@ -175,6 +175,7 @@ function PurchaseHistoryData() {
                 </Pressable>
               );
             })}
+            <SocialLinks />
           </ScrollView>
         </>
       )}

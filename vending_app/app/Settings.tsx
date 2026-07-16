@@ -3,7 +3,7 @@ import { Bell, Globe, Info, Moon, Shield, UserX } from "lucide-react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, ScrollView, TextInput, View } from "react-native";
-import { Card, ListItem, listItemIconColor, Separator, Switch } from "~/components/moaddi";
+import { Card, ListItem, listItemIconColor, Separator, SocialLinks, Switch } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import {
@@ -125,6 +125,8 @@ const SettingsScreen = () => {
             />
           </Card>
         ) : null}
+
+        <SocialLinks />
       </ScrollView>
 
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>

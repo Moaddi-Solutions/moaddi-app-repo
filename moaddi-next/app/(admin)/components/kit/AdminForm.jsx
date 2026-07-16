@@ -132,20 +132,24 @@ export const AdminCreate = ({ resource, title, redirect, transform, defaultValue
   </CreateBase>
 );
 
-const EditPageInner = ({ title, children }) => {
+const EditPageInner = ({ title, actions, children }) => {
   const { record, isPending } = useEditContext();
   const resource = useResourceContext();
   return (
-    <FormPageShell title={title ?? `Edit ${humanize(resource)}`} subtitle={record?.name}>
+    <FormPageShell
+      title={title ?? `Edit ${humanize(resource)}`}
+      subtitle={record?.name}
+      actions={actions}
+    >
       {isPending || !record ? <Spinner /> : children}
     </FormPageShell>
   );
 };
 
 /** Drop-in for react-admin's <Edit>. */
-export const AdminEdit = ({ resource, id, title, redirect, transform, mutationMode, children }) => (
+export const AdminEdit = ({ resource, id, title, redirect, transform, mutationMode, actions, children }) => (
   <EditBase resource={resource} id={id} redirect={redirect} transform={transform} mutationMode={mutationMode}>
-    <EditPageInner title={title}>{children}</EditPageInner>
+    <EditPageInner title={title} actions={actions}>{children}</EditPageInner>
   </EditBase>
 );
 

@@ -79,7 +79,7 @@ const Bluetooth2Control = () => {
         ...prev,
         purchase: {
           ...purchase,
-          ...(purchase && {
+          ...(purchase?.boxes && {
             boxes: purchase.boxes.map((box) => {
               if (box._id === id) box.boxStatus = true;
               return box;
@@ -99,7 +99,7 @@ const Bluetooth2Control = () => {
   const doneCallback = () => {
     bluetooth2MachineComplete({
       // machineId: user.purchase.machineId,
-      purchaseId: user.purchase._id,
+      purchaseId: user?.purchase?._id,
     });
     setTimeout(() => {
       setUser(({ purchase, ...prev }) => prev);
@@ -120,7 +120,7 @@ const Bluetooth2Control = () => {
   const boxesContainer = {
     mode: "multiple",
     items:
-      user?.purchase?.boxes.filter((box) => box.machineId == machine._id) ?? [],
+      user?.purchase?.boxes?.filter((box) => box.machineId == machine?._id) ?? [],
     boxProps: (box) => {
       return {
         onPress: () => openOne(box._id, box.boxNumber),

@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, Text as RNText, View } from "react-native";
-import { Loader } from "~/components/moaddi";
+import { Loader, SocialLinks } from "~/components/moaddi";
 import { machinesControlRoutes } from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { Text } from "~/components/ui/text";
@@ -94,6 +94,7 @@ function StaffProductList({ machine, onBack }) {
             {t("noProducts")}
           </Text>
         )}
+        <SocialLinks />
       </ScrollView>
     </View>
   );

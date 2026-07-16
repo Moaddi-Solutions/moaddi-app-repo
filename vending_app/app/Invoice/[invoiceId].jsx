@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, Share, Text, View } from "react-native";
 import QRCode from "react-qr-code";
-import { Badge, Card, IconButton, Separator } from "~/components/moaddi";
+import { Badge, Card, IconButton, Separator, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useUser } from "~/context/UserContext";
 import {
@@ -45,7 +45,14 @@ function InvoicePage({ purchaseData }) {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { products, items, created, status, invoiceId, _id } = purchaseData;
+  const {
+    products = [],
+    items = [],
+    created,
+    status,
+    invoiceId,
+    _id,
+  } = purchaseData;
   const price = asNumber(purchaseData.price);
   const currency = purchasePreferredCurrency(purchaseData);
 
@@ -87,7 +94,7 @@ function InvoicePage({ purchaseData }) {
             />
             <View style={{ flex: 1 }}>
               <Text style={{ ...typo.bodyStrong, color: colors.textHeading }}>
-                {process.env.EXPO_PUBLIC_SELLER_NAME || "Moaddi Solutions"}
+                {t("company.name")}
               </Text>
               <Text style={{ ...typo.caption, color: colors.textMuted }}>
                 {new Date(created).toLocaleString()}
@@ -155,6 +162,8 @@ function InvoicePage({ purchaseData }) {
             </Text>
           </View>
         </Card>
+
+        <SocialLinks />
       </ScrollView>
     </View>
   );

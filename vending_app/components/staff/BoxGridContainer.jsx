@@ -12,7 +12,7 @@ const BoxGridContainer = ({ boxProps, machine }) => {
   const boxes = (machine?.boxes && Array.isArray(machine?.boxes))
     ? machine?.boxes :
     (machine?.products && Array.isArray(machine?.products)) ?
-      machine?.products.flatMap((product) => product?.boxes) : [];
+      machine?.products.flatMap((product) => product?.boxes ?? []) : [];
   console.log(boxes, 'boxes');
   console.log(machine, 'machine');
 
@@ -25,15 +25,15 @@ const BoxGridContainer = ({ boxProps, machine }) => {
         {boxes
           ?.sort((a, b) => a.boxNumber - b.boxNumber)
           .map((box) => {
-            const product = machine.products.find(
+            const product = machine?.products?.find(
               ({ _id }) => _id == box.productId,
             );
             return (
               <View key={box._id}>
                 <Card className="flex items-center justify-center p-4 m-4">
                   <Text>
-                    {[0, 1].includes(machine.type)
-                      ? box.name.slice(1)
+                    {[0, 1].includes(machine?.type)
+                      ? box.name?.slice(1)
                       : box.name}
                   </Text>
                   {product && (

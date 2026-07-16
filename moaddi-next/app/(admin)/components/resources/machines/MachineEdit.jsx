@@ -14,6 +14,7 @@ import {
   AdminFormSection,
   AdminSimpleForm,
 } from "@/(admin)/components/kit/AdminForm";
+import { AdminShowButton } from "@/(admin)/components/kit/AdminUI";
 import { useRecordContext } from "ra-core";
 
 const GenaiInputs = () => {
@@ -111,7 +112,7 @@ export const MachineEditItems = () => {
 };
 
 const MachineEdit = () => (
-  <AdminEdit>
+  <AdminEdit actions={<AdminShowButton label="Fill machine" />}>
     <AdminSimpleForm showDelete>
       <MachineEditItems />
     </AdminSimpleForm>

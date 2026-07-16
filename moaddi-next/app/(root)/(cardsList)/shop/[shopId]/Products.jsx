@@ -13,10 +13,10 @@ const Products = ({ id }) => {
 
   const products = !isPending
     ? Array.from(
-        data
+        (data ?? [])
           .reduce((prev, curr) => {
             if (curr.isActive)
-              curr.products.forEach((product) => {
+              (curr.products ?? []).forEach((product) => {
                 if (product.isActive) prev.set(product._id, product);
               });
             return prev;
@@ -26,13 +26,13 @@ const Products = ({ id }) => {
     : [];
   return (
     <section className="my-8">
-      {!isPending && data.length ? (
+      {!isPending && data?.length ? (
         <>
-          <BlockHeader title={data[0].shop[0].name} />
+          <BlockHeader title={data[0]?.shop?.[0]?.name} />
           <Container className="my-3 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {products
               .map(Fit.image)
-              .sort((a, b) => a.name.localeCompare(b.name))
+              .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
               .map((product, i) => (
                 <ProductCard key={product._id} {...product} />
               ))}

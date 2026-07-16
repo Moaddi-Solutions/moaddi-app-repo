@@ -372,7 +372,7 @@
     "toastCouldNotLoadMachine": "无法加载机器。",
     "toastNoProductsOnMachine": "此机器上没有产品。",
     "toastCouldNotBuildOrder": "无法创建订单 - 请检查产品库存情况。",
-    "toastOrderCreated": "订单已创建。请在准备好后点击订单按钮完成支付。"
+    "toastOrderCreated": "订单已创建，正在前往结账页面..."
   },
   "GroupProducts": {
     "defaultName": "群组产品",

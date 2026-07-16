@@ -2,7 +2,7 @@ import { Check, X } from "lucide-react-native";
 import { ReactNode } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, ButtonVariant } from "~/components/moaddi";
+import { Button, ButtonVariant, SocialLinks } from "~/components/moaddi";
 import { colors, space, type } from "~/theme/moaddi";
 
 export interface ResultAction {
@@ -91,6 +91,8 @@ export function PaymentResult({ tone, title, body, children, actions }: PaymentR
             </Button>
           ))}
         </View>
+
+        <SocialLinks />
       </View>
     </SafeAreaView>
   );

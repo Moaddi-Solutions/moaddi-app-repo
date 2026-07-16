@@ -3,7 +3,7 @@ import { BadgeCheck, Gift, Globe, LogOut, ReceiptText, User, UserX } from "lucid
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
-import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator } from "~/components/moaddi";
+import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
 import {
@@ -75,11 +75,13 @@ function Profile() {
             <Avatar name={user.name} src={user.image} size={72} ring />
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text style={{ ...typo.title3, color: colors.textHeading }}>{user.name}</Text>
-              <BadgeCheck size={18} color={palette.teal[500]} />
+              {!user.isGuest && <BadgeCheck size={18} color={palette.teal[500]} />}
             </View>
-            <Text style={{ ...typo.caption, color: colors.textMuted }}>
-              {t("whatsappNumberVerified")}
-            </Text>
+            {!user.isGuest && (
+              <Text style={{ ...typo.caption, color: colors.textMuted }}>
+                {t("whatsappNumberVerified")}
+              </Text>
+            )}
             <View style={{ flexDirection: "row", gap: 32, marginTop: 8 }}>
               <View style={{ alignItems: "center" }}>
                 <Text style={{ ...typo.caption, color: colors.textMuted }}>{t("totalOrders")}</Text>
@@ -143,6 +145,8 @@ function Profile() {
             onPress={() => router.navigate("/Settings")}
           />
         </Card>
+
+        <SocialLinks />
       </ScrollView>
 
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>

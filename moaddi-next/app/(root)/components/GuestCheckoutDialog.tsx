@@ -1,17 +1,13 @@
 "use client";
 
-import { PhoneInput } from "@/(root)/components/PhoneInput";
 import { Button } from "@/../components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/../components/ui/dialog";
-import { Input } from "@/../components/ui/input";
-import { Label } from "@/../components/ui/label";
 import { persistShopperSession } from "@/../lib/shopper-session";
 import {
   createGuestSession,
@@ -20,9 +16,14 @@ import {
 } from "@/../services/guestAuth";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
-import { isValidPhoneNumber } from "react-phone-number-input";
+import { useState } from "react";
 import { toast } from "sonner";
+
+/* Placeholder phone: +999 is an unassigned country code, so the number is
+ * E.164-valid (server requires one) but can never match a real account's
+ * phone during merge-by-phone. */
+const makePlaceholderPhone = () =>
+  "+999" + String(Math.floor(Math.random() * 1e11)).padStart(11, "0");
 
 type GuestCheckoutDialogProps = {
   open: boolean;
@@ -43,22 +44,10 @@ export function GuestCheckoutDialog({
 }: GuestCheckoutDialogProps) {
   const t = useTranslations("");
   const router = useRouter();
-  const [step, setStep] = useState<"choice" | "form">("choice");
-  const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const reset = () => {
-    setStep("choice");
-    setPhone("");
-    setName("");
-    setEmail("");
-    setIsLoading(false);
-  };
-
   const handleOpenChange = (next: boolean) => {
-    if (!next) reset();
+    if (!next) setIsLoading(false);
     onOpenChange(next);
   };
 
@@ -67,30 +56,16 @@ export function GuestCheckoutDialog({
     router.push("/signin");
   };
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!phone || !isValidPhoneNumber(phone)) {
-      toast.error(t("Auth.invalidPhoneNumber"));
-      return;
-    }
-
+  const handleGuest = async () => {
     setIsLoading(true);
     try {
       // 1) Create the anonymous session so we have a guest token.
       const guest = await createGuestSession();
       const session = persistShopperSession(guest, { defaultRole: "Guest" });
-      // 2) Attach contact info — requires the token persisted above.
-      await updateGuestInfo({
-        phone,
-        ...(name ? { name } : {}),
-        ...(email ? { email } : {}),
-      });
-      const guestUser = {
-        ...session,
-        phone,
-        ...(name ? { name } : {}),
-        ...(email ? { email } : {}),
-      } as GuestSession;
+      // 2) Attach the synthetic phone — requires the token persisted above.
+      const phone = makePlaceholderPhone();
+      await updateGuestInfo({ phone });
+      const guestUser = { ...session, phone } as GuestSession;
       handleOpenChange(false);
       onGuestReady(guestUser);
     } catch (error) {
@@ -106,92 +81,32 @@ export function GuestCheckoutDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
-        {step === "choice" ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>{t("GuestCheckout.title")}</DialogTitle>
-              <DialogDescription>
-                {t("GuestCheckout.description")}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-2">
-              <Button className="w-full font-bold" onClick={handleSignIn}>
-                {t("Auth.signIn")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full font-bold"
-                onClick={() => setStep("form")}
-              >
-                {t("GuestCheckout.continueAsGuest")}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <DialogHeader>
-              <DialogTitle>{t("GuestCheckout.formTitle")}</DialogTitle>
-              <DialogDescription>
-                {t("GuestCheckout.formDescription")}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-2">
-              <Label htmlFor="guest-phone">{t("Auth.phone")}</Label>
-              <PhoneInput
-                id="guest-phone"
-                value={phone}
-                onChange={setPhone}
-                defaultCountry="SA"
-                international
-                countryCallingCodeEditable={false}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="guest-name">
-                {t("GuestCheckout.nameOptional")}
-              </Label>
-              <Input
-                id="guest-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="guest-email">
-                {t("GuestCheckout.emailOptional")}
-              </Label>
-              <Input
-                id="guest-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setStep("choice")}
-                disabled={isLoading}
-              >
-                {t("GuestCheckout.back")}
-              </Button>
-              <Button type="submit" disabled={isLoading} className="font-bold">
-                {isLoading
-                  ? t("GuestCheckout.submitting")
-                  : t("GuestCheckout.continue")}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+        <DialogHeader>
+          <DialogTitle>{t("GuestCheckout.title")}</DialogTitle>
+          <DialogDescription>
+            {t("GuestCheckout.description")}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <Button
+            className="w-full font-bold"
+            onClick={handleSignIn}
+            disabled={isLoading}
+          >
+            {t("Auth.signIn")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full font-bold"
+            onClick={handleGuest}
+            disabled={isLoading}
+          >
+            {isLoading
+              ? t("GuestCheckout.submitting")
+              : t("GuestCheckout.continueAsGuest")}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

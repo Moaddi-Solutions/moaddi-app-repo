@@ -3,7 +3,7 @@ import { Gift, PackageOpen } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
-import { Badge, Button, Card, Loader } from "~/components/moaddi";
+import { Badge, Button, Card, Loader, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
@@ -187,6 +187,7 @@ export default function GiftClaim() {
               </Button>
             </>
           )}
+          <SocialLinks />
         </ScrollView>
       )}
     </View>

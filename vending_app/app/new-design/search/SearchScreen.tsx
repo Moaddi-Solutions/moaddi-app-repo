@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ProductCard } from "~/components/moaddi";
+import { ProductCard, SocialLinks } from "~/components/moaddi";
 import { colors, palette, radius, sizes, space, type } from "~/theme/moaddi";
 import dataProvider from "~/services/dataProvider";
 
@@ -130,6 +130,7 @@ export function SearchScreen() {
             })}
           </View>
         )}
+        <SocialLinks />
       </ScrollView>
     </View>
   );

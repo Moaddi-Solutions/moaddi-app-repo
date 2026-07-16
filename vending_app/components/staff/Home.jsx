@@ -3,7 +3,7 @@ import * as Updates from "expo-updates";
 import { Store } from "lucide-react-native";
 import React, { useEffect } from "react";
 import { ScrollView, View } from "react-native";
-import { ShopCard } from "~/components/moaddi";
+import { ShopCard, SocialLinks } from "~/components/moaddi";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
 import { useManyReference } from "~/hook/useManyReference";
@@ -58,6 +58,7 @@ const HomeScreen = () => {
                 onPress={() => router.push(`/staff/shop/${item._id}`)}
               />
             ))}
+        <SocialLinks />
       </ScrollView>
     </View>
   );
