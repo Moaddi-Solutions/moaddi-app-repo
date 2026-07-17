@@ -18,6 +18,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useCheckoutTheme } from "./useCheckoutTheme";
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
@@ -98,6 +99,7 @@ export default function StripeCheckout({ purchaseId }) {
   const t = useTranslations("Checkout");
   const [clientSecret, setClientSecret] = useState(null);
   const [error, setError] = useState("");
+  const { mode, stripeAppearance } = useCheckoutTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -144,7 +146,11 @@ export default function StripeCheckout({ purchaseId }) {
   }
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <Elements
+      key={`${clientSecret}-${mode}`}
+      stripe={stripePromise}
+      options={{ clientSecret, appearance: stripeAppearance }}
+    >
       <StripePaymentForm purchaseId={purchaseId} />
     </Elements>
   );

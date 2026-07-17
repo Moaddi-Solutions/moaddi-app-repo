@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentResult } from "@/(root)/components/PaymentResult";
 import { useCart } from "@/(root)/context/cart-provider";
 import { Container } from "@/../components/ui/container";
 import { finalizeStripePayment } from "@/../services/checkoutPayments";
@@ -95,14 +96,29 @@ export default function PaymentReturn() {
     })();
   }, [isPending, searchParams, user, router, setUser, t]);
 
+  if (error) {
+    return (
+      <PaymentResult
+        tone="failure"
+        title={t("failureTitle")}
+        body={error}
+        actions={[
+          { label: t("failureCtaRetry"), href: "/checkout" },
+          { label: t("successCtaHome"), href: "/", variant: "ghost" },
+        ]}
+      />
+    );
+  }
+
   return (
-    <section className="py-8">
+    <section className="flex min-h-[70vh] items-center justify-center py-8">
       <Container variant="breakpoint" className="max-w-lg text-center">
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : (
-          <p className="text-muted-foreground text-sm">{t("paymentConfirming")}</p>
-        )}
+        <div className="flex flex-col items-center gap-4">
+          <span className="size-10 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <p className="text-muted-foreground text-sm font-semibold">
+            {t("paymentConfirming")}
+          </p>
+        </div>
       </Container>
     </section>
   );

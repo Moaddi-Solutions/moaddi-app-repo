@@ -16,6 +16,7 @@ function SocketContextProvider({ children }) {
   const [notification, setNotification] = useState(null);
   const [liveEvents, setLiveEvents] = useState(null);
   const [machineEvents, setMachineEvents] = useState(null);
+  const [purchaseRequestEvent, setPurchaseRequestEvent] = useState(null);
   const Types = {
     Notification: () => {
       setNotification((prev) => !prev);
@@ -35,20 +36,11 @@ function SocketContextProvider({ children }) {
       //   }
     },
     PaymentRequestsResponse: (body) => {
-      // if (
-      //   cookies?.role === "Customer" &&
-      //   cookies?._id === body.data.customerId
-      // ) {
-      //   if (body.data.status === "PaymentRejected") {
-      //     setRequestApproved(2);
-      //     setTimeout(() => {
-      //       setRequestApproved(0);
-      //       navigate("/");
-      //     }, 1000);
-      //   } else if (body.data.status === "PaymentDone") {
-      //     setRequestApproved(body.data);
-      //   }
-      // }
+      // Approve/reject/payment-done changes the pending list; nudge listeners to
+      // refetch. Kept on its own channel: `machineEvents` carries string box
+      // serials that BoxGrid decodes, and this payload's `boxes` are full box
+      // objects — routing it there crashes BoxGrid's boxSerialDecoder.
+      setPurchaseRequestEvent(body.data);
     },
     else: (body) => {
       setMachineEvents(body.data);
@@ -164,6 +156,7 @@ function SocketContextProvider({ children }) {
         machineStatus,
         liveEvents,
         machineEvents,
+        purchaseRequestEvent,
         notification,
         controlDirectMachine,
         publishData,

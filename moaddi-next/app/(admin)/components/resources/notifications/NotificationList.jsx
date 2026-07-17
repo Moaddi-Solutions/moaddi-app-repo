@@ -31,11 +31,11 @@ const audio = new Audio(
 );
 
 const SocketContextWontWorkInListWithoutWhy = ({ refetchRef }) => {
-  const { notification, machineEvents } = useSocket();
+  const { notification, machineEvents, purchaseRequestEvent } = useSocket();
 
   useEffect(() => {
     refetchRef.current?.();
-  }, [notification, machineEvents, refetchRef]);
+  }, [notification, machineEvents, purchaseRequestEvent, refetchRef]);
 
   useEffect(() => {
     if (typeof notification !== "boolean") return;
@@ -54,16 +54,23 @@ const NotificationTable = ({ refetchRef }) => {
     if (refetch) refetchRef.current = refetch;
   }, [refetch, refetchRef]);
 
+  // Join through `items`: it holds the product/box pair as purchased. A box's
+  // own productId is live machine state and may be reassigned or cleared after
+  // the purchase, which would drop still-pending requests from this list.
+  // Skip items already dispensed (boxStatus true) — an approved box is no longer
+  // pending, even while the purchase stays Processing for its other boxes.
   const rows = data.flatMap((record) =>
-    (record.boxes ?? [])
-      .map((box) => {
+    (record.items ?? [])
+      .map((item, index) => {
+        if (item.boxStatus) return null;
+        const box = (record.boxes ?? []).find(({ _id }) => _id === item.boxId);
         const product = (record.products ?? []).find(
-          ({ _id }) => _id === box.productId,
+          ({ _id }) => _id === item.productId,
         );
-        if (!product) return null;
         return {
-          key: `${record.id ?? record._id}-${box._id}`,
+          key: `${record.id ?? record._id}-${item.boxId}-${index}`,
           record,
+          item,
           box,
           product,
         };
@@ -72,6 +79,7 @@ const NotificationTable = ({ refetchRef }) => {
   );
 
   const approveHandler = async ({ record, box }) => {
+    if (!box) return;
     controlDirectMachine({
       machineId: record.machineId,
       type: "LOCKER",
@@ -125,9 +133,9 @@ const NotificationTable = ({ refetchRef }) => {
             size="sm"
           >
             <CardContent className="grid gap-3 p-4">
-              <ProductCell product={row.product} />
+              <ProductCell product={row.product} fallbackId={row.item.productId} />
               <Info label="Customer" value={customerLabel(row.record)} />
-              <Info label="Box" value={row.box.name} />
+              <Info label="Box" value={row.box?.name ?? row.item.boxId} />
               <Info label="Machine" value={row.record.machineId} />
               <Info label="Price" value={productPrice(row)} />
               <ActionButtons
@@ -171,14 +179,14 @@ const NotificationTable = ({ refetchRef }) => {
                   className="border-0 border-b border-border/50 transition-colors last:border-0 hover:bg-accent/40"
                 >
                   <TableCell className="px-4 py-3.5">
-                    <ProductCell product={row.product} />
+                    <ProductCell product={row.product} fallbackId={row.item.productId} />
                   </TableCell>
                   <TableCell className="px-4 py-3.5 text-sm font-semibold text-foreground">
                     {customerLabel(row.record)}
                   </TableCell>
                   <TableCell className="px-4 py-3.5">
                     <Badge className="rounded-full border-0 bg-muted font-extrabold text-muted-foreground">
-                      {row.box.name}
+                      {row.box?.name ?? row.item.boxId}
                     </Badge>
                   </TableCell>
                   <TableCell className="max-w-[220px] px-4 py-3.5 text-sm font-semibold text-foreground">

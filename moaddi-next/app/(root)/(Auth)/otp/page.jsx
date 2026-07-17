@@ -21,14 +21,14 @@ export default async function OTPPage() {
             <p className="text-muted-foreground px-8 text-center text-sm">
               {t("Auth.agree")}
               <Link
-                href="/terms"
+                href="/terms-and-conditions"
                 className="hover:text-primary-text underline underline-offset-4"
               >
                 {t("Auth.terms")}
               </Link>
               {t("Auth.and")}
               <Link
-                href="/privacy"
+                href="/privacy-policy"
                 className="hover:text-primary-text underline underline-offset-4"
               >
                 {t("Auth.privacy")}

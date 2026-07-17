@@ -309,6 +309,90 @@ body #cw-bubble-holder {
   font-family: inherit !important;
 }
 
+/* Checkout embeds: Stripe can read appearance tokens directly, while Moyasar
+   ships a fixed palette. Keep both providers aligned with the shared theme
+   variables declared in this file. */
+.mysr-form {
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.mysr-form #mysr,
+.mysr-form #mysr * {
+  font-family: inherit;
+}
+
+.mysr-form #mysr {
+  color: var(--foreground);
+}
+
+.mysr-form #mysr input,
+.mysr-form #mysr select,
+.mysr-form #mysr button {
+  color: var(--foreground);
+}
+
+.mysr-form #mysr input::placeholder,
+.mysr-form #mysr textarea::placeholder,
+.mysr-form #mysr .placeholder-gray-300::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+.mysr-form #mysr .text-black,
+.mysr-form #mysr .text-black\/90,
+.mysr-form #mysr .text-neutral-800\/90 {
+  color: var(--foreground) !important;
+}
+
+.mysr-form #mysr .text-primary-400 {
+  color: var(--muted-foreground) !important;
+}
+
+.mysr-form #mysr .text-white {
+  color: var(--primary-foreground) !important;
+}
+
+.mysr-form #mysr .border-neutral-300,
+.mysr-form #mysr .border-white {
+  border-color: var(--input) !important;
+}
+
+.mysr-form #mysr .bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.mysr-form #mysr .bg-black,
+.mysr-form #mysr .bg-slate-100 {
+  background-color: var(--card) !important;
+}
+
+.mysr-form #mysr .bg-neutral-300 {
+  background-color: var(--muted) !important;
+}
+
+.mysr-form #mysr .shadow-input {
+  --tw-shadow: 0 0 0 1px var(--input), 0 2px 4px 0 rgba(0, 0, 0, 0.07),
+    0 1px 1.5px 0 rgba(0, 0, 0, 0.05) !important;
+  --tw-shadow-colored: 0 0 0 1px var(--input), 0 2px 4px 0 rgba(0, 0, 0, 0.07),
+    0 1px 1.5px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.mysr-form #mysr .shadow-input-error {
+  --tw-shadow: 0 0 0 1px color-mix(in srgb, var(--destructive) 55%, white),
+    0 2px 4px 0 rgba(0, 0, 0, 0.07), 0 1px 1.5px 0 rgba(0, 0, 0, 0.05) !important;
+  --tw-shadow-colored: 0 0 0 1px color-mix(in srgb, var(--destructive) 55%, white),
+    0 2px 4px 0 rgba(0, 0, 0, 0.07), 0 1px 1.5px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.mysr-form #mysr .focus\:shadow-input-focus:focus {
+  --tw-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent),
+    0 1px 1px 0 rgba(0, 0, 0, 0.07),
+    0 0 0 4px color-mix(in srgb, var(--ring) 28%, transparent) !important;
+  --tw-shadow-colored: 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent),
+    0 1px 1px 0 rgba(0, 0, 0, 0.07),
+    0 0 0 4px color-mix(in srgb, var(--ring) 28%, transparent) !important;
+}
+
 /* Magic UI animation tokens (shimmer-button, aurora-text, marquee) */
 @theme inline {
   --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite

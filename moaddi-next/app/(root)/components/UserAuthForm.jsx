@@ -105,14 +105,14 @@ export function SignInForm({ className, variant = "default", ...props }) {
         <p className="m-0 text-xs leading-5 text-muted-foreground">
           {t("Auth.agree")}{" "}
           <Link
-            href="/terms"
+            href="/terms-and-conditions"
             className="font-extrabold text-accent-foreground hover:text-primary-text"
           >
             {t("Auth.terms")}
           </Link>{" "}
           {t("Auth.and")}{" "}
           <Link
-            href="/privacy"
+            href="/privacy-policy"
             className="font-extrabold text-accent-foreground hover:text-primary-text"
           >
             {t("Auth.privacy")}
@@ -255,14 +255,14 @@ export function SignUpForm({ className, variant = "default", ...props }) {
         <p className="m-0 text-xs leading-5 text-muted-foreground">
           {t("Auth.agree")}{" "}
           <Link
-            href="/terms"
+            href="/terms-and-conditions"
             className="font-extrabold text-accent-foreground hover:text-primary-text"
           >
             {t("Auth.terms")}
           </Link>{" "}
           {t("Auth.and")}{" "}
           <Link
-            href="/privacy"
+            href="/privacy-policy"
             className="font-extrabold text-accent-foreground hover:text-primary-text"
           >
             {t("Auth.privacy")}

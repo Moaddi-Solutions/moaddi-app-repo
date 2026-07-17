@@ -27,6 +27,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SYNC_INTERVAL_MS = 45_000;
 
+// The payment result/return pages already tell the user what happened (success,
+// failure, or "confirming") and offer "Open lockers". Suppress the notice modal
+// and FAB there so we don't stack a second dialog on top of those screens.
+const SUPPRESSED_PATH_PREFIXES = [
+  "/checkout/success",
+  "/checkout/failure",
+  "/checkout/payment-return",
+];
+
+function isSuppressedPath(pathname) {
+  if (!pathname) return false;
+  return SUPPRESSED_PATH_PREFIXES.some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
+}
+
 function readDismissed(key) {
   try {
     return localStorage.getItem(key) === "1";
@@ -62,9 +78,12 @@ export default function PurchaseStatusNotifier() {
     return noticeDismissStorageKey(user._id, notice);
   }, [notice, user?._id]);
 
-  const onTargetPage = notice
-    ? isNoticeTargetPath(pathname, notice.href)
-    : false;
+  const suppressed = isSuppressedPath(pathname);
+  const onTargetPage = suppressed
+    ? true
+    : notice
+      ? isNoticeTargetPath(pathname, notice.href)
+      : false;
 
   const syncProfile = useCallback(async () => {
     if (!user?._id || !isShopperRole(user.role)) return;

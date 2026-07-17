@@ -309,7 +309,7 @@ const page = async ({ params, searchParams }) => {
   } = data;
   const {
     PaymentId = purchase.invoiceId ?? invoiceId,
-    Error = null,
+    Error: TransactionError = null,
     ErrorCode = "",
     TransactionStatus = InvoiceStatus === "Paid" ? "Succss" : "Pending",
   } = InvoiceTransactions[0] ?? {};
@@ -325,8 +325,8 @@ const page = async ({ params, searchParams }) => {
       expiryTime: ExpiryTime,
       paymentId: PaymentId,
       total: InvoiceDisplayValue,
-      error: Error && {
-        message: Error,
+      error: TransactionError && {
+        message: TransactionError,
         code: ErrorCode,
         status: TransactionStatus,
       },

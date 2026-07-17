@@ -1,6 +1,5 @@
 "use client";
 import { formatNumberValue } from "@/../lib/formatMoney";
-import BlockHeader from "@/(root)/components/BlockHeader";
 import { useCart } from "@/(root)/context/cart-provider";
 import { useSocket } from "@/(root)/context/Socket";
 import { Button } from "@/../components/ui/button";
@@ -9,7 +8,7 @@ import { Container } from "@/../components/ui/container";
 import { boxSerialDecoder, compressBoxData } from "@/../services/functions";
 import { enableGift } from "@/../services/gift";
 import { baseUrl } from "@/../services/serverAddresses";
-import { Gift } from "lucide-react";
+import { Check, Gift, PackageOpen } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -17,6 +16,9 @@ import { toast } from "sonner";
 
 const boxUpdateHandler = (boxes, machineEvents) => {
   machineEvents?.boxes?.forEach((box) => {
+    // Only machine box-open events carry string serials ("1_6"); ignore any
+    // other payload shape so a stray event can't crash the page.
+    if (typeof box !== "string") return;
     boxSerialDecoder(
       machineEvents.machineId,
       box,
@@ -47,6 +49,18 @@ const cabinBoxFrom = (box) => {
     }
   }
   return null;
+};
+
+const boxLabel = (box) => {
+  const name = String(box?.name ?? "");
+  return name ? name.slice(1) : "";
+};
+
+const productPrice = (product) => {
+  if (!product) return "";
+  const price = product.campaignPrice ?? product.salePrice;
+  if (price == null) return product.name;
+  return `${product.name} - ${formatNumberValue(price)} SAR`;
 };
 
 const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
@@ -162,95 +176,152 @@ const BoxGrid = ({ boxes, status, _id, machineId, machine, customerId }) => {
     }
   };
 
-  const opened = user?.purchase?.boxes?.filter(
-    ({ boxStatus }) => boxStatus,
-  ).length ?? 0;
+  const displayBoxes = user?.purchase?.boxes ?? boxes ?? [];
+  const opened = displayBoxes.filter(({ boxStatus }) => boxStatus).length;
+  const total = displayBoxes.length;
+  const allDone = done || (total > 0 && opened === total);
+  const isDirectMachine = user?.purchase?.machine?.type == 0;
+
   return done ? (
-    <Container className="relative container my-40 flex-col items-center justify-center">
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {t("allBoxesOpened")}
-            </h1>
-            {/* <p className="text-muted-foreground text-sm">
-                {t("SignIn.input")}
-              </p> */}
+    <section className="bg-background py-6 sm:py-10">
+      <Container variant="breakpoint" className="max-w-md">
+        <Card className="rounded-[1.5rem] border-border bg-card p-6 text-center shadow-sm">
+          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-success-soft text-success">
+            <Check className="size-6" strokeWidth={3} aria-hidden="true" />
           </div>
-          <Button asChild className="w-full font-bold">
-            <Link href="/profile?tab=purchases">
-              {t("showInvoiceHistory")}
-            </Link>
+          <h1 className="text-2xl font-extrabold tracking-normal text-foreground">
+            {t("allBoxesOpened")}
+          </h1>
+          <p className="mt-2 text-sm font-semibold text-muted-foreground">
+            {t("enjoyYourItems")}
+          </p>
+          <Button asChild className="mt-6 h-11 w-full rounded-xl font-bold">
+            <Link href="/profile?tab=purchases">{t("showInvoiceHistory")}</Link>
           </Button>
-        </div>
-      </div>
-    </Container>
+        </Card>
+      </Container>
+    </section>
   ) : (
-    <Container>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <BlockHeader title={user?.purchase?.machine?.name} />
-        {canGift && (
-          <Button
-            variant="outline"
-            onClick={shareGift}
-            disabled={sharing}
-            className="font-bold"
-          >
-            <Gift data-icon="inline-start" aria-hidden="true" />
-            {sharing ? t("creatingGiftLink") : t("letSomeoneOpen")}
-          </Button>
-        )}
-      </div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 pt-2 pb-10">
-        {(user?.purchase?.boxes ?? []).map((box) => (
-          <Card
-            key={box._id}
-            className="flex flex-col items-center justify-center gap-2 rounded-xl p-3 text-center"
-          >
-            <p className="text-sm font-bold">{box.name.slice(1)}</p>
-            {box.product && (
-              <>
-                <img
-                  src={`${baseUrl()}${box.product.image}`}
-                  alt={box.product.name}
-                  className="h-30.5 w-full px-2 object-contain"
-                />
-                <p className="text-sm font-semibold">
-                  {`${box.product.name} - ${formatNumberValue(box.product.campaignPrice ?? box.product.salePrice)} SAR`}
+    <section className="min-h-[calc(100vh-7rem)] bg-background py-5 sm:py-8">
+      <Container variant="breakpoint" className="max-w-md">
+        <div className="space-y-4">
+          <Card className="rounded-[1.5rem] border-border bg-card p-5 text-center shadow-sm">
+            <div
+              className={`mx-auto mb-4 grid size-14 place-items-center rounded-full ${
+                allDone
+                  ? "bg-success text-success-foreground"
+                  : "bg-accent text-accent-foreground"
+              }`}
+            >
+              {allDone ? (
+                <Check className="size-6" strokeWidth={3} aria-hidden="true" />
+              ) : (
+                <PackageOpen className="size-6" aria-hidden="true" />
+              )}
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-normal text-foreground">
+              {allDone ? t("allBoxesOpened") : t("paymentConfirmed")}
+            </h1>
+            <p className="mt-2 text-sm font-semibold text-muted-foreground">
+              {allDone ? t("enjoyYourItems") : t("tapBoxToOpen")}
+            </p>
+            {total > 0 ? (
+              <div className="mt-4 text-start">
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={`h-full rounded-full ${
+                      allDone ? "bg-success" : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.round((opened / total) * 100)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted-foreground">
+                  {opened} {t("of")} {total} {t("opened")}
                 </p>
-              </>
-            )}
-            {user?.purchase?.machine?.type == 0 ? (
-              <b className="my-2">
-                {box.boxStatus ? t("opened") : t("waitingForApprove")}
-              </b>
-            ) : (
-              <Button
-                variant="outline"
-                disabled={box.boxStatus}
-                onClick={() => openOne(box)}
-                className="w-full border-green-200 font-bold text-green-700 hover:bg-green-50 disabled:opacity-60 dark:border-green-900 dark:text-green-400 dark:hover:bg-green-950"
-              >
-                {box.boxStatus ? t("opened") : t("open")}
-              </Button>
-            )}
+              </div>
+            ) : null}
           </Card>
-        ))}
-      </div>
-      <div className="mb-6 flex flex-wrap justify-between gap-4">
-        <Card className="rounded-xl p-3 text-green-700 dark:text-green-400">
-          {t("readyToOpen")}:{" "}
-          <b>{user?.purchase?.boxes.length - opened || ""}</b>
-        </Card>
-        <Card className="rounded-xl p-3 text-green-700 dark:text-green-400">
-          {t("openedCount")}: <b>{opened || ""}</b>
-        </Card>
-        <Card className="text-destructive rounded-xl p-3">
-          {t("remaining")}:{" "}
-          <b>{user?.purchase?.boxes.length - opened || ""}</b>
-        </Card>
-      </div>
-    </Container>
+
+          {canGift && !allDone ? (
+            <Button
+              variant="secondary"
+              onClick={shareGift}
+              disabled={sharing}
+              className="h-12 w-full rounded-[1.5rem] bg-accent text-sm font-extrabold text-accent-foreground hover:bg-accent/80"
+            >
+              <Gift data-icon="inline-start" className="size-4" aria-hidden="true" />
+              {sharing ? t("creatingGiftLink") : t("letSomeoneOpen")}
+            </Button>
+          ) : null}
+
+          <div className="space-y-3">
+            {displayBoxes.map((box) => {
+              const label = boxLabel(box);
+              return (
+                <Card
+                  key={box._id}
+                  className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 rounded-[1.125rem] border-border bg-card p-3 shadow-sm"
+                >
+                  <div
+                    className={`grid size-12 place-items-center overflow-hidden rounded-xl ${
+                      box.boxStatus ? "bg-success-soft text-success" : "bg-accent text-accent-foreground"
+                    }`}
+                  >
+                    {box.product ? (
+                      <img
+                        src={`${baseUrl()}${box.product.image}`}
+                        alt={box.product.name}
+                        className="size-10 rounded-lg object-contain"
+                      />
+                    ) : (
+                      <span className="text-sm font-extrabold">{label}</span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-extrabold text-foreground">
+                      {t("box")} {label}
+                    </p>
+                    {box.product ? (
+                      <p className="truncate text-sm font-semibold text-muted-foreground">
+                        {productPrice(box.product)}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {box.boxStatus ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-xs font-extrabold text-success">
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {t("opened")}
+                    </span>
+                  ) : isDirectMachine ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs font-extrabold text-secondary-foreground">
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {t("waiting")}
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => openOne(box)}
+                      className="h-8 rounded-full px-4 text-xs font-extrabold"
+                    >
+                      {t("open")}
+                    </Button>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+
+          {allDone ? (
+            <Button asChild className="h-11 w-full rounded-xl font-bold">
+              <Link href="/profile?tab=purchases">{t("showInvoiceHistory")}</Link>
+            </Button>
+          ) : null}
+        </div>
+      </Container>
+    </section>
   );
 };
 export default BoxGrid;

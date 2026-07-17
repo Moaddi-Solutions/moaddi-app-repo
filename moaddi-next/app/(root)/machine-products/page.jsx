@@ -17,7 +17,7 @@ import {
   machineQRScan,
   purchasesAPI,
 } from "@/../services/serverAddresses";
-import { ChevronRight, Refrigerator, ScanQrCode } from "lucide-react";
+import { ChevronRight, Loader2, Refrigerator, ScanQrCode } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -90,6 +90,10 @@ function MachineProductsContent() {
   const [qrLoading, setQrLoading] = useState(() => !!qrFromUrl);
   const [qrError, setQrError] = useState(null);
   const [guestDialogOpen, setGuestDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  // Synchronous in-flight guard: state updates are async, so a ref is what
+  // actually blocks a rapid second click from POSTing a second purchase.
+  const creatingRef = useRef(false);
 
   const {
     user,
@@ -198,6 +202,9 @@ function MachineProductsContent() {
 
   const createPurchase = useCallback(
     (forUser) => {
+      // Block re-entry while a purchase POST is already in flight (double-click).
+      if (creatingRef.current) return;
+
       if (!machine?.products?.length) {
         toast.error(t("toastNoProductsOnMachine"));
         return;
@@ -229,6 +236,10 @@ function MachineProductsContent() {
         return;
       }
 
+      // Mark in-flight before the request so a second click is a no-op.
+      creatingRef.current = true;
+      setCreating(true);
+
       postRequest(purchasesAPI(), {
         customerId: forUser._id,
         machine,
@@ -245,6 +256,8 @@ function MachineProductsContent() {
         .then((createRes) => {
           if (!createRes?._id) {
             toast.error(tShop("toastInvalidServerResponse"));
+            creatingRef.current = false;
+            setCreating(false);
             return;
           }
           const boxes = items.map((item) => {
@@ -277,6 +290,8 @@ function MachineProductsContent() {
         })
         .catch(() => {
           toast.error(tShop("toastCouldNotCreateOrder"));
+          creatingRef.current = false;
+          setCreating(false);
         });
     },
     [machine, totalPrice, total, setUser, persistMachineInCart, router],
@@ -450,14 +465,19 @@ function MachineProductsContent() {
           <button
             type="button"
             onClick={onPurchaseHandler}
-            disabled={!canPay}
+            disabled={!canPay || creating}
+            aria-busy={creating}
             className={cn(
               "bg-primary text-primary-foreground hover:bg-primary-600 flex w-full items-center justify-center gap-1.5 rounded-xl px-5 py-3 text-sm font-extrabold transition-colors",
               "disabled:pointer-events-none disabled:opacity-50",
             )}
           >
             {tShop("checkout")}
-            <ChevronRight className="size-4" />
+            {creating ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="size-4" />
+            )}
           </button>
 
           <span className="text-muted-foreground text-center text-[11.5px] font-bold">

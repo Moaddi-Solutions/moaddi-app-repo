@@ -69,7 +69,7 @@ export default function MachineProductCard({
         onError={(e) => {
           e.currentTarget.src = "/images/placeholder.webp";
         }}
-        className="bg-muted h-29.5 w-full rounded-xl object-contain"
+        className="bg-white h-29.5 w-full rounded-xl object-contain"
       />
       <p className="mt-2.5 truncate text-sm font-extrabold">{title}</p>
       <span
