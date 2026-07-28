@@ -51,6 +51,13 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -108,7 +115,13 @@
   --success: #2e9e5b;
   --success-foreground: #ffffff;
   --success-soft: color-mix(in srgb, var(--success) 14%, transparent);
+  /* amber + blue status fills — machine lock summary chips (out of order / filled) */
+  --warning: #e3a917;
+  --warning-foreground: #10282e;
+  --info: #2b7cd3;
+  --info-foreground: #ffffff;
   --destructive: #d64545;
+  --destructive-foreground: #ffffff;
   --border: #dde8ea;
   --input: #dde8ea;
   --ring: #1fa3b8;
@@ -185,7 +198,13 @@
   --success: #4cc383;
   --success-foreground: #0b1d22;
   --success-soft: color-mix(in srgb, var(--success) 18%, transparent);
+  /* lightened for dark surfaces; foregrounds flip to ink like --success-foreground */
+  --warning: #f0b83a;
+  --warning-foreground: #0b1d22;
+  --info: #5aa9ea;
+  --info-foreground: #0b1d22;
   --destructive: #ef6a6a;
+  --destructive-foreground: #0b1d22;
   --border: #23434b;
   --input: #23434b;
   --ring: #22a6bd;
