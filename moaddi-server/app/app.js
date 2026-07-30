@@ -21,7 +21,7 @@ const { stripeSetPaymentDone } = require("./data/repos/purchases");
 const { updateExchangeRate } = require("./services/currency");
 const { createWhatsAppClient } = require("./services/whatsapp");
 const server = http.createServer(app);
-
+const { registerChatSocket } = require("./services/chatSocket");
 const io = socketIO(server, {
   cors: {
     origin: "*",
@@ -29,7 +29,10 @@ const io = socketIO(server, {
 });
 
 app.all("*", (req, res, next) => {
-  if (process.env.REQUEST_LOG === "1" || process.env.NODE_ENV === "development") {
+  if (
+    process.env.REQUEST_LOG === "1" ||
+    process.env.NODE_ENV === "development"
+  ) {
     console.log("Request received", req.url);
   }
   next();
@@ -125,18 +128,22 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // HTTP GET Method
 app.get("/test", async (req, res) => {
-  if (process.env.REQUEST_LOG === "1" || process.env.NODE_ENV === "development") {
+  if (
+    process.env.REQUEST_LOG === "1" ||
+    process.env.NODE_ENV === "development"
+  ) {
     console.log("GET Request");
   }
-  return res
-    .status(200)
-    .json({ msg: "Assalam-o-Alaikum Hello World! Welcome to JP Learning :) (ci cd worrrkssss)" });
+  return res.status(200).json({
+    msg: "Assalam-o-Alaikum Hello World! Welcome to JP Learning :) (ci cd worrrkssss)",
+  });
 });
 
 // Socket.IO connection handling
 global.io = io; // Make the io instance available globally
 io.on("connection", handleSocketConnection);
 setInterval(() => io.emit("time", new Date().toTimeString()), 30 * 1000);
+registerChatSocket(io);
 
 // API documentation (Swagger UI + raw spec) — payment endpoints only.
 require("./openapi")(app);
@@ -173,10 +180,13 @@ const bootstrap = async () => {
   // Ensure exchange rates exist before we accept requests (schema validators depend on this).
   await updateExchangeRate();
 
-  setInterval(() => {
-    // Keep refreshing in background; updateExchangeRate handles its own errors.
-    updateExchangeRate();
-  }, 1000 * 60 * 60 * 6); // 6 hours
+  setInterval(
+    () => {
+      // Keep refreshing in background; updateExchangeRate handles its own errors.
+      updateExchangeRate();
+    },
+    1000 * 60 * 60 * 6,
+  ); // 6 hours
 
   require("./services/mqtt");
 
