@@ -71,6 +71,7 @@
     "react-instantsearch": "^7.16.1",
     "react-phone-number-input": "^3.4.12",
     "react-qr-code": "^2.0.18",
+    "react-router-dom": "7.15.1",
     "react-zxing": "^2.1.0",
     "sass": "^1.89.2",
     "shadcn": "^4.13.0",

@@ -1,13 +1,12 @@
 "use server";
 import { readFile, writeFile } from "fs/promises";
-import { join } from "path";
 import walk from "walk";
 
 let walker;
 const options = {};
 const root = "./data";
 export const list = async function () {
-  const { promise, resolve, reject } = Promise.withResolvers();
+  const { promise, resolve } = Promise.withResolvers();
   const result = [];
   walker = walk.walk(root, options);
   walker.on("file", function (parent, fileStats, next) {

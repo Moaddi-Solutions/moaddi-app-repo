@@ -153,6 +153,35 @@
   transition: background-color 0.15s ease;
 }
 
+.moaddi-chat-contact-btn {
+  height: 40px;
+  border: 1px solid var(--site-header-line);
+  border-radius: 999px;
+  background: var(--site-header-surface);
+  color: var(--site-header-ink);
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.moaddi-chat-contact-btn:hover {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.moaddi-chat-contact-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.moaddi-storefront-shell:has(.moaddi-chat-page) > footer {
+  display: none;
+}
+
 .moaddi-scan-btn:hover {
   background: var(--primary-hover);
   color: var(--brand-on-solid);
@@ -286,6 +315,263 @@
 
   .moaddi-brand small {
     display: none;
+  }
+}
+
+/* Mobile/tablet bottom navigation */
+.moaddi-bottom-nav {
+  display: none;
+}
+
+.moaddi-settings-sheet {
+  --drawer-inset: max(8px, env(safe-area-inset-left));
+  width: min(
+    calc(
+      100% - max(16px, env(safe-area-inset-left) + env(safe-area-inset-right))
+    ),
+    560px
+  );
+  margin-inline: auto;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--popover);
+  box-shadow: 0 -18px 52px
+    color-mix(in srgb, var(--foreground) 18%, transparent);
+}
+
+.moaddi-settings-sheet-header {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px 10px;
+  text-align: start;
+}
+
+.moaddi-settings-close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  cursor: pointer;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--muted-foreground);
+}
+
+.moaddi-settings-close:hover {
+  color: var(--foreground);
+}
+
+.moaddi-settings-close:focus-visible,
+.moaddi-setting-option:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ring) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.moaddi-settings-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.moaddi-settings-body {
+  display: grid;
+  gap: 22px;
+  overflow-y: auto;
+  padding: 14px 20px calc(24px + env(safe-area-inset-bottom));
+}
+
+.moaddi-settings-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.moaddi-settings-label svg {
+  width: 16px;
+  height: 16px;
+}
+
+.moaddi-theme-options,
+.moaddi-language-options {
+  display: grid;
+  gap: 10px;
+}
+
+.moaddi-theme-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.moaddi-language-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.moaddi-setting-option {
+  display: flex;
+  min-height: 52px;
+  cursor: pointer;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--foreground);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: start;
+}
+
+.moaddi-setting-option:hover {
+  border-color: var(--primary);
+}
+
+.moaddi-setting-option[data-active="true"] {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.moaddi-setting-option svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.moaddi-setting-option svg:last-child {
+  margin-inline-start: auto;
+}
+
+@media (max-width: 1023px) {
+  .moaddi-site-head {
+    display: none;
+  }
+
+  .moaddi-bottom-nav {
+    position: fixed;
+    z-index: 45;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    padding: 0 8px max(8px, env(safe-area-inset-bottom));
+    padding-inline: max(8px, env(safe-area-inset-left))
+      max(8px, env(safe-area-inset-right));
+    pointer-events: none;
+  }
+
+  .moaddi-bottom-nav nav {
+    max-width: 100%;
+    pointer-events: auto;
+  }
+
+  .moaddi-bottom-dock {
+    width: max-content;
+    max-width: 100%;
+    height: 66px;
+    gap: 4px;
+    border-color: var(--site-header-line);
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--site-header-surface) 94%, transparent);
+    box-shadow:
+      0 14px 40px color-mix(in srgb, var(--foreground) 18%, transparent),
+      0 2px 10px color-mix(in srgb, var(--foreground) 10%, transparent);
+    padding: 6px 8px;
+  }
+
+  .moaddi-dock-slot {
+    flex: none;
+    padding: 3px !important;
+    color: var(--site-header-muted);
+  }
+
+  .moaddi-dock-slot:hover,
+  .moaddi-dock-slot[data-active="true"] {
+    background: var(--accent);
+    color: var(--primary-text);
+  }
+
+  .moaddi-dock-link {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: inherit;
+    color: inherit;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font-weight: inherit;
+    text-decoration: none;
+  }
+
+  .moaddi-dock-link:hover {
+    background: transparent;
+    color: inherit;
+  }
+
+  .moaddi-dock-link:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ring) 42%, transparent);
+    outline-offset: 2px;
+  }
+
+  .moaddi-dock-link svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    stroke-width: 2.2;
+  }
+
+  .moaddi-dock-link span {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .moaddi-dock-slot-scan {
+    background: var(--primary);
+    box-shadow:
+      0 7px 18px color-mix(in srgb, var(--primary) 32%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, white 22%, transparent);
+    color: var(--primary-foreground);
+  }
+
+  .moaddi-dock-slot-scan:hover {
+    background: var(--primary-hover);
+    color: var(--primary-foreground);
+  }
+
+  .moaddi-dock-slot-scan[data-active="true"] {
+    background: var(--primary-hover);
+    color: var(--primary-foreground);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent),
+      0 8px 20px color-mix(in srgb, var(--primary) 38%, transparent);
+  }
+}
+
+@media (max-width: 420px) {
+  .moaddi-language-options {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -771,4 +1057,447 @@
   .moaddi-404-rise {
     animation: none;
   }
+}
+
+/* ==========================================================================
+   Chat — conversations inbox + thread
+   Brand rule: gold is reserved for offers/discounts/low-stock, so chat runs
+   entirely on the teal ramp. Personality comes from weight and tracking
+   because Cairo is the only typeface.
+   ========================================================================== */
+
+/*
+ * Cairo (the site's only typeface, see --font-sans) has no color emoji
+ * glyphs, and the rest of the site stack — Tahoma, Arial, "Segoe UI", "Noto
+ * Sans Arabic" — doesn't reliably reach one either ("Segoe UI" is not the
+ * same font as the color-emoji "Segoe UI Emoji" on Windows). Font fallback
+ * is resolved per character, so appending real emoji fonts after Cairo here
+ * fixes rendering without touching the global --font-sans used everywhere
+ * else on the site. Scoped to chat text specifically (bubble content, inbox
+ * previews) rather than the whole app.
+ */
+:root {
+  --chat-emoji-font-stack:
+    Cairo, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji", Tahoma, Arial, "Segoe UI", "Noto Sans Arabic",
+    sans-serif;
+}
+
+.moaddi-chat-emoji-font {
+  font-family: var(--chat-emoji-font-stack);
+}
+
+:root {
+  /* canvas behind the message run — a touch cooler than --card so the thread
+     reads as a surface the bubbles sit on, not another panel */
+  --chat-rail: #f5fafb;
+  --chat-bubble-in: #ffffff;
+  --chat-bubble-in-text: #10282e;
+  --chat-bubble-out: #147f91;
+  --chat-bubble-out-text: #ffffff;
+  --chat-identity: #dff2f5;
+  --chat-identity-text: #0f5d6d;
+  --chat-hairline: #dde8ea;
+}
+
+.dark {
+  --chat-rail: #0e2429;
+  --chat-bubble-in: #17353c;
+  --chat-bubble-in-text: #e8f1f2;
+  --chat-bubble-out: #16899b;
+  --chat-bubble-out-text: #ffffff;
+  --chat-identity: #193f46;
+  --chat-identity-text: #7bd9e6;
+  --chat-hairline: #23434b;
+}
+
+/* Receipt alignment — the signature. Times are a column, not prose. */
+.moaddi-chat-time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ---- Inline timestamp (text + image bubbles) ----
+   Floated so the last line of text wraps AROUND it rather than running
+   under it — when the last line is too long, the float drops to its own
+   line by itself, never overlapping. */
+.moaddi-chat-inline-time {
+  float: inline-end;
+  margin-inline-start: 8px;
+  margin-block-start: 4px;
+  /* Pulls the chip into the bubble's bottom padding instead of adding a
+     whole extra line of height. */
+  margin-block-end: -4px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+[data-slot="bubble"][data-variant="default"] .moaddi-chat-inline-time {
+  color: color-mix(in srgb, var(--chat-bubble-out-text) 72%, transparent);
+}
+
+[data-slot="bubble"][data-variant="muted"] .moaddi-chat-inline-time {
+  color: var(--muted-foreground);
+}
+
+/* Image bubbles: no padding to float into, so the time rides a scrim. */
+.moaddi-chat-media-scrim {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: 44px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), transparent);
+  pointer-events: none;
+}
+
+.moaddi-chat-media-time {
+  position: absolute;
+  inset-inline-end: 8px;
+  inset-block-end: 6px;
+  z-index: 1;
+  color: #fff;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ---- Inbox ---- */
+
+.moaddi-chat-eyebrow {
+  color: var(--primary-text);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.moaddi-chat-inbox-title {
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.moaddi-chat-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 11px;
+  border-radius: 16px;
+  padding: 11px 12px;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.moaddi-chat-row:hover {
+  background: var(--muted);
+}
+
+.moaddi-chat-row[aria-current="page"] {
+  background: var(--accent);
+}
+
+.moaddi-chat-row[aria-current="page"]::before {
+  position: absolute;
+  inset-block: 14px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--primary);
+  content: "";
+}
+
+.moaddi-chat-name {
+  font-size: 13.5px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.moaddi-chat-preview {
+  color: var(--muted-foreground);
+  font-family: var(--chat-emoji-font-stack);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.moaddi-chat-meta {
+  color: var(--muted-foreground);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.moaddi-chat-unread-badge {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--primary);
+  padding: 0 5px;
+  color: var(--primary-foreground);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.moaddi-chat-button-badge {
+  position: absolute;
+  inset-block-start: -6px;
+  inset-inline-end: -6px;
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--background);
+  border-radius: 999px;
+  background: var(--destructive);
+  padding: 0 4px;
+  color: var(--destructive-foreground);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* ---- Identity ---- */
+
+.moaddi-chat-identity {
+  background: var(--chat-identity);
+  color: var(--chat-identity-text);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+/* support reads as the house voice — the one identity that carries the ink */
+.moaddi-chat-identity[data-role="support"] {
+  background: linear-gradient(145deg, var(--primary-strong), var(--primary));
+  color: #ffffff;
+}
+
+.moaddi-chat-rolechip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  background: var(--accent);
+  padding: 2px 8px;
+  color: var(--accent-foreground);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+/* ---- Thread ---- */
+
+.moaddi-chat-rail {
+  background: var(--chat-rail);
+}
+
+.moaddi-chat-thread-title {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+/* live channel state — calm, not a klaxon */
+.moaddi-chat-pulse {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--success);
+}
+
+.moaddi-chat-pulse[data-state="connecting"] {
+  background: var(--warning);
+  animation: moaddi-chat-breathe 1.6s ease-in-out infinite;
+}
+
+.moaddi-chat-pulse[data-state="offline"] {
+  background: var(--destructive);
+}
+
+@keyframes moaddi-chat-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* The separator rules carry no `content`, so they never paint on their own. */
+[data-slot="marker"][data-variant="separator"]::before,
+[data-slot="marker"][data-variant="separator"]::after {
+  content: "";
+}
+
+/* date rule — a short tear flanking the label, not a full-width divider */
+.moaddi-chat-rail [data-slot="marker"][data-variant="separator"]::before,
+.moaddi-chat-rail [data-slot="marker"][data-variant="separator"]::after {
+  max-width: 88px;
+  background: color-mix(in srgb, var(--muted-foreground) 32%, transparent);
+}
+
+.moaddi-chat-datemark {
+  color: var(--muted-foreground);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.moaddi-chat-composer {
+  border-radius: 16px;
+  background: var(--card);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.moaddi-chat-composer:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moaddi-chat-pulse[data-state="connecting"] {
+    animation: none;
+  }
+  .moaddi-chat-row {
+    transition: none;
+  }
+}
+
+/* ---- Voice note scrub bar — plain <input type="range">, styled to match ---- */
+
+.chat-audio-seek {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 25%, transparent);
+  outline: none;
+}
+
+.chat-audio-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: currentColor;
+  cursor: pointer;
+}
+
+.chat-audio-seek::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: currentColor;
+  cursor: pointer;
+}
+
+.chat-audio-seek:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ---- Reactions ---- */
+
+.moaddi-chat-reaction-bar {
+  display: inline-flex;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--popover);
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.moaddi-chat-reaction-bar button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 21px;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.moaddi-chat-reaction-bar button:hover,
+.moaddi-chat-reaction-bar button[data-active="true"] {
+  background: var(--accent);
+  transform: scale(1.15);
+}
+
+/* A separate card below the reaction pill, WhatsApp/Messenger-style, rather
+   than merging Reply into the same rounded pill as the emoji row. */
+.moaddi-chat-actions-menu {
+  min-width: 9.5rem;
+  border-radius: 0.875rem;
+  background: var(--popover);
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.moaddi-chat-actions-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: start;
+}
+
+.moaddi-chat-actions-item:hover {
+  background: var(--accent);
+}
+
+.moaddi-chat-reaction-chips {
+  display: inline-flex;
+  gap: 3px;
+  position: absolute;
+  inset-block-end: -10px;
+  inset-inline-start: 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.moaddi-chat-reaction-chips.justify-end {
+  inset-inline-start: auto;
+  inset-inline-end: 10px;
+}
+
+.moaddi-chat-reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--chat-hairline);
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.moaddi-chat-reaction-chip[data-mine="true"] {
+  border-color: var(--primary);
 }

@@ -10,6 +10,8 @@
     "ensure-seed-groups": "tsx scripts/ensure-seed-groups.js",
     "typecheck": "tsc --noEmit",
     "test:geo-currency": "node scripts/test-geo-currency.js",
+    "chat:audit": "tsx scripts/audit-chat-integrity.ts",
+    "test:chat-integrity": "tsx scripts/test-chat-integrity.ts",
     "seed:products-active": "node scripts/seed-products-active-test.js",
     "start": "tsx index.js",
     "dev": "nodemon --exec tsx index.js --ext js,ts,mjs,cjs,json",

@@ -10,7 +10,16 @@ export function clearAuthHeaders() {
   delete axios.defaults.headers.Authorization;
 }
 
-export const postRequest = async (url, body = null) => {
+/**
+ * @param {string} url
+ * @param {unknown} [body]
+ * @param {import("axios").AxiosRequestConfig} [config] optional per-call config
+ *   (onUploadProgress, signal, timeout, ...). Every existing call site passes
+ *   0-2 args, so `config` is undefined there and the request is unchanged —
+ *   this parameter exists only for chat media uploads, which need their own
+ *   timeout (the 20s default aborts real-world uploads) and progress callback.
+ */
+export const postRequest = async (url, body = null, config = undefined) => {
   console.log("url", url);
   if (url !== signInAddress()) {
     let cookies = Cookies.get("user");
@@ -22,9 +31,9 @@ export const postRequest = async (url, body = null) => {
   // try {
   let response;
   if (body) {
-    response = await axios.post(url, body);
+    response = config ? await axios.post(url, body, config) : await axios.post(url, body);
   } else {
-    response = await axios.post(url);
+    response = config ? await axios.post(url, undefined, config) : await axios.post(url);
   }
   return response.data;
   // } catch (error) {
@@ -52,28 +61,32 @@ export const getRequest = async (url) => {
   // }
 };
 
-export const putRequest = async (url, body = {}) => {
+export const putRequest = async (url, body = {}, config = undefined) => {
   let cookies = Cookies.get("user");
   if (cookies) {
     cookies = JSON.parse(cookies);
     axios.defaults.headers["Authorization"] = "Bearer " + cookies.token;
   }
   // try {
-  const response = await axios.put(url, body);
+  const response = config
+    ? await axios.put(url, body, config)
+    : await axios.put(url, body);
   return response?.data;
   // } catch (error) {
   //   return error?.response?.data;
   // }
 };
 
-export const deleteRequest = async (url) => {
+export const deleteRequest = async (url, config = undefined) => {
   let cookies = Cookies.get("user");
   if (cookies) {
     cookies = JSON.parse(cookies);
     axios.defaults.headers["Authorization"] = "Bearer " + cookies.token;
   }
   // try {
-  const response = await axios.delete(url);
+  const response = config
+    ? await axios.delete(url, config)
+    : await axios.delete(url);
   return response?.data;
   // } catch (error) {
   //   return error?.response?.data;

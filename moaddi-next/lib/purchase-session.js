@@ -80,6 +80,26 @@ export function isNoticeTargetPath(pathname, href) {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+/**
+ * Fields that only ever come from the sign-in/cookie flow, never from a
+ * profile fetch. `GET /users/:id` returns the raw Mongo user document, which
+ * has no `token` field — JWTs are never persisted server-side. Every branch
+ * below that returns `next` (the profile response) would otherwise silently
+ * drop the caller's auth token from client state.
+ */
+const SESSION_ONLY_FIELDS = ["token"];
+
+function withPreservedSessionFields(prev, merged) {
+  if (!prev || !merged || merged === prev) return merged;
+  const patch = {};
+  for (const field of SESSION_ONLY_FIELDS) {
+    if (prev[field] !== undefined && merged[field] === undefined) {
+      patch[field] = prev[field];
+    }
+  }
+  return Object.keys(patch).length ? { ...merged, ...patch } : merged;
+}
+
 export function mergeServerUser(prev, next) {
   // Never resurrect a signed-out session: a background refetch that resolves
   // after logout has nothing to merge into, so keep `prev` (null) as-is.
@@ -88,30 +108,25 @@ export function mergeServerUser(prev, next) {
   const prevP = prev?.purchase;
   const nextP = next.purchase;
 
+  let merged = next;
+
   if (!nextP && prevP && isAwaitingPaymentPurchase(prevP)) {
-    return { ...next, purchase: prevP };
-  }
-
-  if (!prevP?._id || !nextP?._id) {
-    return next;
-  }
-  if (String(prevP._id) !== String(nextP._id)) {
-    return next;
-  }
-
-  if (nextP.boxes == null && prevP.boxes != null) {
-    return { ...next, purchase: { ...nextP, boxes: prevP.boxes } };
-  }
-
-  if (
+    merged = { ...next, purchase: prevP };
+  } else if (!prevP?._id || !nextP?._id) {
+    merged = next;
+  } else if (String(prevP._id) !== String(nextP._id)) {
+    merged = next;
+  } else if (nextP.boxes == null && prevP.boxes != null) {
+    merged = { ...next, purchase: { ...nextP, boxes: prevP.boxes } };
+  } else if (
     Array.isArray(nextP.boxes) &&
     nextP.boxes.length === 0 &&
     Array.isArray(prevP.boxes) &&
     prevP.boxes.length > 0 &&
     isAwaitingPaymentPurchase(nextP)
   ) {
-    return { ...next, purchase: { ...nextP, boxes: prevP.boxes } };
+    merged = { ...next, purchase: { ...nextP, boxes: prevP.boxes } };
   }
 
-  return next;
+  return withPreservedSessionFields(prev, merged);
 }

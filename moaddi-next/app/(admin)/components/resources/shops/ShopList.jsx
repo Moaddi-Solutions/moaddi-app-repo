@@ -2,8 +2,9 @@ import AdminList from "@/(admin)/components/kit/AdminList";
 import AdminShadcnTable, {
   AdminBooleanBadge,
 } from "@/(admin)/components/AdminShadcnTable";
-import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
+import { AdminContactUserButton, AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
 import { Fit } from "@/../services/data-provider";
+import { useGetManyReference } from "ra-core";
 
 export const ShopListItems = [
   { key: "name", label: "Name" },
@@ -25,6 +26,25 @@ export const ShopListItems = [
   },
 ];
 
+/**
+ * Shops carry no owner field of their own — ownership is inverted onto the
+ * vendor/user record (`user.shopId`). Resolve it by looking up vendors
+ * scoped to this shop; only offer the button when exactly one active
+ * vendor owns it, since with zero or several there's no single "the owner"
+ * to message.
+ */
+const ContactShopOwnerButton = ({ record }) => {
+  const { data } = useGetManyReference("vendors", {
+    target: "shopId",
+    id: record.id ?? record._id,
+  });
+  const activeOwners = (data ?? []).filter(
+    ({ isActive, isDeleted }) => isActive !== false && isDeleted !== true,
+  );
+  if (activeOwners.length !== 1) return null;
+  return <AdminContactUserButton targetUserId={activeOwners[0]?.id ?? activeOwners[0]?._id} />;
+};
+
 const ShopList = () => (
   <AdminList sort={{ field: "name", order: "DESC" }}>
     <AdminShadcnTable
@@ -33,6 +53,7 @@ const ShopList = () => (
       actions={(record) => (
         <>
           <AdminEditButton record={record} />
+          <ContactShopOwnerButton record={record} />
           <AdminDeleteButton record={record} />
         </>
       )}

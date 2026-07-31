@@ -22,6 +22,7 @@ const { updateExchangeRate } = require("./services/currency");
 const { createWhatsAppClient } = require("./services/whatsapp");
 const server = http.createServer(app);
 const { registerChatSocket } = require("./services/chatSocket");
+const { startChatMediaSweeper } = require("./services/chatMediaSweeper");
 const io = socketIO(server, {
   cors: {
     origin: "*",
@@ -187,6 +188,9 @@ const bootstrap = async () => {
     },
     1000 * 60 * 60 * 6,
   ); // 6 hours
+
+  // Removes chat uploads that were never attached to a sent message.
+  startChatMediaSweeper();
 
   require("./services/mqtt");
 

@@ -1,4 +1,5 @@
 "use client";
+import AdminConversationsScreen from "@/(admin)/components/chat/AdminConversationsScreen";
 import Dashboard from "@/(admin)/components/Dashboard";
 import Layout, { Login } from "@/(admin)/components/layout/Layout";
 import blocks from "@/(admin)/components/resources/blocks";
@@ -30,9 +31,14 @@ import { isDashboardAdminRole, isVendorRole, normalizeDashboardRole } from "@/..
 import authProvider from "@/../services/auth-provider";
 import { getAdminDataProvider } from "@/../services/data-provider";
 import { CoreAdmin as Admin, CustomRoutes, Resource } from "ra-core";
-import { Route } from "react-router-dom";
+import { Route, useParams } from "react-router-dom";
 
 const adminDataProvider = getAdminDataProvider();
+
+const ConversationRoute = () => {
+  const { conversationId } = useParams();
+  return <AdminConversationsScreen selectedConversationId={conversationId ?? null} />;
+};
 
 const AdminApp = () => {
   return (
@@ -51,6 +57,12 @@ const AdminApp = () => {
         return [
         <CustomRoutes key="custom-routes">
           <Route path="/home" element={<Dashboard />} />
+          {(isDashboardAdminRole(role) || isVendorRole(role)) && (
+            <Route path="/conversations" element={<AdminConversationsScreen />} />
+          )}
+          {(isDashboardAdminRole(role) || isVendorRole(role)) && (
+            <Route path="/conversations/:conversationId" element={<ConversationRoute />} />
+          )}
         </CustomRoutes>,
         ...(isDashboardAdminRole(role)
           ? [

@@ -1,7 +1,7 @@
 /** Helpers for invoice / post-payment purchase loading. */
 
 /** Unit price (campaign if set, else sale) and tax % from flat or nested product shape. */
-export function getProductPricing(product, preferredCurrency = "SAR") {
+export function getProductPricing(product) {
   const pick = (row) => {
     if (!row || typeof row !== "object") return { price: 0, tax: 0 };
     const sale = Number(row.salePrice);
