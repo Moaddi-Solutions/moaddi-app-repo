@@ -1,14 +1,19 @@
-import { AdminCreate, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
+import {
+  AdminCreate,
+  AdminFormSection,
+  AdminSimpleForm,
+} from "@/(admin)/components/kit/AdminForm";
 import { AdminPhoneInput } from "@/(admin)/components/kit/inputs/AdminPhoneInput";
 import { VendorEditItems } from "./VendorEdit";
 
-const VendorCreateItems = [
-  <AdminPhoneInput key="_id" source="_id" label="Phone number" defaultCountry="SA" />,
-  ...VendorEditItems,
-];
 const create = () => (
   <AdminCreate>
-    <AdminSimpleForm>{VendorCreateItems}</AdminSimpleForm>
+    <AdminSimpleForm>
+      <AdminFormSection title="Contact">
+        <AdminPhoneInput source="_id" label="Phone number" defaultCountry="SA" />
+      </AdminFormSection>
+      <VendorEditItems />
+    </AdminSimpleForm>
   </AdminCreate>
 );
 

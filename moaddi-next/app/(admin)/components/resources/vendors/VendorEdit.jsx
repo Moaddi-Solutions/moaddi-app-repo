@@ -1,5 +1,9 @@
-import { AdminEdit, AdminSimpleForm } from "@/(admin)/components/kit/AdminForm";
-import { BooleanInput, PasswordInput, TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
+import {
+  AdminEdit,
+  AdminFormSection,
+  AdminSimpleForm,
+} from "@/(admin)/components/kit/AdminForm";
+import { BooleanInput, PasswordInput, ReferenceInput, TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 
 const equalToPassword = (value, allValues) => {
   if (value !== allValues.password) {
@@ -7,22 +11,37 @@ const equalToPassword = (value, allValues) => {
   }
 };
 
-export const VendorEditItems = [
-  <TextInput key="name" source="name" />,
-  <TextInput key="role" source="role" defaultValue="Vendor" className="hidden" label={false} />,
-  <BooleanInput key="isActive" source="isActive" label="Active" />,
-  <PasswordInput key={"password"} source="password" label="Password" />,
-  <PasswordInput
-    key={"re"}
-    source="confirm_password"
-    label="Confirm password"
-    validate={equalToPassword}
-  />,
-];
+export const VendorEditItems = () => (
+  <>
+    <AdminFormSection title="Identity">
+      <TextInput source="name" />
+      <TextInput source="role" defaultValue="Vendor" className="hidden" label={false} />
+    </AdminFormSection>
+
+    <AdminFormSection title="Status">
+      <BooleanInput source="isActive" label="Active" />
+    </AdminFormSection>
+
+    <AdminFormSection title="Assignment" description="The shop this vendor is the contact for.">
+      <ReferenceInput reference="shops" source="shopId" />
+    </AdminFormSection>
+
+    <AdminFormSection title="Access" description="Leave blank to keep the current password.">
+      <PasswordInput source="password" label="Password" />
+      <PasswordInput
+        source="confirm_password"
+        label="Confirm password"
+        validate={equalToPassword}
+      />
+    </AdminFormSection>
+  </>
+);
 
 const VendorEdit = () => (
   <AdminEdit>
-    <AdminSimpleForm showDelete>{VendorEditItems}</AdminSimpleForm>
+    <AdminSimpleForm showDelete>
+      <VendorEditItems />
+    </AdminSimpleForm>
   </AdminEdit>
 );
 

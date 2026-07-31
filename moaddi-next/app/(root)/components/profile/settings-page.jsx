@@ -19,14 +19,17 @@ import {
   Clock3,
   Gift,
   LogOut,
+  MessageCircle,
   Pencil,
   ReceiptText,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import GiftsPanel from "./gifts-panel";
+import PreferencesDrawer from "./preferences-drawer";
 import PurchaseHistory from "./purchase-history";
 import UserProfileSettings from "./user-profile-settings";
 
@@ -56,12 +59,10 @@ export default function SettingsPage({ preferredCurrency }) {
   if (!user) {
     return (
       <main className="mx-auto flex min-h-[55vh] max-w-3xl items-center px-4 py-16">
-        <Card className="w-full border-border/80 bg-card">
+        <Card className="border-border/80 bg-card w-full">
           <CardHeader>
             <CardTitle>{t("title")}</CardTitle>
-            <CardDescription>
-              {t("signedOutDescription")}
-            </CardDescription>
+            <CardDescription>{t("signedOutDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild>
@@ -87,7 +88,7 @@ export default function SettingsPage({ preferredCurrency }) {
             type="button"
             variant="ghost"
             size="sm"
-            className="w-fit gap-1 rounded-full font-bold text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground w-fit gap-1 rounded-full font-bold"
             onClick={() => openDetail("overview")}
           >
             <BackChevron className="size-4" aria-hidden="true" />
@@ -108,27 +109,35 @@ export default function SettingsPage({ preferredCurrency }) {
 
 function ProfileOverview({ user, onOpenDetail, onSignOut }) {
   const t = useTranslations("Profile");
-  const { isPending, data = [], total = 0 } = useGetManyReference("purchases", {
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const {
+    isPending,
+    data = [],
+    total = 0,
+  } = useGetManyReference("purchases", {
     id: user._id,
     target: "customerId",
     pagination: { page: 1, perPage: 100 },
   });
 
   const orders = data.length > 0 ? data : user.purchase ? [user.purchase] : [];
-  const lastOrder = useMemo(() => getLastOrder(orders, user.purchase), [orders, user.purchase]);
+  const lastOrder = useMemo(
+    () => getLastOrder(orders, user.purchase),
+    [orders, user.purchase],
+  );
   const orderCount = total || orders.length;
   const location = lastOrder?.machine?.location;
 
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-black leading-tight text-pretty sm:text-4xl">
+        <h1 className="text-3xl leading-tight font-black text-pretty sm:text-4xl">
           {t("title")}
         </h1>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Card className="overflow-hidden rounded-xl border-primary/20 bg-primary text-primary-foreground shadow-sm">
+        <Card className="border-primary/20 bg-primary text-primary-foreground overflow-hidden rounded-xl shadow-sm">
           <CardContent className="flex flex-col items-center justify-center gap-3 p-6 text-center">
             <Avatar className="size-16 border border-white/45 bg-white/10">
               <AvatarFallback className="bg-white/15 text-lg font-black text-white">
@@ -136,7 +145,9 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
               </AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-col gap-1">
-              <h2 className="truncate text-lg font-black">{displayName(user, t)}</h2>
+              <h2 className="truncate text-lg font-black">
+                {displayName(user, t)}
+              </h2>
               <p className="truncate text-xs font-bold text-white/85" dir="ltr">
                 {user._id}
                 {location ? ` - ${location}` : ""}
@@ -155,9 +166,12 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
         </Card>
 
         <div className="flex min-w-0 flex-col gap-4">
-          <Card className="overflow-hidden rounded-xl border-border/80 bg-card" size="sm">
+          <Card
+            className="border-border/80 bg-card overflow-hidden rounded-xl"
+            size="sm"
+          >
             <CardHeader className="pb-0">
-              <CardDescription className="font-black uppercase tracking-[0.16em] text-primary-text">
+              <CardDescription className="text-primary-text font-black tracking-[0.16em] uppercase">
                 {t("orders")}
               </CardDescription>
             </CardHeader>
@@ -168,7 +182,7 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
                 detail={
                   lastOrder
                     ? `${shortOrderId(lastOrder, t)} - ${formatStatus(lastOrder.status, t)}`
-                  : isPending
+                    : isPending
                       ? t("loading")
                       : t("noOrdersYet")
                 }
@@ -198,22 +212,34 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
                 onClick={() => onOpenDetail("gifts")}
               />
               <ProfileRow
+                icon={MessageCircle}
+                title={t("conversations")}
+                detail={t("conversationsDetail")}
+                href="/conversations"
+              />
+              <ProfileRow
                 icon={CircleHelp}
                 title={t("helpSupport")}
                 detail={t("helpSupportDetail")}
                 href="/contact"
               />
+              <ProfileRow
+                icon={Settings}
+                title={t("appSettings")}
+                detail={t("appSettingsDetail")}
+                onClick={() => setPreferencesOpen(true)}
+              />
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl border-border/80 bg-card" size="sm">
+          <Card className="border-border/80 bg-card rounded-xl" size="sm">
             <CardContent className="p-3">
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start font-black text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+                className="text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/25 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-start font-black transition-colors focus-visible:ring-[3px] focus-visible:outline-none"
                 onClick={onSignOut}
               >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <span className="bg-destructive/10 text-destructive flex size-10 shrink-0 items-center justify-center rounded-lg">
                   <LogOut aria-hidden="true" />
                 </span>
                 {t("signOut")}
@@ -222,6 +248,10 @@ function ProfileOverview({ user, onOpenDetail, onSignOut }) {
           </Card>
         </div>
       </div>
+      <PreferencesDrawer
+        open={preferencesOpen}
+        onOpenChange={setPreferencesOpen}
+      />
     </section>
   );
 }
@@ -246,14 +276,14 @@ function ProfileRow({
       </div>
       <span className="ms-auto flex min-w-0 shrink-0 items-center gap-2">
         {detail ? (
-          <span className="max-w-[220px] truncate text-xs font-black text-primary-text">
+          <span className="text-primary-text max-w-[220px] truncate text-xs font-black">
             {detail}
           </span>
         ) : null}
         {showChevron ? (
           <ChevronRight
             aria-hidden="true"
-            className="shrink-0 text-muted-foreground"
+            className="text-muted-foreground shrink-0"
           />
         ) : null}
       </span>
@@ -280,7 +310,7 @@ function ProfileRow({
 
 function IconTile({ children }) {
   return (
-    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
+    <span className="bg-accent text-primary-text flex size-10 shrink-0 items-center justify-center rounded-lg">
       {children}
     </span>
   );

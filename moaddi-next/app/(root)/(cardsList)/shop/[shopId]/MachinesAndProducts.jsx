@@ -2,6 +2,7 @@
 import BlockHeader from "@/(root)/components/BlockHeader";
 import MachineCard from "@/(root)/components/MachineCard";
 import ProductCard from "@/(root)/components/ProductCard";
+import { useRegisterContactTarget } from "@/(root)/context/contact-target-context";
 import { useGetManyReference } from "@/(root)/hook/ra/useGetManyReference";
 import { Container } from "@/../components/ui/container";
 import { Skeleton } from "@/../components/ui/skeleton";
@@ -47,9 +48,31 @@ const MachinesAndProducts = ({ id }) => {
     target: "shopId",
     id,
   });
+  const { data: rawShopUsers, isPending: shopUsersPending } =
+    useGetManyReference("vendors", {
+      target: "shopId",
+      id,
+    });
   const data = !isPending
     ? (rawData ?? []).filter(({ isActive }) => isActive)
     : [];
+  const shop = data[0]?.shop?.[0];
+  const activeShopUsers = (rawShopUsers ?? []).filter(
+    ({ isActive, isDeleted }) => isActive !== false && isDeleted !== true,
+  );
+  const shopOwnerId =
+    shop?.shopOwner?._id ??
+    shop?.ownerId ??
+    shop?.vendorId ??
+    (activeShopUsers.length === 1 ? activeShopUsers[0]?._id : null);
+
+  useRegisterContactTarget({
+    kind: "shop-owner",
+    targetUserId: shopOwnerId,
+    resourceId: id,
+    isPending: isPending || shopUsersPending,
+  });
+
   const products = !isPending
     ? Array.from(
         data
@@ -104,7 +127,7 @@ const MachinesAndProducts = ({ id }) => {
                     ))}
                 </Container>
               ) : (
-                <p className="mx-12 my-6 text-muted-foreground">
+                <p className="text-muted-foreground mx-12 my-6">
                   {t("noMachines")}
                 </p>
               )}
@@ -120,7 +143,7 @@ const MachinesAndProducts = ({ id }) => {
                     ))}
                 </Container>
               ) : (
-                <p className="mx-12 my-6 text-muted-foreground">
+                <p className="text-muted-foreground mx-12 my-6">
                   {t("noProducts")}
                 </p>
               )}

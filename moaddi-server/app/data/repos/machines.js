@@ -54,6 +54,49 @@ const attachBoxesToProducts = (machine) => {
   };
 };
 
+const activeVendorLookup = (localVendorField = "$vendorId") => ({
+  $lookup: {
+    from: "users",
+    let: { vendorId: localVendorField },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", "$$vendorId"] },
+          isActive: { $ne: false },
+          isDeleted: { $ne: true },
+        },
+      },
+      {
+        $project: {
+          password: 0,
+          otp: 0,
+        },
+      },
+    ],
+    as: "shopOwner",
+  },
+});
+
+const attachShopOwnerToShop = () => ({
+  $addFields: {
+    shopOwner: { $arrayElemAt: ["$shopOwner", 0] },
+    shop: {
+      $map: {
+        input: "$shop",
+        as: "shop",
+        in: {
+          $mergeObjects: [
+            "$$shop",
+            {
+              shopOwner: { $arrayElemAt: ["$shopOwner", 0] },
+            },
+          ],
+        },
+      },
+    },
+  },
+});
+
 const getProductStockById = (machines) => {
   const stockByProduct = new Map();
   for (const machine of machines ?? []) {
@@ -603,6 +646,8 @@ let getByShopId = async (shopId, skip = 0, limit = 1000, preferredCurrency) => {
           as: "shop",
         },
       },
+      activeVendorLookup(),
+      attachShopOwnerToShop(),
       {
         $lookup: {
           from: "boxes",
@@ -742,6 +787,8 @@ let getByShopIdVendorId = async (
           as: "shop",
         },
       },
+      activeVendorLookup(),
+      attachShopOwnerToShop(),
       {
         $lookup: {
           from: "boxes",

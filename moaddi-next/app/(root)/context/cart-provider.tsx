@@ -12,6 +12,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -108,7 +109,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (machine) localStorage.setItem("machine", JSON.stringify(machine));
   }, [machine]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     setCartItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === product.id);
 
@@ -122,20 +123,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return [...prevItems, { ...product, quantity: 1 }];
       }
     });
-  };
+  }, []);
 
-  const removeFromCart = (productId: number) => {
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => item.id !== productId),
-    );
+  const removeFromCart = useCallback((productId: number) => {
+    setCartItems((prevItems) => {
+      const next = prevItems.filter((item) => item.id !== productId);
+      // If cart is empty after removal, clear localStorage
+      if (next.length === 0) localStorage.removeItem("cart");
+      return next;
+    });
+  }, []);
 
-    // If cart is empty after removal, clear localStorage
-    if (cartItems.length === 1) {
-      localStorage.removeItem("cart");
-    }
-  };
-
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = useCallback((productId: number, quantity: number) => {
     if (quantity < 1) return;
 
     setCartItems((prevItems) =>
@@ -143,12 +142,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         item.id === productId ? { ...item, quantity } : item,
       ),
     );
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
     localStorage.removeItem("cart");
-  };
+  }, []);
 
   /**
    * Authoritative shopper logout. Clears the auth cookie, the mirrored
@@ -177,26 +176,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     0,
   );
 
+  // Every useChat()/useCart() consumer in the tree re-renders whenever this
+  // value's identity changes. Without this memo, a new object was minted on
+  // every CartProvider render, defeating downstream useMemo/useCallback and
+  // driving a refetch loop in the chat screens (see chat-context.tsx).
+  const value = useMemo<CartContextType>(
+    () => ({
+      user,
+      isPending,
+      setUser,
+      machine,
+      setMachine,
+      logout,
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      totalItems,
+      subtotal,
+    }),
+    [
+      user,
+      isPending,
+      machine,
+      logout,
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      totalItems,
+      subtotal,
+    ],
+  );
+
   return (
-    <CartContext.Provider
-      value={{
-        user,
-        isPending,
-        setUser,
-        machine,
-        setMachine,
-        logout,
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        subtotal,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={value}>{children}</CartContext.Provider>
   );
 }
 

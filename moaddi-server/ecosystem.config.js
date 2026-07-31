@@ -9,6 +9,8 @@ module.exports = {
         "node_modules",
         "images",
         "public",
+        // private chat media — without this every upload restarts the server
+        "chat-uploads",
         "db.json",
         "app/services/test",
       ],

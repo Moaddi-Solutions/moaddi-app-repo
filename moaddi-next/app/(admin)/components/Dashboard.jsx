@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   Banknote,
   Handshake,
+  MessageCircle,
   Package,
   Plus,
   Radio,
@@ -524,6 +525,17 @@ const Dashboard = () => {
               Your machines, payments and vendors â€” one calm view. Everything
               below is live.
             </p>
+            {(isAdmin || isVendor) && (
+              <ShadcnButton
+                asChild
+                className="mt-5 h-10 rounded-xl bg-white text-sm font-extrabold text-slate-950 hover:bg-white/90"
+              >
+                <a href="/conversations">
+                  <MessageCircle data-icon="inline-start" />
+                  Open conversations
+                </a>
+              </ShadcnButton>
+            )}
           </div>
           <FleetPulse
             machines={machines}

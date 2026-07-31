@@ -25,68 +25,63 @@ export function deferReject(error) {
 
 /** Prefer localStorage; fall back to cookie and sync so react-admin auth stays consistent. */
 export function readDashboardUser() {
-  let raw = {};
-  let fromCookie = false;
-  const stored = getLocalStorageItem("user");
-  if (stored) {
-    try {
-      raw = JSON.parse(stored);
-    } catch {
-      raw = {};
-    }
-  } else {
-    const cookie = Cookies.get("user");
-    if (cookie) {
-      fromCookie = true;
-      try {
-        raw = JSON.parse(cookie);
-      } catch {
-        raw = {};
-      }
-    }
-  }
-  const role = normalizeDashboardRole(raw.role);
-  const user = { ...raw, role };
-  if (Object.keys(raw).length && (fromCookie || role !== raw.role)) {
-    setLocalStorageItem("user", JSON.stringify(user));
-  }
-  return user;
+  return readAuthSession().user ?? {};
 }
 
-function readRoleFromCookie() {
-  const raw = Cookies.get("user");
+function parseStoredUser(raw) {
   if (!raw) return undefined;
   try {
-    return normalizeDashboardRole(JSON.parse(raw).role);
+    return JSON.parse(raw);
   } catch {
     return undefined;
   }
 }
 
-function readRoleFromLocalStorage() {
-  try {
-    const raw = JSON.parse(getLocalStorageItem("user") ?? "{}");
-    return normalizeDashboardRole(raw.role);
-  } catch {
-    return undefined;
+function readUserFromCookie() {
+  return parseStoredUser(Cookies.get("user"));
+}
+
+function readUserFromLocalStorage() {
+  return parseStoredUser(getLocalStorageItem("user"));
+}
+
+export function readAuthSession() {
+  const cookieUser = readUserFromCookie();
+  const storedUser = readUserFromLocalStorage();
+  const raw = cookieUser ?? storedUser;
+  if (!raw || typeof raw !== "object") {
+    return {
+      user: null,
+      token: null,
+      role: undefined,
+      isDashboardSession: false,
+    };
   }
+
+  const role = normalizeDashboardRole(raw.role);
+  const user = { ...raw, role };
+  const token = typeof user.token === "string" ? user.token : null;
+  const isDashboardSession = isDashboardRole(role);
+
+  if (isDashboardSession && (!storedUser || storedUser.role !== role)) {
+    setLocalStorageItem("user", JSON.stringify(user));
+  }
+
+  return {
+    user,
+    token,
+    role,
+    isDashboardSession,
+  };
 }
 
 /** True when cookie or localStorage holds an admin/vendor staff session. */
 export function hasDashboardSession() {
-  const cookieRole = readRoleFromCookie();
-  const storageRole = readRoleFromLocalStorage();
-  return isDashboardRole(cookieRole) || isDashboardRole(storageRole);
+  return readAuthSession().isDashboardSession;
 }
 
 export function getStoredAuthToken() {
-  const raw = Cookies.get("user");
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw).token ?? null;
-  } catch {
-    return null;
-  }
+  return readAuthSession().token;
 }
 
 export function notifyAdminLogout() {
