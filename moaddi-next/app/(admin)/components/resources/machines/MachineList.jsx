@@ -1,9 +1,11 @@
 import AdminList from "@/(admin)/components/kit/AdminList";
 import AdminShadcnTable from "@/(admin)/components/AdminShadcnTable";
-import { AdminCreateButton, AdminDeleteButton, AdminEditButton, AdminReferenceField, AdminShowButton } from "@/(admin)/components/kit/AdminUI";
+import { AdminContactUserButton, AdminCreateButton, AdminDeleteButton, AdminEditButton, AdminReferenceField, AdminShowButton } from "@/(admin)/components/kit/AdminUI";
 import { useSocket } from "@/(root)/context/Socket";
 import { Badge } from "@/../components/ui/badge";
 import { Switch } from "@/../components/ui/switch";
+import { readDashboardUser } from "@/../lib/auth-session";
+import { isDashboardAdminRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
 import { cn } from "@/../lib/utils";
 import { putRequest } from "@/../services/events";
 import { machineToggleAPI } from "@/../services/serverAddresses";
@@ -37,6 +39,13 @@ const ActiveSwitch = ({ record }) => {
       className="data-[state=checked]:bg-[color:var(--success)]"
     />
   );
+};
+
+/** Admin-only: vendors don't contact each other from this list. */
+const ContactVendorButton = ({ record }) => {
+  const role = normalizeDashboardRole(readDashboardUser().role);
+  if (!isDashboardAdminRole(role)) return null;
+  return <AdminContactUserButton targetUserId={record.vendorId} />;
 };
 
 const ConnectionBadge = ({ connected }) => (
@@ -112,6 +121,7 @@ const MachineList = () => (
         <>
           <AdminShowButton record={record} label="Fill" />
           <AdminEditButton record={record} />
+          <ContactVendorButton record={record} />
           <AdminDeleteButton record={record} />
         </>
       )}

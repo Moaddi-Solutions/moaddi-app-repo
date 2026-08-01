@@ -2,7 +2,7 @@ import AdminList from "@/(admin)/components/kit/AdminList";
 import AdminShadcnTable, {
   AdminBooleanBadge,
 } from "@/(admin)/components/AdminShadcnTable";
-import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
+import { AdminContactUserButton, AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
 
 export const CustomerListItems = [
   { key: "id", label: "ID" },
@@ -28,6 +28,9 @@ const CustomerList = () => (
       actions={(record) => (
         <>
           <AdminEditButton record={record} />
+          {record.isActive !== false ? (
+            <AdminContactUserButton targetUserId={record.id ?? record._id} />
+          ) : null}
           <AdminDeleteButton record={record} />
         </>
       )}

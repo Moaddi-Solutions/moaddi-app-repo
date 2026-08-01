@@ -2,7 +2,7 @@ import AdminList from "@/(admin)/components/kit/AdminList";
 import AdminShadcnTable, {
   AdminBooleanBadge,
 } from "@/(admin)/components/AdminShadcnTable";
-import { AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
+import { AdminContactUserButton, AdminDeleteButton, AdminEditButton } from "@/(admin)/components/kit/AdminUI";
 
 export const VendorListItems = [
   {
@@ -31,6 +31,7 @@ const VendorList = () => (
       actions={(record) => (
         <>
           <AdminEditButton record={record} />
+          <AdminContactUserButton targetUserId={record.id ?? record._id} />
           <AdminDeleteButton record={record} />
         </>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import StrapiImage from "@/(root)/components/StrapiImage";
+import ContactChatButton from "@/(root)/components/chat/ContactChatButton";
 import { useCart } from "@/(root)/context/cart-provider";
 import { themeContext } from "@/(root)/context/Theme";
 import {
@@ -10,9 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@/../components/ui/dropdown-menu";
 import rtlRules from "@/../i18n/rtl";
+import { readAuthSession } from "@/../lib/auth-session";
 import { cn } from "@/../lib/utils";
 import { useTheme } from "@/../lib/use-theme";
-import { Languages, Menu, Moon, ScanQrCode, Sun, UserRound } from "lucide-react";
+import {
+  Languages,
+  Menu,
+  Moon,
+  ScanQrCode,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -71,6 +80,7 @@ export default function Header({ items = [], logo }) {
         <Logo src={logo} />
         <MainNav items={navItems} />
         <div className="moaddi-head-actions">
+          <ContactChatButton surface="header" />
           <ScanLink />
           <LocaleToggle />
           <ThemeToggle />
@@ -179,10 +189,7 @@ function LocaleToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className="moaddi-lang"
-        aria-label="Change language"
-      >
+      <DropdownMenuTrigger className="moaddi-lang" aria-label="Change language">
         <Languages aria-hidden="true" className="size-4" />
         <span>{current.label}</span>
       </DropdownMenuTrigger>
@@ -216,9 +223,19 @@ function ScanLink() {
 
 function ProfileAvatar() {
   const { user } = useCart();
+  const dashboardSession = useMemo(() => readAuthSession(), [user]);
   const t = useTranslations("Header");
 
   if (!user) {
+    if (dashboardSession.isDashboardSession) {
+      return (
+        <Link className="moaddi-signin-btn" href="/admin#/home">
+          <UserRound aria-hidden="true" />
+          <span className="moaddi-btn-label">Dashboard</span>
+        </Link>
+      );
+    }
+
     return (
       <Link className="moaddi-signin-btn" href="/signin">
         <UserRound aria-hidden="true" />

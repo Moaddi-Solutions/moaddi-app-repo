@@ -3,6 +3,7 @@
 import GuestCheckoutDialog from "@/(root)/components/GuestCheckoutDialog";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
+import { useRegisterContactTarget } from "@/(root)/context/contact-target-context";
 import { Badge } from "@/../components/ui/badge";
 import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
@@ -102,6 +103,14 @@ function MachineProductsContent() {
     setMachine: persistMachineInCart,
     isPending,
   } = useCart();
+  const contactTargetPending = qrFromUrl ? qrLoading : isPending;
+
+  useRegisterContactTarget({
+    kind: "machine-vendor",
+    targetUserId: machine?.vendorId,
+    resourceId: machine?._id,
+    isPending: contactTargetPending,
+  });
 
   const persistMachineRef = useRef(persistMachineInCart);
   const setUserRef = useRef(setUser);
@@ -336,7 +345,7 @@ function MachineProductsContent() {
       <Container className="my-16 space-y-4 text-center">
         <p className="text-muted-foreground">
           {t("scanPrompt")}{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-sm">
+          <code className="bg-muted rounded px-1 py-0.5 text-sm">
             /machine-products?qr=M001
           </code>
         </p>
@@ -348,9 +357,8 @@ function MachineProductsContent() {
   }
 
   const shelfCount =
-    machine.products?.filter((p) =>
-      (p.boxes ?? []).some((b) => b.isActive),
-    ).length ?? 0;
+    machine.products?.filter((p) => (p.boxes ?? []).some((b) => b.isActive))
+      .length ?? 0;
 
   const selectedItems = Object.entries(total)
     .map(([id, qty]) => {
@@ -426,33 +434,35 @@ function MachineProductsContent() {
               {tShop("noItemsSelected")}
             </p>
           ) : (
-            selectedItems.map(({ id, product, count, unit, isOffer, lineTotal }) => (
-              <div
-                key={id}
-                className="flex items-center gap-2.5 text-[13px] font-bold"
-              >
-                <img
-                  src={resolveImage(product.image)}
-                  alt=""
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/placeholder.webp";
-                  }}
-                  className="bg-muted size-9.5 shrink-0 rounded-lg object-contain"
-                />
-                <span className="min-w-0 flex-1 leading-tight">
-                  <span className="block truncate">
-                    {product.productName ?? product.name}
+            selectedItems.map(
+              ({ id, product, count, unit, isOffer, lineTotal }) => (
+                <div
+                  key={id}
+                  className="flex items-center gap-2.5 text-[13px] font-bold"
+                >
+                  <img
+                    src={resolveImage(product.image)}
+                    alt=""
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/placeholder.webp";
+                    }}
+                    className="bg-muted size-9.5 shrink-0 rounded-lg object-contain"
+                  />
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate">
+                      {product.productName ?? product.name}
+                    </span>
+                    <small className="text-muted-foreground block text-[11px] font-semibold">
+                      {count} x {formatProductPrice(unit, checkoutCurrency)}
+                      {isOffer ? " - offer" : ""}
+                    </small>
                   </span>
-                  <small className="text-muted-foreground block text-[11px] font-semibold">
-                    {count} x {formatProductPrice(unit, checkoutCurrency)}
-                    {isOffer ? " - offer" : ""}
-                  </small>
-                </span>
-                <span className="text-primary-text shrink-0 tabular-nums">
-                  {formatProductPrice(lineTotal, checkoutCurrency)}
-                </span>
-              </div>
-            ))
+                  <span className="text-primary-text shrink-0 tabular-nums">
+                    {formatProductPrice(lineTotal, checkoutCurrency)}
+                  </span>
+                </div>
+              ),
+            )
           )}
 
           <div className="border-border flex items-baseline justify-between border-t border-dashed pt-3 font-extrabold">

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { PhoneInput } from "@/(root)/components/PhoneInput";
+import { useChat } from "@/(root)/context/chat-context";
 import { SocketContextProvider } from "@/(root)/context/Socket";
 import {
   Accordion,
@@ -57,6 +58,7 @@ import {
   Layers,
   LoaderCircle,
   LogOut,
+  MessageCircle,
   Moon,
   Package,
   PanelBottom,
@@ -76,12 +78,31 @@ import {
   UsersRound,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCreatePath, useLogin, useLogout, useNotify } from "ra-core";
 import { Link, useLocation } from "react-router-dom";
 import { AdminNotifications } from "@/(admin)/components/kit/AdminUI";
 
-const NavItem = ({ to, icon: Icon, children }) => {
+const normalizeUnreadCount = (value) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.floor(value));
+};
+
+const formatUnreadCount = (value) => (value > 99 ? "99+" : String(value));
+
+const UnreadBadge = ({ count, className = "" }) => {
+  const normalized = normalizeUnreadCount(count);
+  if (!normalized) return null;
+  return (
+    <span
+      className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-black leading-none text-destructive-foreground ${className}`}
+    >
+      {formatUnreadCount(normalized)}
+    </span>
+  );
+};
+
+const NavItem = ({ to, icon: Icon, children, badgeCount = 0 }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   return (
@@ -90,6 +111,10 @@ const NavItem = ({ to, icon: Icon, children }) => {
         <Link to={to} state={{ _scrollToTop: true }}>
           <Icon />
           <span>{children}</span>
+          <UnreadBadge
+            count={badgeCount}
+            className="ms-auto group-data-[collapsible=icon]:hidden"
+          />
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -132,6 +157,7 @@ export const AppSidebar = () => {
   const role = normalizeDashboardRole(readDashboardUser().role);
   const isAdmin = isDashboardAdminRole(role);
   const isVendor = isVendorRole(role);
+  const { totalUnreadCount } = useChat();
 
   return (
     <Sidebar collapsible="icon">
@@ -183,6 +209,11 @@ export const AppSidebar = () => {
             <NavItem to={createPath({ resource: "notifications", type: "list" })} icon={BellRing}>
               Notifications
             </NavItem>
+            {(isAdmin || isVendor) && (
+              <NavItem to="/conversations" icon={MessageCircle} badgeCount={totalUnreadCount}>
+                Conversations
+              </NavItem>
+            )}
             {isVendor && (
               <NavItem to={createPath({ resource: "docs", type: "list" })} icon={NotebookText}>
                 Docs
@@ -487,13 +518,38 @@ const ThemeToggleButton = () => {
   );
 };
 
-const AppHeader = () => (
-  <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-2 border-b px-3">
-    <SidebarTrigger />
-    <div className="min-w-0 flex-1" />
-    <ThemeToggleButton />
-  </header>
-);
+const AppHeader = () => {
+  const role = normalizeDashboardRole(readDashboardUser().role);
+  const canOpenConversations = isDashboardAdminRole(role) || isVendorRole(role);
+  const { totalUnreadCount } = useChat();
+
+  return (
+    <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-2 border-b px-3">
+      <SidebarTrigger />
+      <div className="min-w-0 flex-1" />
+      {canOpenConversations && (
+        <ShadcnButton
+          asChild
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="relative size-8 rounded-lg"
+          aria-label="Open conversations"
+          title="Open conversations"
+        >
+          <Link to="/conversations">
+            <MessageCircle className="size-4" />
+            <UnreadBadge
+              count={totalUnreadCount}
+              className="absolute -right-1.5 -top-1.5 border-2 border-sidebar"
+            />
+          </Link>
+        </ShadcnButton>
+      )}
+      <ThemeToggleButton />
+    </header>
+  );
+};
 
 const Layout = ({ children }) => {
   return (

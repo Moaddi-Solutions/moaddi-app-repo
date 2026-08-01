@@ -3,6 +3,7 @@
 import GuestCheckoutDialog from "@/(root)/components/GuestCheckoutDialog";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
+import { useRegisterContactTarget } from "@/(root)/context/contact-target-context";
 import { Badge } from "@/../components/ui/badge";
 import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
@@ -12,11 +13,7 @@ import { cn } from "@/../lib/utils";
 import { Fit } from "@/../services/data-provider";
 import { getRequest, postRequest } from "@/../services/events";
 import { activeProductBoxes } from "@/../services/productBoxes";
-import {
-  baseUrl,
-  groupAPI,
-  purchasesAPI,
-} from "@/../services/serverAddresses";
+import { baseUrl, groupAPI, purchasesAPI } from "@/../services/serverAddresses";
 import { ChevronRight, Boxes } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -95,6 +92,24 @@ function GroupProductsContent() {
   const [loading, setLoading] = useState(Boolean(groupId));
   const [error, setError] = useState("");
   const [guestDialogOpen, setGuestDialogOpen] = useState(false);
+  const groupVendorIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          machines
+            .map(({ vendorId }) => vendorId)
+            .filter((vendorId) => typeof vendorId === "string" && vendorId),
+        ),
+      ),
+    [machines],
+  );
+
+  useRegisterContactTarget({
+    kind: "machine-vendor",
+    targetUserId: groupVendorIds.length === 1 ? groupVendorIds[0] : null,
+    resourceId: groupId,
+    isPending: loading || isPending,
+  });
 
   useEffect(() => {
     if (!groupId) {
@@ -111,7 +126,11 @@ function GroupProductsContent() {
       try {
         const group = await getRequest(groupAPI(groupId));
         if (cancelled) return;
-        if (group?.statusCode || !Array.isArray(group?.machines) || !group.machines.length) {
+        if (
+          group?.statusCode ||
+          !Array.isArray(group?.machines) ||
+          !group.machines.length
+        ) {
           setMachines([]);
           setError("notFound");
           toast.error(t("toastGroupNotFound"));
@@ -143,12 +162,22 @@ function GroupProductsContent() {
           ...source,
           ...product,
           _id: source._id || product._id,
-          productName: product.productName || product.name || source.productName || source.name,
-          salePrice: product.salePrice ?? source.salePrice ?? product.price ?? source.price,
+          productName:
+            product.productName ||
+            product.name ||
+            source.productName ||
+            source.name,
+          salePrice:
+            product.salePrice ??
+            source.salePrice ??
+            product.price ??
+            source.price,
           campaignPrice: product.campaignPrice ?? source.campaignPrice,
           boxes: product.boxes ?? source.boxes ?? [],
           preferredCurrency:
-            product.preferredCurrency || source.preferredCurrency || machine.preferredCurrency,
+            product.preferredCurrency ||
+            source.preferredCurrency ||
+            machine.preferredCurrency,
         };
         const key = itemKey(machine._id, normalizedProduct._id);
         return {
@@ -169,7 +198,8 @@ function GroupProductsContent() {
 
   const checkoutCurrency =
     user?.preferredCurrency ||
-    rows.find(({ product }) => product.preferredCurrency)?.product.preferredCurrency ||
+    rows.find(({ product }) => product.preferredCurrency)?.product
+      .preferredCurrency ||
     "SAR";
 
   const totalPrice = useMemo(() => {
@@ -216,7 +246,9 @@ function GroupProductsContent() {
         return;
       }
 
-      const paymentProvider = machines.find((machine) => machine.paymentProvider)?.paymentProvider;
+      const paymentProvider = machines.find(
+        (machine) => machine.paymentProvider,
+      )?.paymentProvider;
 
       postRequest(purchasesAPI(), {
         customerId: forUser._id,
@@ -268,7 +300,16 @@ function GroupProductsContent() {
           toast.error(tShop("toastCouldNotCreateOrder"));
         });
     },
-    [canPay, rows, total, machines, totalPrice, checkoutCurrency, setUser, router],
+    [
+      canPay,
+      rows,
+      total,
+      machines,
+      totalPrice,
+      checkoutCurrency,
+      setUser,
+      router,
+    ],
   );
 
   const onPurchaseHandler = useCallback(() => {
@@ -360,33 +401,35 @@ function GroupProductsContent() {
               {tShop("noItemsSelected")}
             </p>
           ) : (
-            selectedItems.map(({ key, product, count, unit, isOffer, lineTotal }) => (
-              <div
-                key={key}
-                className="flex items-center gap-2.5 text-[13px] font-bold"
-              >
-                <img
-                  src={resolveImage(product.image)}
-                  alt=""
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/placeholder.webp";
-                  }}
-                  className="bg-muted size-9.5 shrink-0 rounded-lg object-contain"
-                />
-                <span className="min-w-0 flex-1 leading-tight">
-                  <span className="block truncate">
-                    {product.productName ?? product.name}
+            selectedItems.map(
+              ({ key, product, count, unit, isOffer, lineTotal }) => (
+                <div
+                  key={key}
+                  className="flex items-center gap-2.5 text-[13px] font-bold"
+                >
+                  <img
+                    src={resolveImage(product.image)}
+                    alt=""
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/placeholder.webp";
+                    }}
+                    className="bg-muted size-9.5 shrink-0 rounded-lg object-contain"
+                  />
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate">
+                      {product.productName ?? product.name}
+                    </span>
+                    <small className="text-muted-foreground block text-[11px] font-semibold">
+                      {count} x {formatProductPrice(unit, checkoutCurrency)}
+                      {isOffer ? " - offer" : ""}
+                    </small>
                   </span>
-                  <small className="text-muted-foreground block text-[11px] font-semibold">
-                    {count} x {formatProductPrice(unit, checkoutCurrency)}
-                    {isOffer ? " - offer" : ""}
-                  </small>
-                </span>
-                <span className="text-primary-text shrink-0 tabular-nums">
-                  {formatProductPrice(lineTotal, checkoutCurrency)}
-                </span>
-              </div>
-            ))
+                  <span className="text-primary-text shrink-0 tabular-nums">
+                    {formatProductPrice(lineTotal, checkoutCurrency)}
+                  </span>
+                </div>
+              ),
+            )
           )}
 
           <div className="border-border flex items-baseline justify-between border-t border-dashed pt-3 font-extrabold">

@@ -7,6 +7,35 @@ const {
   flattenProductForPreferredCurrency,
 } = require("./product-pricing");
 
+const activeShopOwnersLookup = () => ({
+  $lookup: {
+    from: "users",
+    let: { vendorIds: "$machines.vendorId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", "$$vendorIds"] },
+          isActive: { $ne: false },
+          isDeleted: { $ne: true },
+        },
+      },
+      {
+        $project: {
+          password: 0,
+          otp: 0,
+        },
+      },
+    ],
+    as: "shopOwners",
+  },
+});
+
+const attachPrimaryShopOwner = () => ({
+  $addFields: {
+    shopOwner: { $arrayElemAt: ["$shopOwners", 0] },
+  },
+});
+
 /*
  * Create new shop.
  */
@@ -56,6 +85,8 @@ let getActive = async (skip = 0, limit = 1000, filter, preferredCurrency) => {
           as: "machines",
         },
       },
+      activeShopOwnersLookup(),
+      attachPrimaryShopOwner(),
       {
         $lookup: {
           from: "boxes",
@@ -134,6 +165,8 @@ let getById = async (shopId, preferredCurrency) => {
           as: "machines",
         },
       },
+      activeShopOwnersLookup(),
+      attachPrimaryShopOwner(),
       {
         $lookup: {
           from: "boxes",
