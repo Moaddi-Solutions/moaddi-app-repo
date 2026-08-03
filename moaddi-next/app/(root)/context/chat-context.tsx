@@ -201,7 +201,14 @@ const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useCart();
   const shopperToken = (user as ShopperUser | null)?.token?.trim() || null;
-  const dashboardSession = useMemo(() => readAuthSession(), [shopperToken]);
+  // Read on every render, deliberately un-memoized: the token lives in the
+  // `user` cookie, and login writes that cookie without putting the token
+  // into React state (the profile passed to setUser has no token field, and
+  // dashboard login never calls setUser at all). So there is no dependency
+  // that tracks when this value changes — a useMemo keyed on anything from
+  // state goes stale the moment someone logs in, leaving token null and the
+  // inbox empty until a hard reload. It's a cookie read plus a JSON.parse.
+  const dashboardSession = readAuthSession();
   const token = shopperToken || dashboardSession.token?.trim() || null;
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<
