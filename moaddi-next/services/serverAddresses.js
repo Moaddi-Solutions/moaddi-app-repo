@@ -33,6 +33,15 @@ export function guestSignInAddress() {
 export function guestMeAddress() {
   return `${address()}users/guest/me`;
 }
+export function myPermissionsAddress() {
+  return `${address()}users/me/permissions`;
+}
+export function rolesAPI() {
+  return `${address()}roles`;
+}
+export function roleAPI(id) {
+  return `${address()}roles/${enc(id)}`;
+}
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }

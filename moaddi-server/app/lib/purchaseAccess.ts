@@ -33,7 +33,7 @@ const needAuth = (): HttpError => withStatusCode('Authentication required', 401)
 
 type PurchaseForMachineIds = Pick<IPurchase, 'machineId' | 'items'>;
 
-/** DB / seeds may use `admin` or `Admin` — align with `requireRole` (lowercase). */
+/** DB / seeds may use `admin` or `Admin` — compare case-insensitively. */
 export const normRole = (role: string | undefined | null): string =>
   String(role ?? '').trim().toLowerCase();
 

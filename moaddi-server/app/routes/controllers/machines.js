@@ -2,13 +2,25 @@ const express = require("express");
 const machines = require("../../data/repos/machines");
 const authenticate = require("../middlewares/authenticate");
 const optionalAuthenticate = require("../middlewares/optionalAuthenticate");
+const authorize = require("../middlewares/authorize");
+const { subject } = require("../../lib/ability");
+
+/** 403 unless the caller may `action` this machine (vendors: own machines only). */
+const assertCanTouchMachine = async (req, res, action, machineId) => {
+  const vendorId = await machines.getVendorIdOf(machineId);
+  if (req.ability.cannot(action, subject("Machine", { vendorId }))) {
+    res.status(403).json({ message: "Forbidden." });
+    return false;
+  }
+  return true;
+};
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 
 module.exports = () => {
   let router = express.Router();
 
   //create new machine
-  router.post("/machines", authenticate(), async (req, res, next) => {
+  router.post("/machines", authenticate(), authorize("create", "Machine"), async (req, res, next) => {
     try {
       let results = await machines.create(req.body);
       return res.status(201).json(results);
@@ -18,7 +30,7 @@ module.exports = () => {
   });
 
   //get all machines
-  router.get("/machines", authenticate(), async (req, res, next) => {
+  router.get("/machines", authenticate(), authorize("read", "Machine"), async (req, res, next) => {
     try {
       let results = await machines.get(
         req.query.offset,
@@ -32,7 +44,7 @@ module.exports = () => {
   });
 
   //get all machines which are not assigned to any vendor.
-  router.get("/machines/all", authenticate(), async (req, res, next) => {
+  router.get("/machines/all", authenticate(), authorize("read", "Machine"), async (req, res, next) => {
     try {
       let results = await machines.getAllNotAssigned(
         req.query.offset,
@@ -62,7 +74,7 @@ module.exports = () => {
   );
 
   //get machine by id
-  router.get("/machines/:machineId", authenticate(), async (req, res, next) => {
+  router.get("/machines/:machineId", authenticate(), authorize("read", "Machine"), async (req, res, next) => {
     try {
       const getBoxes = req.query.getBoxes !== "false";
       let results = await machines.getById(req.params.machineId, getBoxes);
@@ -185,8 +197,10 @@ module.exports = () => {
   router.put(
     "/machines/:machineId/toggle",
     authenticate(),
+    authorize("update", "Machine"),
     async (req, res, next) => {
       try {
+        if (!(await assertCanTouchMachine(req, res, "update", req.params.machineId))) return;
         let results = await machines.toggle(req.params.machineId);
         return res.status(200).json(results);
       } catch (err) {
@@ -196,8 +210,9 @@ module.exports = () => {
   );
 
   // Update machine by machineId.
-  router.put("/machines/:machineId", authenticate(), async (req, res, next) => {
+  router.put("/machines/:machineId", authenticate(), authorize("update", "Machine"), async (req, res, next) => {
     try {
+      if (!(await assertCanTouchMachine(req, res, "update", req.params.machineId))) return;
       let results = await machines.update(req.params.machineId, req.body);
       return res.status(200).json(results);
     } catch (err) {
@@ -209,8 +224,14 @@ module.exports = () => {
   router.put(
     "/machines/:machineId/assign",
     authenticate(),
+    authorize("update", "Machine"),
     async (req, res, next) => {
       try {
+        // Assignment moves machines between vendors — requires rights over
+        // unassigned machines, which vendor-scoped rules never grant.
+        if (req.ability.cannot("update", subject("Machine", { vendorId: null }))) {
+          return res.status(403).json({ message: "Forbidden." });
+        }
         let results = await machines.assign(req.params.machineId, req.body);
         return res.status(200).json(results);
       } catch (err) {
@@ -223,8 +244,10 @@ module.exports = () => {
   router.put(
     "/machines/:machineId/unassign",
     authenticate(),
+    authorize("update", "Machine"),
     async (req, res, next) => {
       try {
+        if (!(await assertCanTouchMachine(req, res, "update", req.params.machineId))) return;
         let results = await machines.unassign(req.params.machineId, req.body);
         return res.status(200).json(results);
       } catch (err) {
@@ -237,8 +260,12 @@ module.exports = () => {
   router.put(
     "/machines/vendor/:vendorId/assign",
     authenticate(),
+    authorize("update", "Machine"),
     async (req, res, next) => {
       try {
+        if (req.ability.cannot("update", subject("Machine", { vendorId: null }))) {
+          return res.status(403).json({ message: "Forbidden." });
+        }
         let results = await machines.assignBulk(req.params.vendorId, req.body);
         return res.status(200).json(results);
       } catch (err) {
@@ -251,8 +278,10 @@ module.exports = () => {
   router.delete(
     "/machines/:machineId",
     authenticate(),
+    authorize("delete", "Machine"),
     async (req, res, next) => {
       try {
+        if (!(await assertCanTouchMachine(req, res, "delete", req.params.machineId))) return;
         let results = await machines.remove(req.params.machineId);
         return res.status(200).json(results);
       } catch (err) {

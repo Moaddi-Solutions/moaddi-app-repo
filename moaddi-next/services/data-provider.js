@@ -43,6 +43,8 @@ import {
   shopsAPI,
   userAPI,
   VendorsByShop,
+  rolesAPI,
+  roleAPI,
 } from "@/../services/serverAddresses";
 
 let getRequest;
@@ -135,6 +137,13 @@ const Api = {
     },
     update: (id, data) => putRequest(machineAPI(id), data),
     delete: (id) => deleteRequest(machineAPI(id)),
+  },
+  roles: {
+    create: (data) => postRequest(rolesAPI(), data),
+    getList: () => getRequest(rolesAPI()),
+    getOne: (id) => getRequest(roleAPI(id)),
+    update: (id, data) => putRequest(roleAPI(id), data),
+    delete: (id) => deleteRequest(roleAPI(id)),
   },
   vendors: {
     create: (data) => postRequest(addUserAPI(), data),

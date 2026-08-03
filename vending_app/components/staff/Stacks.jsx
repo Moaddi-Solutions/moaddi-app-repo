@@ -162,6 +162,11 @@ const Stacks = () => {
             title: t("fill"),
           }}
         />
+        {/* ChatThread renders its own header, so the stack header is hidden. */}
+        <Stack.Screen
+          name="conversations/[conversationId]"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </>
   );

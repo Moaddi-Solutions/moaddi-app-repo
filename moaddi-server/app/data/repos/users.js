@@ -3,6 +3,7 @@ const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const config = require("../../../config");
 const Users = require("../models/users");
+const { rulesFor, isCustomRole } = require("../../lib/ability");
 const Purchases = require("../models/purchases");
 const machinesRepo = require("../../data/repos/machines");
 const purchasesRepo = require("../../data/repos/purchases");
@@ -158,6 +159,7 @@ let createGuest = async (preferredCurrency) => {
     _id: guest._id,
     name: guest.name,
     role: guest.role,
+    rules: rulesFor(guest),
     preferredCurrency: guest.preferredCurrency || "SAR",
     isGuest: true,
     token,
@@ -309,6 +311,7 @@ let socialSignIn = async (profile, preferredCurrency) => {
     _id: user._id,
     name: user.name,
     role: user.role,
+    rules: rulesFor(user),
     email: user.email || "",
     provider,
     preferredCurrency: user.preferredCurrency || "SAR",
@@ -324,35 +327,44 @@ let create = async (user) => {
   delete user.confirm_password;
   user = new Users(user);
 
-  if (user.role == "Vendor") {
-    user._id = user._id.toLowerCase();
+  // Staff accounts only: built-in staff roles or a dashboard-created custom
+  // role. (Customers sign themselves up; the role-grant checks live in the
+  // controller.)
+  const role = String(user.role || "");
+  const creatable =
+    role === "Vendor" ||
+    role === "Admin" ||
+    role === "SuperAdmin" ||
+    isCustomRole(role);
+  if (!creatable) return { message: "User role is not valid" };
 
-    let User = await Users.findOne({ _id: user._id });
+  user._id = user._id.toLowerCase();
 
-    // Return error if user already exists.
-    if (User) {
-      console.log("User already exists.", User);
-      return Promise.reject({
-        message: "User already exists.",
-        statusCode: 409,
-      });
-    }
+  let User = await Users.findOne({ _id: user._id });
 
-    // Check if create user is Vendor and also request with assign machine
-    if (user.role == "Vendor" && user.hasOwnProperty("machines")) {
-      if (user.machines.length)
-        await machinesRepo.assignBulk(user._id, user.machines);
-    }
+  // Return error if user already exists.
+  if (User) {
+    console.log("User already exists.", User);
+    return Promise.reject({
+      message: "User already exists.",
+      statusCode: 409,
+    });
+  }
 
-    user.created = moment().utc().add(config.timeDifference, "hours");
-    user.updated = moment().utc().add(config.timeDifference, "hours");
-    user = await user.save();
+  // Check if create user is Vendor and also request with assign machine
+  if (role === "Vendor" && user.hasOwnProperty("machines")) {
+    if (user.machines.length)
+      await machinesRepo.assignBulk(user._id, user.machines);
+  }
 
-    user = user.toJSON();
-    delete user.password;
+  user.created = moment().utc().add(config.timeDifference, "hours");
+  user.updated = moment().utc().add(config.timeDifference, "hours");
+  user = await user.save();
 
-    return user;
-  } else return { message: "User role is not valid" };
+  user = user.toJSON();
+  delete user.password;
+
+  return user;
 };
 
 /*
@@ -411,6 +423,7 @@ let signIn = async (credentials) => {
     _id: user._id,
     name: user.name,
     role: user.role,
+    rules: rulesFor(user),
     preferredCurrency: user.preferredCurrency || "SAR",
     token: token,
     expiresIn: expiresIn,

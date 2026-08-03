@@ -15,6 +15,8 @@ import { I18nextProvider } from "react-i18next";
 import { Appearance, Platform, StatusBar, View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 import Stacks from "~/components/Stacks";
+import { AbilityProvider } from "~/context/AbilityContext";
+import { ChatProvider } from "~/context/ChatContext";
 import { MachineProvider } from "~/context/MachineContext";
 import { SocketContextProvider } from "~/context/Socket";
 import { UserProvider, useUser } from "~/context/UserContext";
@@ -72,11 +74,17 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <QueryClientProvider client={queryClient}>
           <UserProvider>
-            <MachineProvider>
-              <SocketContextProvider>
-                <MainStacks />
-              </SocketContextProvider>
-            </MachineProvider>
+            <AbilityProvider>
+              <MachineProvider>
+                <SocketContextProvider>
+                  {/* Above both shells: the chat socket is app-wide, so the
+                      unread badge stays correct on every tab and in /staff. */}
+                  <ChatProvider>
+                    <MainStacks />
+                  </ChatProvider>
+                </SocketContextProvider>
+              </MachineProvider>
+            </AbilityProvider>
           </UserProvider>
         </QueryClientProvider>
       </I18nextProvider>

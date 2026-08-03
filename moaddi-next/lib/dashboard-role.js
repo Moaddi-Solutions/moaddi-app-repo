@@ -38,8 +38,14 @@ export function isVendorRole(role) {
   return normalizeDashboardRole(role) === "Vendor";
 }
 
-/** Staff roles allowed on `/admin` (react-admin dashboard). */
+/** Staff roles allowed on `/admin` (react-admin dashboard). Besides the
+ *  built-in staff roles, any dashboard-created custom role counts as staff —
+ *  what its holder can actually see/do is decided by their CASL rules. */
 export function isDashboardRole(role) {
   const normalized = normalizeDashboardRole(role);
-  return normalized === "Admin" || normalized === "Vendor" || normalized === "SuperAdmin";
+  if (normalized === "Admin" || normalized === "Vendor" || normalized === "SuperAdmin") {
+    return true;
+  }
+  const raw = String(role ?? "").trim();
+  return raw.length > 0 && !isCustomerRole(raw) && !isGuestRole(raw);
 }

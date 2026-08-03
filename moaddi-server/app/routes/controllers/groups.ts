@@ -3,6 +3,10 @@ import type { Request, Response, NextFunction } from 'express';
 
 const groups = require('../../data/repos/groups') as typeof import('../../data/repos/groups');
 const authenticate = require('../middlewares/authenticate') as () => import('express').RequestHandler;
+const authorize = require('../middlewares/authorize') as (
+  action: string,
+  subjectType: string
+) => import('express').RequestHandler;
 import { getCurrencyOfUser } from '../../services/geo-currency';
 
 const pathParam = (v: string | string[] | undefined): string => {
@@ -13,7 +17,7 @@ const pathParam = (v: string | string[] | undefined): string => {
 const controller = (): import('express').Router => {
   const router = express.Router();
 
-  router.post('/groups', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/groups', authenticate(), authorize('create', 'Group'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = await groups.create(req.body as Record<string, unknown>);
       return res.status(201).json(results);
@@ -34,7 +38,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.get('/groups/:groupId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/groups/:groupId', authenticate(), authorize('read', 'Group'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const preferredCurrency = await getCurrencyOfUser(req);
       const results = await groups.getById(pathParam(req.params.groupId), preferredCurrency);
@@ -44,7 +48,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.put('/groups/:groupId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.put('/groups/:groupId', authenticate(), authorize('update', 'Group'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = await groups.update(pathParam(req.params.groupId), req.body as Record<string, unknown>);
       return res.status(200).json(results);
@@ -54,7 +58,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.delete('/groups/:groupId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.delete('/groups/:groupId', authenticate(), authorize('delete', 'Group'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = await groups.remove(pathParam(req.params.groupId));
       return res.status(200).json(results);

@@ -41,10 +41,11 @@ import {
 } from "@/../components/ui/sidebar";
 import { readDashboardUser } from "@/../lib/auth-session";
 import {
-  isDashboardAdminRole,
-  isVendorRole,
+  isDashboardRole,
   normalizeDashboardRole,
 } from "@/../lib/dashboard-role";
+import { canAccessResource } from "@/../lib/ability";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { useTheme } from "@/../lib/use-theme";
 import {
   Banknote,
@@ -68,6 +69,7 @@ import {
   Rows3,
   SearchCheck,
   Settings2,
+  ShieldCheck,
   SlidersHorizontal,
   Smartphone,
   Store,
@@ -154,9 +156,10 @@ const NavGroup = ({ title, icon: Icon, children }) => (
 
 export const AppSidebar = () => {
   const createPath = useCreatePath();
-  const role = normalizeDashboardRole(readDashboardUser().role);
-  const isAdmin = isDashboardAdminRole(role);
-  const isVendor = isVendorRole(role);
+  const ability = useAbility();
+  // CASL drives what appears: each entry shows only when the logged-in
+  // user's rules allow the underlying resource (works for custom roles too).
+  const show = (resource) => canAccessResource(ability, resource, "list");
   const { totalUnreadCount } = useChat();
 
   return (
@@ -180,41 +183,52 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Business</SidebarGroupLabel>
           <SidebarMenu>
-            {isAdmin && (
+            {show("customers") && (
               <NavItem to={createPath({ resource: "customers", type: "list" })} icon={UsersRound}>
                 Customers
               </NavItem>
             )}
-            <NavItem to={createPath({ resource: "machines", type: "list" })} icon={Refrigerator}>
-              Machines
-            </NavItem>
-            {isAdmin && (
+            {show("machines") && (
+              <NavItem to={createPath({ resource: "machines", type: "list" })} icon={Refrigerator}>
+                Machines
+              </NavItem>
+            )}
+            {show("vendors") && (
               <NavItem to={createPath({ resource: "vendors", type: "list" })} icon={Handshake}>
                 Vendors
               </NavItem>
             )}
-            {(isAdmin || isVendor) && (
+            {show("roles") && (
+              <NavItem to={createPath({ resource: "roles", type: "list" })} icon={ShieldCheck}>
+                Roles
+              </NavItem>
+            )}
+            {show("products") && (
               <NavItem to={createPath({ resource: "products", type: "list" })} icon={Package}>
                 Products
               </NavItem>
             )}
-            {isAdmin && (
+            {show("shops") && (
               <NavItem to={createPath({ resource: "shops", type: "list" })} icon={Store}>
                 Shops
               </NavItem>
             )}
-            <NavItem to={createPath({ resource: "groups", type: "list" })} icon={Layers}>
-              Groups
-            </NavItem>
-            <NavItem to={createPath({ resource: "notifications", type: "list" })} icon={BellRing}>
-              Notifications
-            </NavItem>
-            {(isAdmin || isVendor) && (
+            {show("groups") && (
+              <NavItem to={createPath({ resource: "groups", type: "list" })} icon={Layers}>
+                Groups
+              </NavItem>
+            )}
+            {show("notifications") && (
+              <NavItem to={createPath({ resource: "notifications", type: "list" })} icon={BellRing}>
+                Notifications
+              </NavItem>
+            )}
+            {ability.can("read", "Conversation") && (
               <NavItem to="/conversations" icon={MessageCircle} badgeCount={totalUnreadCount}>
                 Conversations
               </NavItem>
             )}
-            {isVendor && (
+            {show("docs") && !show("websites") && (
               <NavItem to={createPath({ resource: "docs", type: "list" })} icon={NotebookText}>
                 Docs
               </NavItem>
@@ -222,7 +236,7 @@ export const AppSidebar = () => {
           </SidebarMenu>
         </SidebarGroup>
 
-        {isAdmin && (
+        {show("payments") && (
           <SidebarGroup>
             <SidebarGroupLabel>Payments</SidebarGroupLabel>
             <SidebarMenu>
@@ -246,24 +260,28 @@ export const AppSidebar = () => {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isVendor) && (
+        {(show("wallets") || show("withdrawals")) && (
           <SidebarGroup>
             <SidebarGroupLabel>Finance</SidebarGroupLabel>
             <SidebarMenu>
-              <NavItem to={createPath({ resource: "wallets", type: "list" })} icon={Wallet}>
-                Wallets
-              </NavItem>
-              <NavItem
-                to={createPath({ resource: "withdrawals", type: "list" })}
-                icon={Landmark}
-              >
-                Withdrawals
-              </NavItem>
+              {show("wallets") && (
+                <NavItem to={createPath({ resource: "wallets", type: "list" })} icon={Wallet}>
+                  Wallets
+                </NavItem>
+              )}
+              {show("withdrawals") && (
+                <NavItem
+                  to={createPath({ resource: "withdrawals", type: "list" })}
+                  icon={Landmark}
+                >
+                  Withdrawals
+                </NavItem>
+              )}
             </SidebarMenu>
           </SidebarGroup>
         )}
 
-        {isAdmin && (
+        {show("websites") && (
           <>
             <SidebarSeparator />
             <SidebarGroup>
@@ -520,7 +538,7 @@ const ThemeToggleButton = () => {
 
 const AppHeader = () => {
   const role = normalizeDashboardRole(readDashboardUser().role);
-  const canOpenConversations = isDashboardAdminRole(role) || isVendorRole(role);
+  const canOpenConversations = isDashboardRole(role);
   const { totalUnreadCount } = useChat();
 
   return (

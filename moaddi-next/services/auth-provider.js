@@ -6,112 +6,53 @@ import {
   notifyAdminLogout,
   readDashboardUser,
 } from "@/../lib/auth-session";
+import { buildAbility, canAccessResource } from "@/../lib/ability";
 import { isDashboardRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
 import { setLocalStorageItem } from "@/../lib/utils";
 import { getAdminDataProvider } from "@/../services/data-provider";
 import { clearAuthHeaders, postRequest } from "@/../services/events";
-import { signInAddress } from "@/../services/serverAddresses";
+import { getRequest } from "@/../services/events";
+import { myPermissionsAddress, signInAddress } from "@/../services/serverAddresses";
 import axios from "axios";
 import Cookies from "js-cookie";
 import moment from "moment";
 
-/** Dashboard routes allowed for Admin and SuperAdmin (same rules). */
-const adminAccess = {
-  machines: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  vendors: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  customers: (action) =>
-    [/*"create",*/ "delete", "edit", "show", "list"].includes(action),
-  products: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  currencies: (action) => ["list"].includes(action),
-  shops: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  groups: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  notifications: (action) => ["list"].includes(action),
-  withdrawals: (action) => ["list", "show", "create"].includes(action),
-  wallets: (action) => ["list", "show"].includes(action),
-  payments: (action) => ["list", "show"].includes(action),
-  invoices: (action) => ["list", "show"].includes(action),
-  transactions: (action) => ["list", "show"].includes(action),
-  // Site options (payment strategies + platform fees)
-  paymentProviders: (action) => ["list"].includes(action),
-  paymentProvidersAll: (action) =>
-    ["list", "edit"].includes(action),
-  platformOptions: (action) => ["show", "edit"].includes(action),
-  // Content
-  websites: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  docs: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  enBlocks: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
-  arBlocks: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
-  zhBlocks: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
-  itBlocks: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show", "list"].includes(action),
-  enSite: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  arSite: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  zhSite: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  itSite: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  enSeo: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  arSeo: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  zhSeo: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  itSeo: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  enFooterBody: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  arFooterBody: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  zhFooterBody: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  itFooterBody: (action) =>
-    [/*"create",*/ /* "delete",*/ "edit", "show" /*"list"*/].includes(action),
-  enHeaderLinks: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  arHeaderLinks: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  zhHeaderLinks: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  itHeaderLinks: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  enPages: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  arPages: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  zhPages: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
-  itPages: (action) =>
-    ["create", "delete", "edit", "show", "list"].includes(action),
+/**
+ * CASL ability for the current dashboard user. Rules arrive packed in the
+ * signin response; sessions created before the CASL rollout are backfilled
+ * from GET users/me/permissions and persisted alongside the stored user.
+ */
+let abilityCache = { key: null, ability: null };
+let rulesRefresh = null;
+
+const abilityKeyFor = (user) =>
+  `${user?._id ?? ""}:${user?.role ?? ""}:${Array.isArray(user?.rules) ? user.rules.length : -1}`;
+
+const abilityFor = (user) => {
+  const key = abilityKeyFor(user);
+  if (abilityCache.key !== key) {
+    abilityCache = { key, ability: buildAbility(user?.rules) };
+  }
+  return abilityCache.ability;
 };
 
-const accessControlStrategies = {
-  Admin: adminAccess,
-  SuperAdmin: adminAccess,
-  Vendor: {
-    machines: (action) => ["show", "list"].includes(action),
-    products: (action) => ["show", "list"].includes(action),
-    notifications: (action) => ["list"].includes(action),
-    docs: (action) => ["show", "list"].includes(action),
-    groups: (action) =>
-      ["create", "delete", "edit", "show", "list"].includes(action),
-    paymentProviders: (action) => ["list", "show"].includes(action),
-    paymentProvidersAll: (action) => ["list", "show"].includes(action),
-    wallets: (action) => ["list", "show"].includes(action),
-    withdrawals: (action) => ["list", "show", "create"].includes(action),
-    transactions: (action) => ["list", "show"].includes(action),
-  },
+const backfillRules = async (user) => {
+  if (!rulesRefresh) {
+    rulesRefresh = getRequest(myPermissionsAddress())
+      .then((data) => {
+        const rules = data?.rules ?? data?.data?.rules;
+        if (Array.isArray(rules)) {
+          setLocalStorageItem("user", JSON.stringify({ ...user, rules }));
+          return rules;
+        }
+        return null;
+      })
+      .catch(() => null)
+      .finally(() => {
+        rulesRefresh = null;
+      });
+  }
+  return rulesRefresh;
 };
 
 /** E.164 login id for staff sign-in (matches server `credentials._id.toLowerCase()`). */
@@ -145,7 +86,16 @@ const getIdentity = () => {
   return deferReject();
 };
 
-const getPermissions = () => getIdentity();
+const getPermissions = async () => {
+  const user = readDashboardUser();
+  // Sessions from before the CASL rollout have no stored rules — backfill
+  // them so resource registration can build the ability synchronously.
+  if (isDashboardRole(user.role) && !Array.isArray(user.rules)) {
+    const rules = await backfillRules(user);
+    if (rules) return { ...user, rules };
+  }
+  return getIdentity();
+};
 
 const checkAuth = () => {
   const { role } = readDashboardUser();
@@ -206,8 +156,14 @@ export default {
     if (response?.data?.message) throw new Error(response?.data?.message);
     return Promise.resolve();
   },
-  canAccess({ resource, action, record, signal }) {
-    const { role } = readDashboardUser();
-    return accessControlStrategies[role]?.[resource]?.(action) ?? false;
+  async canAccess({ resource, action }) {
+    const user = readDashboardUser();
+    if (!isDashboardRole(user.role)) return false;
+    let ability = abilityFor(user);
+    if (!Array.isArray(user.rules)) {
+      const rules = await backfillRules(user);
+      if (rules) ability = abilityFor({ ...user, rules });
+    }
+    return canAccessResource(ability, resource, action);
   },
 };

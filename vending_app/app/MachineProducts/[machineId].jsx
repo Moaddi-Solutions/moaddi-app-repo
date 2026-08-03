@@ -16,6 +16,7 @@ import { Card } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 import { Badge, Button as MButton, Loader, SocialLinks, Stepper } from "~/components/moaddi";
 import GuestCheckoutModal from "~/components/GuestCheckoutModal";
+import ContactChatButton from "~/components/chat/ContactChatButton";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { colors, radius, shadow, space, type as typo } from "~/theme/moaddi";
 import { useMachine } from "~/context/MachineContext";
@@ -105,6 +106,14 @@ function DefaultView({
           justifyContent: "space-between",
         }}
       >
+        {/* Message the machine's vendor. `shopOwner` is attached by the
+            machines aggregation; `vendorId` is the fallback. */}
+        <ContactChatButton
+          targetUserId={machine.shopOwner?._id ?? machine.vendorId}
+          kind="machine-vendor"
+          fullWidth
+        />
+
         {products.map((product) => {
           const id = product._id;
           const available = product.boxes.filter(({ isActive }) => isActive).length;

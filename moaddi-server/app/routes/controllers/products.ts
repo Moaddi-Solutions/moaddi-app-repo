@@ -5,6 +5,11 @@ const products = require('../../data/repos/products') as typeof import('../../da
 const authenticate = require('../middlewares/authenticate') as () => import('express').RequestHandler;
 const upload = require('../middlewares/fileHandler') as { files: () => import('multer').Multer };
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate') as () => import('express').RequestHandler;
+const authorize = require('../middlewares/authorize') as (
+  action: string,
+  subjectType: string
+) => import('express').RequestHandler;
+import { subject } from '../../lib/ability';
 import { getCurrencyOfUser } from '../../services/geo-currency';
 import { listSupportedCurrencies } from '../../services/currency';
 
@@ -25,6 +30,21 @@ const isAuthenticated = (req: Request): boolean => {
   return Boolean(r.user ?? r.authenticatedUser);
 };
 
+/** 403 unless the caller may `action` this product (vendors: own products only). */
+const assertCanTouchProduct = async (
+  req: Request,
+  res: Response,
+  action: string,
+  productId: string
+): Promise<boolean> => {
+  const vendorId = await products.getVendorIdOf(productId);
+  if (req.ability!.cannot(action, subject('Product', { vendorId }))) {
+    res.status(403).json({ message: 'Forbidden.' });
+    return false;
+  }
+  return true;
+};
+
 const controller = (): import('express').Router => {
   const router = express.Router();
 
@@ -33,9 +53,14 @@ const controller = (): import('express').Router => {
   });
 
   // create new product
-  router.post('/products', authenticate(), upload.files().single('image'), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/products', authenticate(), authorize('create', 'Product'), upload.files().single('image'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = parseJSON((req.body as { data?: string }).data);
+      // Suppliers may only create products they own; admins may set any vendor.
+      const claimedVendorId = (data.vendorId as string | undefined) ?? null;
+      if (req.ability!.cannot('update', subject('Product', { vendorId: claimedVendorId }))) {
+        data.vendorId = req.authenticatedUser!._id;
+      }
       const saved = await products.create(data, req.file as { path: string });
       const results = products.formatSavedProductForClient(saved, true);
       return res.status(201).json(results);
@@ -100,16 +125,18 @@ const controller = (): import('express').Router => {
     } catch (err) { next(err); }
   });
 
-  router.put('/products/:productId/toggle', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.put('/products/:productId/toggle', authenticate(), authorize('update', 'Product'), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!(await assertCanTouchProduct(req, res, 'update', pathParam(req.params.productId)))) return;
       const saved = await products.toggle(pathParam(req.params.productId));
       const results = products.formatSavedProductForClient(saved, true);
       return res.status(200).json(results);
     } catch (err) { next(err); }
   });
 
-  router.put('/products/:productId', authenticate(), upload.files().single('image'), async (req: Request, res: Response, next: NextFunction) => {
+  router.put('/products/:productId', authenticate(), authorize('update', 'Product'), upload.files().single('image'), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!(await assertCanTouchProduct(req, res, 'update', pathParam(req.params.productId)))) return;
       const data = parseJSON((req.body as { data?: string }).data);
       const saved = await products.update(pathParam(req.params.productId), data, req.file as { path: string } | undefined);
       const results = products.formatSavedProductForClient(saved, true);
@@ -117,8 +144,9 @@ const controller = (): import('express').Router => {
     } catch (err) { next(err); }
   });
 
-  router.delete('/products/:productId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.delete('/products/:productId', authenticate(), authorize('delete', 'Product'), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!(await assertCanTouchProduct(req, res, 'delete', pathParam(req.params.productId)))) return;
       const saved = await products.remove(pathParam(req.params.productId));
       const results = products.formatSavedProductForClient(saved, true);
       return res.status(200).json(results);

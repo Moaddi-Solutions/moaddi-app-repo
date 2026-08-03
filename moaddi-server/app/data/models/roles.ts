@@ -1,0 +1,43 @@
+import mongoose = require('mongoose');
+import moment = require('moment');
+
+const config: { timeDifference: number } = require('../../../config');
+
+interface IRole {
+  _id: string;
+  name: string;
+  label: string;
+  description: string;
+  builtIn: boolean;
+  /** Custom roles only: rule rows ({action, subject, scope}) applied by the ability registry. */
+  rules: unknown[];
+  created: Date;
+  updated?: Date;
+}
+
+/**
+ * Reference data for the platform roles (Supplier / Shop Admin / Super Admin).
+ * Permission RULES live in code (`app/lib/ability.ts`) — this collection only
+ * records which roles exist, for admin UI and auditing.
+ */
+const RolesSchema = new mongoose.Schema<IRole>(
+  {
+    _id: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
+    label: { type: String, required: true },
+    description: { type: String, required: true },
+    builtIn: { type: Boolean, default: true },
+    rules: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },
+    updated: { type: Date, required: false },
+  },
+  {
+    _id: false,
+    id: false,
+    versionKey: false,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  }
+);
+
+export = mongoose.model<IRole>('roles', RolesSchema);

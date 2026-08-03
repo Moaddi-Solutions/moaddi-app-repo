@@ -3,7 +3,8 @@
 const express = require("express");
 const withdrawalsRepo = require("../../data/repos/withdrawals");
 const authenticate = require("../middlewares/authenticate");
-const requireRole = require("../middlewares/requireRole");
+const authorize = require("../middlewares/authorize");
+const { subject } = require("../../lib/ability");
 const { files } = require("../middlewares/fileHandler");
 
 const proofUpload = files().single("proofImage");
@@ -21,13 +22,15 @@ module.exports = () => {
   const router = express.Router();
 
   /** Vendor: create withdrawal. Admin: optional body.vendorId to create on behalf. */
-  router.post("/withdrawals", authenticate(), requireRole(["Vendor", "Admin", "SuperAdmin"]), async (req, res, next) => {
+  router.post("/withdrawals", authenticate(), authorize("create", "Withdrawal"), async (req, res, next) => {
     try {
       const u = req.authenticatedUser;
-      const vendorId =
-        (u.role === "Admin" || u.role === "SuperAdmin") && req.body && req.body.vendorId
-          ? req.body.vendorId
-          : u._id;
+      const requestedVendorId =
+        req.body && req.body.vendorId ? String(req.body.vendorId) : u._id;
+      // Admins may create on behalf of any vendor; vendors only for themselves.
+      const vendorId = req.ability.can("create", subject("Withdrawal", { vendorId: requestedVendorId }))
+        ? requestedVendorId
+        : u._id;
       const { amount, bankDetails, currency } = req.body || {};
       const result = await withdrawalsRepo.create(vendorId, { amount, bankDetails, currency });
       return res.status(201).json(result);
@@ -37,7 +40,7 @@ module.exports = () => {
   });
 
   /** Vendor: own list. Admin: all, optional ?vendorId=&?status= */
-  router.get("/withdrawals", authenticate(), requireRole(["Vendor", "Admin", "SuperAdmin"]), async (req, res, next) => {
+  router.get("/withdrawals", authenticate(), authorize("read", "Withdrawal"), async (req, res, next) => {
     try {
       const u = req.authenticatedUser;
       const skip = parseInt(String(req.query.offset || req.query.skip || 0), 10) || 0;
@@ -58,11 +61,10 @@ module.exports = () => {
   });
 
   /** Single withdrawal: owner vendor or admin */
-  router.get("/withdrawals/:withdrawalId", authenticate(), requireRole(["Vendor", "Admin", "SuperAdmin"]), async (req, res, next) => {
+  router.get("/withdrawals/:withdrawalId", authenticate(), authorize("read", "Withdrawal"), async (req, res, next) => {
     try {
       const w = await withdrawalsRepo.getById(req.params.withdrawalId);
-      const u = req.authenticatedUser;
-      if (u.role === "Vendor" && w.vendorId !== u._id) {
+      if (req.ability.cannot("read", subject("Withdrawal", w))) {
         return res.status(403).json({ message: "Forbidden." });
       }
       return res.status(200).json(w);
@@ -74,7 +76,7 @@ module.exports = () => {
   router.put(
     "/withdrawals/:withdrawalId/approve",
     authenticate(),
-    requireRole(["Admin", "SuperAdmin"]),
+    authorize("approve", "Withdrawal"),
     optionalProofUpload,
     async (req, res, next) => {
       try {
@@ -94,7 +96,7 @@ module.exports = () => {
   router.put(
     "/withdrawals/:withdrawalId/reject",
     authenticate(),
-    requireRole(["Admin", "SuperAdmin"]),
+    authorize("reject", "Withdrawal"),
     optionalProofUpload,
     async (req, res, next) => {
       try {
@@ -117,7 +119,7 @@ module.exports = () => {
   router.put(
     "/withdrawals/:withdrawalId/markpaid",
     authenticate(),
-    requireRole(["Admin", "SuperAdmin"]),
+    authorize("pay", "Withdrawal"),
     optionalProofUpload,
     async (req, res, next) => {
       try {

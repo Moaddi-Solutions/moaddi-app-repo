@@ -16,6 +16,10 @@ const usersRepo = require('../../data/repos/users') as {
   createGuest: (preferredCurrency?: string) => Promise<GuestSession>;
 };
 const authenticate = require('../middlewares/authenticate') as () => import('express').RequestHandler;
+const authorize = require('../middlewares/authorize') as (
+  action: string,
+  subjectType: string
+) => import('express').RequestHandler;
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate') as () => import('express').RequestHandler;
 const { getCurrencyOfUser } = require('../../services/geo-currency') as {
   getCurrencyOfUser: (req: Request) => Promise<string>;
@@ -50,6 +54,7 @@ const controller = (): import('express').Router => {
   router.post(
     '/purchases/:purchaseId/gift',
     authenticate(),
+    authorize('create', 'Gift'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const u = req.authenticatedUser;
@@ -82,6 +87,7 @@ const controller = (): import('express').Router => {
   router.get(
     '/gifts/mine',
     authenticate(),
+    authorize('read', 'Gift'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const u = req.authenticatedUser;
@@ -108,6 +114,7 @@ const controller = (): import('express').Router => {
   router.get(
     '/gifts/purchase/:purchaseId',
     authenticate(),
+    authorize('read', 'Gift'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const purchase = await purchasesRepo.getById(

@@ -797,6 +797,13 @@
     deepmerge "^3.2.0"
     hoist-non-react-statics "^3.3.0"
 
+"@casl/ability@^7.0.1":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@casl/ability/-/ability-7.0.1.tgz#3c81a804a453738fc217cc2aa9987f8bcda3fe9b"
+  integrity sha512-krOW1zQGEie5lH6fpryrcsPvc5r2pe5Vn5xbthuzc5X9gwzHIyZgGGgw9dMoSLHXdjB4BIVxGG/HBkG+1NuyZQ==
+  dependencies:
+    "@ucast/mongo2js" "^2.0.0"
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.npmmirror.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz"
@@ -3154,6 +3161,34 @@
   dependencies:
     "@types/yargs-parser" "*"
 
+"@ucast/core@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ucast/core/-/core-2.0.0.tgz#fafbd125571e987940d8392015710cfe1fd0b035"
+  integrity sha512-4XVx6LzPXZGvnZO5jp39cm/G4UvuwvEdtmg+9+4+zl6uFkCcB7UJacvtMYeBE56GJVT99Zqy6Pii7dGJq3Kz9Q==
+
+"@ucast/js@4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@ucast/js/-/js-4.0.1.tgz#c3d2843a6178f3a6b61945db966357780078e377"
+  integrity sha512-9O5xPBvwEWQk2WvO69Eh2WJB8QljVZ2vRVdFvfnKjlZwWXcYxp1lqLBhwXBU1AtuSgCvKhJPkXdjKJggUmAmQQ==
+  dependencies:
+    "@ucast/core" "2.0.0"
+
+"@ucast/mongo2js@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@ucast/mongo2js/-/mongo2js-2.0.0.tgz#7a7f7b401e4345da0b517debe39b591bc8cdd6e6"
+  integrity sha512-vNBZzRnsfLr/TSxEoxz6W6hHQ5tmWsfEeC0nCq5z8RezC1AqIRy3cfHm8AGvlGtcn+cTSFQcZremfqnz6wm+nQ==
+  dependencies:
+    "@ucast/core" "2.0.0"
+    "@ucast/js" "4.0.1"
+    "@ucast/mongo" "3.0.0"
+
+"@ucast/mongo@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@ucast/mongo/-/mongo-3.0.0.tgz#46b7d2b21731272c8c40f5db4afb346cefaf2202"
+  integrity sha512-kwuSH+kdB4GCR0LGhy/PEDm4PCflur89AlK82kNiYD0FvsA8A/p+0sx7m+/R8mMFAlmlkAd3VXp7sM/cLLYWYg==
+  dependencies:
+    "@ucast/core" "2.0.0"
+
 "@urql/core@4.0.11":
   version "4.0.11"
   resolved "https://registry.npmmirror.com/@urql/core/-/core-4.0.11.tgz"
@@ -4913,6 +4948,11 @@ expo-asset@~11.1.7:
     "@expo/image-utils" "^0.7.6"
     expo-constants "~17.1.7"
 
+expo-audio@~0.4.9:
+  version "0.4.9"
+  resolved "https://registry.yarnpkg.com/expo-audio/-/expo-audio-0.4.9.tgz#f15f64652785ecd416ad351bf42666315e1e0b69"
+  integrity sha512-J4mMYEt2mqRqqwmSsXFylMGlrNWa+MbCzGl1IZBs+smvPAMJ3Ni8fNplzCQ0I9RnRzygKhRwJNpnAVL+n4MuyA==
+
 expo-build-properties@~0.14.8:
   version "0.14.8"
   resolved "https://registry.npmmirror.com/expo-build-properties/-/expo-build-properties-0.14.8.tgz"
@@ -4976,6 +5016,11 @@ expo-device@~7.1.4:
   dependencies:
     ua-parser-js "^0.7.33"
 
+expo-document-picker@~13.1.6:
+  version "13.1.6"
+  resolved "https://registry.yarnpkg.com/expo-document-picker/-/expo-document-picker-13.1.6.tgz#d31a14eac7f0d44f6d1eee8d41403499ce07924d"
+  integrity sha512-8FTQPDOkyCvFN/i4xyqzH7ELW4AsB6B3XBZQjn1FEdqpozo6rpNJRr7sWFU/93WrLgA9FJEKpKbyr6XxczK6BA==
+
 expo-eas-client@~0.14.4:
   version "0.14.4"
   resolved "https://registry.npmmirror.com/expo-eas-client/-/expo-eas-client-0.14.4.tgz"
@@ -4997,6 +5042,13 @@ expo-image-loader@~5.1.0:
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/expo-image-loader/-/expo-image-loader-5.1.0.tgz#f7d65f9b9a9714eaaf5d50a406cb34cb25262153"
   integrity sha512-sEBx3zDQIODWbB5JwzE7ZL5FJD+DK3LVLWBVJy6VzsqIA6nDEnSFnsnWyCfCTSvbGigMATs1lgkC2nz3Jpve1Q==
+
+expo-image-manipulator@~13.1.7:
+  version "13.1.7"
+  resolved "https://registry.yarnpkg.com/expo-image-manipulator/-/expo-image-manipulator-13.1.7.tgz#e891ce9b49d75962eafdf5b7d670116583379e76"
+  integrity sha512-DBy/Xdd0E/yFind14x36XmwfWuUxOHI/oH97/giKjjPaRc2dlyjQ3tuW3x699hX6gAs9Sixj5WEJ1qNf3c8sag==
+  dependencies:
+    expo-image-loader "~5.1.0"
 
 expo-image-picker@~16.1.4:
   version "16.1.4"
@@ -5039,6 +5091,11 @@ expo-localization@~16.1.6:
   integrity sha512-v4HwNzs8QvyKHwl40MvETNEKr77v1o9/eVC8WCBY++DIlBAvonHyJe2R9CfqpZbC4Tlpl7XV+07nLXc8O5PQsA==
   dependencies:
     rtl-detect "^1.0.2"
+
+expo-location@~18.1.6:
+  version "18.1.6"
+  resolved "https://registry.yarnpkg.com/expo-location/-/expo-location-18.1.6.tgz#b855e14e8b4e29a1bde470fc4dc2a341abecf631"
+  integrity sha512-l5dQQ2FYkrBgNzaZN1BvSmdhhcztFOUucu2kEfDBMV4wSIuTIt/CKsho+F3RnAiWgvui1wb1WTTf80E8zq48hA==
 
 expo-manifests@~0.16.6:
   version "0.16.6"
@@ -5105,6 +5162,11 @@ expo-router@~5.1.11:
     semver "~7.6.3"
     server-only "^0.0.1"
     shallowequal "^1.1.0"
+
+expo-sharing@~13.1.5:
+  version "13.1.5"
+  resolved "https://registry.yarnpkg.com/expo-sharing/-/expo-sharing-13.1.5.tgz#73d86cdcc037b46ddc82be224dfd3d6bceec497c"
+  integrity sha512-X/5sAEiWXL2kdoGE3NO5KmbfcmaCWuWVZXHu8OQef7Yig4ZgHFkGD11HKJ5KqDrDg+SRZe4ISd6MxE7vGUgm4w==
 
 expo-splash-screen@~0.30.8:
   version "0.30.10"

@@ -140,6 +140,11 @@ const Stacks = () => {
             title: t("shop"),
           }}
         />
+        {/* ChatThread renders its own header, so the stack header is hidden. */}
+        <Stack.Screen
+          name="conversations/[conversationId]"
+          options={{ headerShown: false }}
+        />
         {/* Checkout Moyasar */}
         <Stack.Screen
           name="CheckoutMoyasar/failure"

@@ -25,6 +25,10 @@ module.exports = {
       ...appJson.expo.extra,
       serverOrigin,
       staticOrigin,
+      // Support account that receives "Contact support" chats. Mirrors the web
+      // client's NEXT_PUBLIC_CHAT_ADMIN_ID; `services/serverAddresses` falls
+      // back to the shared default when unset.
+      chatAdminId: process.env.EXPO_PUBLIC_CHAT_ADMIN_ID?.trim() || undefined,
     },
   },
 };

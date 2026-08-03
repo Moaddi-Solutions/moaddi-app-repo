@@ -178,6 +178,21 @@ const bootstrap = async () => {
     console.warn("ensureSeedGroups:", err.message);
   }
 
+  // Load custom (dashboard-created) roles into the CASL ability registry
+  // before any request is authorized; refresh periodically so multi-instance
+  // deployments converge after a role change elsewhere.
+  try {
+    const rolesRepo = require("./data/repos/roles");
+    await rolesRepo.primeCustomRoles();
+    setInterval(() => {
+      rolesRepo.primeCustomRoles().catch((err) =>
+        console.warn("primeCustomRoles refresh:", err.message)
+      );
+    }, 1000 * 60 * 5);
+  } catch (err) {
+    console.warn("primeCustomRoles:", err.message);
+  }
+
   // Ensure exchange rates exist before we accept requests (schema validators depend on this).
   await updateExchangeRate();
 

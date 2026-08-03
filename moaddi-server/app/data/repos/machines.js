@@ -1020,6 +1020,15 @@ let unassign = async (machineId, body) => {
 /*
  * Delete machine by id.
  */
+/** Owner lookup for CASL ownership checks (null = unassigned machine). */
+let getVendorIdOf = async (machineId) => {
+  const m = await Machines.findOne({ _id: machineId }).select("vendorId").lean();
+  if (!m) {
+    return Promise.reject({ message: "Machine not found.", statusCode: 404 });
+  }
+  return m.vendorId || null;
+};
+
 let remove = async (machineId) => {
   let machine = await Machines.deleteOne({ _id: machineId });
   await Boxes.deleteMany({ machineId: machineId });
@@ -1046,5 +1055,6 @@ module.exports = {
   assignBulk,
   unassign,
   remove,
+  getVendorIdOf,
   getByShopIdVendorId,
 };

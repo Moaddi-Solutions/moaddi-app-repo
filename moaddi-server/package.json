@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --import tsx --test app/lib/ability.test.ts",
+    "test:ability": "node --import tsx --test app/lib/ability.test.ts",
     "seed": "tsx db/seed.js",
     "seed:users": "tsx db/seed-users.js",
+    "seed:roles": "tsx db/seed-roles.js",
+    "make:superadmin": "tsx db/make-superadmin.js",
     "ensure-seed-groups": "tsx scripts/ensure-seed-groups.js",
     "typecheck": "tsc --noEmit",
     "test:geo-currency": "node scripts/test-geo-currency.js",
@@ -29,6 +32,7 @@
   "homepage": "https://github.com/najabhaider96/Moaddi-Server-V1#readme",
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
+    "@casl/ability": "^7.0.1",
     "@faker-js/faker": "^9.9.0",
     "@maxmind/geoip2-node": "^6.3.4",
     "@zatca/qr": "^1.4.0",

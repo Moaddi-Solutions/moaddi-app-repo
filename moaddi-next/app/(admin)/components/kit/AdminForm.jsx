@@ -13,6 +13,7 @@ import {
   EditBase,
   Form,
   ShowBase,
+  useCanAccess,
   useCreateContext,
   useCreatePath,
   useEditContext,
@@ -156,7 +157,10 @@ export const AdminEdit = ({ resource, id, title, redirect, transform, mutationMo
 const EditAction = ({ resource, id }) => {
   const createPath = useCreatePath();
   const { hasEdit } = useResourceDefinition({ resource });
-  if (id == null || !hasEdit) return null;
+  // CASL: without this the button renders for roles that may only read the
+  // record, and following it lands on ra-core's /access-denied page.
+  const { canAccess } = useCanAccess({ resource, action: "edit" });
+  if (id == null || !hasEdit || !canAccess) return null;
   return (
     <Button
       asChild

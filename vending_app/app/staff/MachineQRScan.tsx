@@ -6,8 +6,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Linking,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,6 +13,7 @@ import {
 } from "react-native";
 import { Text as UIText } from "~/components/ui/text";
 import alert from "~/lib/alert";
+import { openAppSettings } from "~/lib/permissions";
 import { getRequest } from "~/services/httpClient";
 import { machineQRScan } from "~/services/serverAddresses";
 
@@ -27,61 +26,29 @@ export default function App() {
 
   // Handler for manual permission request
   const handleRequestPermission = async () => {
-    console.log("Button clicked - requesting permission");
-    console.log(
-      "Current permission state:",
-      JSON.stringify(permission, null, 2),
-    );
+    if (!permission) return;
 
-    if (!permission) {
-      console.log("Permission is null, waiting...");
-      return;
-    }
-
+    // Once the OS has stopped asking, its Settings page is the only way back.
     if (!permission.canAskAgain) {
-      console.log("Permission cannot be asked again - opening settings");
-      // Open device settings so user can grant permission manually
-      if (Platform.OS === "ios") {
-        Linking.openURL("app-settings:");
-      } else {
-        Linking.openSettings();
-      }
+      openAppSettings();
       return;
     }
 
     try {
-      console.log("Calling Camera.requestCameraPermissionsAsync() directly");
-      // Use Camera API directly instead of hook's requestPermission which seems to hang
-      const result = await Camera.requestCameraPermissionsAsync();
-      console.log("Permission result:", JSON.stringify(result, null, 2));
-
-      // The permission state should update automatically via the hook, but if not, we can force a refresh
-      if (!result.granted) {
-        // Permission was denied, user might need to go to settings
-        console.log("Camera permission denied");
-        console.log("Can ask again:", result.canAskAgain);
-      } else {
-        console.log("Camera permission granted!");
-        // Force component to re-check permission state
-        // The hook should update automatically, but we can trigger a re-render if needed
-      }
-    } catch (error) {
-      console.error("Error requesting camera permission:", error);
+      // Use the Camera API directly; the hook's requestPermission seems to hang.
+      await Camera.requestCameraPermissionsAsync();
+    } catch (error: any) {
+      console.warn("[qr] camera permission request failed:", error?.message);
     }
   };
 
-  // Request permission automatically on mount (optional - can be removed if you only want manual request)
+  // Ask on mount, but only while the OS will still show its dialog — otherwise
+  // let the user reach for the button.
   useEffect(() => {
-    // Only auto-request on first mount, not every time
-    if (permission === null) {
-      // Permission is still loading, wait for it
-      return;
-    }
-    // Don't auto-request if already denied - let user click button
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
-  }, [permission]);
+  }, [permission?.granted, permission?.canAskAgain]);
 
   if (!permission) {
     // Camera permissions are still loading.
