@@ -3,6 +3,7 @@ import {
   deferReject,
   deferResolve,
   hasDashboardSession,
+  notifyAdminLogin,
   notifyAdminLogout,
   readDashboardUser,
 } from "@/../lib/auth-session";
@@ -182,6 +183,10 @@ const login = async ({ username, password }) => {
     Cookies.set("user", JSON.stringify(response), { expires: cookieExpiresAt });
     setLocalStorageItem("user", JSON.stringify(response));
     axios.defaults.headers.common.Authorization = `Bearer ${response.token}`;
+    // Dashboard login is a client-side nav (no reload), so anything that
+    // read the cookie before it existed — e.g. ChatProvider's dashboardSession
+    // — needs an explicit nudge to re-read it now that it does.
+    notifyAdminLogin();
     return deferResolve();
   } catch (error) {
     const message =

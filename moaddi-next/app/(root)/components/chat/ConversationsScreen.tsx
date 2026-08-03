@@ -113,7 +113,8 @@ export default function ConversationsScreen({
   const dashboardSession = useMemo(() => readAuthSession(), [user]);
   const activeUser = useMemo(
     () =>
-      user || (dashboardSession.isDashboardSession ? dashboardSession.user : null),
+      user ||
+      (dashboardSession.isDashboardSession ? dashboardSession.user : null),
     [dashboardSession, user],
   );
   const {
@@ -156,6 +157,7 @@ export default function ConversationsScreen({
   if (isPending || !activeUser) {
     return <ChatPageSkeleton />;
   }
+  console.log(inboxLoading === true && 'loading');
 
   return (
     <main className="moaddi-chat-page mx-auto flex h-[100svh] w-full max-w-[1180px] px-0 pt-0 pb-24 sm:px-6 sm:pt-6 lg:h-[calc(100svh-66px)] lg:pb-6">
@@ -331,7 +333,10 @@ function ConversationInbox({
 
   return (
     <aside
-      className={cn("border-border bg-card min-h-0 flex-col border-e", className)}
+      className={cn(
+        "border-border bg-card min-h-0 flex-col border-e",
+        className,
+      )}
       aria-label={t("inbox")}
     >
       <header className="flex items-start justify-between gap-3 px-5 pt-6 pb-4">
@@ -519,8 +524,8 @@ function ConversationThread({
   const [contactKind, setContactKind] = useState<string | null>(null);
   const [replyTarget, setReplyTarget] = useState<ChatMessage | null>(null);
   const [recording, setRecording] = useState(false);
-  const [voiceRecordingAvailable, setVoiceRecordingAvailable] = useState(
-    () => isVoiceRecordingSupported(),
+  const [voiceRecordingAvailable, setVoiceRecordingAvailable] = useState(() =>
+    isVoiceRecordingSupported(),
   );
   const [locating, setLocating] = useState(false);
   const messages = messagesByConversation[conversationId] ?? EMPTY_MESSAGES;
@@ -788,16 +793,26 @@ function ConversationThread({
                       onReply={() => setReplyTarget(item.message)}
                       onReplyNotLoaded={() => toast.info(t("reply.notLoaded"))}
                       onReact={(emoji) =>
-                        void setReaction(conversationId, item.message._id, emoji)
+                        void setReaction(
+                          conversationId,
+                          item.message._id,
+                          emoji,
+                        )
                       }
                       onClearReaction={() =>
                         void clearReaction(conversationId, item.message._id)
                       }
                       onRetry={() =>
-                        retryMessage(conversationId, item.message.clientMessageId)
+                        retryMessage(
+                          conversationId,
+                          item.message.clientMessageId,
+                        )
                       }
                       onDiscard={() =>
-                        discardMessage(conversationId, item.message.clientMessageId)
+                        discardMessage(
+                          conversationId,
+                          item.message.clientMessageId,
+                        )
                       }
                     />
                   ),
@@ -918,7 +933,8 @@ function MessageBody({
 
   switch (message.type) {
     case "image": {
-      const src = message.localPreviewUrl || chatMediaAPI(conversationId, message._id);
+      const src =
+        message.localPreviewUrl || chatMediaAPI(conversationId, message._id);
       return (
         <ImageBubble
           src={src}
@@ -933,7 +949,9 @@ function MessageBody({
         return (
           <div className="flex w-[15rem] items-center gap-3 px-3.5 py-2.5">
             <span className="bg-background/60 flex size-9 shrink-0 items-center justify-center rounded-full" />
-            <span className="text-sm font-semibold">{t("media.voiceNote")}</span>
+            <span className="text-sm font-semibold">
+              {t("media.voiceNote")}
+            </span>
           </div>
         );
       }
@@ -949,7 +967,10 @@ function MessageBody({
         return (
           <div className="flex min-w-[14rem] items-center gap-3 px-3.5 py-2.5">
             <span className="bg-background/60 flex size-9 shrink-0 items-center justify-center rounded-lg" />
-            <span className="min-w-0 flex-1 truncate text-sm font-semibold" dir="auto">
+            <span
+              className="min-w-0 flex-1 truncate text-sm font-semibold"
+              dir="auto"
+            >
               {message.attachment?.name}
             </span>
           </div>
@@ -1025,12 +1046,16 @@ function ChatMessageRow({
     message.type === "image" ||
     message.type === "audio" ||
     message.type === "document";
-  const myReaction = message.reactions.find((reaction) => reaction.isMine)?.emoji;
+  const myReaction = message.reactions.find(
+    (reaction) => reaction.isMine,
+  )?.emoji;
   // A quoted reply keeps its normal chrome even if the reply text itself is
   // emoji-only — an oversized emoji floating above a reply strip with no
   // bubble to anchor it reads as broken, not expressive.
   const emojiOnly =
-    message.type === "text" && !message.replyTo && isEmojiOnlyText(message.text);
+    message.type === "text" &&
+    !message.replyTo &&
+    isEmojiOnlyText(message.text);
   /* Tail, avatar and timestamp are the three marks of "this run ended here"
      — they always appear together, on the same bubble, so they all read off
      `group` rather than a separate flag. */
@@ -1038,12 +1063,7 @@ function ChatMessageRow({
   const timeLabel = formatMessageTime(message.createdAt, locale);
 
   const bubble = (
-    <div
-      className={cn(
-        "relative",
-        message.reactions.length > 0 && "mb-3",
-      )}
-    >
+    <div className={cn("relative", message.reactions.length > 0 && "mb-3")}>
       <Bubble
         variant={emojiOnly ? "ghost" : message.isMine ? "default" : "muted"}
         align={align}
@@ -1051,7 +1071,7 @@ function ChatMessageRow({
         padding={isMedia || emojiOnly ? "none" : "default"}
         className={cn(
           message.status === "failed" &&
-            "ring-1 ring-destructive/45 ring-offset-1 ring-offset-background",
+            "ring-destructive/45 ring-offset-background ring-1 ring-offset-1",
         )}
       >
         {message.replyTo ? (
@@ -1073,7 +1093,12 @@ function ChatMessageRow({
       </Bubble>
       {message.status === "uploading" ||
       (message.status === "failed" && isUploadMessage) ? (
-        <div className={cn("absolute inset-0", isMedia ? "" : "rounded-2xl overflow-hidden")}>
+        <div
+          className={cn(
+            "absolute inset-0",
+            isMedia ? "" : "overflow-hidden rounded-2xl",
+          )}
+        >
           <UploadProgress
             status={message.status}
             progress={message.uploadProgress}
@@ -1162,10 +1187,7 @@ function ConversationWelcome({ className }: { className?: string }) {
   const t = useTranslations("Chat");
   return (
     <div
-      className={cn(
-        "moaddi-chat-rail items-center justify-center",
-        className,
-      )}
+      className={cn("moaddi-chat-rail items-center justify-center", className)}
     >
       <Empty>
         <EmptyMedia className="bg-accent text-primary-text size-14">
@@ -1305,7 +1327,9 @@ function buildThreadItems(
         kind: "marker",
         id: `date-${message._id}`,
         label: valid
-          ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date)
+          ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+              date,
+            )
           : "",
       });
     }

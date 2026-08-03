@@ -1,7 +1,11 @@
 "use client";
 
 import { useCart } from "@/(root)/context/cart-provider";
-import { readAuthSession } from "@/../lib/auth-session";
+import {
+  ADMIN_LOGIN_EVENT,
+  ADMIN_LOGOUT_EVENT,
+  readAuthSession,
+} from "@/../lib/auth-session";
 import { getRequest, postRequest, putRequest, deleteRequest } from "@/../services/events";
 import {
   chatAttachmentsAPI,
@@ -201,7 +205,26 @@ const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useCart();
   const shopperToken = (user as ShopperUser | null)?.token?.trim() || null;
-  const dashboardSession = useMemo(() => readAuthSession(), [shopperToken]);
+  // Dashboard login/logout happen client-side (react-admin nav, no reload),
+  // so this can't be a useMemo keyed on shopperToken: a vendor/admin session
+  // never touches shopperToken (CartProvider deliberately ignores dashboard
+  // cookies), so the memo would compute once, before login ever wrote the
+  // cookie, and cache token:null for the rest of the session — the inbox
+  // shows 0 conversations until a hard reload. Re-read on mount and on the
+  // explicit login/logout events instead.
+  const [dashboardSession, setDashboardSession] = useState(() =>
+    readAuthSession(),
+  );
+  useEffect(() => {
+    const refresh = () => setDashboardSession(readAuthSession());
+    refresh();
+    window.addEventListener(ADMIN_LOGIN_EVENT, refresh);
+    window.addEventListener(ADMIN_LOGOUT_EVENT, refresh);
+    return () => {
+      window.removeEventListener(ADMIN_LOGIN_EVENT, refresh);
+      window.removeEventListener(ADMIN_LOGOUT_EVENT, refresh);
+    };
+  }, []);
   const token = shopperToken || dashboardSession.token?.trim() || null;
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<

@@ -9,6 +9,14 @@ import Cookies from "js-cookie";
 
 /** Dispatched on admin logout so Socket and other listeners can tear down. */
 export const ADMIN_LOGOUT_EVENT = "moaddi:admin-logout";
+/** Dispatched right after the dashboard login cookie is set (client-side nav, no reload). */
+export const ADMIN_LOGIN_EVENT = "moaddi:admin-login";
+
+export function notifyAdminLogin() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(ADMIN_LOGIN_EVENT));
+  }
+}
 
 /** Defer to next macrotask — avoids react-admin logout ↔ getPermissions race. */
 export function deferResolve(value) {
