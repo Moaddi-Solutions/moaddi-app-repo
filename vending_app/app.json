@@ -147,7 +147,8 @@
           "merchantIdentifier": [],
           "enableGooglePay": false
         }
-      ]
+      ],
+      "expo-fmt-consteval-fix"
     ],
     "experiments": {
       "typedRoutes": true
