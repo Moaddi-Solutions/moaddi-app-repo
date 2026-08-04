@@ -150,6 +150,7 @@
           "enableGooglePay": false
         }
       ],
+      "expo-fmt-consteval-fix",
       [
         "expo-audio",
         {
