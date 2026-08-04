@@ -28,7 +28,7 @@ import {
   Power,
   RefreshCw,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ListBase,
   RecordContextProvider,
@@ -126,10 +126,112 @@ const SectionHeading = ({ children }) => (
   </h3>
 );
 
+// Lock summary chips — a colored label segment joined to a value segment, per the
+// machine admin spec. `status` is the locker state: true means the lock is OPEN
+// (see the boxes model), so a closed lock is `!status`.
+const SummaryChip = ({ label, value, total, hint, className, alert }) => (
+  <div
+    title={hint}
+    className={cn(
+      "flex items-stretch overflow-hidden rounded-xl border border-border bg-background shadow-sm",
+      alert && "ring-2 ring-warning",
+    )}
+  >
+    <span
+      className={cn(
+        "flex min-w-19 items-center justify-center px-3 py-2.5 text-xs font-extrabold uppercase tracking-[0.06em]",
+        className,
+      )}
+    >
+      {label}
+    </span>
+    <span className="flex flex-1 items-baseline justify-center gap-1 px-3 py-2.5">
+      <span className="text-xl font-extrabold tabular-nums text-foreground">
+        {value}
+      </span>
+      <span className="text-xs font-bold tabular-nums text-muted-foreground">
+        / {total}
+      </span>
+    </span>
+  </div>
+);
+
+// Spec: "Fill — how many locks have product inside it". Assigning a product goes
+// through fillProductInBox, which sets productId but never isFilled; isFilled only
+// flips on an IR sensor event. Counting isFilled alone therefore reads 0 on a fully
+// stocked machine whose IR path isn't reporting, so a box counts as filled when
+// either source says it holds product.
+const isBoxFilled = (box) => box.isFilled || !!box.productId;
+
+const MachineSummary = ({ boxes, machine, selectedCount }) => {
+  const counts = useMemo(
+    () => ({
+      // Spec: green "Open" = ready to open, which per the legend means the box
+      // holds product and the lock reads closed.
+      open: boxes.filter((box) => isBoxFilled(box) && !box.status).length,
+      close: boxes.filter((box) => !box.status).length,
+      // Approximate: there is no per-lock health data (no heartbeat, and the
+      // socket layer only carries LOCKER/IR), so this falls back to the
+      // machine-level connection and is all-or-nothing. Per-box granularity
+      // needs a lastSeen field plus a firmware heartbeat.
+      out: machine?.isConnected ? 0 : boxes.length,
+      fill: boxes.filter(isBoxFilled).length,
+      selected: selectedCount,
+    }),
+    [boxes, machine?.isConnected, selectedCount],
+  );
+
+  const total = boxes.length;
+
+  return (
+    <div className="mt-5 border-t border-border/60 pt-4">
+      <SectionHeading>Summary</SectionHeading>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <SummaryChip
+          label="Open"
+          value={counts.open}
+          total={total}
+          hint="Locks active and ready to open — stocked with product and currently closed. A lock that is already open is not counted."
+          className="bg-success text-success-foreground"
+        />
+        <SummaryChip
+          label="Close"
+          value={counts.close}
+          total={total}
+          hint="Locks currently closed. Every ready-to-open lock is also closed, so Open never exceeds Close."
+          className="bg-destructive text-destructive-foreground"
+        />
+        <SummaryChip
+          label="Out"
+          value={counts.out}
+          total={total}
+          alert={counts.out > 0}
+          hint="Locks with no communication with the website. Machine-level only for now, so this is 0 or every box."
+          className="bg-warning text-warning-foreground"
+        />
+        <SummaryChip
+          label="Fill"
+          value={counts.fill}
+          total={total}
+          hint="Locks that have product inside."
+          className="bg-info text-info-foreground"
+        />
+        <SummaryChip
+          label="Selected"
+          value={counts.selected}
+          total={total}
+          hint="Locks you have ticked in the grid above."
+          className="bg-muted text-muted-foreground"
+        />
+      </div>
+    </div>
+  );
+};
+
 const BoxGrid = ({
   machine,
   boxes,
-  refetchBoxes,
+  refetch,
   selectedBoxes,
   setSelectedBoxes,
   selectedProduct,
@@ -137,23 +239,11 @@ const BoxGrid = ({
   loading,
   setLoading,
 }) => {
-  const { isPending, data, refetch, dataUpdatedAt } = useGetOne("vendors", {
-    id: machine.vendorId,
-  });
   const {
     publishData,
     controlDirectMachine,
     controlBluetooth1Machine,
   } = useSocket();
-
-  useEffect(() => {
-    refetchBoxes.current = refetch;
-    if (isPending) boxes.current = [];
-    else {
-      const _machine = data.machines.find(({ _id }) => _id == machine._id);
-      boxes.current = _machine ? _machine.boxes : [];
-    }
-  }, [isPending, data, dataUpdatedAt, refetch]);
 
   useEffect(() => {
     if (loading) return;
@@ -163,9 +253,7 @@ const BoxGrid = ({
   const productAssignOne = (boxId) => {
     setLoading(true);
     BoxApi.productAssign(machine._id, [boxId], selectedProduct).then(() =>
-      refetchBoxes
-        .current?.()
-        .then(() => setTimeout(() => setLoading(false), 100)),
+      refetch().then(() => setTimeout(() => setLoading(false), 100)),
     );
   };
 
@@ -200,7 +288,7 @@ const BoxGrid = ({
 
   return (
     <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-      {boxes.current.map?.((box, i) => {
+      {boxes.map((box, i) => {
         const selected = selectedBoxes.includes(box._id);
         return (
         <RecordContextProvider key={box._id} value={box}>
@@ -401,9 +489,23 @@ const MachineControl = ({ children }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const { publishData, controlDirectMachine, controlBluetooth1Machine } =
     useSocket();
-  const boxes = useRef([]);
-  const refetchBoxes = useRef(null);
   const machine = useRecordContext();
+  // Owned here rather than in BoxGrid so that both the grid and the summary bar
+  // re-render off the same query — RealTime writes MQTT updates straight into
+  // this cache entry, which is what keeps the counters live.
+  const { data: vendor, isPending, refetch } = useGetOne(
+    "vendors",
+    { id: machine?.vendorId },
+    { enabled: !!machine?.vendorId },
+  );
+  const boxes = useMemo(() => {
+    if (isPending || !vendor) return [];
+    const found = vendor.machines.find(({ _id }) => _id == machine?._id);
+    // The vendors lookup pulls every box for the machine without filtering
+    // isDeleted, so soft-deleted boxes arrive here and would otherwise be both
+    // rendered in the grid and counted in the summary.
+    return (found?.boxes ?? []).filter((box) => !box.isDeleted);
+  }, [vendor, isPending, machine?._id]);
   const readyToSet = !machine?.isActive && machine?.isConnected;
   const productRow = {
     selectedProduct,
@@ -415,7 +517,7 @@ const MachineControl = ({ children }) => {
     machine,
     selectedProduct,
     boxes,
-    refetchBoxes,
+    refetch,
     selectedBoxes,
     setSelectedBoxes,
     readyToSet,
@@ -427,30 +529,24 @@ const MachineControl = ({ children }) => {
     setLoading(true);
     BoxApi.productAssign(
       machine.id,
-      boxes.current.map(({ _id }) => _id),
+      boxes.map(({ _id }) => _id),
       selectedProduct,
     ).then(() => {
-      refetchBoxes
-        .current?.()
-        .then(() => setTimeout(() => setLoading(false), 100));
+      refetch().then(() => setTimeout(() => setLoading(false), 100));
     });
   };
 
   const productAssignSelected = () => {
     setLoading(true);
     BoxApi.productAssign(machine.id, selectedBoxes, selectedProduct).then(() => {
-      refetchBoxes
-        .current?.()
-        .then(() => setTimeout(() => setLoading(false), 100));
+      refetch().then(() => setTimeout(() => setLoading(false), 100));
     });
   };
 
   const productUnassignAll = (machineId) => {
     setLoading(true);
     BoxApi.productUnassign(machineId).then(() => {
-      refetchBoxes
-        .current?.()
-        .then(() => setTimeout(() => setLoading(false), 100));
+      refetch().then(() => setTimeout(() => setLoading(false), 100));
     });
   };
 
@@ -553,7 +649,7 @@ const MachineControl = ({ children }) => {
                     openSelected(
                       machine._id,
                       selectedBoxes.map((id) =>
-                        boxes.current.find(({ _id }) => id == _id),
+                        boxes.find(({ _id }) => id == _id),
                       ),
                     )
                   }
@@ -605,6 +701,11 @@ const MachineControl = ({ children }) => {
             <div className="border-t border-border/60 pt-4">
               <SectionHeading>Boxes / Slots</SectionHeading>
               <BoxGrid {...boxGrid} />
+              <MachineSummary
+                boxes={boxes}
+                machine={machine}
+                selectedCount={selectedBoxes.length}
+              />
             </div>
           </>
         ) : null}

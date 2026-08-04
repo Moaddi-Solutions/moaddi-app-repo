@@ -3,7 +3,27 @@
 const express = require("express");
 const users = require("../../data/repos/users");
 const authenticate = require("../middlewares/authenticate");
+const authorize = require("../middlewares/authorize");
+const { subject, rulesFor } = require("../../lib/ability");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
+
+/** True only for staff whose User rules carry no ownership condition (admins). */
+const canManageUsers = (req) => req.ability.can("create", "User");
+
+/** Own-or-admin check against a target user id. */
+const canTouchUser = (req, action, userId) =>
+  req.ability.can(action, subject("User", { _id: String(userId) }));
+
+/**
+ * Shop Admins may only grant the basic roles; anything else — Admin,
+ * SuperAdmin, or a dashboard-created custom role (which can carry arbitrary
+ * permissions) — requires a Super Admin (manage all).
+ */
+const BASIC_ROLES = ["vendor", "customer"];
+const canGrantRole = (req, role) =>
+  role === undefined ||
+  BASIC_ROLES.includes(String(role || "").toLowerCase()) ||
+  req.ability.can("manage", "all");
 const { verifySocialToken } = require("../../services/social-auth");
 
 
@@ -83,9 +103,21 @@ module.exports = () => {
     }
   });
 
+  // Current user's CASL permission rules — lets clients rebuild their
+  // ability after a session restore without re-signing in.
+  router.get("/users/me/permissions", authenticate(), (req, res) => {
+    const u = req.authenticatedUser;
+    return res.status(200).json({ role: u.role, rules: rulesFor(u) });
+  });
+
   // Create new sub-users.
-  router.post("/users/create", authenticate(), async (req, res, next) => {
+  router.post("/users/create", authenticate(), authorize("create", "User"), async (req, res, next) => {
     try {
+      if (req.body && !canGrantRole(req, req.body.role)) {
+        return res
+          .status(403)
+          .json({ message: "Only a Super Admin can grant admin roles." });
+      }
       let results = await users.create(req.body);
       return res.status(201).json(results);
     } catch (err) {
@@ -94,8 +126,11 @@ module.exports = () => {
   });
 
   // Get all users.
-  router.get("/users", authenticate(), async (req, res, next) => {
+  router.get("/users", authenticate(), authorize("read", "User"), async (req, res, next) => {
     try {
+      if (!canManageUsers(req)) {
+        return res.status(403).json({ message: "Forbidden." });
+      }
       let results = await users.get(req.query.offset, req.query.limit);
       return res.status(200).json(results);
     } catch (err) {
@@ -104,7 +139,7 @@ module.exports = () => {
   });
 
   // Get user by userId.
-  router.get("/users/:userId", authenticate(), async (req, res, next) => {
+  router.get("/users/:userId", authenticate(), authorize("read", "User"), async (req, res, next) => {
     try {
       const preferredCurrency = await getCurrencyOfUser(req);
       
@@ -116,9 +151,16 @@ module.exports = () => {
   });
 
   // Get all users by role.
-  router.get("/users/role/:role", authenticate(), async (req, res, next) => {
+  router.get("/users/role/:role", authenticate(), authorize("read", "User"), async (req, res, next) => {
     try {
       let results = await users.getByRole(req.params.role);
+      // Non-admin staff only resolve references to themselves (e.g. the
+      // vendor column in their own machines list) — never the full roster.
+      if (!canManageUsers(req)) {
+        results = (results || []).filter(
+          (u) => String(u._id) === String(req.authenticatedUser._id)
+        );
+      }
       return res.status(200).json(results);
     } catch (err) {
       next(err);
@@ -129,8 +171,12 @@ module.exports = () => {
   router.put(
     "/users/:userId/toggle",
     authenticate(),
+    authorize("update", "User"),
     async (req, res, next) => {
       try {
+        if (!canTouchUser(req, "update", req.params.userId)) {
+          return res.status(403).json({ message: "Forbidden." });
+        }
         let results = await users.toggle(req.params.userId);
         return res.status(200).json(results);
       } catch (err) {
@@ -140,9 +186,23 @@ module.exports = () => {
   );
 
   // Update user by userId.
-  router.put("/users/:userId", authenticate(), async (req, res, next) => {
+  router.put("/users/:userId", authenticate(), authorize("update", "User"), async (req, res, next) => {
     try {
-      let results = await users.update(req.params.userId, req.body);
+      if (!canTouchUser(req, "update", req.params.userId)) {
+        return res.status(403).json({ message: "Forbidden." });
+      }
+      const properties = { ...(req.body || {}) };
+      // Only admins may change roles or shop assignment — never self-service.
+      if (!canManageUsers(req)) {
+        delete properties.role;
+        delete properties.shopId;
+      }
+      if (!canGrantRole(req, properties.role)) {
+        return res
+          .status(403)
+          .json({ message: "Only a Super Admin can grant admin roles." });
+      }
+      let results = await users.update(req.params.userId, properties);
       return res.status(200).json(results);
     } catch (err) {
       next(err);
@@ -166,8 +226,12 @@ module.exports = () => {
   router.put(
     "/users/:userId/updatepassword",
     authenticate(),
+    authorize("update", "User"),
     async (req, res, next) => {
       try {
+        if (!canTouchUser(req, "update", req.params.userId)) {
+          return res.status(403).json({ message: "Forbidden." });
+        }
         let results = await users.updatePassword(req.params.userId, req.body);
         return res.status(200).json(results);
       } catch (err) {
@@ -217,8 +281,11 @@ module.exports = () => {
   // // });
 
   // Delete user by userId.
-  router.delete("/users/:userId", authenticate(), async (req, res, next) => {
+  router.delete("/users/:userId", authenticate(), authorize("delete", "User"), async (req, res, next) => {
     try {
+      if (!canTouchUser(req, "delete", req.params.userId)) {
+        return res.status(403).json({ message: "Forbidden." });
+      }
       let results = await users.remove(req.params.userId);
       return res.status(200).json(results);
     } catch (err) {

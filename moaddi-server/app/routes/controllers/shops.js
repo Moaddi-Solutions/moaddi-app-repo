@@ -1,6 +1,7 @@
 const express = require("express");
 const shops = require("../../data/repos/shops");
 const authenticate = require("../middlewares/authenticate");
+const authorize = require("../middlewares/authorize");
 const optionalAuthenticate = require("../middlewares/optionalAuthenticate");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 const upload = require("../middlewares/fileHandler");
@@ -12,6 +13,7 @@ module.exports = () => {
   router.post(
     "/shops",
     authenticate(),
+    authorize("create", "Shop"),
     upload.files().single("image"),
     async (req, res, next) => {
       try {
@@ -54,7 +56,7 @@ module.exports = () => {
   );
 
   //get shop by id
-  router.get("/shops/:shopId", authenticate(), async (req, res, next) => {
+  router.get("/shops/:shopId", authenticate(), authorize("read", "Shop"), async (req, res, next) => {
     try {
       const preferredCurrency = await getCurrencyOfUser(req);
       let results = await shops.getById(req.params.shopId, preferredCurrency);
@@ -68,6 +70,7 @@ module.exports = () => {
   router.get(
     "/shops/vendor/:vendorId",
     authenticate(),
+    authorize("read", "Shop"),
     async (req, res, next) => {
       try {
         let results = await shops.getByVendor(req.params.vendorId);
@@ -82,6 +85,7 @@ module.exports = () => {
   router.put(
     "/shops/:shopId",
     authenticate(),
+    authorize("update", "Shop"),
     upload.files().single("image"),
     async (req, res, next) => {
       try {
@@ -102,7 +106,7 @@ module.exports = () => {
   );
 
   // delete shop by shopId.
-  router.delete("/shops/:shopId", authenticate(), async (req, res, next) => {
+  router.delete("/shops/:shopId", authenticate(), authorize("delete", "Shop"), async (req, res, next) => {
     try {
       let results = await shops.remove(req.params.shopId);
       return res.status(200).json(results);

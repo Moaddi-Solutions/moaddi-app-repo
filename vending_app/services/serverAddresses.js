@@ -46,6 +46,8 @@ export const contentUploadAPI = baseUrl + "content/upload";
 export const allPendingRequests = address + "purchases/allpendingrequests";
 export const getCertificatesAPI = address + "broker/generatecerts";
 
+export const myPermissionsAPI = address + "users/me/permissions";
+
 export const userAPI = (id) => address + "users/" + id;
 export const shopAPI = (id) => address + "shops/" + id;
 export const groupAPI = (id) => address + "groups/" + id;
@@ -83,6 +85,36 @@ export const boxUpdateAPI = (id) =>
 export const unassignBoxAPI = (id) =>
   address + "boxes/machine/" + id + "/unassign";
 export const productsAPI = (id) => address + "products/" + id;
+
+/* ---- Chat ----
+ * 1:1 messaging. Realtime rides a dedicated `/chat` Socket.IO namespace, which
+ * is separate from the machine/BLE socket on the default namespace.
+ */
+export const chatSocketNamespace = baseUrl + "chat";
+export const chatConversationsAPI = address + "chat/conversations";
+export const chatConversationAPI = (conversationId) =>
+  `${chatConversationsAPI}/${conversationId}`;
+export const chatMessagesAPI = (conversationId) =>
+  `${chatConversationAPI(conversationId)}/messages`;
+export const chatReadAPI = (conversationId) =>
+  `${chatConversationAPI(conversationId)}/read`;
+export const chatAttachmentsAPI = (conversationId) =>
+  `${chatConversationAPI(conversationId)}/attachments`;
+export const chatMediaAPI = (conversationId, messageId) =>
+  `${chatMessagesAPI(conversationId)}/${messageId}/media`;
+export const chatReactionAPI = (conversationId, messageId) =>
+  `${chatMessagesAPI(conversationId)}/${messageId}/reaction`;
+
+/**
+ * The account that receives "Contact support" messages.
+ *
+ * Mirrors the web client's NEXT_PUBLIC_CHAT_ADMIN_ID, including its fallback,
+ * so both clients reach the same inbox until support assignment moves server-side.
+ */
+export const supportUserId = () =>
+  process.env.EXPO_PUBLIC_CHAT_ADMIN_ID?.trim() ||
+  Constants.expoConfig?.extra?.chatAdminId?.trim() ||
+  "+966555728085";
 
 export const myWalletAPI = address + "wallets/me";
 export const myTransactionsAPI = address + "transactions";

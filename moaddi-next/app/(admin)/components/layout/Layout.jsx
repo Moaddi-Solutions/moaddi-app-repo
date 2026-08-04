@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { PhoneInput } from "@/(root)/components/PhoneInput";
+import { useChat } from "@/(root)/context/chat-context";
 import { SocketContextProvider } from "@/(root)/context/Socket";
 import {
   Accordion,
@@ -40,10 +41,11 @@ import {
 } from "@/../components/ui/sidebar";
 import { readDashboardUser } from "@/../lib/auth-session";
 import {
-  isDashboardAdminRole,
-  isVendorRole,
+  isDashboardRole,
   normalizeDashboardRole,
 } from "@/../lib/dashboard-role";
+import { canAccessResource } from "@/../lib/ability";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { useTheme } from "@/../lib/use-theme";
 import {
   Banknote,
@@ -57,6 +59,7 @@ import {
   Layers,
   LoaderCircle,
   LogOut,
+  MessageCircle,
   Moon,
   Package,
   PanelBottom,
@@ -66,6 +69,7 @@ import {
   Rows3,
   SearchCheck,
   Settings2,
+  ShieldCheck,
   SlidersHorizontal,
   Smartphone,
   Store,
@@ -76,12 +80,31 @@ import {
   UsersRound,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCreatePath, useLogin, useLogout, useNotify } from "ra-core";
 import { Link, useLocation } from "react-router-dom";
 import { AdminNotifications } from "@/(admin)/components/kit/AdminUI";
 
-const NavItem = ({ to, icon: Icon, children }) => {
+const normalizeUnreadCount = (value) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.floor(value));
+};
+
+const formatUnreadCount = (value) => (value > 99 ? "99+" : String(value));
+
+const UnreadBadge = ({ count, className = "" }) => {
+  const normalized = normalizeUnreadCount(count);
+  if (!normalized) return null;
+  return (
+    <span
+      className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-black leading-none text-destructive-foreground ${className}`}
+    >
+      {formatUnreadCount(normalized)}
+    </span>
+  );
+};
+
+const NavItem = ({ to, icon: Icon, children, badgeCount = 0 }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   return (
@@ -90,6 +113,10 @@ const NavItem = ({ to, icon: Icon, children }) => {
         <Link to={to} state={{ _scrollToTop: true }}>
           <Icon />
           <span>{children}</span>
+          <UnreadBadge
+            count={badgeCount}
+            className="ms-auto group-data-[collapsible=icon]:hidden"
+          />
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -129,9 +156,11 @@ const NavGroup = ({ title, icon: Icon, children }) => (
 
 export const AppSidebar = () => {
   const createPath = useCreatePath();
-  const role = normalizeDashboardRole(readDashboardUser().role);
-  const isAdmin = isDashboardAdminRole(role);
-  const isVendor = isVendorRole(role);
+  const ability = useAbility();
+  // CASL drives what appears: each entry shows only when the logged-in
+  // user's rules allow the underlying resource (works for custom roles too).
+  const show = (resource) => canAccessResource(ability, resource, "list");
+  const { totalUnreadCount } = useChat();
 
   return (
     <Sidebar collapsible="icon">
@@ -154,36 +183,52 @@ export const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Business</SidebarGroupLabel>
           <SidebarMenu>
-            {isAdmin && (
+            {show("customers") && (
               <NavItem to={createPath({ resource: "customers", type: "list" })} icon={UsersRound}>
                 Customers
               </NavItem>
             )}
-            <NavItem to={createPath({ resource: "machines", type: "list" })} icon={Refrigerator}>
-              Machines
-            </NavItem>
-            {isAdmin && (
+            {show("machines") && (
+              <NavItem to={createPath({ resource: "machines", type: "list" })} icon={Refrigerator}>
+                Machines
+              </NavItem>
+            )}
+            {show("vendors") && (
               <NavItem to={createPath({ resource: "vendors", type: "list" })} icon={Handshake}>
                 Vendors
               </NavItem>
             )}
-            {(isAdmin || isVendor) && (
+            {show("roles") && (
+              <NavItem to={createPath({ resource: "roles", type: "list" })} icon={ShieldCheck}>
+                Roles
+              </NavItem>
+            )}
+            {show("products") && (
               <NavItem to={createPath({ resource: "products", type: "list" })} icon={Package}>
                 Products
               </NavItem>
             )}
-            {isAdmin && (
+            {show("shops") && (
               <NavItem to={createPath({ resource: "shops", type: "list" })} icon={Store}>
                 Shops
               </NavItem>
             )}
-            <NavItem to={createPath({ resource: "groups", type: "list" })} icon={Layers}>
-              Groups
-            </NavItem>
-            <NavItem to={createPath({ resource: "notifications", type: "list" })} icon={BellRing}>
-              Notifications
-            </NavItem>
-            {isVendor && (
+            {show("groups") && (
+              <NavItem to={createPath({ resource: "groups", type: "list" })} icon={Layers}>
+                Groups
+              </NavItem>
+            )}
+            {show("notifications") && (
+              <NavItem to={createPath({ resource: "notifications", type: "list" })} icon={BellRing}>
+                Notifications
+              </NavItem>
+            )}
+            {ability.can("read", "Conversation") && (
+              <NavItem to="/conversations" icon={MessageCircle} badgeCount={totalUnreadCount}>
+                Conversations
+              </NavItem>
+            )}
+            {show("docs") && !show("websites") && (
               <NavItem to={createPath({ resource: "docs", type: "list" })} icon={NotebookText}>
                 Docs
               </NavItem>
@@ -191,7 +236,7 @@ export const AppSidebar = () => {
           </SidebarMenu>
         </SidebarGroup>
 
-        {isAdmin && (
+        {show("payments") && (
           <SidebarGroup>
             <SidebarGroupLabel>Payments</SidebarGroupLabel>
             <SidebarMenu>
@@ -215,24 +260,28 @@ export const AppSidebar = () => {
           </SidebarGroup>
         )}
 
-        {(isAdmin || isVendor) && (
+        {(show("wallets") || show("withdrawals")) && (
           <SidebarGroup>
             <SidebarGroupLabel>Finance</SidebarGroupLabel>
             <SidebarMenu>
-              <NavItem to={createPath({ resource: "wallets", type: "list" })} icon={Wallet}>
-                Wallets
-              </NavItem>
-              <NavItem
-                to={createPath({ resource: "withdrawals", type: "list" })}
-                icon={Landmark}
-              >
-                Withdrawals
-              </NavItem>
+              {show("wallets") && (
+                <NavItem to={createPath({ resource: "wallets", type: "list" })} icon={Wallet}>
+                  Wallets
+                </NavItem>
+              )}
+              {show("withdrawals") && (
+                <NavItem
+                  to={createPath({ resource: "withdrawals", type: "list" })}
+                  icon={Landmark}
+                >
+                  Withdrawals
+                </NavItem>
+              )}
             </SidebarMenu>
           </SidebarGroup>
         )}
 
-        {isAdmin && (
+        {show("websites") && (
           <>
             <SidebarSeparator />
             <SidebarGroup>
@@ -487,13 +536,38 @@ const ThemeToggleButton = () => {
   );
 };
 
-const AppHeader = () => (
-  <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-2 border-b px-3">
-    <SidebarTrigger />
-    <div className="min-w-0 flex-1" />
-    <ThemeToggleButton />
-  </header>
-);
+const AppHeader = () => {
+  const role = normalizeDashboardRole(readDashboardUser().role);
+  const canOpenConversations = isDashboardRole(role);
+  const { totalUnreadCount } = useChat();
+
+  return (
+    <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-2 border-b px-3">
+      <SidebarTrigger />
+      <div className="min-w-0 flex-1" />
+      {canOpenConversations && (
+        <ShadcnButton
+          asChild
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="relative size-8 rounded-lg"
+          aria-label="Open conversations"
+          title="Open conversations"
+        >
+          <Link to="/conversations">
+            <MessageCircle className="size-4" />
+            <UnreadBadge
+              count={totalUnreadCount}
+              className="absolute -right-1.5 -top-1.5 border-2 border-sidebar"
+            />
+          </Link>
+        </ShadcnButton>
+      )}
+      <ThemeToggleButton />
+    </header>
+  );
+};
 
 const Layout = ({ children }) => {
   return (

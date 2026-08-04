@@ -5,13 +5,15 @@ import type { IPurchase } from '../../data/models/types';
 const purchasesRepo = require('../../data/repos/purchases') as typeof import('../../data/repos/purchases');
 const machinesRepo = require('../../data/repos/machines') as typeof import('../../data/repos/machines');
 const authenticate = require('../middlewares/authenticate') as () => import('express').RequestHandler;
-const requireRole = require('../middlewares/requireRole') as (
-  roles: string[]
+const authorize = require('../middlewares/authorize') as (
+  action: string,
+  subjectType: string
 ) => import('express').RequestHandler;
 const {
   canViewOrMutatePurchase,
   canViewPurchase,
   isStaffAdminRole,
+  isVendorRole,
 } = require('../../lib/purchaseAccess') as typeof import('../../lib/purchaseAccess');
 const {
   completePayment,
@@ -46,7 +48,7 @@ const resetIncompletePurchasesHandler = async (req: Request, res: Response): Pro
 const controller = (): import('express').Router => {
   const router = express.Router();
 
-  router.post('/purchases', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/purchases', authenticate(), authorize('create', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const u = req.authenticatedUser;
       if (!u) return res.status(401).json({ message: 'Unauthorized.' });
@@ -66,9 +68,14 @@ const controller = (): import('express').Router => {
   router.get(
     '/purchases/allpendingrequests',
     authenticate(),
-    requireRole(['Admin', 'SuperAdmin', 'Vendor']),
+    authorize('read', 'Purchase'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        const u = req.authenticatedUser!;
+        // Operational staff view; shoppers use customerHistory instead.
+        if (!isStaffAdminRole(u.role) && !isVendorRole(u.role)) {
+          return res.status(403).json({ message: 'Forbidden.' });
+        }
         const results = await purchasesRepo.getPendingRequests(
           asPendingQueryNum(req.query.offset),
           asPendingQueryNum(req.query.limit),
@@ -84,9 +91,13 @@ const controller = (): import('express').Router => {
   router.get(
     '/purchases',
     authenticate(),
-    requireRole(['Admin', 'SuperAdmin']),
+    authorize('read', 'Purchase'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        // Unscoped listing is an admin-only view.
+        if (!isStaffAdminRole(req.authenticatedUser!.role)) {
+          return res.status(403).json({ message: 'Forbidden.' });
+        }
         const results = await purchasesRepo.listAll(
           {
             status: req.query.status ? String(req.query.status) : undefined,
@@ -109,7 +120,7 @@ const controller = (): import('express').Router => {
     }
   );
 
-  router.get('/purchases/:purchaseId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/purchases/:purchaseId', authenticate(), authorize('read', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const expand = req.query.expand === '1' || req.query.expand === 'true';
       const purchase = expand
@@ -127,7 +138,7 @@ const controller = (): import('express').Router => {
   router.post(
     '/purchases/complete',
     authenticate(),
-    requireRole(['Admin', 'Vendor', 'Customer', 'Guest']),
+    authorize('create', 'Purchase'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const results = await completePayment(req.body, req.authenticatedUser);
@@ -138,7 +149,7 @@ const controller = (): import('express').Router => {
     }
   );
 
-  router.put('/purchases/:purchaseId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.put('/purchases/:purchaseId', authenticate(), authorize('update', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (req.body == null || !Array.isArray(req.body.items)) {
         return res.status(400).json({ message: 'Body must include an `items` array.' });
@@ -156,7 +167,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.delete('/purchases/:purchaseId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.delete('/purchases/:purchaseId', authenticate(), authorize('delete', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const purchase = await purchasesRepo.getById(pathParam(req.params.purchaseId));
       if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo))) {
@@ -172,6 +183,7 @@ const controller = (): import('express').Router => {
   router.get(
     '/purchases/customerHistory/:customerId',
     authenticate(),
+    authorize('read', 'Purchase'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const u = req.authenticatedUser;
@@ -192,7 +204,7 @@ const controller = (): import('express').Router => {
     }
   );
 
-  router.get('/purchases/invoice/:invoiceId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/purchases/invoice/:invoiceId', authenticate(), authorize('read', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = (await purchasesRepo.getByInvoiceId(pathParam(req.params.invoiceId))) as IPurchase;
       if (!(await canViewOrMutatePurchase(results, req.authenticatedUser!, machinesRepo))) {
@@ -204,7 +216,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.delete('/purchases/reset/:customerId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.delete('/purchases/reset/:customerId', authenticate(), authorize('read', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       await resetIncompletePurchasesHandler(req, res);
     } catch (err) {
@@ -212,7 +224,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.get('/purchases/reset/:customerId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/purchases/reset/:customerId', authenticate(), authorize('read', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       res.set('Deprecation', 'true');
       res.set('X-API-Deprecated-Use-Instead', 'DELETE /api/v1/purchases/reset/:customerId');
@@ -222,7 +234,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.get('/purchases/invoiceData/:invoiceId', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/purchases/invoiceData/:invoiceId', authenticate(), authorize('read', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = (await myFatoraStrategy.getInvoice!(pathParam(req.params.invoiceId))) as {
         purchase: IPurchase;
@@ -238,7 +250,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.post('/purchases/create-payment-intent', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/purchases/create-payment-intent', authenticate(), authorize('create', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { currency, purchaseId } = req.body as { currency?: string; purchaseId?: string };
       const results = await stripeStrategy.createPayment!({
@@ -252,7 +264,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.post('/purchases/moyasar-checkout', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/purchases/moyasar-checkout', authenticate(), authorize('create', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { currency, purchaseId } = req.body as { currency?: string; purchaseId?: string };
       const results = await moyasarStrategy.createPayment!({
@@ -266,7 +278,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.post('/purchases/stripeIsPaymentDone', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/purchases/stripeIsPaymentDone', authenticate(), authorize('create', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = await stripeStrategy.finalizeClientNotification!(
         (req.body as { _id?: string })._id!,
@@ -278,7 +290,7 @@ const controller = (): import('express').Router => {
     }
   });
 
-  router.post('/purchases/moyasarIsPaymentDone', authenticate(), async (req: Request, res: Response, next: NextFunction) => {
+  router.post('/purchases/moyasarIsPaymentDone', authenticate(), authorize('create', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const results = await moyasarStrategy.finalizeClientNotification!(
         (req.body as { _id?: string })._id!,

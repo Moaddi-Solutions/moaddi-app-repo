@@ -1,11 +1,37 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { House, Mail, Store, User } from "lucide-react-native";
+import { House, Mail, MessageSquare, Store, User } from "lucide-react-native";
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomNav, BottomNavItem } from "~/components/moaddi";
-import { colors, palette } from "~/theme/moaddi";
+import { useChat } from "~/context/ChatContext";
+import { colors, palette, radius, type as typo } from "~/theme/moaddi";
+
+/** Unread count pill anchored to the top-right of the Messages icon. */
+function UnreadBadge({ count }: { count: number }) {
+  if (!count) return null;
+  return (
+    <View
+      style={{
+        position: "absolute",
+        top: -6,
+        right: -10,
+        minWidth: 16,
+        height: 16,
+        paddingHorizontal: 4,
+        borderRadius: radius.pill,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.danger,
+      }}
+    >
+      <Text style={{ ...typo.label, fontSize: 10, color: palette.white }}>
+        {count > 99 ? "99+" : count}
+      </Text>
+    </View>
+  );
+}
 
 /** Per-route presentation: icon. Keyed by the route file name. */
 const TAB_ICONS: Record<string, (active: boolean) => ReactNode> = {
@@ -14,6 +40,12 @@ const TAB_ICONS: Record<string, (active: boolean) => ReactNode> = {
   ),
   shops: (active) => (
     <Store size={20} color={active ? palette.teal[500] : palette.ink[500]} />
+  ),
+  messages: (active) => (
+    <MessageSquare
+      size={20}
+      color={active ? palette.teal[500] : palette.ink[500]}
+    />
   ),
   contact: (active) => (
     <Mail size={20} color={active ? palette.teal[500] : palette.ink[500]} />
@@ -30,9 +62,11 @@ const TAB_ICONS: Record<string, (active: boolean) => ReactNode> = {
 export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { totalUnreadCount } = useChat();
   const tabLabels: Record<string, string> = {
     index: t("home"),
     shops: t("shops"),
+    messages: t("messages"),
     contact: t("contactUs"),
     profile: t("profile"),
   };
@@ -42,7 +76,15 @@ export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
     .map((route) => ({
       id: route.name,
       label: tabLabels[route.name],
-      icon: TAB_ICONS[route.name],
+      icon:
+        route.name === "messages"
+          ? (active: boolean) => (
+              <View>
+                {TAB_ICONS.messages(active)}
+                <UnreadBadge count={totalUnreadCount} />
+              </View>
+            )
+          : TAB_ICONS[route.name],
     }));
 
   const activeId = state.routes[state.index]?.name;

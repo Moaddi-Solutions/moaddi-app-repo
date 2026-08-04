@@ -33,6 +33,15 @@ export function guestSignInAddress() {
 export function guestMeAddress() {
   return `${address()}users/guest/me`;
 }
+export function myPermissionsAddress() {
+  return `${address()}users/me/permissions`;
+}
+export function rolesAPI() {
+  return `${address()}roles`;
+}
+export function roleAPI(id) {
+  return `${address()}roles/${enc(id)}`;
+}
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }
@@ -66,6 +75,37 @@ export function currenciesAPI() {
 export function purchasesAPI() {
   return `${address()}purchases`;
 }
+export function chatConversationsAPI() {
+  return `${address()}chat/conversations`;
+}
+export function chatConversationMessagesAPI(conversationId, beforeSeq) {
+  const url = `${chatConversationsAPI()}/${enc(conversationId)}/messages`;
+  return beforeSeq ? `${url}?beforeSeq=${enc(beforeSeq)}` : url;
+}
+export function chatConversationReadAPI(conversationId) {
+  return `${chatConversationsAPI()}/${enc(conversationId)}/read`;
+}
+export function chatSocketAddress() {
+  return `${baseUrl().replace(/\/$/, "")}/chat`;
+}
+export function chatAttachmentsAPI(conversationId) {
+  return `${chatConversationsAPI()}/${enc(conversationId)}/attachments`;
+}
+export function chatMessageReactionAPI(conversationId, messageId) {
+  return `${chatConversationsAPI()}/${enc(conversationId)}/messages/${enc(messageId)}/reaction`;
+}
+/**
+ * Relative, unlike every other builder here — it points at the Next route
+ * handler proxy (app/api/chat-media/...), not at the API server directly.
+ * Private media cannot be fetched with a plain <img>/<audio> src against the
+ * API origin: there is no way to attach the bearer token to that request, and
+ * the dev API port is not even in next.config.ts remotePatterns. The proxy
+ * reads the auth cookie server-side and forwards the request (including Range
+ * headers, for audio seeking).
+ */
+export function chatMediaAPI(conversationId, messageId) {
+  return `/api/chat-media/${enc(conversationId)}/${enc(messageId)}`;
+}
 export function contentUploadAPI() {
   return `${baseUrl()}content/upload`;
 }
@@ -83,16 +123,19 @@ export const contentAPI = (id) => `${baseUrl()}content/${id}`;
 export const userToggleAPI = (id) => `${address()}users/${enc(id)}/toggle`;
 export const machineAPI = (id) => `${address()}machines/${enc(id)}`;
 export const purchaseAPI = (id) => `${address()}purchases/${enc(id)}`;
-export const MachinesByVendor = (id) => `${address()}machines/vendor/${enc(id)}`;
+export const MachinesByVendor = (id) =>
+  `${address()}machines/vendor/${enc(id)}`;
 export const purchaseByCustomer = (id) =>
   `${address()}purchases/customerHistory/${enc(id)}`;
 export const purchaseByInvoice = (id) =>
   `${address()}purchases/invoice/${enc(id)}`;
-export const MachinesByProduct = (id) => `${address()}machine/product/${enc(id)}`;
+export const MachinesByProduct = (id) =>
+  `${address()}machine/product/${enc(id)}`;
 export const MachinesByShop = (id) => `${address()}machine/shop/${enc(id)}`;
 export const MachinesByGroup = (id) => `${address()}machine/group/${enc(id)}`;
 export const VendorsByShop = (id) => `${address()}vendor/shop/${enc(id)}`;
-export const ProductsByMachine = (id) => `${address()}product/machine/${enc(id)}`;
+export const ProductsByMachine = (id) =>
+  `${address()}product/machine/${enc(id)}`;
 export const ProductsByVendor = (id) => `${address()}product/vendor/${enc(id)}`;
 export const machineToggleAPI = (id) =>
   `${address()}machines/${enc(id)}/toggle`;

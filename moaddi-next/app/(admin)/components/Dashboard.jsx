@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   Banknote,
   Handshake,
+  MessageCircle,
   Package,
   Plus,
   Radio,
@@ -262,11 +263,17 @@ const FleetPulse = ({ machines, loading, createPath }) => {
 /*  Recent payments                                                           */
 /* -------------------------------------------------------------------------- */
 
-const RecentPayments = ({ createPath }) => {
-  const { data = [], isPending } = useGetList("payments", {
-    pagination: { page: 1, perPage: 6 },
-    sort: { field: "created", order: "DESC" },
-  });
+// GET /purchases is Admin/SuperAdmin-only on the server, so never fire it for a
+// Vendor â€” an unauthorized 403 here surfaces as a dashboard-wide error on login.
+const RecentPayments = ({ createPath, isAdmin }) => {
+  const { data = [], isPending } = useGetList(
+    "payments",
+    {
+      pagination: { page: 1, perPage: 6 },
+      sort: { field: "created", order: "DESC" },
+    },
+    { enabled: isAdmin },
+  );
 
   return (
     <Card className="h-full gap-0 border-border/70 bg-card shadow-none">
@@ -524,6 +531,17 @@ const Dashboard = () => {
               Your machines, payments and vendors â€” one calm view. Everything
               below is live.
             </p>
+            {(isAdmin || isVendor) && (
+              <ShadcnButton
+                asChild
+                className="mt-5 h-10 rounded-xl bg-white text-sm font-extrabold text-slate-950 hover:bg-white/90"
+              >
+                <a href="/conversations">
+                  <MessageCircle data-icon="inline-start" />
+                  Open conversations
+                </a>
+              </ShadcnButton>
+            )}
           </div>
           <FleetPulse
             machines={machines}
@@ -546,8 +564,13 @@ const Dashboard = () => {
       </section>
 
       {/* Activity + attention */}
-      <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <RecentPayments createPath={createPath} />
+      <section
+        className={cn(
+          "grid gap-4",
+          isAdmin && "lg:grid-cols-[1.5fr_1fr]",
+        )}
+      >
+        {isAdmin && <RecentPayments createPath={createPath} isAdmin={isAdmin} />}
         <PendingActions createPath={createPath} isAdmin={isAdmin} />
       </section>
     </div>

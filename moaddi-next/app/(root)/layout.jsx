@@ -1,7 +1,10 @@
 import Footer from "@/(root)/components/Footer";
 import Header from "@/(root)/components/Header";
+import BottomNavigation from "@/(root)/components/BottomNavigation";
 import PurchaseStatusNotifier from "@/(root)/components/PurchaseStatusNotifier";
 import { CartProvider } from "@/(root)/context/cart-provider";
+import { ContactTargetProvider } from "@/(root)/context/contact-target-context";
+import { ChatProvider } from "@/(root)/context/chat-context";
 import AdminContextProvider from "@/(root)/context/ra/AdminContextProvider";
 import { SocketContextProvider } from "@/(root)/context/Socket";
 import { ThemeContextProvider } from "@/(root)/context/Theme";
@@ -20,6 +23,12 @@ const cairo = Cairo({
   subsets: ["latin", "arabic"],
   weight: ["300", "400", "600", "700", "800"],
 });
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 // const website = {
 //   en: websiteEn,
@@ -45,7 +54,8 @@ const SITE_META_FALLBACK = {
   },
   zh: {
     title: "Moaddi",
-    description: "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
+    description:
+      "遍布沙特阿拉伯的智能自动售货机。扫描、选购、支付 — 几秒钟内取走你的零食。",
   },
   it: {
     title: "Moaddi",
@@ -67,9 +77,7 @@ export async function generateMetadata() {
   } = await client(`${locale}Seo`).then((data) =>
     Array.isArray(data) ? {} : data,
   );
-  const {
-    favicon: { src: faviconUrl } = {},
-  } = await client("site");
+  const { favicon: { src: faviconUrl } = {} } = await client("site");
 
   const title = siteName || metaFallback.title;
   const description = siteDescription || metaFallback.description;
@@ -157,21 +165,26 @@ export default async function RootLayout({ children }) {
         <NextIntlClientProvider messages={messages}>
           <ThemeContextProvider>
             <KumaRegistry>
-                <CartProvider>
-                  <AdminContextProvider>
-                    <SocketContextProvider>
-                      <div
-                        data-vaul-drawer-wrapper
-                        className="flex min-h-screen flex-col"
-                      >
-                        <Header {...header} />
-                        <div className="flex-1">{children}</div>
-                        <Footer {...footer} />
-                      </div>
-                      <PurchaseStatusNotifier />
-                    </SocketContextProvider>
-                  </AdminContextProvider>
-                </CartProvider>
+              <CartProvider>
+                <AdminContextProvider>
+                  <SocketContextProvider>
+                    <ChatProvider>
+                      <ContactTargetProvider>
+                        <div
+                          data-vaul-drawer-wrapper
+                          className="moaddi-storefront-shell flex min-h-screen flex-col"
+                        >
+                          <Header {...header} />
+                          <div className="flex-1">{children}</div>
+                          <Footer {...footer} />
+                        </div>
+                        <BottomNavigation />
+                      </ContactTargetProvider>
+                    </ChatProvider>
+                    <PurchaseStatusNotifier />
+                  </SocketContextProvider>
+                </AdminContextProvider>
+              </CartProvider>
             </KumaRegistry>
           </ThemeContextProvider>
         </NextIntlClientProvider>

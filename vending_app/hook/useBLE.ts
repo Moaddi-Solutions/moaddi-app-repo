@@ -17,6 +17,8 @@ import {
 import { useMachine } from "~/context/MachineContext";
 import { useSocket } from "~/context/Socket";
 import alert from "~/lib/alert";
+import i18n from "~/lib/i18n";
+import { classifyAndroidResult, promptOpenSettings } from "~/lib/permissions";
 import { bleManager } from "~/services/bleManager";
 
 type Chanel = { [key: string]: Characteristic[] };
@@ -152,11 +154,19 @@ function useBLE() {
       }
     );
 
-    return (
-      bluetoothScanPermission === "granted" &&
-      bluetoothConnectPermission === "granted" &&
-      fineLocationPermission === "granted"
-    );
+    const outcomes = [
+      bluetoothScanPermission,
+      bluetoothConnectPermission,
+      fineLocationPermission,
+    ].map(classifyAndroidResult);
+
+    // Android stops showing the dialog after "Don't allow"; from then on these
+    // requests resolve `never_ask_again` instantly, so offer the way back.
+    if (outcomes.includes("blocked")) {
+      promptOpenSettings(i18n.t("blePermissionBlocked"));
+    }
+
+    return outcomes.every((outcome) => outcome === "granted");
   };
 
   const requestPermissions = async () => {
@@ -186,15 +196,20 @@ function useBLE() {
 
     if (Platform.OS === "android") {
       if ((ExpoDevice.platformApiLevel ?? -1) < 31) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: "Location Permission",
-            message: "Bluetooth Low Energy requires Location",
-            buttonPositive: "OK",
-          }
+        const outcome = classifyAndroidResult(
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: "Location Permission",
+              message: "Bluetooth Low Energy requires Location",
+              buttonPositive: "OK",
+            }
+          )
         );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+        if (outcome === "blocked") {
+          promptOpenSettings(i18n.t("blePermissionBlocked"));
+        }
+        return outcome === "granted";
       } else {
         const isAndroid31PermissionsGranted =
           await requestAndroid31Permissions();

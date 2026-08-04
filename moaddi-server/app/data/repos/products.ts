@@ -345,6 +345,15 @@ const remove = async (productId: string): Promise<ModelTypes.IProduct> => {
   return update(productId, { isDeleted: true });
 };
 
+/** Owner lookup for CASL ownership checks (null = platform/unassigned product). */
+const getVendorIdOf = async (productId: string): Promise<string | null> => {
+  const p = await Products.findOne({ _id: productId }).select('vendorId').lean();
+  if (!p) {
+    return Promise.reject({ message: 'Product not found.', statusCode: 404 });
+  }
+  return (p as { vendorId?: string | null }).vendorId ?? null;
+};
+
 export = {
   create,
   toggle,
@@ -356,6 +365,7 @@ export = {
   getByVendorMachines,
   update,
   remove,
+  getVendorIdOf,
   formatSavedProductForClient,
   /** For callers outside this repo (e.g. machines QR) that have a full product doc + preferred currency. */
   flattenProductForPreferredCurrency: flattenForPreferredCurrency,

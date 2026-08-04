@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Loader, Plus } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, TouchableOpacity, View } from "react-native";
 import QrCodeSvg from "react-native-qrcode-svg";
@@ -10,6 +10,7 @@ import { Card } from "~/components/ui/card";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Switch } from "~/components/ui/switch";
 import { Text } from "~/components/ui/text";
+import MachineSummary from "~/components/staff/MachineSummary";
 import { useMachine } from "~/context/MachineContext";
 import { useGetOne } from "~/hook/useGetOne";
 import { useList } from "~/hook/useList";
@@ -164,7 +165,7 @@ const MachineFill = ({
   selectedBoxes,
   selectedProduct,
   boxes,
-  refetchBoxes,
+  refetch,
   readyToSet,
   loading,
   setLoading,
@@ -174,21 +175,17 @@ const MachineFill = ({
     setLoading(true);
     BoxApi.productAssign(
       machine._id,
-      boxes.current.map(({ _id }) => _id),
+      boxes.map(({ _id }) => _id),
       selectedProduct
     ).then((response) => {
-      refetchBoxes
-        .current?.()
-        .then((r) => setTimeout(() => setLoading(false), 100));
+      refetch().then((r) => setTimeout(() => setLoading(false), 100));
     });
   };
   const productAssignSelected = () => {
     setLoading(true);
     BoxApi.productAssign(machine._id, selectedBoxes, selectedProduct).then(
       (response) => {
-        refetchBoxes
-          .current?.()
-          .then((r) => setTimeout(() => setLoading(false), 100));
+        refetch().then((r) => setTimeout(() => setLoading(false), 100));
       }
     );
   };
@@ -196,9 +193,7 @@ const MachineFill = ({
     setLoading(true);
 
     BoxApi.productUnassign(machine._id).then((response) => {
-      refetchBoxes
-        .current?.()
-        .then((r) => setTimeout(() => setLoading(false), 100));
+      refetch().then((r) => setTimeout(() => setLoading(false), 100));
     });
   };
   // const productUnassignSelected = () => {
@@ -258,7 +253,7 @@ const MachineFill = ({
 
 const BoxesList = ({
   boxes,
-  refetchBoxes,
+  refetch,
   selectedBoxes,
   setSelectedBoxes,
   selectedProduct,
@@ -268,14 +263,6 @@ const BoxesList = ({
 }) => {
   const { t } = useTranslation();
   const { machine } = useMachine();
-  const { isPending, item, refetch, dataUpdatedAt } = useGetOne(
-    "vendors",
-    machine.vendorId
-  );
-
-  useEffect(() => {
-    refetchBoxes.current = refetch;
-  }, [isPending, item, dataUpdatedAt, refetch]);
 
   useEffect(() => {
     if (loading) return;
@@ -286,16 +273,11 @@ const BoxesList = ({
     setLoading(true);
     BoxApi.productAssign(machine._id, [boxId], selectedProduct).then(
       (response) =>
-        refetchBoxes
-          .current?.()
-          .then((r) => setTimeout(() => setLoading(false), 100))
+        refetch().then((r) => setTimeout(() => setLoading(false), 100))
     );
   };
 
-  boxes.current = !isPending
-    ? item?.machines?.find(({ _id }) => _id == machine._id)?.boxes ?? []
-    : [];
-  return boxes.current.map(({ _id, name, product, status }, i) => (
+  return boxes.map(({ _id, name, product, status }, i) => (
     <View key={_id} className="flex gap-2">
       <Card className="flex justify-center items-center gap-1 p-2 m-1">
         <View className="flex flex-row w-full justify-between items-center">
@@ -355,8 +337,38 @@ const Fill = (props) => {
   const { machine, setMachine } = useMachine();
   const readyToSet = !machine?.isActive;
   const [loading, setLoading] = useState(false);
-  const boxes = useRef([]);
-  const refetchBoxes = useRef(null);
+  // Owned here rather than in BoxesList so the list, the bulk-fill actions and
+  // the summary all render off the same query — a useRef would not re-render
+  // the counters when boxes change.
+  const { item: vendor, refetch: refetchVendor } = useGetOne(
+    "vendors",
+    machine?.vendorId,
+    { enabled: !!machine?.vendorId }
+  );
+  // Machine-scoped lookup: unlike the vendor query this needs no vendor
+  // permissions and no id matching, so it is the dependable source of boxes.
+  const { item: machineRecord, refetch: refetchMachine } = useGetOne(
+    "machines",
+    machine?._id,
+    { enabled: !!machine?._id }
+  );
+  const refetch = () =>
+    Promise.all([refetchMachine(), refetchVendor()]);
+  const boxes = useMemo(() => {
+    // Boxes can arrive from three places, in decreasing reliability: the
+    // machine record, the vendor's copy of the machine, or the machine already
+    // in context (populated by the QR scan and vendor listing). Fall through so
+    // the list and summary still work when a request is pending or unavailable.
+    const fromVendor = vendor?.machines?.find(
+      ({ _id }) => _id == machine?._id,
+    )?.boxes;
+    const source = [machineRecord?.boxes, fromVendor, machine?.boxes].find(
+      (candidate) => Array.isArray(candidate) && candidate.length,
+    );
+    // These lookups return every box without filtering isDeleted, so
+    // soft-deleted boxes would otherwise be both listed and counted.
+    return (source ?? []).filter((box) => !box.isDeleted);
+  }, [machineRecord, vendor, machine]);
   const productRow = {
     selectedProduct,
     setSelectedProduct,
@@ -367,14 +379,14 @@ const Fill = (props) => {
     loading,
     setLoading,
     boxes,
-    refetchBoxes,
+    refetch,
     selectedBoxes,
     selectedProduct,
     readyToSet,
   };
   const boxesList = {
     boxes,
-    refetchBoxes,
+    refetch,
     selectedBoxes,
     setSelectedBoxes,
     selectedProduct,
@@ -398,6 +410,13 @@ const Fill = (props) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="mx-4">
       <MachineDetails />
+      {/* Outside the vendorId guard: the summary describes the machine's boxes,
+          which is worth showing even when no vendor is attached. */}
+      <MachineSummary
+        boxes={boxes}
+        machine={machine}
+        selectedCount={selectedBoxes.length}
+      />
       {!!machine.vendorId && (
         <>
           <MachineFill {...machineFill} />

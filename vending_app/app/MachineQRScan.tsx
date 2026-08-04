@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import alert from "~/lib/alert";
+import { openAppSettings } from "~/lib/permissions";
 import { getRequest } from "~/services/httpClient";
 import { groupAPI, machineQRScan } from "~/services/serverAddresses";
 import { palette, space, type as typo } from "~/theme/moaddi";
@@ -33,9 +34,14 @@ export default function MachineQRScan() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  // Only auto-ask while the OS is still willing to show its dialog; once it is
+  // hard-denied the request resolves silently and the user needs the button below.
   useEffect(() => {
-    setTimeout(requestPermission, 500);
-  }, []);
+    if (permission && !permission.granted && permission.canAskAgain) {
+      const timer = setTimeout(requestPermission, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [permission?.granted, permission?.canAskAgain]);
 
   function goHomeWithError(message: string) {
     alert("error", message);
@@ -154,8 +160,29 @@ export default function MachineQRScan() {
           />
         </View>
         <Text style={{ ...typo.body, color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: 260 }}>
-          {t("pointCameraAtQrCode")}
+          {permission && !permission.granted
+            ? t("cameraPermissionRequired")
+            : t("pointCameraAtQrCode")}
         </Text>
+
+        {/* Without this the screen is a dead end: the camera never appears and
+            nothing on it can grant the permission back. */}
+        {permission && !permission.granted ? (
+          <Pressable
+            onPress={permission.canAskAgain ? requestPermission : openAppSettings}
+            accessibilityRole="button"
+            style={{
+              paddingHorizontal: 22,
+              paddingVertical: 13,
+              borderRadius: 14,
+              backgroundColor: TEAL,
+            }}
+          >
+            <Text style={{ ...typo.bodyStrong, color: "#101014" }}>
+              {permission.canAskAgain ? t("grantPermission") : t("openSettings")}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {/* Gallery upload */}

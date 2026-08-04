@@ -15,9 +15,12 @@ import {
   DialogTitle,
 } from "@/../components/ui/dialog";
 import { cn } from "@/../lib/utils";
+import { postRequest } from "@/../services/events";
+import { chatConversationsAPI } from "@/../services/serverAddresses";
 import {
   ArrowLeft,
   LoaderCircle,
+  MessageCircle,
   Pencil,
   Plus,
   Trash2,
@@ -25,6 +28,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   ReferenceFieldBase,
+  useCanAccess,
   useCreatePath,
   useDelete,
   useGetRecordRepresentation,
@@ -36,7 +40,7 @@ import {
   useTakeUndoableMutation,
   useTranslate,
 } from "ra-core";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export const humanize = (value) => {
@@ -95,6 +99,9 @@ export const AdminPageHeader = ({ title, subtitle, backTo, actions }) => (
 export const AdminCreateButton = ({ resource: resourceProp, label = "Create", className }) => {
   const resource = useResourceContext({ resource: resourceProp });
   const createPath = useCreatePath();
+  // CASL: hide the action when the role's ability doesn't allow it.
+  const { canAccess } = useCanAccess({ resource, action: "create" });
+  if (!canAccess) return null;
   return (
     <Button asChild className={cn("h-9 rounded-xl text-sm font-extrabold", className)}>
       <Link to={createPath({ resource, type: "create" })}>
@@ -109,7 +116,8 @@ export const AdminEditButton = ({ record: recordProp, resource: resourceProp, la
   const resource = useResourceContext({ resource: resourceProp });
   const record = useRecordContext({ record: recordProp });
   const createPath = useCreatePath();
-  if (!record) return null;
+  const { canAccess } = useCanAccess({ resource, action: "edit", record });
+  if (!record || !canAccess) return null;
   return (
     <Button
       asChild
@@ -160,8 +168,9 @@ export const AdminDeleteButton = ({
   const redirect = useRedirect();
   const [open, setOpen] = useState(false);
   const [deleteOne, { isPending }] = useDelete();
+  const { canAccess } = useCanAccess({ resource, action: "delete", record });
 
-  if (!record) return null;
+  if (!record || !canAccess) return null;
   const id = record.id ?? record._id;
 
   const handleDelete = () => {
@@ -223,6 +232,55 @@ export const AdminDeleteButton = ({
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+/**
+ * Opens (or starts) a chat with the given user. `targetUserId` is a phone
+ * number (the user model's `_id`) — pass it directly when the row already
+ * IS the contactable user (customers, vendors), or resolve it first when
+ * it lives elsewhere (e.g. a machine's `vendorId` field).
+ */
+export const AdminContactUserButton = ({ targetUserId, label, className }) => {
+  const notify = useNotify();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  if (!targetUserId) return null;
+
+  const handleClick = async (event) => {
+    event.stopPropagation();
+    if (loading) return;
+    setLoading(true);
+    try {
+      const response = await postRequest(chatConversationsAPI(), { targetUserId });
+      const conversationId = response?.conversationId;
+      if (!conversationId) throw new Error("Missing conversationId");
+      navigate(`/conversations/${encodeURIComponent(conversationId)}`);
+    } catch {
+      notify("Could not open a conversation with this user", { type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size={label ? "sm" : "icon"}
+      className={cn(
+        "size-8 rounded-lg text-primary-text hover:bg-primary/10 hover:text-primary-text",
+        label && "w-auto px-3",
+        className,
+      )}
+      onClick={handleClick}
+      disabled={loading}
+      aria-label="Contact"
+      title="Contact"
+    >
+      <MessageCircle className="size-4" />
+      {label}
+    </Button>
   );
 };
 

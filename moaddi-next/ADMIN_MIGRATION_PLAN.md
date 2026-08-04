@@ -23,7 +23,7 @@ Deliberately deferred: `app/(admin)/components/resources/machines/MachineControl
 
 ## Next: verification before continuing
 
-Before starting Phase 2, run and fix:
+Before starting Phase 2, run and fix
 
 ```
 cd moaddi-next

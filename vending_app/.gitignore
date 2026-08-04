@@ -15,3 +15,6 @@ android
 dist
 # Google Cloud service account keys — never commit
 moaddi-2e568-61ea631f6c3c.json
+# Apple App Store Connect API keys — never commit
+AuthKey_*.p8
+*.p8

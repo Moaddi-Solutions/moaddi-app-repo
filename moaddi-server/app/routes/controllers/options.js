@@ -1,9 +1,7 @@
 const express = require("express");
 const optionsRepo = require("../../data/repos/options");
 const authenticate = require("../middlewares/authenticate");
-const requireRole = require("../middlewares/requireRole");
-
-const ADMIN_ROLES = ["Admin", "SuperAdmin"];
+const authorize = require("../middlewares/authorize");
 
 module.exports = () => {
   const router = express.Router();
@@ -12,7 +10,7 @@ module.exports = () => {
   router.get(
     "/options/platform",
     authenticate(),
-    requireRole(ADMIN_ROLES),
+    authorize("read", "Option"),
     async (req, res, next) => {
       try {
         const result = await optionsRepo.getPlatform();
@@ -27,7 +25,7 @@ module.exports = () => {
   router.put(
     "/options/platform",
     authenticate(),
-    requireRole(ADMIN_ROLES),
+    authorize("update", "Option"),
     async (req, res, next) => {
       try {
         const result = await optionsRepo.updatePlatform(
@@ -62,7 +60,7 @@ module.exports = () => {
   router.put(
     "/paymentProviders/:providerId/toggle",
     authenticate(),
-    requireRole(ADMIN_ROLES),
+    authorize("update", "Option"),
     async (req, res, next) => {
       try {
         const result = await optionsRepo.togglePaymentProvider(

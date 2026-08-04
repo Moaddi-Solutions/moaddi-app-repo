@@ -5,17 +5,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const grouped = (items: Array<any>, key: string) =>
+export const grouped = (items: Array<Record<string, unknown>>, key: string) =>
   Object.entries(
-    items.reduce((acc, { [key]: category, ...rest }) => {
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(rest);
+    items.reduce<Record<string, Array<Record<string, unknown>>>>((acc, item) => {
+      const { [key]: category, ...rest } = item;
+      const categoryKey = String(category ?? "");
+      const group = acc[categoryKey] ?? [];
+      group.push(rest);
+      acc[categoryKey] = group;
       return acc;
     }, {}),
   );
 
-export const chunk = (array: Array<any>, limit: number) => {
-  const result: any[][] = [];
+export const chunk = <T,>(array: T[], limit: number) => {
+  const result: T[][] = [];
   let resIndex = 0;
   array.forEach((item, i) => {
     if (!(i % limit)) result[resIndex++] = [item];
