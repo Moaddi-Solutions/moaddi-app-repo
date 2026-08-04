@@ -101,6 +101,14 @@ export default function AdminConversationsScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // On lg+ the inbox stays visible beside the thread, so defaulting to the
+  // newest conversation just fills an otherwise-empty pane. Deliberately not
+  // done below lg: there the inbox is full-screen and a selection hides it,
+  // which would drop the user into a thread they never picked.
+  const autoSelectedId = selectedConversationId
+    ? null
+    : (conversations[0]?.conversationId ?? null);
+
   return (
     <main className="moaddi-chat-page mx-auto flex h-[calc(100vh-3.5rem-2rem)] w-full px-0">
       <section
@@ -109,7 +117,7 @@ export default function AdminConversationsScreen({
       >
         <ConversationInbox
           conversations={conversations}
-          selectedConversationId={selectedConversationId}
+          selectedConversationId={selectedConversationId ?? autoSelectedId}
           loading={inboxLoading}
           error={inboxError}
           onRefresh={refreshInbox}
@@ -124,6 +132,20 @@ export default function AdminConversationsScreen({
             )}
             currentUserName={currentUserName}
             connectionState={connectionState}
+          />
+        ) : autoSelectedId ? (
+          // `hidden lg:flex` keeps this off mobile, where the inbox owns the
+          // screen. The key remounts the thread when the newest conversation
+          // changes, so per-conversation state resets like a real navigation.
+          <ConversationThread
+            key={autoSelectedId}
+            conversationId={autoSelectedId}
+            conversation={conversations.find(
+              (item) => item.conversationId === autoSelectedId,
+            )}
+            currentUserName={currentUserName}
+            connectionState={connectionState}
+            className="hidden lg:flex"
           />
         ) : (
           <ConversationWelcome className="hidden lg:flex" />
@@ -288,11 +310,13 @@ function ConversationThread({
   conversation,
   currentUserName,
   connectionState,
+  className,
 }: {
   conversationId: string;
   conversation?: ChatConversation;
   currentUserName?: string;
   connectionState: "idle" | "connecting" | "connected" | "offline";
+  className?: string;
 }) {
   const {
     messagesByConversation,
@@ -470,7 +494,12 @@ function ConversationThread({
   };
 
   return (
-    <section className="moaddi-chat-rail flex min-h-0 min-w-0 flex-1 flex-col">
+    <section
+      className={cn(
+        "moaddi-chat-rail flex min-h-0 min-w-0 flex-1 flex-col",
+        className,
+      )}
+    >
       <header className="border-border bg-card flex min-h-[72px] items-center gap-3 border-b px-3 sm:px-5">
         <Button variant="ghost" size="icon-sm" asChild className="lg:hidden">
           <Link to="/conversations" aria-label={t("backToInbox")}>
