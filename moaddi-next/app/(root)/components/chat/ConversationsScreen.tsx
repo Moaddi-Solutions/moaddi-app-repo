@@ -740,11 +740,16 @@ function ConversationThread({
         <ConnectionState state={connectionState} />
       </header>
 
-      <MessageScrollerProvider autoScroll>
+      <MessageScrollerProvider autoScroll resetKey={conversationId}>
         <MessageScroller>
           <MessageScrollerViewport>
             {/* gap-0: spacing is set per row so grouped turns can sit tight */}
-            <MessageScrollerContent className="gap-0">
+            <MessageScrollerContent
+              className="gap-0"
+              count={messages.length}
+              anchorId={messages[0]?._id}
+              ready={!firstLoad}
+            >
               {page?.hasMore ? (
                 <div className="mb-4 flex justify-center">
                   <Button

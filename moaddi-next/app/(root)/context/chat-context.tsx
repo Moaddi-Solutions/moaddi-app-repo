@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/(root)/context/cart-provider";
-import { readAuthSession } from "@/../lib/auth-session";
+import { AUTH_SESSION_EVENT, readAuthSession } from "@/../lib/auth-session";
 import { getRequest, postRequest, putRequest, deleteRequest } from "@/../services/events";
 import {
   chatAttachmentsAPI,
@@ -20,6 +20,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 export type ChatPeer = {
@@ -194,6 +195,30 @@ type ReactionUpdate = {
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
+
+/**
+ * Re-reads the stored dashboard token whenever the session changes.
+ *
+ * `storage` covers another tab logging in or out; AUTH_SESSION_EVENT covers
+ * this tab, where a same-document cookie write fires no native event.
+ */
+function subscribeToAuthSession(onChange: () => void) {
+  window.addEventListener(AUTH_SESSION_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(AUTH_SESSION_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+/**
+ * Must return a cached primitive, not a fresh object: useSyncExternalStore
+ * compares snapshots by identity and would re-render forever otherwise.
+ */
+function readDashboardToken() {
+  return readAuthSession().token?.trim() || null;
+}
+
 let pendingSequence = 0;
 const MAX_UPLOAD_IMAGE_DIMENSION = 1600;
 const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
@@ -201,15 +226,19 @@ const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useCart();
   const shopperToken = (user as ShopperUser | null)?.token?.trim() || null;
-  // Read on every render, deliberately un-memoized: the token lives in the
-  // `user` cookie, and login writes that cookie without putting the token
-  // into React state (the profile passed to setUser has no token field, and
-  // dashboard login never calls setUser at all). So there is no dependency
-  // that tracks when this value changes — a useMemo keyed on anything from
-  // state goes stale the moment someone logs in, leaving token null and the
-  // inbox empty until a hard reload. It's a cookie read plus a JSON.parse.
-  const dashboardSession = readAuthSession();
-  const token = shopperToken || dashboardSession.token?.trim() || null;
+  // Subscribed rather than read inline: the token lives in the `user` cookie,
+  // and login writes that cookie without touching React state (the profile
+  // passed to setUser has no token field, and dashboard login never calls
+  // setUser at all). A plain render-time read looks like it handles that, but
+  // nothing re-renders this provider when the cookie appears — it sits above
+  // the dashboard SPA, where navigation only changes the hash — so the token
+  // stayed null from mount and the inbox never loaded until a hard reload.
+  const dashboardToken = useSyncExternalStore(
+    subscribeToAuthSession,
+    readDashboardToken,
+    () => null, // server render: no cookie access, no token
+  );
+  const token = shopperToken || dashboardToken;
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<
     Record<string, ChatMessage[]>
