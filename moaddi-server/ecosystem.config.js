@@ -1,10 +1,13 @@
 // pm2 start ecosystem.config.js --env production
+// tsx is required: the app loads .ts modules (e.g. app/lib/ability.ts).
 module.exports = {
   apps: [
     {
       name: "Server",
       script: "index.js",
-      watch: ".",
+      interpreter: "node",
+      interpreter_args: "--import tsx",
+      watch: false,
       ignore_watch: [
         "node_modules",
         "images",

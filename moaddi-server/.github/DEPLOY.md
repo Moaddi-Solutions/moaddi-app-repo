@@ -23,6 +23,7 @@ In this repo: **Settings → Secrets and variables → Actions → New repositor
    - `pm2 start ecosystem.config.js --env production`
    - `pm2 save`
 4. Process name must be **`Server`** (matches [`ecosystem.config.js`](../ecosystem.config.js)).
+5. **Do not** start with `pm2 start npm -- start`. Use the ecosystem file so Node loads `tsx` (`--import tsx`) and can require `.ts` modules.
 
 ## 3. Branch
 
