@@ -139,7 +139,7 @@ function Profile() {
           <Separator />
           <ListItem
             icon={<UserX size={18} color={listItemIconColor(true)} />}
-            title={t("deactivateAccount")}
+            title={t("deleteAccount")}
             destructive
             chevron={false}
             onPress={() => router.navigate("/Settings")}

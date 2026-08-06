@@ -176,18 +176,18 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "29c1e61d-c811-47d8-92e1-2b1ea0327f83"
+        "projectId": "d21a7b3f-c67d-4971-aa87-b828fc5bec6c"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/29c1e61d-c811-47d8-92e1-2b1ea0327f83",
+      "url": "https://u.expo.dev/d21a7b3f-c67d-4971-aa87-b828fc5bec6c",
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
-    "owner": "mrsawy"
+    "owner": "moaddiexpo"
   }
 }

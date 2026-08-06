@@ -132,6 +132,7 @@
   "typeDeactivate": "输入“Deactivate”以确认",
   "delete": "删除",
   "deactivate": "停用",
+  "deleteAccountHint": "您将被退出登录，在账户恢复之前无法登录。",
   "deactivateAccountHint": "您将被退出登录，在重新激活之前无法登录。",
   "grantPermission": "授予权限",
   "cameraPermissionRequired": "扫描二维码需要相机权限",
