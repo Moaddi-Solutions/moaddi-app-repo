@@ -22,6 +22,7 @@ import {
   paymentProvidersActiveResource,
   paymentProvidersResource,
   platformOptionsResource,
+  supportRoutingResource,
 } from "@/(admin)/components/resources/siteOptions";
 import vendors from "@/(admin)/components/resources/vendors";
 import wallets from "@/(admin)/components/resources/wallets";
@@ -90,6 +91,9 @@ const AdminApp = () => {
           ),
           allowed("platformOptions") && (
             <Resource {...platformOptionsResource} key="platformOptionsResource" />
+          ),
+          allowed("supportRouting") && (
+            <Resource {...supportRoutingResource} key="supportRoutingResource" />
           ),
           allowed("paymentProvidersAll") && (
             <Resource {...paymentProvidersActiveResource} key="paymentProvidersActiveResource" />

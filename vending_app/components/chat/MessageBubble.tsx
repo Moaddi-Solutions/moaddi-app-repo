@@ -1,13 +1,14 @@
-import { AlertCircle, Check, RotateCw, Trash2 } from "lucide-react-native";
+import { AlertCircle, RotateCw, Trash2 } from "lucide-react-native";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import AudioBody from "~/components/chat/bodies/AudioBody";
 import DocumentBody from "~/components/chat/bodies/DocumentBody";
 import ImageBody from "~/components/chat/bodies/ImageBody";
 import LocationBody from "~/components/chat/bodies/LocationBody";
 import { formatTime } from "~/components/chat/chatFormat";
 import ReactionChips from "~/components/chat/ReactionChips";
+import ReadTicks from "~/components/chat/ReadTicks";
 import ReplyStrip from "~/components/chat/ReplyStrip";
 import SwipeToReply from "~/components/chat/SwipeToReply";
 import { colors, palette, radius, space, type as typo } from "~/theme/moaddi";
@@ -25,6 +26,8 @@ type MessageBubbleProps = {
   item: ChatThreadItem;
   conversationId: string;
   language?: string;
+  /** Peer's read cursor for this conversation; 0 when they've read nothing. */
+  peerLastReadSeq: number;
   onReply: (replyTo: ChatReplyTo) => void;
   onLongPress: (message: ChatMessage) => void;
   onRetry: (clientMessageId: string) => void;
@@ -35,6 +38,7 @@ function MessageBubbleImpl({
   item,
   conversationId,
   language,
+  peerLastReadSeq,
   onReply,
   onLongPress,
   onRetry,
@@ -151,12 +155,9 @@ function MessageBubbleImpl({
           {formatTime(item.createdAt, language)}
         </Text>
         {mine && !pending ? (
-          <Check size={13} color="rgba(255,255,255,0.85)" />
-        ) : null}
-        {pending && !failed ? (
-          <ActivityIndicator
-            size="small"
-            color={mine ? "rgba(255,255,255,0.85)" : colors.textMuted}
+          <ReadTicks
+            seq={(item as ChatMessage).seq}
+            peerLastReadSeq={peerLastReadSeq}
           />
         ) : null}
       </View>

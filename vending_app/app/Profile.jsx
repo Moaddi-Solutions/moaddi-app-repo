@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { BadgeCheck, Gift, Globe, LogOut, ReceiptText, User, UserX } from "lucide-react-native";
+import { BadgeCheck, Gift, Globe, LogOut, Mail, MessageSquare, ReceiptText, User, UserX } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
@@ -118,6 +118,20 @@ function Profile() {
             title={t("myGifts")}
             subtitle={t("myGiftsSubtitle")}
             onPress={() => router.navigate("/Gifts")}
+          />
+          <Separator />
+          <ListItem
+            icon={<MessageSquare size={18} color={listItemIconColor()} />}
+            title={t("chat")}
+            subtitle={t("chatConversationsSubtitle")}
+            onPress={() => router.navigate("/(tabs)/chat")}
+          />
+          <Separator />
+          <ListItem
+            icon={<Mail size={18} color={listItemIconColor()} />}
+            title={t("contactUs")}
+            subtitle={t("contactUsSubtitle")}
+            onPress={() => router.navigate("/Contact")}
           />
           <Separator />
           <ListItem

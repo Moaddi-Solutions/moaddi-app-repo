@@ -30,7 +30,8 @@ function MainStacks() {
   }, [isLoading]);
 
   useEffect(() => {
-    if (user?.role?.toLowerCase() === "admin") {
+    // Keep in sync with the Stack.Protected guard in Stacks.jsx.
+    if (["admin", "vendor", "superadmin"].includes(user?.role?.toLowerCase() ?? "")) {
       router.replace("/staff");
     }
   }, [user]);

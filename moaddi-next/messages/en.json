@@ -47,6 +47,7 @@
     "noMessages": "No messages yet",
     "conversationUnavailable": "This conversation is no longer available.",
     "newConversation": "New conversation",
+    "viewCustomer": "View customer record",
     "reconnecting": "Reconnecting",
     "connecting": "Connecting",
     "loadOlder": "Load older messages",
@@ -69,8 +70,10 @@
     "roles": {
       "support": "Support team",
       "vendor": "Vendor",
+      "customer": "Customer",
       "supplier": "Supplier",
-      "contact": "Moaddi contact"
+      "contact": "Moaddi contact",
+      "guest": "Guest"
     },
     "media": {
       "attach": "Attach",
@@ -113,6 +116,11 @@
       "cancelReply": "Cancel reply",
       "you": "you",
       "notLoaded": "That message is not loaded yet."
+    },
+    "readState": {
+      "sending": "Sending",
+      "sent": "Sent",
+      "read": "Read"
     },
     "reactions": {
       "react": "React",

@@ -105,16 +105,9 @@ export const chatMediaAPI = (conversationId, messageId) =>
 export const chatReactionAPI = (conversationId, messageId) =>
   `${chatMessagesAPI(conversationId)}/${messageId}/reaction`;
 
-/**
- * The account that receives "Contact support" messages.
- *
- * Mirrors the web client's NEXT_PUBLIC_CHAT_ADMIN_ID, including its fallback,
- * so both clients reach the same inbox until support assignment moves server-side.
- */
-export const supportUserId = () =>
-  process.env.EXPO_PUBLIC_CHAT_ADMIN_ID?.trim() ||
-  Constants.expoConfig?.extra?.chatAdminId?.trim() ||
-  "+966555728085";
+/** Resolves the admin-configured "Contact support" target id from the server. */
+export const chatSupportTargetAPI = (audience = "customers") =>
+  `${address}chat/support-target?audience=${audience}`;
 
 export const myWalletAPI = address + "wallets/me";
 export const myTransactionsAPI = address + "transactions";

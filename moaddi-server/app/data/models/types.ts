@@ -338,6 +338,8 @@ export interface IOptions {
   platformFeePercent: Money;
   currency: string;
   paymentProviders?: Record<string, IPaymentProviderState>;
+  supportAdminIdCustomers?: string;
+  supportAdminIdVendors?: string;
   updatedBy?: string;
   updated?: Date;
 }

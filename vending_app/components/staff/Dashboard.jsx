@@ -1,10 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Receipt, ScanQrCode, Store, Wallet } from "lucide-react-native";
+import { MessageCircle, Receipt, ScanQrCode, Store, Wallet } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { SectionHeader, ServiceTile, serviceTileIconColor, ShopCard, SocialLinks } from "~/components/moaddi";
 import { TopBar } from "~/components/moaddi/TopBar";
+import { useOpenChatWith } from "~/components/chat/ContactChatButton";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
 import { useUser } from "~/context/UserContext";
 import { useManyReference } from "~/hook/useManyReference";
 import { colors, gradients, palette, radius, shadow, space, type as typo } from "~/theme/moaddi";
@@ -13,6 +15,9 @@ export function Dashboard() {
   const { user } = useUser();
   const router = useRouter();
   const { t } = useTranslation();
+  const supportUserId = useSupportUserId("vendors");
+  const { open: openAdminChat, busy: openingAdminChat, isSelf: isSupportSelf } =
+    useOpenChatWith(supportUserId);
 
   const { items, isPending } = useManyReference("shops", {
     target: "vendorId",
@@ -77,6 +82,8 @@ export function Dashboard() {
           paddingVertical: 16,
           paddingHorizontal: 8,
           flexDirection: "row",
+          flexWrap: "wrap",
+          rowGap: 16,
           justifyContent: "space-around",
           ...shadow.card,
         }}
@@ -105,6 +112,14 @@ export function Dashboard() {
           onPress={() => router.push("/staff/WithdrawalsList")}
           icon={<Receipt size={22} color={serviceTileIconColor("neutral")} />}
         />
+        {supportUserId && !isSupportSelf && (
+          <ServiceTile
+            label={t("chatContactSupport") || "Contact support"}
+            tone="brand"
+            onPress={openingAdminChat ? undefined : openAdminChat}
+            icon={<MessageCircle size={22} color={serviceTileIconColor("brand")} />}
+          />
+        )}
       </View>
 
       {/* Shops section */}

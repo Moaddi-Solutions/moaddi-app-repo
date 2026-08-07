@@ -2,6 +2,7 @@
 
 import { PhoneInput } from "@/(root)/components/PhoneInput";
 import { useChat } from "@/(root)/context/chat-context";
+import { useSupportUserId } from "@/(root)/context/contact-target-context";
 import { SocketContextProvider } from "@/(root)/context/Socket";
 import {
   Accordion,
@@ -20,6 +21,7 @@ import {
 } from "@/../components/ui/card";
 import { Input } from "@/../components/ui/input";
 import { Label } from "@/../components/ui/label";
+import { PasswordInput } from "@/../components/ui/password-input";
 import {
   Sidebar,
   SidebarContent,
@@ -53,6 +55,7 @@ import {
   CreditCard,
   Globe,
   Handshake,
+  Headset,
   Home,
   Landmark,
   Languages,
@@ -83,7 +86,7 @@ import {
 import { useState } from "react";
 import { useCreatePath, useLogin, useLogout, useNotify } from "ra-core";
 import { Link, useLocation } from "react-router-dom";
-import { AdminNotifications } from "@/(admin)/components/kit/AdminUI";
+import { AdminContactUserButton, AdminNotifications } from "@/(admin)/components/kit/AdminUI";
 
 const normalizeUnreadCount = (value) => {
   if (typeof value !== "number" || !Number.isFinite(value)) return 0;
@@ -296,6 +299,14 @@ export const AppSidebar = () => {
                 <NavItem to={createPath({ resource: "docs", type: "list" })} icon={NotebookText}>
                   Docs
                 </NavItem>
+                {show("supportRouting") && (
+                  <NavItem
+                    to={createPath({ resource: "supportRouting", type: "show", id: "platform" })}
+                    icon={Headset}
+                  >
+                    Contact Support
+                  </NavItem>
+                )}
                 <li>
                   <NavGroup title="English" icon={Languages}>
                     <SubNavItem
@@ -537,14 +548,28 @@ const ThemeToggleButton = () => {
 };
 
 const AppHeader = () => {
-  const role = normalizeDashboardRole(readDashboardUser().role);
+  const user = readDashboardUser();
+  const role = normalizeDashboardRole(user.role);
   const canOpenConversations = isDashboardRole(role);
+  // Every dashboard role may reach SuperAdmin except SuperAdmin itself —
+  // there's no one above them to contact, and it'd otherwise self-chat.
+  const canContactAdmin = canOpenConversations && role !== "SuperAdmin";
   const { totalUnreadCount } = useChat();
+  // Dashboard staff (Admin/Vendor) are the "vendors" support audience —
+  // distinct from the shopper-facing "customers" contact-support target.
+  const supportUserId = useSupportUserId("vendors");
 
   return (
     <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-2 border-b px-3">
       <SidebarTrigger />
       <div className="min-w-0 flex-1" />
+      {canContactAdmin && (
+        <AdminContactUserButton
+          targetUserId={supportUserId}
+          label="Contact admin"
+          className="h-8 rounded-lg"
+        />
+      )}
       {canOpenConversations && (
         <ShadcnButton
           asChild
@@ -676,7 +701,7 @@ export const Login = () => {
               >
                 Password
               </Label>
-              <Input
+              <PasswordInput
                 id="admin-password"
                 name="password"
                 autoComplete="current-password"
@@ -685,7 +710,6 @@ export const Login = () => {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Password"
                 required
-                type="password"
                 value={password}
               />
             </div>
@@ -731,6 +755,7 @@ export const Login = () => {
           />
         </CardFooter>
       </Card>
+      <AdminNotifications />
     </main>
   );
 };

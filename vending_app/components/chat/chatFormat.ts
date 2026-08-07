@@ -132,6 +132,8 @@ export const roleLabel = (t: TFunction, role?: string) => {
       return t("chatRoleVendor");
     case "customer":
       return t("chatRoleCustomer");
+    case "guest":
+      return t("chatRoleGuest");
     default:
       return role || "";
   }

@@ -37,15 +37,13 @@ export default function SettingsPage({ preferredCurrency }) {
   const { user, logout } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = normalizeTab(searchParams.get("tab"));
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const activeTab = normalizeTab(searchParams.get("tab"));
   const currency = preferredCurrency ?? user?.preferredCurrency ?? "SAR";
   const locale = useLocale();
   const t = useTranslations("Profile");
   const BackChevron = rtlRules[locale] ? ChevronRight : ChevronLeft;
 
   const openDetail = (tab) => {
-    setActiveTab(tab);
     router.replace(`/profile${tab === "overview" ? "" : `?tab=${tab}`}`, {
       scroll: false,
     });

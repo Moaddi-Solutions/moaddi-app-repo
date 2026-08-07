@@ -40,6 +40,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   const {
     conversations,
     pendingByConversation,
+    peerLastReadSeqByConversation,
     markRead,
     sendText,
     sendMedia,
@@ -143,7 +144,9 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   );
 
   const peerName = conversation?.peer?.name || t("chatUnknownPeer");
-  const subtitle = roleLabel(t, conversation?.peer?.role);
+  const subtitle = [roleLabel(t, conversation?.peer?.role), conversation?.peer?.phone]
+    .filter(Boolean)
+    .join(" · ");
 
   const bottomInset = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
 
@@ -198,6 +201,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           </View>
         ) : (
           <MessageList
+            peerLastReadSeq={peerLastReadSeqByConversation[conversationId] ?? 0}
             items={items}
             conversationId={conversationId}
             language={i18n.language}

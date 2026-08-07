@@ -1,10 +1,12 @@
+import { getRequest } from '~/services/httpClient';
+import { chatSupportTargetAPI } from '~/services/serverAddresses';
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 
@@ -25,27 +27,75 @@ type ContactTargetContextValue = {
   setPageTarget: (target: ContactTarget | null) => void;
 };
 
-// Temporary MVP fallback, matching the web client's current behaviour.
-// EXPO_PUBLIC_CHAT_ADMIN_ID should become the only source once support
-// assignment moves behind the server.
-const SUPPORT_USER_ID =
-  process.env.EXPO_PUBLIC_CHAT_ADMIN_ID?.trim() || '+966555728085';
+export type SupportAudience = 'customers' | 'vendors';
 
 const DEFAULT_SUPPORT_TARGET: ContactTarget = {
   kind: 'support',
-  targetUserId: SUPPORT_USER_ID,
+  targetUserId: null,
 };
+
+const cachedSupportUserId: Record<SupportAudience, string | null> = {
+  customers: null,
+  vendors: null,
+};
+const fetchStarted: Record<SupportAudience, boolean> = {
+  customers: false,
+  vendors: false,
+};
+const supportUserIdListeners: Record<SupportAudience, Set<() => void>> = {
+  customers: new Set(),
+  vendors: new Set(),
+};
+
+const setCachedSupportUserId = (audience: SupportAudience, id: string) => {
+  cachedSupportUserId[audience] = id;
+  supportUserIdListeners[audience].forEach((listener) => listener());
+};
+
+const ensureSupportUserIdFetched = (audience: SupportAudience) => {
+  if (fetchStarted[audience] || cachedSupportUserId[audience]) return;
+  fetchStarted[audience] = true;
+  getRequest(chatSupportTargetAPI(audience))
+    .then(({ targetUserId }: { targetUserId: string | null }) => {
+      if (targetUserId) setCachedSupportUserId(audience, targetUserId);
+    })
+    .catch(() => {
+      fetchStarted[audience] = false;
+    });
+};
+
+/**
+ * The admin-configured "Contact support" target id for the given audience,
+ * resolved from the server and cached for the session. Re-renders the
+ * caller once resolved.
+ */
+export function useSupportUserId(audience: SupportAudience = 'customers') {
+  useEffect(() => {
+    ensureSupportUserIdFetched(audience);
+  }, [audience]);
+  return useSyncExternalStore(
+    (onChange) => {
+      supportUserIdListeners[audience].add(onChange);
+      return () => supportUserIdListeners[audience].delete(onChange);
+    },
+    () => cachedSupportUserId[audience],
+    () => null,
+  );
+}
 
 const ContactTargetContext = createContext<ContactTargetContextValue | null>(null);
 
 export function ContactTargetProvider({ children }: { children: ReactNode }) {
-  const [target, setTarget] = useState<ContactTarget>(DEFAULT_SUPPORT_TARGET);
+  const supportId = useSupportUserId();
+  const [pageTarget, setPageTarget] = useState<ContactTarget | null>(null);
 
-  const setPageTarget = useCallback((nextTarget: ContactTarget | null) => {
-    setTarget(nextTarget ?? DEFAULT_SUPPORT_TARGET);
-  }, []);
-
-  const value = useMemo(() => ({ target, setPageTarget }), [target, setPageTarget]);
+  const value = useMemo(
+    () => ({
+      target: pageTarget ?? { ...DEFAULT_SUPPORT_TARGET, targetUserId: supportId },
+      setPageTarget,
+    }),
+    [pageTarget, supportId],
+  );
 
   return (
     <ContactTargetContext.Provider value={value}>{children}</ContactTargetContext.Provider>

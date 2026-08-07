@@ -1117,6 +1117,19 @@
   font-feature-settings: "tnum" 1;
 }
 
+/* Read ticks: an outlined double-check until the peer has read, then the same
+   ticks knocked out of a filled disc, colored WhatsApp-style green.
+   --chat-tick-knockout must match what sits BEHIND the mark (the thread
+   background, since the footer sits outside the bubble). */
+.moaddi-chat-tick {
+  color: var(--muted-foreground);
+  --chat-tick-knockout: var(--chat-rail, var(--background));
+}
+
+.moaddi-chat-tick[data-read] {
+  color: var(--chat-tick-read, #16a34a);
+}
+
 /* ---- Inline timestamp (text + image bubbles) ----
    Floated so the last line of text wraps AROUND it rather than running
    under it — when the last line is too long, the float drops to its own

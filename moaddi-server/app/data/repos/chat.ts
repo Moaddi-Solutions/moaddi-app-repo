@@ -476,13 +476,23 @@ const listConversations = async (currentUserId: string) => {
     .lean();
 
   const peersById = new Map(
-    peers.map((peer) => [
-      peer._id,
-      {
-        name: peer.name,
-        role: peer.role,
-      },
-    ]),
+    peers.map((peer) => {
+      // For real accounts `_id` IS the phone number (E.164). Anything else is
+      // a synthetic id (guest-*, chat-*, apple-*) that must never reach the
+      // UI — neither as a number nor as a name — so whitelist real numbers
+      // rather than blacklisting each prefix.
+      const id = String(peer._id);
+      const isRealAccount = /^\+?[1-9]\d{7,14}$/.test(id);
+
+      return [
+        peer._id,
+        {
+          name: isRealAccount ? peer.name || "Guest" : "Guest",
+          role: peer.role,
+          phone: isRealAccount ? id : null,
+        },
+      ];
+    }),
   );
   const unreadCountsByConversation = await unreadCountsFor(
     consistentConversations,
@@ -499,6 +509,9 @@ const listConversations = async (currentUserId: string) => {
       peer: peerId ? (peersById.get(peerId) ?? null) : null,
       lastMessage: toLastMessageResponse(conversation.lastMessage, currentUserId),
       unreadCount: unreadCountsByConversation.get(String(conversation._id)) ?? 0,
+      // How far the peer has read MY messages — drives the sender's read ticks
+      // on first paint, before any live chat:read.updated arrives.
+      peerLastReadSeq: peerId ? readStateFor(conversation, peerId) : 0,
     };
   });
 };
@@ -536,6 +549,7 @@ const markConversationRead = async (
     conversationId,
     lastReadSeq,
     unreadCount: 0,
+    participantIds: (conversation.participantIds || []).map(String),
   };
 };
 

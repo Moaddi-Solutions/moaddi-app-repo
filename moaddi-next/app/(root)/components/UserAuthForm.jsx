@@ -7,6 +7,7 @@ import { useCart } from "@/(root)/context/cart-provider";
 import { Button } from "@/../components/ui/button";
 import { Input } from "@/../components/ui/input";
 import { Label } from "@/../components/ui/label";
+import { PasswordInput } from "@/../components/ui/password-input";
 import { isCustomerRole, isDashboardRole } from "@/../lib/dashboard-role";
 import { persistShopperSession } from "@/../lib/shopper-session";
 import { cn, setLocalStorageItem } from "@/../lib/utils";
@@ -231,11 +232,10 @@ export function SignUpForm({ className, variant = "default", ...props }) {
             htmlFor="re-password"
             variant={variant}
           >
-            <Input
+            <PasswordInput
               id="re-password"
               name="rePassword"
               placeholder={t("Auth.rePassword")}
-              type="password"
               disabled={isLoading}
               className={authInputClassName}
             />
@@ -300,11 +300,10 @@ export function SignUpForm({ className, variant = "default", ...props }) {
             <Label className="sr-only" htmlFor="re-password">
               {t("Auth.rePassword")}
             </Label>
-            <Input
+            <PasswordInput
               id="re-password"
               name="rePassword"
               placeholder={t("Auth.rePassword")}
-              type="password"
               disabled={isLoading}
             />
           </div>
@@ -601,11 +600,10 @@ const Inputs = ({
             {t("Auth.password")}
           </Label>
         ) : null}
-        <Input
+        <PasswordInput
           name="password"
           id="password"
           placeholder={t("Auth.password")}
-          type="password"
           disabled={isLoading}
           className={variant === "card" ? authInputClassName : undefined}
         />

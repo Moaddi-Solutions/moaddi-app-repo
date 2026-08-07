@@ -82,6 +82,7 @@ export type ChatLastMessage = {
 export type ChatPeer = {
   name?: string;
   role?: string;
+  phone?: string;
 };
 
 export type ChatConversation = {
@@ -89,6 +90,8 @@ export type ChatConversation = {
   peer: ChatPeer | null;
   lastMessage: ChatLastMessage | null;
   unreadCount: number;
+  /** How far the peer has read; drives read ticks on my outgoing messages. */
+  peerLastReadSeq?: number;
 };
 
 export type ChatMessagesPage = {

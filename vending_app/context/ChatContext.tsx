@@ -57,6 +57,11 @@ type ChatContextValue = {
   conversationsError: unknown;
   refetchConversations: () => void;
   totalUnreadCount: number;
+  /**
+   * How far the OTHER participant has read, per conversation. Drives the read
+   * ticks on my outgoing messages; absent key means they've read nothing.
+   */
+  peerLastReadSeqByConversation: Record<string, number>;
   pendingByConversation: Record<string, PendingMessage[]>;
   openConversation: (targetUserId: string) => Promise<string>;
   sendText: (
@@ -110,6 +115,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [pendingByConversation, setPendingByConversation] = useState<
     Record<string, PendingMessage[]>
   >({});
+  const [peerLastReadSeqByConversation, setPeerLastReadSeqByConversation] =
+    useState<Record<string, number>>({});
+
+  /**
+   * Advance the peer's read cursor. Monotonic on purpose: socket frames can
+   * arrive out of order, and a read state must never travel backwards.
+   */
+  const advancePeerLastReadSeq = useCallback(
+    (conversationId: string, lastReadSeq: number) => {
+      if (typeof lastReadSeq !== "number" || Number.isNaN(lastReadSeq)) return;
+      setPeerLastReadSeqByConversation((prev) =>
+        (prev[conversationId] ?? 0) >= lastReadSeq
+          ? prev
+          : { ...prev, [conversationId]: lastReadSeq },
+      );
+    },
+    [],
+  );
 
   const token = user?.token;
   const canChat = Boolean(token) && !isGuest;
@@ -266,6 +289,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [conversations],
   );
 
+  // Hydrate peer read cursors from the list payload so ticks are correct on
+  // first paint, before any socket frame arrives. Still monotonic: a stale
+  // refetch must not undo a newer `chat:read.updated`.
+  useEffect(() => {
+    for (const conversation of conversations) {
+      if (typeof conversation.peerLastReadSeq === "number") {
+        advancePeerLastReadSeq(
+          conversation.conversationId,
+          conversation.peerLastReadSeq,
+        );
+      }
+    }
+  }, [conversations, advancePeerLastReadSeq]);
+
   /* ---------------- socket ---------------- */
 
   useEffect(() => {
@@ -326,8 +363,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const onConversationRead = (payload: {
       conversationId: string;
       unreadCount: number;
+      lastReadSeq?: number;
     }) => {
       updateConversation(payload.conversationId, null, payload.unreadCount);
+    };
+
+    /**
+     * The peer read our messages. The server emits this to everyone BUT the
+     * reader, so the cursor here always belongs to the other participant.
+     */
+    const onReadUpdated = (payload: {
+      v?: number;
+      conversationId: string;
+      lastReadSeq: number;
+    }) => {
+      if (payload?.v !== 1 || !payload.conversationId) return;
+      if (typeof payload.lastReadSeq !== "number") return;
+      advancePeerLastReadSeq(payload.conversationId, payload.lastReadSeq);
     };
 
     const onReaction = (payload: {
@@ -345,6 +397,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     socket.on("chat:message.new", onNewMessage);
     socket.on("chat:conversation.updated", onConversationUpdated);
     socket.on("chat:conversation.read", onConversationRead);
+    socket.on("chat:read.updated", onReadUpdated);
     socket.on("chat:message.reaction", onReaction);
     socket.on("connect_error", (error) =>
       console.warn("[chat] socket connect_error:", error?.message),
@@ -356,6 +409,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       socket.off("chat:message.new", onNewMessage);
       socket.off("chat:conversation.updated", onConversationUpdated);
       socket.off("chat:conversation.read", onConversationRead);
+      socket.off("chat:read.updated", onReadUpdated);
       socket.off("chat:message.reaction", onReaction);
       socket.off("connect_error");
     };
@@ -365,6 +419,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     patchMessage,
     updateConversation,
     removePending,
+    advancePeerLastReadSeq,
     queryClient,
   ]);
 
@@ -643,6 +698,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       conversationsError: conversationsQuery.error,
       refetchConversations: conversationsQuery.refetch,
       totalUnreadCount,
+      peerLastReadSeqByConversation,
       pendingByConversation,
       openConversation,
       sendText,
@@ -661,6 +717,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       conversationsQuery.error,
       conversationsQuery.refetch,
       totalUnreadCount,
+      peerLastReadSeqByConversation,
       pendingByConversation,
       openConversation,
       sendText,

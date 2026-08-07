@@ -88,6 +88,7 @@ const markConversationRead = async (
   try {
     chatSocket.emitConversationRead({
       userId: currentUserId,
+      participantIds: result.participantIds,
       conversationId,
       unreadCount: result.unreadCount,
       lastReadSeq: result.lastReadSeq,
@@ -96,7 +97,10 @@ const markConversationRead = async (
     console.error("Chat read emission failed");
   }
 
-  return result;
+  // participantIds is for the socket fan-out only — it must not reach the
+  // HTTP client, which returns this object verbatim.
+  const { participantIds, ...response } = result;
+  return response;
 };
 
 export = {
