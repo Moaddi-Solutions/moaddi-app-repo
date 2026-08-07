@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Chat Feature Implementation Plan for vending&lowbar;app</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="chat-feature-implementation-plan-for-vending_app">Chat Feature Implementation Plan for vending_app</h1>
+<p><strong>Date:</strong> 2026-07-31<br>
+<strong>Status:</strong> Planning<br>
+<strong>Package:</strong> <code>@kesha-antonov/react-native-chat</code> v4.1.0<br>
+<strong>Scope:</strong> Full-featured chat UI with media support (image, document, location, voice notes)</p>
+<hr>
+<h2 id="overview">Overview</h2>
+<p>Integrate <code>@kesha-antonov/react-native-chat</code> into the Expo/React Native app to provide a production-ready chat UI with built-in reactions, swipe-to-reply, and message customization. This is a maintained fork of <code>react-native-gifted-chat</code> with streaming support and latest fixes.</p>
+<h3 id="known-limitations">Known Limitations</h3>
+<ul>
+<li><strong>No RTL support</strong> — will need custom RTL handling for Arabic; not built into the package</li>
+<li><strong>StyleSheet-based styling</strong> — uses React Native StyleSheet, not NativeWind; teal tokens will need manual mapping</li>
+<li><strong>Voice notes &amp; documents</strong> — require custom <code>renderCustomView</code> implementation (not built-in)</li>
+</ul>
+<hr>
+<h2 id="phase-1-core-dependencies">Phase 1: Core Dependencies</h2>
+<h3 id="install-packages">Install packages</h3>
+<pre><code class="language-bash">yarn add @kesha-antonov/react-native-chat@^4.1.0
+yarn add @shopify/flash-list@^1.7.6  <span class="hljs-comment"># already installed</span>
+yarn add react-native-keyboard-controller
+yarn add react-native-gesture-handler
+yarn add expo-audio@^17.0.0
+yarn add expo-document-picker@^14.0.0
+yarn add expo-image-picker@^16.1.4  <span class="hljs-comment"># already installed</span>
+yarn add expo-location@^17.0.0
+</code></pre>
+<h3 id="existing-packages-verify-versions">Existing packages (verify versions)</h3>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;react-native-reanimated&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;~3.17.4&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;react-native-gesture-handler&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;[version needed]&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;react-native-screens&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;~4.11.1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;socket.io-client&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^4.8.1&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;i18next&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^25.5.2&quot;</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;react-i18next&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^16.6.4&quot;</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<hr>
+<h2 id="phase-2-project-structure">Phase 2: Project Structure</h2>
+<pre><code>vending_app/
+├── app/
+│   └── (root)/
+│       ├── context/
+│       │   └── ChatContext.tsx          # Socket + REST transport (port from web)
+│       └── screens/
+│           └── ChatScreen.tsx           # Thread screen with chat UI
+├── components/
+│   └── chat/
+│       ├── ChatBubble.tsx               # Message bubble wrapper
+│       ├── AudioBubble.tsx              # Voice note component
+│       ├── DocumentBubble.tsx           # Document attachment display
+│       ├── LocationBubble.tsx           # Location map preview
+│       ├── ImageBubble.tsx              # Image display
+│       ├── MessageActions.tsx           # Long-press menu (reactions, reply, delete)
+│       ├── ComposerInput.tsx            # Text input + attachment buttons
+│       ├── MediaPicker.tsx              # Unified media selection UI
+│       └── VoiceRecorder.tsx            # Audio recording component
+├── lib/
+│   ├── chatMessageTypes.ts              # Message type definitions (port from server)
+│   ├── chatTypes.ts                     # TypeScript interfaces
+│   └── mockChatData.ts                  # Dummy data for UI development
+├── services/
+│   └── chatMediaService.ts              # Upload/download handlers
+└── theme/
+    └── chatTheme.ts                     # Design system color mappings
+</code></pre>
+<hr>
+<h2 id="phase-3-design-system-integration">Phase 3: Design System Integration</h2>
+<h3 id="31-theme-colors-from-moaddi-redesign-direction">3.1 Theme Colors (from moaddi-redesign-direction)</h3>
+<p><strong>File:</strong> <code>theme/chatTheme.ts</code></p>
+<p>Map the Moaddi teal + gold palette to chat UI components:</p>
+<pre><code class="language-typescript"><span class="hljs-comment">// Primary palette (teal ramp for chat UI)</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> chatColors = {
+  <span class="hljs-comment">// Teal scale (chat messages, bubbles, accents)</span>
+  <span class="hljs-attr">teal50</span>: <span class="hljs-string">&#x27;#f0fdfa&#x27;</span>,
+  <span class="hljs-attr">teal100</span>: <span class="hljs-string">&#x27;#ccfbf1&#x27;</span>,
+  <span class="hljs-attr">teal200</span>: <span class="hljs-string">&#x27;#99f6e4&#x27;</span>,
+  <span class="hljs-attr">teal300</span>: <span class="hljs-string">&#x27;#5eead4&#x27;</span>,
+  <span class="hljs-attr">teal400</span>: <span class="hljs-string">&#x27;#2dd4bf&#x27;</span>,
+  <span class="hljs-attr">teal500</span>: <span class="hljs-string">&#x27;#14b8a6&#x27;</span>,     <span class="hljs-comment">// Primary action, own messages</span>
+  <span class="hljs-attr">teal600</span>: <span class="hljs-string">&#x27;#0d9488&#x27;</span>,     <span class="hljs-comment">// Hover, active states</span>
+  <span class="hljs-attr">teal700</span>: <span class="hljs-string">&#x27;#0f766e&#x27;</span>,     <span class="hljs-comment">// Dark mode primary</span>
+  
+  <span class="hljs-comment">// Gold (reserved for offers/discounts per design system — NOT for chat)</span>
+  <span class="hljs-comment">// gold500: &#x27;#eab308&#x27;,  // NOT USED IN CHAT</span>
+  
+  <span class="hljs-comment">// Neutral (text, borders, backgrounds)</span>
+  <span class="hljs-attr">gray50</span>: <span class="hljs-string">&#x27;#f9fafb&#x27;</span>,
+  <span class="hljs-attr">gray100</span>: <span class="hljs-string">&#x27;#f3f4f6&#x27;</span>,
+  <span class="hljs-attr">gray200</span>: <span class="hljs-string">&#x27;#e5e7eb&#x27;</span>,
+  <span class="hljs-attr">gray300</span>: <span class="hljs-string">&#x27;#d1d5db&#x27;</span>,
+  <span class="hljs-attr">gray400</span>: <span class="hljs-string">&#x27;#9ca3af&#x27;</span>,
+  <span class="hljs-attr">gray500</span>: <span class="hljs-string">&#x27;#6b7280&#x27;</span>,
+  <span class="hljs-attr">gray600</span>: <span class="hljs-string">&#x27;#4b5563&#x27;</span>,
+  <span class="hljs-attr">gray700</span>: <span class="hljs-string">&#x27;#374151&#x27;</span>,
+  <span class="hljs-attr">gray800</span>: <span class="hljs-string">&#x27;#1f2937&#x27;</span>,
+  <span class="hljs-attr">gray900</span>: <span class="hljs-string">&#x27;#111827&#x27;</span>,
+  
+  <span class="hljs-comment">// Semantic (for reactions, status)</span>
+  <span class="hljs-attr">successGreen</span>: <span class="hljs-string">&#x27;#10b981&#x27;</span>,
+  <span class="hljs-attr">warningYellow</span>: <span class="hljs-string">&#x27;#f59e0b&#x27;</span>,
+  <span class="hljs-attr">errorRed</span>: <span class="hljs-string">&#x27;#ef4444&#x27;</span>,
+  <span class="hljs-attr">infoBlue</span>: <span class="hljs-string">&#x27;#3b82f6&#x27;</span>,
+};
+
+<span class="hljs-comment">// Component-specific mappings</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> chatTheme = {
+  <span class="hljs-comment">// Own message bubble</span>
+  <span class="hljs-attr">ownBubbleBg</span>: chatColors.<span class="hljs-property">teal500</span>,
+  <span class="hljs-attr">ownBubbleText</span>: <span class="hljs-string">&#x27;#ffffff&#x27;</span>,
+  
+  <span class="hljs-comment">// Other&#x27;s message bubble</span>
+  <span class="hljs-attr">otherBubbleBg</span>: chatColors.<span class="hljs-property">gray200</span>,
+  <span class="hljs-attr">otherBubbleText</span>: chatColors.<span class="hljs-property">gray900</span>,
+  
+  <span class="hljs-comment">// Reactions</span>
+  <span class="hljs-attr">reactionBg</span>: chatColors.<span class="hljs-property">teal100</span>,
+  <span class="hljs-attr">reactionBorder</span>: chatColors.<span class="hljs-property">teal300</span>,
+  <span class="hljs-attr">reactionText</span>: chatColors.<span class="hljs-property">teal700</span>,
+  
+  <span class="hljs-comment">// Reply strip</span>
+  <span class="hljs-attr">replyBg</span>: chatColors.<span class="hljs-property">gray100</span>,
+  <span class="hljs-attr">replyBorder</span>: chatColors.<span class="hljs-property">teal400</span>,
+  <span class="hljs-attr">replyText</span>: chatColors.<span class="hljs-property">gray700</span>,
+  
+  <span class="hljs-comment">// Input area</span>
+  <span class="hljs-attr">composerBg</span>: chatColors.<span class="hljs-property">gray50</span>,
+  <span class="hljs-attr">composerBorder</span>: chatColors.<span class="hljs-property">gray300</span>,
+  <span class="hljs-attr">composerText</span>: chatColors.<span class="hljs-property">gray900</span>,
+  <span class="hljs-attr">composerPlaceholder</span>: chatColors.<span class="hljs-property">gray400</span>,
+  <span class="hljs-attr">sendButtonBg</span>: chatColors.<span class="hljs-property">teal500</span>,
+  <span class="hljs-attr">sendButtonText</span>: <span class="hljs-string">&#x27;#ffffff&#x27;</span>,
+  
+  <span class="hljs-comment">// Media bubbles</span>
+  <span class="hljs-attr">imageBorder</span>: chatColors.<span class="hljs-property">teal200</span>,
+  <span class="hljs-attr">documentIcon</span>: chatColors.<span class="hljs-property">teal500</span>,
+  <span class="hljs-attr">locationMapBorder</span>: chatColors.<span class="hljs-property">teal300</span>,
+  <span class="hljs-attr">audioPlayButton</span>: chatColors.<span class="hljs-property">teal500</span>,
+  
+  <span class="hljs-comment">// Status &amp; timestamps</span>
+  <span class="hljs-attr">timestampText</span>: chatColors.<span class="hljs-property">gray500</span>,
+  <span class="hljs-attr">deliveredTick</span>: chatColors.<span class="hljs-property">teal500</span>,
+  <span class="hljs-attr">readTick</span>: chatColors.<span class="hljs-property">teal600</span>,
+  
+  <span class="hljs-comment">// Dark mode (optional)</span>
+  <span class="hljs-attr">dark</span>: {
+    <span class="hljs-attr">ownBubbleBg</span>: chatColors.<span class="hljs-property">teal600</span>,
+    <span class="hljs-attr">otherBubbleBg</span>: chatColors.<span class="hljs-property">gray700</span>,
+    <span class="hljs-attr">otherBubbleText</span>: chatColors.<span class="hljs-property">gray100</span>,
+    <span class="hljs-attr">composerBg</span>: chatColors.<span class="hljs-property">gray800</span>,
+    <span class="hljs-attr">composerText</span>: chatColors.<span class="hljs-property">gray100</span>,
+  },
+};
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> chatStyles = {
+  <span class="hljs-attr">bubbleLeft</span>: {
+    <span class="hljs-attr">backgroundColor</span>: chatTheme.<span class="hljs-property">otherBubbleBg</span>,
+    <span class="hljs-attr">borderRadius</span>: <span class="hljs-number">18</span>,
+    <span class="hljs-attr">paddingHorizontal</span>: <span class="hljs-number">12</span>,
+    <span class="hljs-attr">paddingVertical</span>: <span class="hljs-number">8</span>,
+    <span class="hljs-attr">marginHorizontal</span>: <span class="hljs-number">4</span>,
+  },
+  <span class="hljs-attr">bubbleRight</span>: {
+    <span class="hljs-attr">backgroundColor</span>: chatTheme.<span class="hljs-property">ownBubbleBg</span>,
+    <span class="hljs-attr">borderRadius</span>: <span class="hljs-number">18</span>,
+    <span class="hljs-attr">paddingHorizontal</span>: <span class="hljs-number">12</span>,
+    <span class="hljs-attr">paddingVertical</span>: <span class="hljs-number">8</span>,
+    <span class="hljs-attr">marginHorizontal</span>: <span class="hljs-number">4</span>,
+  },
+  <span class="hljs-attr">time</span>: {
+    <span class="hljs-attr">color</span>: chatTheme.<span class="hljs-property">timestampText</span>,
+    <span class="hljs-attr">fontSize</span>: <span class="hljs-number">12</span>,
+    <span class="hljs-attr">marginTop</span>: <span class="hljs-number">4</span>,
+  },
+  <span class="hljs-attr">composer</span>: {
+    <span class="hljs-attr">borderTopWidth</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">borderTopColor</span>: chatTheme.<span class="hljs-property">composerBorder</span>,
+    <span class="hljs-attr">backgroundColor</span>: chatTheme.<span class="hljs-property">composerBg</span>,
+    <span class="hljs-attr">paddingHorizontal</span>: <span class="hljs-number">12</span>,
+    <span class="hljs-attr">paddingVertical</span>: <span class="hljs-number">8</span>,
+    <span class="hljs-attr">minHeight</span>: <span class="hljs-number">56</span>,
+  },
+  <span class="hljs-attr">textInput</span>: {
+    <span class="hljs-attr">color</span>: chatTheme.<span class="hljs-property">composerText</span>,
+    <span class="hljs-attr">paddingHorizontal</span>: <span class="hljs-number">12</span>,
+    <span class="hljs-attr">paddingVertical</span>: <span class="hljs-number">8</span>,
+    <span class="hljs-attr">borderRadius</span>: <span class="hljs-number">20</span>,
+    <span class="hljs-attr">backgroundColor</span>: <span class="hljs-string">&#x27;white&#x27;</span>,
+    <span class="hljs-attr">borderWidth</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">borderColor</span>: chatTheme.<span class="hljs-property">composerBorder</span>,
+  },
+};
+</code></pre>
+<h3 id="32-apply-theme-to-chat-components">3.2 Apply Theme to Chat Components</h3>
+<p><strong>Usage in components:</strong></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { chatTheme, chatStyles } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@/theme/chatTheme&#x27;</span>;
+<span class="hljs-keyword">import</span> { useColorScheme } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react-native&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">ChatBubble</span>(<span class="hljs-params">props</span>) {
+  <span class="hljs-keyword">const</span> colorScheme = <span class="hljs-title function_">useColorScheme</span>();
+  <span class="hljs-keyword">const</span> theme = colorScheme === <span class="hljs-string">&#x27;dark&#x27;</span> ? chatTheme.<span class="hljs-property">dark</span> : chatTheme;
+  
+  <span class="hljs-keyword">const</span> bubbleStyle = props.<span class="hljs-property">currentMessage</span>.<span class="hljs-property">user</span>.<span class="hljs-property">_id</span> === userId
+    ? { ...chatStyles.<span class="hljs-property">bubbleRight</span>, <span class="hljs-attr">backgroundColor</span>: theme.<span class="hljs-property">ownBubbleBg</span> }
+    : { ...chatStyles.<span class="hljs-property">bubbleLeft</span>, <span class="hljs-attr">backgroundColor</span>: theme.<span class="hljs-property">otherBubbleBg</span> };
+    
+  <span class="hljs-keyword">return</span> <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">View</span> <span class="hljs-attr">style</span>=<span class="hljs-string">{bubbleStyle}</span>&gt;</span>{/* content */}<span class="hljs-tag">&lt;/<span class="hljs-name">View</span>&gt;</span></span>;
+}
+</code></pre>
+<hr>
+<h2 id="phase-4-mock-data-setup">Phase 4: Mock Data Setup</h2>
+<h3 id="41-dummy-chat-data-generator">4.1 Dummy Chat Data Generator</h3>
+<p><strong>File:</strong> <code>lib/mockChatData.ts</code></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">ChatMessage</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;./chatMessageTypes&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> mockUsers = [
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;user-1&#x27;</span>,
+    <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;You&#x27;</span>,
+    <span class="hljs-attr">avatar</span>: <span class="hljs-string">&#x27;https://api.dicebear.com/7.x/avataaars/svg?seed=user1&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;user-2&#x27;</span>,
+    <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Support Agent&#x27;</span>,
+    <span class="hljs-attr">avatar</span>: <span class="hljs-string">&#x27;https://api.dicebear.com/7.x/avataaars/svg?seed=user2&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;user-3&#x27;</span>,
+    <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Manager&#x27;</span>,
+    <span class="hljs-attr">avatar</span>: <span class="hljs-string">&#x27;https://api.dicebear.com/7.x/avataaars/svg?seed=user3&#x27;</span>,
+  },
+];
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> <span class="hljs-attr">mockMessages</span>: <span class="hljs-title class_">ChatMessage</span>[] = [
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;1&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Hi! How can I help you today?&#x27;</span>,
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">3600000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">1</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;2&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;I&#x27;</span>d like to check the status <span class="hljs-keyword">of</span> my vending machine delivery<span class="hljs-string">&#x27;,
+    createdAt: new Date(Date.now() - 3480000),
+    user: mockUsers[0],
+    status: &#x27;</span>sent<span class="hljs-string">&#x27;,
+  },
+  {
+    _id: &#x27;</span><span class="hljs-number">3</span><span class="hljs-string">&#x27;,
+    text: &#x27;</span><span class="hljs-title class_">Sure</span>! <span class="hljs-title class_">Can</span> you share your order <span class="hljs-built_in">number</span>?<span class="hljs-string">&#x27;,
+    createdAt: new Date(Date.now() - 3300000),
+    user: mockUsers[1],
+    status: &#x27;</span>sent<span class="hljs-string">&#x27;,
+  },
+  {
+    _id: &#x27;</span><span class="hljs-number">4</span><span class="hljs-string">&#x27;,
+    text: &#x27;</span><span class="hljs-title class_">Order</span> #<span class="hljs-variable constant_">VM</span>-<span class="hljs-number">2026</span>-<span class="hljs-number">001234</span><span class="hljs-string">&#x27;,
+    createdAt: new Date(Date.now() - 3100000),
+    user: mockUsers[0],
+    status: &#x27;</span>sent<span class="hljs-string">&#x27;,
+    reaction: [{ emoji: &#x27;</span>👍<span class="hljs-string">&#x27;, userIds: [&#x27;</span>user-<span class="hljs-number">2</span><span class="hljs-string">&#x27;] }],
+  },
+  {
+    _id: &#x27;</span><span class="hljs-number">5</span><span class="hljs-string">&#x27;,
+    image: &#x27;</span><span class="hljs-attr">https</span>:<span class="hljs-comment">//picsum.photos/300/400?random=1&#x27;,</span>
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">2900000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">1</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;6&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Your machine will arrive tomorrow between 2-4 PM&#x27;</span>,
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">2700000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">1</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+    <span class="hljs-attr">reaction</span>: [
+      { <span class="hljs-attr">emoji</span>: <span class="hljs-string">&#x27;😊&#x27;</span>, <span class="hljs-attr">userIds</span>: [<span class="hljs-string">&#x27;user-1&#x27;</span>] },
+      { <span class="hljs-attr">emoji</span>: <span class="hljs-string">&#x27;👍&#x27;</span>, <span class="hljs-attr">userIds</span>: [<span class="hljs-string">&#x27;user-1&#x27;</span>, <span class="hljs-string">&#x27;user-2&#x27;</span>] },
+    ],
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;7&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Perfect! What time should I be home?&#x27;</span>,
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">2500000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">0</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+    <span class="hljs-attr">replyTo</span>: {
+      <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;6&#x27;</span>,
+      <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Your machine will arrive tomorrow between 2-4 PM&#x27;</span>,
+      <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">1</span>],
+      <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">2700000</span>),
+    } <span class="hljs-keyword">as</span> <span class="hljs-title class_">ChatMessage</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;8&#x27;</span>,
+    <span class="hljs-attr">location</span>: {
+      <span class="hljs-attr">latitude</span>: <span class="hljs-number">25.2048</span>,
+      <span class="hljs-attr">longitude</span>: <span class="hljs-number">55.2708</span>,
+      <span class="hljs-attr">address</span>: <span class="hljs-string">&#x27;Dubai Marina, Dubai, UAE&#x27;</span>,
+    },
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">2300000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">0</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;9&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Got it! We&#x27;</span>ll deliver to that location<span class="hljs-string">&#x27;,
+    createdAt: new Date(Date.now() - 2100000),
+    user: mockUsers[1],
+    status: &#x27;</span>sent<span class="hljs-string">&#x27;,
+  },
+  {
+    _id: &#x27;</span><span class="hljs-number">10</span><span class="hljs-string">&#x27;,
+    audio: {
+      uri: &#x27;</span><span class="hljs-attr">https</span>:<span class="hljs-comment">//www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3&#x27;,</span>
+      <span class="hljs-attr">duration</span>: <span class="hljs-number">45</span>,
+      <span class="hljs-attr">waveform</span>: [<span class="hljs-number">0.1</span>, <span class="hljs-number">0.3</span>, <span class="hljs-number">0.5</span>, <span class="hljs-number">0.7</span>, <span class="hljs-number">0.8</span>, <span class="hljs-number">0.7</span>, <span class="hljs-number">0.5</span>, <span class="hljs-number">0.3</span>, <span class="hljs-number">0.2</span>],
+    },
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">1900000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">0</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;11&#x27;</span>,
+    <span class="hljs-attr">document</span>: {
+      <span class="hljs-attr">uri</span>: <span class="hljs-string">&#x27;https://example.com/docs/invoice.pdf&#x27;</span>,
+      <span class="hljs-attr">name</span>: <span class="hljs-string">&#x27;Invoice_VM-2026-001234.pdf&#x27;</span>,
+      <span class="hljs-attr">mimeType</span>: <span class="hljs-string">&#x27;application/pdf&#x27;</span>,
+      <span class="hljs-attr">size</span>: <span class="hljs-number">245000</span>,
+    },
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">1700000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">1</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;12&#x27;</span>,
+    <span class="hljs-attr">text</span>: <span class="hljs-string">&#x27;Thank you! Excited to receive the machine 🎉&#x27;</span>,
+    <span class="hljs-attr">createdAt</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">1500000</span>),
+    <span class="hljs-attr">user</span>: mockUsers[<span class="hljs-number">0</span>],
+    <span class="hljs-attr">status</span>: <span class="hljs-string">&#x27;sent&#x27;</span>,
+  },
+];
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> mockConversations = [
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;conv-1&#x27;</span>,
+    <span class="hljs-attr">participantName</span>: <span class="hljs-string">&#x27;Support Agent&#x27;</span>,
+    <span class="hljs-attr">participantAvatar</span>: mockUsers[<span class="hljs-number">1</span>].<span class="hljs-property">avatar</span>,
+    <span class="hljs-attr">lastMessage</span>: mockMessages[mockMessages.<span class="hljs-property">length</span> - <span class="hljs-number">1</span>].<span class="hljs-property">text</span>,
+    <span class="hljs-attr">lastMessageTime</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">1500000</span>),
+    <span class="hljs-attr">unreadCount</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-attr">messages</span>: mockMessages,
+  },
+];
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> mockConversationsList = [
+  mockConversations[<span class="hljs-number">0</span>],
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;conv-2&#x27;</span>,
+    <span class="hljs-attr">participantName</span>: <span class="hljs-string">&#x27;Manager&#x27;</span>,
+    <span class="hljs-attr">participantAvatar</span>: mockUsers[<span class="hljs-number">2</span>].<span class="hljs-property">avatar</span>,
+    <span class="hljs-attr">lastMessage</span>: <span class="hljs-string">&#x27;Please review the attached document&#x27;</span>,
+    <span class="hljs-attr">lastMessageTime</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">86400000</span>),
+    <span class="hljs-attr">unreadCount</span>: <span class="hljs-number">2</span>,
+    <span class="hljs-attr">messages</span>: [],
+  },
+  {
+    <span class="hljs-attr">_id</span>: <span class="hljs-string">&#x27;conv-3&#x27;</span>,
+    <span class="hljs-attr">participantName</span>: <span class="hljs-string">&#x27;Technical Support&#x27;</span>,
+    <span class="hljs-attr">participantAvatar</span>: <span class="hljs-string">&#x27;https://api.dicebear.com/7.x/avataaars/svg?seed=tech&#x27;</span>,
+    <span class="hljs-attr">lastMessage</span>: <span class="hljs-string">&#x27;Machine is operational&#x27;</span>,
+    <span class="hljs-attr">lastMessageTime</span>: <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>(<span class="hljs-title class_">Date</span>.<span class="hljs-title function_">now</span>() - <span class="hljs-number">172800000</span>),
+    <span class="hljs-attr">unreadCount</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-attr">messages</span>: [],
+  },
+];
+</code></pre>
+<h3 id="42-use-mock-data-in-chatscreen-development">4.2 Use Mock Data in ChatScreen (Development)</h3>
+<p><strong>File:</strong> <code>app/(root)/screens/ChatScreen.tsx</code> (dev mode)</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { useEffect, useState } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react&#x27;</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-title class_">GiftedChat</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@kesha-antonov/react-native-chat&#x27;</span>;
+<span class="hljs-keyword">import</span> { useChatContext } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../context/ChatContext&#x27;</span>;
+<span class="hljs-keyword">import</span> { mockMessages, mockUsers } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@/lib/mockChatData&#x27;</span>;
+<span class="hljs-keyword">import</span> { chatTheme, chatStyles } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@/theme/chatTheme&#x27;</span>;
+
+<span class="hljs-keyword">const</span> isDev = __DEV__; <span class="hljs-comment">// Expo dev flag</span>
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">ChatScreen</span>(<span class="hljs-params">{ conversationId }</span>) {
+  <span class="hljs-keyword">const</span> [messages, setMessages] = <span class="hljs-title function_">useState</span>([]);
+  
+  <span class="hljs-title function_">useEffect</span>(<span class="hljs-function">() =&gt;</span> {
+    <span class="hljs-keyword">if</span> (isDev) {
+      <span class="hljs-comment">// Load mock data for UI development</span>
+      <span class="hljs-title function_">setMessages</span>(mockMessages.<span class="hljs-title function_">reverse</span>()); <span class="hljs-comment">// GiftedChat expects reversed order</span>
+    } <span class="hljs-keyword">else</span> {
+      <span class="hljs-comment">// Load from context in production</span>
+      <span class="hljs-keyword">const</span> { <span class="hljs-attr">messages</span>: contextMessages } = <span class="hljs-title function_">useChatContext</span>();
+      <span class="hljs-title function_">setMessages</span>(contextMessages);
+    }
+  }, []);
+
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">GiftedChat</span>
+      <span class="hljs-attr">messages</span>=<span class="hljs-string">{messages}</span>
+      <span class="hljs-attr">onSend</span>=<span class="hljs-string">{handleSend}</span>
+      <span class="hljs-attr">user</span>=<span class="hljs-string">{{</span> <span class="hljs-attr">_id:</span> <span class="hljs-attr">isDev</span> ? &#x27;<span class="hljs-attr">user-1</span>&#x27; <span class="hljs-attr">:</span> <span class="hljs-attr">userId</span> }}
+      // <span class="hljs-attr">Theme</span> <span class="hljs-attr">via</span> <span class="hljs-attr">chatTheme</span>
+      <span class="hljs-attr">showUserAvatar</span>=<span class="hljs-string">{true}</span>
+      <span class="hljs-attr">showAvatarForEveryMessage</span>=<span class="hljs-string">{false}</span>
+      <span class="hljs-attr">renderBubble</span>=<span class="hljs-string">{(props)</span> =&gt;</span> (
+        <span class="hljs-tag">&lt;<span class="hljs-name">Bubble</span>
+          {<span class="hljs-attr">...props</span>}
+          <span class="hljs-attr">wrapperStyle</span>=<span class="hljs-string">{{</span>
+            <span class="hljs-attr">left:</span> { <span class="hljs-attr">backgroundColor:</span> <span class="hljs-attr">chatTheme.otherBubbleBg</span> },
+            <span class="hljs-attr">right:</span> { <span class="hljs-attr">backgroundColor:</span> <span class="hljs-attr">chatTheme.ownBubbleBg</span> },
+          }}
+          <span class="hljs-attr">textStyle</span>=<span class="hljs-string">{{</span>
+            <span class="hljs-attr">left:</span> { <span class="hljs-attr">color:</span> <span class="hljs-attr">chatTheme.otherBubbleText</span> },
+            <span class="hljs-attr">right:</span> { <span class="hljs-attr">color:</span> &#x27;#<span class="hljs-attr">fff</span>&#x27; },
+          }}
+        /&gt;</span>
+      )}
+      textInputStyle={chatStyles.textInput}
+      // Use FlashList for performance
+      isFlashListEnabled={true}
+      inverted={true}
+    /&gt;</span>
+  );
+}
+
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">handleSend</span>(<span class="hljs-params">messages</span>) {
+  <span class="hljs-keyword">if</span> (__DEV__) {
+    <span class="hljs-title function_">setMessages</span>(<span class="hljs-function">(<span class="hljs-params">prevMessages</span>) =&gt;</span>
+      <span class="hljs-title class_">GiftedChat</span>.<span class="hljs-title function_">append</span>(prevMessages, messages)
+    );
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-comment">// Send via socket in production</span>
+    <span class="hljs-keyword">const</span> { sendMessage } = <span class="hljs-title function_">useChatContext</span>();
+    messages.<span class="hljs-title function_">forEach</span>(<span class="hljs-function">(<span class="hljs-params">msg</span>) =&gt;</span> <span class="hljs-title function_">sendMessage</span>(msg.<span class="hljs-property">text</span>));
+  }
+}
+</code></pre>
+<hr>
+<h2 id="phase-5-configuration--setup">Phase 5: Configuration &amp; Setup</h2>
+<h3 id="51-chat-context-port-from-web">5.1 Chat Context (Port from web)</h3>
+<p><strong>File:</strong> <code>app/(root)/context/ChatContext.tsx</code></p>
+<p>Port the transport layer from <code>moaddi-next/app/(root)/context/chat-context.tsx</code>:</p>
+<ul>
+<li><a href="http://Socket.io">Socket.io</a> connection setup (<code>chat:message.new</code>, <code>chat:conversation.updated</code>, etc.)</li>
+<li>Message state management</li>
+<li>Optimistic sends &amp; deduplication</li>
+<li>Unread count tracking</li>
+<li>Reactions &amp; replies state</li>
+</ul>
+<p><strong>Key changes for RN:</strong></p>
+<ul>
+<li>Replace web's <code>services/events</code> fetch wrapper with RN-compatible HTTP client</li>
+<li>Emit socket events unchanged (contract stays the same)</li>
+<li>Use <code>AsyncStorage</code> for caching (already in package.json)</li>
+</ul>
+<h3 id="52-message-type-system">5.2 Message Type System</h3>
+<p><strong>File:</strong> <code>lib/chatMessageTypes.ts</code></p>
+<p>Extend message objects with media metadata:</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> <span class="hljs-title class_">ChatMessage</span> = {
+  <span class="hljs-attr">_id</span>: <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">text</span>: <span class="hljs-built_in">string</span>;
+  <span class="hljs-attr">createdAt</span>: <span class="hljs-title class_">Date</span>;
+  <span class="hljs-attr">user</span>: {
+    <span class="hljs-attr">_id</span>: <span class="hljs-built_in">string</span>;
+    <span class="hljs-attr">name</span>: <span class="hljs-built_in">string</span>;
+    avatar?: <span class="hljs-built_in">string</span>;
+  };
+  <span class="hljs-comment">// Media types</span>
+  image?: <span class="hljs-built_in">string</span>; <span class="hljs-comment">// URL</span>
+  <span class="hljs-variable language_">document</span>?: {
+    <span class="hljs-attr">uri</span>: <span class="hljs-built_in">string</span>;
+    <span class="hljs-attr">name</span>: <span class="hljs-built_in">string</span>;
+    <span class="hljs-attr">mimeType</span>: <span class="hljs-built_in">string</span>;
+    <span class="hljs-attr">size</span>: <span class="hljs-built_in">number</span>;
+  };
+  audio?: {
+    <span class="hljs-attr">uri</span>: <span class="hljs-built_in">string</span>;
+    <span class="hljs-attr">duration</span>: <span class="hljs-built_in">number</span>; <span class="hljs-comment">// seconds</span>
+    waveform?: <span class="hljs-built_in">number</span>[]; <span class="hljs-comment">// peak data for visualization</span>
+  };
+  location?: {
+    <span class="hljs-attr">latitude</span>: <span class="hljs-built_in">number</span>;
+    <span class="hljs-attr">longitude</span>: <span class="hljs-built_in">number</span>;
+    address?: <span class="hljs-built_in">string</span>;
+  };
+  <span class="hljs-comment">// Meta</span>
+  reaction?: { <span class="hljs-attr">emoji</span>: <span class="hljs-built_in">string</span>; <span class="hljs-attr">userIds</span>: <span class="hljs-built_in">string</span>[] }[];
+  replyTo?: <span class="hljs-title class_">ChatMessage</span>;
+  status?: <span class="hljs-string">&#x27;sending&#x27;</span> | <span class="hljs-string">&#x27;sent&#x27;</span> | <span class="hljs-string">&#x27;failed&#x27;</span>;
+};
+</code></pre>
+<hr>
+<h2 id="phase-6-component-implementation">Phase 6: Component Implementation</h2>
+<h3 id="61-main-chat-screen">6.1 Main Chat Screen</h3>
+<p><strong>File:</strong> <code>app/(root)/screens/ChatScreen.tsx</code></p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { <span class="hljs-title class_">GiftedChat</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@kesha-antonov/react-native-chat&#x27;</span>;
+<span class="hljs-keyword">import</span> { useChatContext } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;../context/ChatContext&#x27;</span>;
+<span class="hljs-keyword">import</span> { chatTheme } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@/theme/chatTheme&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">ChatScreen</span>(<span class="hljs-params">{ conversationId }</span>) {
+  <span class="hljs-keyword">const</span> {
+    messages,
+    sendMessage,
+    markAsRead,
+    onReactionAdd,
+    onReplySelect,
+  } = <span class="hljs-title function_">useChatContext</span>();
+
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">GiftedChat</span>
+      <span class="hljs-attr">messages</span>=<span class="hljs-string">{messages}</span>
+      <span class="hljs-attr">onSend</span>=<span class="hljs-string">{handleSend}</span>
+      <span class="hljs-attr">user</span>=<span class="hljs-string">{{</span> <span class="hljs-attr">_id:</span> <span class="hljs-attr">userId</span> }}
+      <span class="hljs-attr">renderMessage</span>=<span class="hljs-string">{props</span> =&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">ChatBubble</span> {<span class="hljs-attr">...props</span>} /&gt;</span>}
+      renderBubble={props =&gt; <span class="hljs-tag">&lt;<span class="hljs-name">BubbleWrapper</span> {<span class="hljs-attr">...props</span>} /&gt;</span>}
+      renderInputToolbar={props =&gt; <span class="hljs-tag">&lt;<span class="hljs-name">ComposerInput</span> {<span class="hljs-attr">...props</span>} /&gt;</span>}
+      renderCustomView={renderMediaBubbles}
+      onLongPress={handleMessageLongPress}
+      isFlashListEnabled={true}
+      // RTL handling (custom implementation needed)
+      inverted={true}
+      // Theme colors
+      primaryColor={chatTheme.teal500}
+      // ... more config
+    /&gt;</span>
+  );
+}
+</code></pre>
+<h3 id="62-media-bubbles">6.2 Media Bubbles</h3>
+<p><strong>Voice Note:</strong> <code>components/chat/AudioBubble.tsx</code></p>
+<ul>
+<li>Display waveform visualization (Reanimated)</li>
+<li>Play/pause button with duration</li>
+<li>Progress bar</li>
+<li>Theme: use <code>chatTheme.audioPlayButton</code> for controls</li>
+</ul>
+<p><strong>Document:</strong> <code>components/chat/DocumentBubble.tsx</code></p>
+<ul>
+<li>Thumbnail (file icon)</li>
+<li>Filename + size + upload progress</li>
+<li>Download button</li>
+<li>Theme: use <code>chatTheme.documentIcon</code></li>
+</ul>
+<p><strong>Location:</strong> <code>components/chat/LocationBubble.tsx</code></p>
+<ul>
+<li>Static map preview (Mapbox/Google Maps static API)</li>
+<li>Address text</li>
+<li>Tap to open full map</li>
+<li>Theme: use <code>chatTheme.locationMapBorder</code></li>
+</ul>
+<p><strong>Image:</strong> <code>components/chat/ImageBubble.tsx</code></p>
+<ul>
+<li>Thumbnail in thread</li>
+<li>Tap to view full-screen gallery</li>
+<li>Long-press to save/share</li>
+<li>Theme: use <code>chatTheme.imageBorder</code></li>
+</ul>
+<h3 id="63-composer-with-media-picker">6.3 Composer with Media Picker</h3>
+<p><strong>File:</strong> <code>components/chat/ComposerInput.tsx</code></p>
+<ul>
+<li>Text input (keyboard-pinned via <code>react-native-keyboard-controller</code>)</li>
+<li>4 attachment buttons:
+<ol>
+<li>Image (camera/gallery via <code>expo-image-picker</code>)</li>
+<li>Document (via <code>expo-document-picker</code>)</li>
+<li>Location (current via <code>expo-location</code>)</li>
+<li>Voice note (modal trigger to <code>VoiceRecorder</code>)</li>
+</ol>
+</li>
+<li>Send button</li>
+<li>Theme: apply <code>chatTheme</code> to all buttons/inputs</li>
+</ul>
+<h3 id="64-voice-recorder-modal">6.4 Voice Recorder Modal</h3>
+<p><strong>File:</strong> <code>components/chat/VoiceRecorder.tsx</code></p>
+<ul>
+<li>Record/stop button</li>
+<li>Live waveform animation (Reanimated)</li>
+<li>Duration counter</li>
+<li>Cancel/send buttons</li>
+<li>URI stored, sent with audio metadata</li>
+<li>Theme: use <code>chatTheme.audioPlayButton</code></li>
+</ul>
+<hr>
+<h2 id="phase-7-integration-with-backend">Phase 7: Integration with Backend</h2>
+<h3 id="71-socket-events-unchanged-from-web">7.1 Socket Events (unchanged from web)</h3>
+<pre><code class="language-typescript"><span class="hljs-comment">// Listen</span>
+socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;chat:message.new&#x27;</span>, handleNewMessage);
+socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;chat:message.reaction&#x27;</span>, handleReaction);
+socket.<span class="hljs-title function_">on</span>(<span class="hljs-string">&#x27;chat:conversation.updated&#x27;</span>, handleConversationUpdate);
+
+<span class="hljs-comment">// Emit</span>
+socket.<span class="hljs-title function_">emit</span>(<span class="hljs-string">&#x27;chat:message.send&#x27;</span>, { conversationId, text, media });
+socket.<span class="hljs-title function_">emit</span>(<span class="hljs-string">&#x27;chat:message.reaction.add&#x27;</span>, { messageId, emoji });
+socket.<span class="hljs-title function_">emit</span>(<span class="hljs-string">&#x27;chat:message.reply&#x27;</span>, { messageId, replyToId });
+</code></pre>
+<h3 id="72-media-upload">7.2 Media Upload</h3>
+<p><strong>File:</strong> <code>services/chatMediaService.ts</code></p>
+<ul>
+<li><strong>Images:</strong> FormData POST to <code>/api/chat-media/[conversationId]/[messageId]</code>
+<ul>
+<li>Auto-compress before upload (resize, quality 70-80)</li>
+</ul>
+</li>
+<li><strong>Documents:</strong> Same endpoint, multipart form</li>
+<li><strong>Audio:</strong> Record to temp file, upload with duration/waveform metadata</li>
+<li><strong>Location:</strong> No upload; JSON in message payload</li>
+</ul>
+<hr>
+<h2 id="phase-8-rtl-handling">Phase 8: RTL Handling</h2>
+<p>Since <code>@kesha-antonov/react-native-chat</code> has no RTL support, implement custom wrapper:</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { I18nManager, <span class="hljs-title class_">View</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react-native&#x27;</span>;
+<span class="hljs-keyword">import</span> { useTranslation } <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;react-i18next&#x27;</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">function</span> <span class="hljs-title function_">ChatScreen</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-keyword">const</span> { i18n } = <span class="hljs-title function_">useTranslation</span>();
+  <span class="hljs-keyword">const</span> isRTL = i18n.<span class="hljs-property">language</span> === <span class="hljs-string">&#x27;ar&#x27;</span>;
+  
+  <span class="hljs-comment">// Custom layout flipping for Arabic</span>
+  <span class="hljs-keyword">return</span> (
+    <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">View</span> <span class="hljs-attr">style</span>=<span class="hljs-string">{[</span>
+      <span class="hljs-attr">styles.container</span>,
+      <span class="hljs-attr">isRTL</span> &amp;&amp; { <span class="hljs-attr">direction:</span> &#x27;<span class="hljs-attr">rtl</span>&#x27;, <span class="hljs-attr">flexDirection:</span> &#x27;<span class="hljs-attr">row-reverse</span>&#x27; },
+    ]}&gt;</span>
+      {/* Bubble layout: swap left/right bubbles manually */}
+      {messages.map((msg) =&gt; (
+        <span class="hljs-tag">&lt;<span class="hljs-name">ChatBubble</span>
+          <span class="hljs-attr">key</span>=<span class="hljs-string">{msg._id}</span>
+          <span class="hljs-attr">message</span>=<span class="hljs-string">{msg}</span>
+          <span class="hljs-attr">isOwn</span>=<span class="hljs-string">{msg.user._id</span> === <span class="hljs-string">currentUserId}</span>
+          <span class="hljs-attr">isRTL</span>=<span class="hljs-string">{isRTL}</span>
+        /&gt;</span>
+      ))}
+    <span class="hljs-tag">&lt;/<span class="hljs-name">View</span>&gt;</span></span>
+  );
+}
+</code></pre>
+<hr>
+<h2 id="phase-9-testing-checklist">Phase 9: Testing Checklist</h2>
+<h3 id="functional">Functional</h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Connect to socket backend</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Send/receive text messages</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Display message bubbles with avatars</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Reactions (long-press, emoji picker, toggle)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Swipe-to-reply gesture</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Reply strip displays above bubble</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Unread badges in conversation list</li>
+</ul>
+<h3 id="media">Media</h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Image picker → compress → upload → display</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Document picker → upload → display with filename + size</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Location share → static map preview</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Voice record → waveform → send → playback</li>
+</ul>
+<h3 id="theme--ui">Theme &amp; UI</h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Teal theme applied to all bubbles/buttons/inputs</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Dark mode support (gray theme)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Mock data shows all message types correctly</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Reactions display with correct teal background</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Reply strips have correct border color</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Timestamps, read ticks in correct gray tone</li>
+</ul>
+<h3 id="edge-cases">Edge Cases</h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Long messages (text wrapping)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Rapid sends (optimistic UI + deduplication)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Connection lost → reconnect &amp; sync</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Swipe-to-reply while scrolling</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Keyboard focus on composer input</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> RTL layout (Arabic messages right-aligned)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Dark mode support</li>
+</ul>
+<h3 id="performance">Performance</h3>
+<ul class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Message list smooth scroll (FlashList)</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> No janky reactions/replies on old messages</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Audio playback doesn't stutter</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Image loads without blocking UI</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> 1000+ message thread remains performant</li>
+</ul>
+<hr>
+<h2 id="phase-10-deliverables">Phase 10: Deliverables</h2>
+<p><strong>Files to create/modify:</strong></p>
+<ol>
+<li><code>app/(root)/context/ChatContext.tsx</code> (ported from web)</li>
+<li><code>app/(root)/screens/ChatScreen.tsx</code> (main thread view with mock data option)</li>
+<li><code>components/chat/</code> (7 components: bubble, audio, document, location, image, actions, composer, recorder)</li>
+<li><code>lib/chatMessageTypes.ts</code> &amp; <code>lib/chatTypes.ts</code> (types)</li>
+<li><code>lib/mockChatData.ts</code> (dummy data for dev)</li>
+<li><code>services/chatMediaService.ts</code> (upload/download)</li>
+<li><code>theme/chatTheme.ts</code> (design system color mappings + theme object)</li>
+</ol>
+<p><strong>Total estimated LOC:</strong> ~3,000–3,500 (including media handling, mock data, theme integration, RTL wrapper)</p>
+<hr>
+<h2 id="known-risks--mitigations">Known Risks &amp; Mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTL breaks message layout</td>
+<td>Custom wrapper + manual style flipping for Arabic</td>
+</tr>
+<tr>
+<td>StyleSheet theming conflicts with design system</td>
+<td>Use centralized <code>chatTheme.ts</code> object for all colors</td>
+</tr>
+<tr>
+<td>Voice recording on Android permissions</td>
+<td>Use <code>expo-permissions</code>, handle gracefully</td>
+</tr>
+<tr>
+<td>Image upload size/compression</td>
+<td>Client-side resize before FormData</td>
+</tr>
+<tr>
+<td>Audio playback compatibility</td>
+<td>Test on both iOS/Android simulators</td>
+</tr>
+<tr>
+<td>Message list performance at 1000+ messages</td>
+<td>FlashList v2 + pagination (load older messages on scroll-top)</td>
+</tr>
+<tr>
+<td>Mock data stale during dev</td>
+<td>Toggle via <code>__DEV__</code> flag; switch to socket when ready</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="dependencies-summary">Dependencies Summary</h2>
+<pre><code class="language-json"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">&quot;new&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;@kesha-antonov/react-native-chat&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^4.1.0&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;react-native-keyboard-controller&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^1.15.0&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;expo-audio&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^17.0.0&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;expo-document-picker&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^14.0.0&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;expo-location&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^17.0.0&quot;</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">&quot;existing&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;react-native-reanimated&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;~3.17.4&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;react-native-gesture-handler&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;[verify]&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;@shopify/flash-list&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^1.7.6&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;socket.io-client&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^4.8.1&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;i18next&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^25.5.2&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;react-i18next&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;^16.6.4&quot;</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">}</span>
+</code></pre>
+<hr>
+<h2 id="next-steps">Next Steps</h2>
+<ol>
+<li><strong>Approval:</strong> Confirm dependency list, theme mappings, mock data structure</li>
+<li><strong>Setup:</strong> <code>yarn add</code> all packages, run <code>yarn postinstall</code></li>
+<li><strong>Theme:</strong> Create <code>theme/chatTheme.ts</code> with teal palette + component mappings</li>
+<li><strong>Mock Data:</strong> Build <code>lib/mockChatData.ts</code> with all message types</li>
+<li><strong>Port Context:</strong> Copy chat-context.tsx from web, adapt service calls</li>
+<li><strong>Build Components:</strong> Implement bubbles + composer in parallel</li>
+<li><strong>Dev Testing:</strong> Use mock data with <code>__DEV__</code> flag to verify UI</li>
+<li><strong>Integration:</strong> Wire socket events, swap to live data</li>
+<li><strong>Polish:</strong> RTL testing, dark mode, error handling</li>
+<li><strong>QA:</strong> Full test matrix (media types, edge cases, performance)</li>
+</ol>
+
+            
+            
+        </body>
+        </html>
