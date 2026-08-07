@@ -132,6 +132,7 @@
   "typeDeactivate": "Digita \"Deactivate\" per confermare",
   "delete": "Elimina",
   "deactivate": "Disattiva",
+  "deleteAccountHint": "Verrai disconnesso e non potrai accedere finché il tuo account non verrà ripristinato.",
   "deactivateAccountHint": "Verrai disconnesso e non potrai accedere finché non verrà riattivato.",
   "grantPermission": "Concedi autorizzazione",
   "cameraPermissionRequired": "È necessaria l'autorizzazione della fotocamera per scansionare i codici QR",

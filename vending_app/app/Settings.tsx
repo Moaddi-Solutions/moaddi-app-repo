@@ -45,7 +45,7 @@ const SettingsScreen = () => {
     setItem("theme", newTheme);
   };
 
-  const deactivateAccount = () => {
+  const deleteAccount = () => {
     // @ts-ignore
     putRequest(userToggleAPI(user._id)).then(async (response) => {
       if (response) {
@@ -117,8 +117,8 @@ const SettingsScreen = () => {
           <Card padded={false} style={{ paddingHorizontal: 12 }}>
             <ListItem
               icon={<UserX size={18} color={listItemIconColor(true)} />}
-              title={t("deactivateAccount")}
-              subtitle={t("deactivateAccountHint")}
+              title={t("deleteAccount")}
+              subtitle={t("deleteAccountHint")}
               destructive
               chevron={false}
               onPress={() => setAlertOpen(true)}
@@ -132,11 +132,11 @@ const SettingsScreen = () => {
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("areYouSureToDeactivateAccount")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("typeDeactivate")}</AlertDialogDescription>
+            <AlertDialogTitle>{t("areYouSureToDeleteAccount")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("typeDelete")}</AlertDialogDescription>
             <TextInput
               className="rounded-lg bg-muted text-foreground px-4 py-3 text-sm"
-              onChangeText={(value) => setConfirmable(value === "Deactivate")}
+              onChangeText={(value) => setConfirmable(value === "Delete")}
             />
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -144,11 +144,11 @@ const SettingsScreen = () => {
               <Text>{t("cancel")}</Text>
             </AlertDialogCancel>
             <AlertDialogAction
-              onPress={deactivateAccount}
+              onPress={deleteAccount}
               variant={confirmable ? "destructive" : "secondary"}
               disabled={!confirmable}
             >
-              <Text>{t("deactivate")}</Text>
+              <Text>{t("delete")}</Text>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
