@@ -45,6 +45,9 @@ export function roleAPI(id) {
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }
+export function getUsersByRoleAPI(role) {
+  return `${address()}users/role/${enc(role)}`;
+}
 export function getCustomerAPI() {
   return `${address()}users/role/Customer`;
 }
@@ -87,6 +90,9 @@ export function chatConversationReadAPI(conversationId) {
 }
 export function chatSocketAddress() {
   return `${baseUrl().replace(/\/$/, "")}/chat`;
+}
+export function chatSupportTargetAPI(audience = "customers") {
+  return `${address()}chat/support-target?${new URLSearchParams({ audience })}`;
 }
 export function chatAttachmentsAPI(conversationId) {
   return `${chatConversationsAPI()}/${enc(conversationId)}/attachments`;

@@ -4,6 +4,7 @@ import {
   deferResolve,
   hasDashboardSession,
   notifyAdminLogout,
+  notifyAuthSessionChange,
   readDashboardUser,
 } from "@/../lib/auth-session";
 import { buildAbility, canAccessResource } from "@/../lib/ability";
@@ -132,6 +133,9 @@ const login = async ({ username, password }) => {
     Cookies.set("user", JSON.stringify(response), { expires: cookieExpiresAt });
     setLocalStorageItem("user", JSON.stringify(response));
     axios.defaults.headers.common.Authorization = `Bearer ${response.token}`;
+    // The cookie is the only record of this token — nothing above the SPA
+    // re-renders on login, so ChatProvider has to be told the session exists.
+    notifyAuthSessionChange();
     return deferResolve();
   } catch (error) {
     const message =

@@ -1,8 +1,8 @@
 import type { Href } from "expo-router";
 import ConversationsScreen from "~/components/chat/ConversationsScreen";
 
-/** Messages tab: the shopper's conversation inbox. */
-export default function MessagesTab() {
+/** Chat tab: the shopper's conversation inbox. */
+export default function ChatTab() {
   return (
     <ConversationsScreen
       threadHref={(conversationId) =>

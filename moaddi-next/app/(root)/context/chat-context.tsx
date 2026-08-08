@@ -1,7 +1,7 @@
 "use client";
 
 import { useCart } from "@/(root)/context/cart-provider";
-import { readAuthSession } from "@/../lib/auth-session";
+import { AUTH_SESSION_EVENT, readAuthSession } from "@/../lib/auth-session";
 import { getRequest, postRequest, putRequest, deleteRequest } from "@/../services/events";
 import {
   chatAttachmentsAPI,
@@ -20,11 +20,13 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 export type ChatPeer = {
   name?: string | null;
   role?: string | null;
+  phone?: string | null;
 };
 
 export type ChatMessageType = "text" | "image" | "audio" | "document" | "location";
@@ -71,6 +73,8 @@ export type ChatConversation = {
   peer: ChatPeer | null;
   lastMessage: ChatLastMessage | null;
   unreadCount: number;
+  /** How far the peer has read MY messages. Drives outgoing read ticks. */
+  peerLastReadSeq: number;
 };
 
 export type ChatMessage = {
@@ -127,6 +131,7 @@ type ChatContextValue = {
   inboxError: boolean;
   messagesByConversation: Record<string, ChatMessage[]>;
   pagesByConversation: Record<string, ChatPageState>;
+  peerLastReadSeqByConversation: Record<string, number>;
   connectionState: ChatConnectionState;
   totalUnreadCount: number;
   refreshInbox: () => Promise<void>;
@@ -186,6 +191,12 @@ type ConversationReadUpdate = {
   unreadCount?: number;
   lastReadSeq?: number;
 };
+/** The PEER read up to lastReadSeq. Carries no unreadCount by design. */
+type ReadUpdate = {
+  v?: number;
+  conversationId?: string;
+  lastReadSeq?: number;
+};
 type ReactionUpdate = {
   v?: number;
   conversationId?: string;
@@ -194,6 +205,30 @@ type ReactionUpdate = {
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
+
+/**
+ * Re-reads the stored dashboard token whenever the session changes.
+ *
+ * `storage` covers another tab logging in or out; AUTH_SESSION_EVENT covers
+ * this tab, where a same-document cookie write fires no native event.
+ */
+function subscribeToAuthSession(onChange: () => void) {
+  window.addEventListener(AUTH_SESSION_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(AUTH_SESSION_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+/**
+ * Must return a cached primitive, not a fresh object: useSyncExternalStore
+ * compares snapshots by identity and would re-render forever otherwise.
+ */
+function readDashboardToken() {
+  return readAuthSession().token?.trim() || null;
+}
+
 let pendingSequence = 0;
 const MAX_UPLOAD_IMAGE_DIMENSION = 1600;
 const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
@@ -201,15 +236,19 @@ const UPLOAD_IMAGE_JPEG_QUALITY = 0.85;
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { user } = useCart();
   const shopperToken = (user as ShopperUser | null)?.token?.trim() || null;
-  // Read on every render, deliberately un-memoized: the token lives in the
-  // `user` cookie, and login writes that cookie without putting the token
-  // into React state (the profile passed to setUser has no token field, and
-  // dashboard login never calls setUser at all). So there is no dependency
-  // that tracks when this value changes — a useMemo keyed on anything from
-  // state goes stale the moment someone logs in, leaving token null and the
-  // inbox empty until a hard reload. It's a cookie read plus a JSON.parse.
-  const dashboardSession = readAuthSession();
-  const token = shopperToken || dashboardSession.token?.trim() || null;
+  // Subscribed rather than read inline: the token lives in the `user` cookie,
+  // and login writes that cookie without touching React state (the profile
+  // passed to setUser has no token field, and dashboard login never calls
+  // setUser at all). A plain render-time read looks like it handles that, but
+  // nothing re-renders this provider when the cookie appears — it sits above
+  // the dashboard SPA, where navigation only changes the hash — so the token
+  // stayed null from mount and the inbox never loaded until a hard reload.
+  const dashboardToken = useSyncExternalStore(
+    subscribeToAuthSession,
+    readDashboardToken,
+    () => null, // server render: no cookie access, no token
+  );
+  const token = shopperToken || dashboardToken;
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<
     Record<string, ChatMessage[]>
@@ -217,6 +256,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [pagesByConversation, setPagesByConversation] = useState<
     Record<string, ChatPageState>
   >({});
+  const [peerLastReadSeqByConversation, setPeerLastReadSeqByConversation] =
+    useState<Record<string, number>>({});
   const [inboxLoading, setInboxLoading] = useState(false);
   const [inboxError, setInboxError] = useState(false);
   const [connectionState, setConnectionState] =
@@ -330,6 +371,22 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  /**
+   * Monotonic on purpose: socket delivery is not ordered, and a late-arriving
+   * lower seq must never un-read a message that already showed a read tick.
+   * Mirrors the server's `$max` on `readStates.$.lastReadSeq`.
+   */
+  const advancePeerLastReadSeq = useCallback(
+    (conversationId: string, lastReadSeq: number) => {
+      const incoming = normalizeUnreadCount(lastReadSeq);
+      setPeerLastReadSeqByConversation((current) => {
+        if ((current[conversationId] ?? 0) >= incoming) return current;
+        return { ...current, [conversationId]: incoming };
+      });
+    },
+    [],
+  );
+
   const refreshInbox = useCallback(async () => {
     if (!token) return;
     setInboxLoading(true);
@@ -339,6 +396,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const nextConversations = normalizeConversations(response);
       conversationsRef.current = nextConversations;
       setConversations(nextConversations);
+      setPeerLastReadSeqByConversation((current) => {
+        const next = { ...current };
+        for (const conversation of nextConversations) {
+          // Same monotonic rule as the socket path: a refresh that races a
+          // live read event must not roll the tick back.
+          next[conversation.conversationId] = Math.max(
+            next[conversation.conversationId] ?? 0,
+            conversation.peerLastReadSeq,
+          );
+        }
+        return next;
+      });
     } catch {
       setInboxError(true);
     } finally {
@@ -878,6 +947,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const markConversationReadRef = useRef(markConversationRead);
   const setConversationUnreadCountRef = useRef(setConversationUnreadCount);
   const applyReactionsRef = useRef(applyReactions);
+  const advancePeerLastReadSeqRef = useRef(advancePeerLastReadSeq);
 
   useEffect(() => {
     refreshInboxRef.current = refreshInbox;
@@ -885,7 +955,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     markConversationReadRef.current = markConversationRead;
     setConversationUnreadCountRef.current = setConversationUnreadCount;
     applyReactionsRef.current = applyReactions;
+    advancePeerLastReadSeqRef.current = advancePeerLastReadSeq;
   }, [
+    advancePeerLastReadSeq,
     applyReactions,
     loadConversation,
     markConversationRead,
@@ -943,6 +1015,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setConversations([]);
     setMessagesByConversation({});
     setPagesByConversation({});
+    setPeerLastReadSeqByConversation({});
     conversationsRef.current = [];
     messagesByConversationRef.current = {};
     pagesRef.current = {};
@@ -1069,6 +1142,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         normalizeUnreadCount(payload.unreadCount),
       );
     };
+    const onReadUpdated = (payload: ReadUpdate) => {
+      if (payload?.v !== 1 || !payload.conversationId) return;
+      if (typeof payload.lastReadSeq !== "number") return;
+      advancePeerLastReadSeqRef.current(
+        payload.conversationId,
+        payload.lastReadSeq,
+      );
+    };
     const onReactionUpdated = (payload: ReactionUpdate) => {
       if (
         payload?.v !== 1 ||
@@ -1092,6 +1173,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     socket.on("chat:message.new", onNewMessage);
     socket.on("chat:conversation.updated", onConversationUpdated);
     socket.on("chat:conversation.read", onConversationRead);
+    socket.on("chat:read.updated", onReadUpdated);
     socket.on("chat:message.reaction", onReactionUpdated);
 
     return () => {
@@ -1101,6 +1183,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       socket.off("chat:message.new", onNewMessage);
       socket.off("chat:conversation.updated", onConversationUpdated);
       socket.off("chat:conversation.read", onConversationRead);
+      socket.off("chat:read.updated", onReadUpdated);
       socket.off("chat:message.reaction", onReactionUpdated);
       socket.disconnect();
       if (socketRef.current === socket) socketRef.current = null;
@@ -1124,6 +1207,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       inboxError,
       messagesByConversation,
       pagesByConversation,
+      peerLastReadSeqByConversation,
       connectionState,
       totalUnreadCount,
       refreshInbox,
@@ -1151,6 +1235,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       markConversationRead,
       messagesByConversation,
       pagesByConversation,
+      peerLastReadSeqByConversation,
       refreshInbox,
       retryMessage,
       sendAttachmentMessage,
@@ -1182,6 +1267,7 @@ function normalizeConversations(value: unknown): ChatConversation[] {
   ).map((conversation) => ({
     ...conversation,
     unreadCount: normalizeUnreadCount(conversation.unreadCount),
+    peerLastReadSeq: normalizeUnreadCount(conversation.peerLastReadSeq),
   }));
 }
 

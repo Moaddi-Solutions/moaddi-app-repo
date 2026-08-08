@@ -67,6 +67,7 @@ const RESOURCE_MAP = {
   paymentProviders: { subject: "PaymentProvider" },
   paymentProvidersAll: { subject: "PaymentProvider" },
   platformOptions: { subject: "Option" },
+  supportRouting: { subject: "SupportRouting", action: "manage" },
   conversations: { subject: "Conversation" },
 };
 

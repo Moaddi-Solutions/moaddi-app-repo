@@ -8,16 +8,21 @@ import { Skeleton } from "@/../components/ui/skeleton";
 import { readDashboardUser } from "@/../lib/auth-session";
 import {
   isDashboardAdminRole,
+  isDashboardRole,
   isVendorRole,
   normalizeDashboardRole,
 } from "@/../lib/dashboard-role";
 import { formatMoneyValue } from "@/../lib/formatMoney";
 import { cn } from "@/../lib/utils";
+import { chatConversationsAPI } from "@/../services/serverAddresses";
+import { postRequest } from "@/../services/events";
+import { useSupportUserId } from "@/(root)/context/contact-target-context";
 import {
   ArrowDownRight,
   ArrowUpRight,
   Banknote,
   Handshake,
+  Loader2,
   MessageCircle,
   Package,
   Plus,
@@ -26,9 +31,10 @@ import {
   UsersRound,
   Wallet,
 } from "lucide-react";
-import { useId, useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 import { useCreatePath, useGetList } from "ra-core";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 /* -------------------------------------------------------------------------- */
 /*  Data hooks                                                                */
@@ -444,10 +450,31 @@ const PendingActions = ({ createPath, isAdmin }) => {
 
 const Dashboard = () => {
   const createPath = useCreatePath();
+  const navigate = useNavigate();
   const user = readDashboardUser();
   const role = normalizeDashboardRole(user.role);
   const isAdmin = isDashboardAdminRole(role);
   const isVendor = isVendorRole(role);
+  // Any staff role that isn't admin itself can message the admin directly
+  // (vendor today, custom dashboard roles later).
+  const canContactAdmin = isDashboardRole(role) && !isAdmin;
+  const supportUserId = useSupportUserId("vendors");
+  const [contactingAdmin, setContactingAdmin] = useState(false);
+
+  const contactAdmin = async () => {
+    if (contactingAdmin || !supportUserId) return;
+    setContactingAdmin(true);
+    try {
+      const { conversationId } = await postRequest(chatConversationsAPI(), {
+        targetUserId: supportUserId,
+      });
+      navigate(`/conversations/${encodeURIComponent(conversationId)}`);
+    } catch {
+      toast.error("Couldn't open conversation with admin. Try again.");
+    } finally {
+      setContactingAdmin(false);
+    }
+  };
 
   const { data: machines = [], isPending: machinesLoading } =
     useResourceSummary("machines");
@@ -532,15 +559,33 @@ const Dashboard = () => {
               below is live.
             </p>
             {(isAdmin || isVendor) && (
-              <ShadcnButton
-                asChild
-                className="mt-5 h-10 rounded-xl bg-white text-sm font-extrabold text-slate-950 hover:bg-white/90"
-              >
-                <a href="/conversations">
-                  <MessageCircle data-icon="inline-start" />
-                  Open conversations
-                </a>
-              </ShadcnButton>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <ShadcnButton
+                  asChild
+                  className="h-10 rounded-xl bg-white text-sm font-extrabold text-slate-950 hover:bg-white/90"
+                >
+                  <a href="/admin#/conversations">
+                    <MessageCircle data-icon="inline-start" />
+                    Open conversations
+                  </a>
+                </ShadcnButton>
+                {canContactAdmin && (
+                  <ShadcnButton
+                    type="button"
+                    variant="outline"
+                    className="h-10 rounded-xl border-white/40 bg-transparent text-sm font-extrabold text-white hover:bg-white/10"
+                    disabled={contactingAdmin || !supportUserId}
+                    onClick={contactAdmin}
+                  >
+                    {contactingAdmin ? (
+                      <Loader2 data-icon="inline-start" className="animate-spin" />
+                    ) : (
+                      <MessageCircle data-icon="inline-start" />
+                    )}
+                    Contact admin
+                  </ShadcnButton>
+                )}
+              </div>
             )}
           </div>
           <FleetPulse

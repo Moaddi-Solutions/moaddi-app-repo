@@ -52,6 +52,10 @@ export type SubjectName =
   | 'PaymentProvider'
   // Platform role reference data (label/description); rules stay in code.
   | 'Role'
+  // Who receives "Contact support" chats from customers/vendors. Deliberately
+  // not in ASSIGNABLE_SUBJECTS — only SuperAdmin's `manage all` grants it, so
+  // custom roles can never be given it either.
+  | 'SupportRouting'
   | 'all';
 
 export type AppAbility = MongoAbility;

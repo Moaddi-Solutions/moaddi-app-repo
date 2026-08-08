@@ -14,6 +14,7 @@ import { ImageBubble } from "@/(root)/components/chat/message-bodies/ImageBubble
 import { LocationBubble } from "@/(root)/components/chat/message-bodies/LocationBubble";
 import { MessageActions } from "@/(root)/components/chat/message-bodies/MessageActions";
 import { ReactionChips } from "@/(root)/components/chat/message-bodies/ReactionChips";
+import { ReadTicks } from "@/(root)/components/chat/message-bodies/ReadTicks";
 import { ReplyStrip } from "@/(root)/components/chat/message-bodies/ReplyStrip";
 import { SwipeToReply } from "@/(root)/components/chat/message-bodies/SwipeToReply";
 import { UploadProgress } from "@/(root)/components/chat/message-bodies/UploadProgress";
@@ -55,6 +56,7 @@ import {
 } from "@/../components/ui/message-scroller";
 import { Skeleton } from "@/../components/ui/skeleton";
 import { readDashboardUser } from "@/../lib/auth-session";
+import { isShopperRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
 import { cn } from "@/../lib/utils";
 import { chatMediaAPI } from "@/../services/serverAddresses";
 import {
@@ -93,13 +95,26 @@ export default function AdminConversationsScreen({
     useChat();
   const t = useTranslations("Chat");
   const locale = useLocale();
-  const currentUserName = readDashboardUser().name;
+  const dashboardUser = readDashboardUser();
+  const currentUserName = dashboardUser.name;
+  // Only SuperAdmin may open a peer's customer record from the thread header.
+  // Vendors share this screen but must not reach customer data.
+  const canOpenCustomer =
+    normalizeDashboardRole(dashboardUser.role) === "SuperAdmin";
 
   useEffect(() => {
     void refreshInbox();
     // Refresh once on mount; the socket keeps the inbox live after that.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // On lg+ the inbox stays visible beside the thread, so defaulting to the
+  // newest conversation just fills an otherwise-empty pane. Deliberately not
+  // done below lg: there the inbox is full-screen and a selection hides it,
+  // which would drop the user into a thread they never picked.
+  const autoSelectedId = selectedConversationId
+    ? null
+    : (conversations[0]?.conversationId ?? null);
 
   return (
     <main className="moaddi-chat-page mx-auto flex h-[calc(100vh-3.5rem-2rem)] w-full px-0">
@@ -109,7 +124,7 @@ export default function AdminConversationsScreen({
       >
         <ConversationInbox
           conversations={conversations}
-          selectedConversationId={selectedConversationId}
+          selectedConversationId={selectedConversationId ?? autoSelectedId}
           loading={inboxLoading}
           error={inboxError}
           onRefresh={refreshInbox}
@@ -124,6 +139,22 @@ export default function AdminConversationsScreen({
             )}
             currentUserName={currentUserName}
             connectionState={connectionState}
+            canOpenCustomer={canOpenCustomer}
+          />
+        ) : autoSelectedId ? (
+          // `hidden lg:flex` keeps this off mobile, where the inbox owns the
+          // screen. The key remounts the thread when the newest conversation
+          // changes, so per-conversation state resets like a real navigation.
+          <ConversationThread
+            key={autoSelectedId}
+            conversationId={autoSelectedId}
+            conversation={conversations.find(
+              (item) => item.conversationId === autoSelectedId,
+            )}
+            currentUserName={currentUserName}
+            connectionState={connectionState}
+            canOpenCustomer={canOpenCustomer}
+            className="hidden lg:flex"
           />
         ) : (
           <ConversationWelcome className="hidden lg:flex" />
@@ -288,15 +319,20 @@ function ConversationThread({
   conversation,
   currentUserName,
   connectionState,
+  canOpenCustomer = false,
+  className,
 }: {
   conversationId: string;
   conversation?: ChatConversation;
   currentUserName?: string;
   connectionState: "idle" | "connecting" | "connected" | "offline";
+  canOpenCustomer?: boolean;
+  className?: string;
 }) {
   const {
     messagesByConversation,
     pagesByConversation,
+    peerLastReadSeqByConversation,
     loadConversation,
     sendMessage,
     sendLocationMessage,
@@ -371,6 +407,12 @@ function ConversationThread({
   const peerName = conversation?.peer?.name?.trim() || t("newConversation");
   const peerRole = roleLabel(conversation?.peer?.role, t);
   const PeerRoleIcon = roleIcon(conversation?.peer?.role);
+  const peerPhone = conversation?.peer?.phone;
+  // Staff peers have no customer record, so only link shoppers.
+  const customerHref =
+    canOpenCustomer && peerPhone && isShopperRole(conversation?.peer?.role)
+      ? `/customers/${encodeURIComponent(peerPhone)}/show`
+      : null;
   const groupedMessages = useMemo(
     () => buildThreadItems(messages, locale),
     [locale, messages],
@@ -470,7 +512,12 @@ function ConversationThread({
   };
 
   return (
-    <section className="moaddi-chat-rail flex min-h-0 min-w-0 flex-1 flex-col">
+    <section
+      className={cn(
+        "moaddi-chat-rail flex min-h-0 min-w-0 flex-1 flex-col",
+        className,
+      )}
+    >
       <header className="border-border bg-card flex min-h-[72px] items-center gap-3 border-b px-3 sm:px-5">
         <Button variant="ghost" size="icon-sm" asChild className="lg:hidden">
           <Link to="/conversations" aria-label={t("backToInbox")}>
@@ -479,19 +526,53 @@ function ConversationThread({
         </Button>
         <ContactAvatar name={peerName} role={conversation?.peer?.role} showRoleBadge={false} />
         <div className="min-w-0 flex-1">
-          <p className="moaddi-chat-thread-title truncate">{peerName}</p>
-          <span className="moaddi-chat-rolechip mt-1">
-            <PeerRoleIcon className="size-3" aria-hidden="true" />
-            {peerRole}
-          </span>
+          {customerHref ? (
+            // SuperAdmin only: open the peer's full customer record (profile +
+            // purchases). `peer.phone` is the account _id, and the server nulls
+            // it for guest/synthetic accounts, so a link only ever renders for
+            // a real customer record.
+            <Link
+              to={customerHref}
+              className="focus-visible:ring-ring/50 rounded-sm outline-none hover:underline focus-visible:ring-[3px]"
+              title={t("viewCustomer")}
+            >
+              <p className="moaddi-chat-thread-title truncate">{peerName}</p>
+            </Link>
+          ) : (
+            <p className="moaddi-chat-thread-title truncate">{peerName}</p>
+          )}
+          <div className="mt-1 flex items-center gap-2">
+            <span className="moaddi-chat-rolechip">
+              <PeerRoleIcon className="size-3" aria-hidden="true" />
+              {peerRole}
+            </span>
+            {conversation?.peer?.phone && (
+              <span className="text-muted-foreground truncate text-xs">
+                {conversation.peer.phone}
+              </span>
+            )}
+          </div>
         </div>
         <ConnectionState state={connectionState} />
       </header>
 
-      <MessageScrollerProvider autoScroll>
+      <MessageScrollerProvider autoScroll resetKey={conversationId}>
         <MessageScroller>
-          <MessageScrollerViewport>
-            <MessageScrollerContent className="gap-0">
+          <MessageScrollerViewport
+            onScroll={(event) => {
+              // Load older history as the user nears the top. The scroller
+              // preserves scroll position on prepend, so this is seamless.
+              if (event.currentTarget.scrollTop < 96 && page?.hasMore && !page.loading) {
+                void loadConversation(conversationId, { older: true });
+              }
+            }}
+          >
+            <MessageScrollerContent
+              className="gap-0"
+              count={messages.length}
+              anchorId={messages[0]?._id}
+              ready={!firstLoad}
+            >
               {page?.hasMore ? (
                 <div className="mb-4 flex justify-center">
                   <Button
@@ -554,6 +635,9 @@ function ConversationThread({
                       peerRole={conversation?.peer?.role}
                       currentUserName={currentUserName || t("you")}
                       locale={locale}
+                      peerLastReadSeq={
+                        peerLastReadSeqByConversation[conversationId] ?? 0
+                      }
                       onReply={() => setReplyTarget(item.message)}
                       onReplyNotLoaded={() => toast.info(t("reply.notLoaded"))}
                       onReact={(emoji) =>
@@ -735,6 +819,7 @@ function ChatMessageRow({
   peerRole,
   currentUserName,
   locale,
+  peerLastReadSeq,
   onReply,
   onReplyNotLoaded,
   onReact,
@@ -749,6 +834,7 @@ function ChatMessageRow({
   peerRole?: string | null;
   currentUserName: string;
   locale: string;
+  peerLastReadSeq: number;
   onReply: () => void;
   onReplyNotLoaded: () => void;
   onReact: (emoji: string) => void;
@@ -831,8 +917,9 @@ function ChatMessageRow({
         bubble
       )}
       {isRunEnd ? (
-        <MessageFooter className="moaddi-chat-time">
+        <MessageFooter className="moaddi-chat-time flex items-center gap-1">
           <time dateTime={message.createdAt}>{timeLabel}</time>
+          <ReadTicks message={message} peerLastReadSeq={peerLastReadSeq} />
         </MessageFooter>
       ) : null}
       {message.status === "failed" && !isUploadMessage ? (
@@ -1020,7 +1107,9 @@ function roleLabel(
   const normalized = role?.toLowerCase();
   if (normalized === "admin" || normalized === "super-admin") return t("roles.support");
   if (normalized === "vendor") return t("roles.vendor");
+  if (normalized === "customer") return t("roles.customer");
   if (normalized === "supplier") return t("roles.supplier");
+  if (normalized === "guest") return t("roles.guest");
   return t("roles.contact");
 }
 

@@ -11,6 +11,7 @@ import {
   contentAPI,
   contentUploadAPI,
   getCustomerAPI,
+  getUsersByRoleAPI,
   getVendorsAPI,
   groupAPI,
   groupsAPI,
@@ -177,6 +178,19 @@ const Api = {
     update: (id, data) => putRequest(userAPI(id), data),
     delete: (id) => deleteRequest(userAPI(id)),
   },
+  admins: {
+    // Merges Admin + SuperAdmin rosters for the "support admin" picker.
+    getList: () =>
+      Promise.all(
+        ["Admin", "SuperAdmin"].map((role) =>
+          getRequest(getUsersByRoleAPI(role)),
+        ),
+      ).then((results) => ({
+        data: results.flatMap(({ data }) => data),
+        total: results.reduce((sum, { total }) => sum + total, 0),
+      })),
+    getOne: (id) => getRequest(userAPI(id)),
+  },
   products: {
     create: ({ image, ...data }) => {
       const formData = new FormData();
@@ -293,6 +307,20 @@ const Api = {
         putRequest(platformOptionsAPI(), data).then(normalize),
     };
   })(),
+  // Same underlying platform-options doc as `platformOptions`, scoped to
+  // just the two support-contact fields for the "Contact Support" screen.
+  supportRouting: {
+    getOne: () =>
+      getRequest(platformOptionsAPI()).then((data) => ({
+        ...data,
+        id: "platform",
+      })),
+    update: (_id, { supportAdminIdCustomers, supportAdminIdVendors }) =>
+      putRequest(platformOptionsAPI(), {
+        supportAdminIdCustomers,
+        supportAdminIdVendors,
+      }).then((data) => ({ ...data, id: "platform" })),
+  },
   groups: {
     create: (data) => postRequest(groupsAPI(), data),
     getList: (offset, limit) =>
@@ -344,6 +372,13 @@ const Api = {
     // expand=1 → server returns products/machine/shop/customer so a direct
     // load / refresh of the detail page is as rich as the list row.
     getOne: (id) => getRequest(`${purchaseAPI(id)}?expand=1`),
+    getManyReference: {
+      customerId: (customerId) =>
+        Api.payments.getList(0, 100, { customerId }).then(({ data, total }) => ({
+          data: data.map(Fit._id),
+          total,
+        })),
+    },
   },
   invoices: {
     getList: (offset, limit, filter = {}) => {

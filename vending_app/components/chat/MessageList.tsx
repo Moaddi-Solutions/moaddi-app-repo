@@ -33,6 +33,8 @@ type MessageListProps = {
   items: ChatThreadItem[];
   conversationId: string;
   language?: string;
+  /** Peer's read cursor; drives the read ticks on my outgoing messages. */
+  peerLastReadSeq: number;
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
@@ -54,6 +56,7 @@ export function MessageList({
   items,
   conversationId,
   language,
+  peerLastReadSeq,
   hasMore,
   isLoadingMore,
   onLoadMore,
@@ -82,6 +85,7 @@ export function MessageList({
             item={item}
             conversationId={conversationId}
             language={language}
+            peerLastReadSeq={peerLastReadSeq}
             onReply={onReply}
             onLongPress={onLongPress}
             onRetry={onRetry}
@@ -94,6 +98,7 @@ export function MessageList({
       items,
       conversationId,
       language,
+      peerLastReadSeq,
       t,
       onReply,
       onLongPress,

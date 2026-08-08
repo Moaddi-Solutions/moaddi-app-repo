@@ -11,6 +11,7 @@ import { Pressable, Text, View } from "react-native";
 import { IconButton } from "~/components/IconButton";
 import { Loader } from "~/components/moaddi";
 import LanguageSelectorModal from "~/components/LanguageSelectorModal";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
 import "~/global.css";
 import { ScanQrCode } from "~/lib/icons/ScanQrCode";
@@ -33,6 +34,7 @@ export function LogoTitle(...props) {
 
 const Stacks = () => {
   const { user, isLoading } = useUser();
+  const { isStaff } = useAbility();
   const { t } = useTranslation();
   const [isModalVisible, setModalVisible] = React.useState(false);
 
@@ -51,7 +53,11 @@ const Stacks = () => {
       <LanguageSelectorModal {...languageSelectorModal} />
       <Stack>
         <Stack.Protected
-          guard={user?.role === "Admin" || user?.role === "Vendor"}
+          guard={
+            user?.role === "Admin" ||
+            user?.role === "Vendor" ||
+            user?.role === "SuperAdmin"
+          }
         >
           <Stack.Screen name="staff" options={{ headerShown: false }} />
         </Stack.Protected>

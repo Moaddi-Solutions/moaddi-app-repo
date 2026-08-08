@@ -47,6 +47,7 @@
     "noMessages": "\u6682\u65e0\u6d88\u606f",
     "conversationUnavailable": "\u6b64\u5bf9\u8bdd\u5df2\u4e0d\u53ef\u7528\u3002",
     "newConversation": "\u65b0\u5bf9\u8bdd",
+    "viewCustomer": "\u67e5\u770b\u5ba2\u6237\u8d44\u6599",
     "reconnecting": "\u6b63\u5728\u91cd\u65b0\u8fde\u63a5",
     "connecting": "\u6b63\u5728\u8fde\u63a5",
     "loadOlder": "\u52a0\u8f7d\u66f4\u65e9\u6d88\u606f",
@@ -69,8 +70,10 @@
     "roles": {
       "support": "\u5ba2\u670d\u56e2\u961f",
       "vendor": "\u4f9b\u5e94\u5546",
+      "customer": "\u5ba2\u6237",
       "supplier": "\u4f9b\u8d27\u5546",
-      "contact": "Moaddi \u8054\u7cfb\u4eba"
+      "contact": "Moaddi \u8054\u7cfb\u4eba",
+      "guest": "\u8bbf\u5ba2"
     },
     "media": {
       "attach": "\u9644\u52a0",
@@ -113,6 +116,11 @@
       "cancelReply": "\u53d6\u6d88\u56de\u590d",
       "you": "\u4f60",
       "notLoaded": "\u8be5\u6d88\u606f\u5c1a\u672a\u52a0\u8f7d\u3002"
+    },
+    "readState": {
+      "sending": "\u53d1\u9001\u4e2d",
+      "sent": "\u5df2\u53d1\u9001",
+      "read": "\u5df2\u8bfb"
     },
     "reactions": {
       "react": "\u8868\u60c5\u56de\u5e94",

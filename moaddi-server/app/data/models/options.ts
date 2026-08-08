@@ -19,6 +19,8 @@ const OptionsSchema = new mongoose.Schema<ModelTypes.IOptions>(
       required: false,
       default: () => ({}),
     },
+    supportAdminIdCustomers: { type: String, required: false },
+    supportAdminIdVendors: { type: String, required: false },
     updatedBy: { type: String, required: false },
     updated: { type: Date, required: false },
   },

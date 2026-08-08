@@ -12,7 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/../components/ui/tabs";
 import { formatProductPrice } from "@/../constants/currency";
 import { listMyGifts } from "@/../services/gift";
-import { Eye, Gift, Share2 } from "lucide-react";
+import { ChevronRight, Gift, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -49,12 +49,18 @@ export default function GiftsPanel({ preferredCurrency = "SAR" }) {
         <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="sent">
-          <TabsList className="mb-4">
-            <TabsTrigger value="sent">
+        <Tabs defaultValue="sent" className="flex flex-col">
+          <TabsList className="mb-4 flex h-auto w-full flex-row justify-start gap-2 bg-transparent p-0">
+            <TabsTrigger
+              value="sent"
+              className="h-9 flex-none rounded-full border border-border/80 bg-transparent px-4 font-bold text-foreground shadow-none data-active:border-primary data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary"
+            >
               {t("sentTab", { count: state.sent.length })}
             </TabsTrigger>
-            <TabsTrigger value="received">
+            <TabsTrigger
+              value="received"
+              className="h-9 flex-none rounded-full border border-border/80 bg-transparent px-4 font-bold text-foreground shadow-none data-active:border-primary data-active:bg-primary data-active:text-primary-foreground dark:data-active:bg-primary"
+            >
               {t("receivedTab", { count: state.received.length })}
             </TabsTrigger>
           </TabsList>
@@ -150,47 +156,50 @@ function GiftRow({ gift, kind, preferredCurrency }) {
   };
 
   return (
-    <li className="flex flex-wrap items-center gap-3 rounded-xl border border-border/80 px-4 py-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
-        <Gift aria-hidden="true" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-black" title={products}>
-          {products}
-        </p>
-        <p className="truncate text-xs font-semibold text-muted-foreground">
-          {gift.machineName || t("moaddiMachine")}
-          {gift.price != null
-            ? ` - ${formatProductPrice(gift.price, gift.preferredCurrency || preferredCurrency)}`
-            : ""}
-          {kind === "received" && gift.buyerName ? ` - ${t("from")} ${gift.buyerName}` : ""}
-        </p>
-        <p className="text-xs font-semibold text-muted-foreground">
-          {statusDetail(gift, t, locale)}
-        </p>
-      </div>
-      <div className="ms-auto flex shrink-0 items-center gap-2">
-        <StatusBadge status={gift.giftStatus} t={t} />
-        {reshareable ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            aria-label={t("shareAgain")}
-            disabled={sharing}
-            onClick={share}
-          >
-            <Share2 aria-hidden="true" />
-          </Button>
-        ) : null}
-        <Link
-          href={`/invoice/success?invoiceId=${encodeURIComponent(String(gift._id))}&show=1`}
-        >
-          <Button variant="ghost" size="icon-sm" aria-label={t("viewGift")}>
-            <Eye aria-hidden="true" />
-          </Button>
-        </Link>
-      </div>
+    <li>
+      <Link
+        href={`/invoice/success?invoiceId=${encodeURIComponent(String(gift._id))}&show=1`}
+        className="flex items-center gap-3 rounded-xl border border-border/80 bg-card px-4 py-3 transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/35"
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-text">
+          <Gift aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-black" title={products}>
+            {products}
+          </p>
+          <p className="truncate text-xs font-semibold text-muted-foreground">
+            {gift.machineName || t("moaddiMachine")}
+            {gift.price != null
+              ? ` - ${formatProductPrice(gift.price, gift.preferredCurrency || preferredCurrency)}`
+              : ""}
+            {kind === "received" && gift.buyerName ? ` - ${t("from")} ${gift.buyerName}` : ""}
+          </p>
+          <p className="text-xs font-semibold text-muted-foreground">
+            {statusDetail(gift, t, locale)}
+          </p>
+        </div>
+        <div className="ms-auto flex shrink-0 items-center gap-2">
+          <StatusBadge status={gift.giftStatus} t={t} />
+          {reshareable ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="rounded-full"
+              aria-label={t("shareAgain")}
+              disabled={sharing}
+              onClick={(e) => {
+                e.preventDefault();
+                share();
+              }}
+            >
+              <Share2 aria-hidden="true" />
+            </Button>
+          ) : null}
+          <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+        </div>
+      </Link>
     </li>
   );
 }
@@ -198,13 +207,13 @@ function GiftRow({ gift, kind, preferredCurrency }) {
 function StatusBadge({ status, t }) {
   switch (status) {
     case "collected":
-      return <Badge variant="default">{t("status.collected")}</Badge>;
+      return <Badge variant="success">{t("status.collected")}</Badge>;
     case "claimed":
-      return <Badge variant="outline">{t("status.claimed")}</Badge>;
+      return <Badge variant="secondary">{t("status.claimed")}</Badge>;
     case "expired":
       return <Badge variant="destructive">{t("status.expired")}</Badge>;
     default:
-      return <Badge variant="secondary">{t("status.pending")}</Badge>;
+      return <Badge variant="warning">{t("status.pending")}</Badge>;
   }
 }
 

@@ -16,7 +16,7 @@ export default function Screen() {
     });
   }, [router]);
 
-  if (user?.role?.toLowerCase() === "admin") {
+  if (["admin", "vendor", "superadmin"].includes(user?.role?.toLowerCase() ?? "")) {
     return <StaffHomeScreen />;
   }
 

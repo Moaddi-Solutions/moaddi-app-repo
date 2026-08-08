@@ -39,6 +39,29 @@ module.exports = () => {
     },
   );
 
+  // Resolve the configured support admin's id for the "Contact support" chat
+  // target. Any authenticated user (including auto-created guests) may read
+  // this — it only exposes an id, not the rest of the platform options doc.
+  // ?audience=customers|vendors picks which of the two assignments to
+  // return; defaults to customers (the shopper-facing "Contact support").
+  router.get(
+    "/chat/support-target",
+    authenticate(),
+    async (req, res, next) => {
+      try {
+        const audience = req.query.audience === "vendors" ? "vendors" : "customers";
+        const opts = await optionsRepo.getPlatform();
+        const targetUserId =
+          audience === "vendors"
+            ? opts.supportAdminIdVendors ?? null
+            : opts.supportAdminIdCustomers ?? null;
+        return res.status(200).json({ targetUserId });
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
   // List every payment provider that has a registered strategy, with its
   // current isActive flag from the platform options doc.
   // Readable by any authenticated user so vendors viewing machines can
