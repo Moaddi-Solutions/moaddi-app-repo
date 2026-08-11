@@ -21,6 +21,7 @@ const staticOrigin = normalizeOrigin(
 module.exports = {
   expo: {
     ...appJson.expo,
+    updates: appJson.expo.updates,
     extra: {
       ...appJson.expo.extra,
       serverOrigin,
