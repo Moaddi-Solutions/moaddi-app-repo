@@ -11,6 +11,8 @@ import {
   contentAPI,
   contentUploadAPI,
   getCustomerAPI,
+  getStaffUsersAPI,
+  getUsersByRoleAPI,
   getVendorsAPI,
   groupAPI,
   groupsAPI,
@@ -147,13 +149,22 @@ const Api = {
   },
   vendors: {
     create: (data) => postRequest(addUserAPI(), data),
-    getList: (offset, limit) =>
-      getRequest(
-        `${getVendorsAPI()}?${new URLSearchParams({
+    // List page shows the full staff roster (any role creatable here).
+    // ReferenceInputs pass `filter.role = "Vendor"` so machine/shop pickers
+    // stay limited to suppliers only.
+    getList: (offset, limit, filter = {}) => {
+      const role = filter?.role;
+      const endpoint =
+        role && String(role).toLowerCase() !== "staff"
+          ? getUsersByRoleAPI(role)
+          : getStaffUsersAPI();
+      return getRequest(
+        `${endpoint}?${new URLSearchParams({
           offset,
           limit,
         })}`,
-      ),
+      );
+    },
     getOne: (id) => getRequest(userAPI(id)),
     getManyReference: {
       shopId: (shopId) =>
@@ -177,6 +188,19 @@ const Api = {
     update: (id, data) => putRequest(userAPI(id), data),
     delete: (id) => deleteRequest(userAPI(id)),
   },
+  admins: {
+    // Merges Admin + SuperAdmin rosters for the "support admin" picker.
+    getList: () =>
+      Promise.all(
+        ["Admin", "SuperAdmin"].map((role) =>
+          getRequest(getUsersByRoleAPI(role)),
+        ),
+      ).then((results) => ({
+        data: results.flatMap(({ data }) => data),
+        total: results.reduce((sum, { total }) => sum + total, 0),
+      })),
+    getOne: (id) => getRequest(userAPI(id)),
+  },
   products: {
     create: ({ image, ...data }) => {
       const formData = new FormData();
@@ -184,6 +208,9 @@ const Api = {
       if (image?.rawFile) formData.append("image", image.rawFile);
       return postRequest(productAPI(), formData);
     },
+    // `native=true` is the authenticated staff listing; the server scopes it to
+    // the caller's own products (supplier) or shops (shop admin), so every row
+    // that comes back is one they can actually act on.
     getList: (offset, limit, filter) =>
       getRequest(
         `${productAPI()}?${new URLSearchParams({
@@ -293,6 +320,20 @@ const Api = {
         putRequest(platformOptionsAPI(), data).then(normalize),
     };
   })(),
+  // Same underlying platform-options doc as `platformOptions`, scoped to
+  // just the two support-contact fields for the "Contact Support" screen.
+  supportRouting: {
+    getOne: () =>
+      getRequest(platformOptionsAPI()).then((data) => ({
+        ...data,
+        id: "platform",
+      })),
+    update: (_id, { supportAdminIdCustomers, supportAdminIdVendors }) =>
+      putRequest(platformOptionsAPI(), {
+        supportAdminIdCustomers,
+        supportAdminIdVendors,
+      }).then((data) => ({ ...data, id: "platform" })),
+  },
   groups: {
     create: (data) => postRequest(groupsAPI(), data),
     getList: (offset, limit) =>
@@ -344,6 +385,18 @@ const Api = {
     // expand=1 → server returns products/machine/shop/customer so a direct
     // load / refresh of the detail page is as rich as the list row.
     getOne: (id) => getRequest(`${purchaseAPI(id)}?expand=1`),
+    getManyReference: {
+      customerId: (customerId) =>
+        Api.payments.getList(0, 100, { customerId }).then(({ data, total }) => ({
+          data: data.map(Fit._id),
+          total,
+        })),
+    },
+    // Staff correct stuck or mistaken orders. Both staff roles are granted
+    // update/delete on Purchase (scoped to their shops / their machines'
+    // sales); without these the dashboard had no way to exercise it.
+    update: (id, data) => putRequest(purchaseAPI(id), data),
+    delete: (id) => deleteRequest(purchaseAPI(id)),
   },
   invoices: {
     getList: (offset, limit, filter = {}) => {
@@ -360,6 +413,8 @@ const Api = {
       return getRequest(`${purchasesAPI()}?${params}`);
     },
     getOne: (id) => getRequest(`${purchaseAPI(id)}?expand=1`),
+    update: (id, data) => putRequest(purchaseAPI(id), data),
+    delete: (id) => deleteRequest(purchaseAPI(id)),
   },
   notifications: {
     getList: (offset, limit) =>

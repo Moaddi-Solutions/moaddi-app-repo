@@ -6,7 +6,7 @@ import { ScrollView, View } from "react-native";
 import { ShopCard, SocialLinks } from "~/components/moaddi";
 import { useSocket } from "~/context/Socket";
 import { useUser } from "~/context/UserContext";
-import { useManyReference } from "~/hook/useManyReference";
+import { useStaffShops } from "~/hook/useStaffShops";
 import { getItem } from "~/lib/utils";
 import { colors, palette, space } from "~/theme/moaddi";
 
@@ -25,12 +25,9 @@ const Init = () => {
 };
 
 const HomeScreen = () => {
-  const { user } = useUser();
   const router = useRouter();
-  const { items, isPending } = useManyReference("shops", {
-    target: "vendorId",
-    id: user._id,
-  });
+  // Admins see the shops they administer, suppliers the shops they serve.
+  const { items, isPending } = useStaffShops();
   const { log } = useSocket();
 
   useEffect(() => {

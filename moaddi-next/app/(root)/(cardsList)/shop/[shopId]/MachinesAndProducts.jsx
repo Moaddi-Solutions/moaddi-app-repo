@@ -2,7 +2,10 @@
 import BlockHeader from "@/(root)/components/BlockHeader";
 import MachineCard from "@/(root)/components/MachineCard";
 import ProductCard from "@/(root)/components/ProductCard";
-import { useRegisterContactTarget } from "@/(root)/context/contact-target-context";
+import {
+  useRegisterContactTarget,
+  useSupportUserId,
+} from "@/(root)/context/contact-target-context";
 import { useGetManyReference } from "@/(root)/hook/ra/useGetManyReference";
 import { Container } from "@/../components/ui/container";
 import { Skeleton } from "@/../components/ui/skeleton";
@@ -48,29 +51,20 @@ const MachinesAndProducts = ({ id }) => {
     target: "shopId",
     id,
   });
-  const { data: rawShopUsers, isPending: shopUsersPending } =
-    useGetManyReference("vendors", {
-      target: "shopId",
-      id,
-    });
   const data = !isPending
     ? (rawData ?? []).filter(({ isActive }) => isActive)
     : [];
-  const shop = data[0]?.shop?.[0];
-  const activeShopUsers = (rawShopUsers ?? []).filter(
-    ({ isActive, isDeleted }) => isActive !== false && isDeleted !== true,
-  );
-  const shopOwnerId =
-    shop?.shopOwner?._id ??
-    shop?.ownerId ??
-    shop?.vendorId ??
-    (activeShopUsers.length === 1 ? activeShopUsers[0]?._id : null);
 
+  // Shop pages route to support, not to the shop's owner: a shopper's question
+  // about a storefront is an admin matter, and the aggregation's "owner" is
+  // only ever the first machine's vendor, which is arbitrary for multi-vendor
+  // shops. Machine pages still contact that machine's own vendor.
+  const supportUserId = useSupportUserId();
   useRegisterContactTarget({
-    kind: "shop-owner",
-    targetUserId: shopOwnerId,
+    kind: "support",
+    targetUserId: supportUserId,
     resourceId: id,
-    isPending: isPending || shopUsersPending,
+    isPending,
   });
 
   const products = !isPending

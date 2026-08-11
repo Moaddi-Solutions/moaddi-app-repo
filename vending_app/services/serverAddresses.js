@@ -105,21 +105,26 @@ export const chatMediaAPI = (conversationId, messageId) =>
 export const chatReactionAPI = (conversationId, messageId) =>
   `${chatMessagesAPI(conversationId)}/${messageId}/reaction`;
 
-/**
- * The account that receives "Contact support" messages.
- *
- * Mirrors the web client's NEXT_PUBLIC_CHAT_ADMIN_ID, including its fallback,
- * so both clients reach the same inbox until support assignment moves server-side.
- */
-export const supportUserId = () =>
-  process.env.EXPO_PUBLIC_CHAT_ADMIN_ID?.trim() ||
-  Constants.expoConfig?.extra?.chatAdminId?.trim() ||
-  "+966555728085";
+/** Resolves the admin-configured "Contact support" target id from the server. */
+export const chatSupportTargetAPI = (audience = "customers") =>
+  `${address}chat/support-target?audience=${audience}`;
 
 export const myWalletAPI = address + "wallets/me";
 export const myTransactionsAPI = address + "transactions";
 export const myWithdrawalsAPI = address + "withdrawals";
 export const withdrawalCreateAPI = address + "withdrawals";
+
+/**
+ * Shop Admin review actions. The server scopes each one to the reviewer's own
+ * shops, so a request from another shop is refused with 403 even if the id is
+ * guessed — the UI gating below is convenience, not the control.
+ */
+export const withdrawalApproveAPI = (id) =>
+  address + "withdrawals/" + id + "/approve";
+export const withdrawalRejectAPI = (id) =>
+  address + "withdrawals/" + id + "/reject";
+export const withdrawalMarkPaidAPI = (id) =>
+  address + "withdrawals/" + id + "/markpaid";
 
 /** Media origin for /images and other static assets (defaults to API origin). */
 export const mediaBaseUrl = () => {

@@ -47,6 +47,7 @@
     "noMessages": "Nessun messaggio",
     "conversationUnavailable": "Questa conversazione non è più disponibile.",
     "newConversation": "Nuova conversazione",
+    "viewCustomer": "Visualizza scheda cliente",
     "reconnecting": "Riconnessione",
     "connecting": "Connessione",
     "loadOlder": "Carica messaggi precedenti",
@@ -69,8 +70,10 @@
     "roles": {
       "support": "Team di assistenza",
       "vendor": "Fornitore",
+      "customer": "Cliente",
       "supplier": "Distributore",
-      "contact": "Contatto Moaddi"
+      "contact": "Contatto Moaddi",
+      "guest": "Ospite"
     },
     "media": {
       "attach": "Allega",
@@ -113,6 +116,11 @@
       "cancelReply": "Annulla risposta",
       "you": "te",
       "notLoaded": "Quel messaggio non e ancora caricato."
+    },
+    "readState": {
+      "sending": "Invio in corso",
+      "sent": "Inviato",
+      "read": "Letto"
     },
     "reactions": {
       "react": "Reagisci",

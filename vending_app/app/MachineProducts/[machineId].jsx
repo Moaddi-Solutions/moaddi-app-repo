@@ -106,10 +106,11 @@ function DefaultView({
           justifyContent: "space-between",
         }}
       >
-        {/* Message the machine's vendor. `shopOwner` is attached by the
-            machines aggregation; `vendorId` is the fallback. */}
+        {/* Message the machine's vendor. `vendorId` is the machine's own
+            persisted owner — the web client uses the same field, so both
+            platforms reach the same person. */}
         <ContactChatButton
-          targetUserId={machine.shopOwner?._id ?? machine.vendorId}
+          targetUserId={machine.vendorId}
           kind="machine-vendor"
           fullWidth
         />

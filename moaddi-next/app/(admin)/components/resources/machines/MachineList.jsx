@@ -4,8 +4,8 @@ import { AdminContactUserButton, AdminCreateButton, AdminDeleteButton, AdminEdit
 import { useSocket } from "@/(root)/context/Socket";
 import { Badge } from "@/../components/ui/badge";
 import { Switch } from "@/../components/ui/switch";
-import { readDashboardUser } from "@/../lib/auth-session";
-import { isDashboardAdminRole, normalizeDashboardRole } from "@/../lib/dashboard-role";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
+import { canActForOthers } from "@/../lib/ability";
 import { cn } from "@/../lib/utils";
 import { putRequest } from "@/../services/events";
 import { machineToggleAPI } from "@/../services/serverAddresses";
@@ -41,10 +41,12 @@ const ActiveSwitch = ({ record }) => {
   );
 };
 
-/** Admin-only: vendors don't contact each other from this list. */
+/** Only for staff who manage other people's machines — a supplier has no one
+ *  to contact here, since every row in their list is their own. */
 const ContactVendorButton = ({ record }) => {
-  const role = normalizeDashboardRole(readDashboardUser().role);
-  if (!isDashboardAdminRole(role)) return null;
+  const ability = useAbility();
+  if (!canActForOthers(ability, "update", "Machine")) return null;
+  if (!record?.vendorId) return null;
   return <AdminContactUserButton targetUserId={record.vendorId} />;
 };
 

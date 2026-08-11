@@ -12,6 +12,11 @@ export const VendorListItems = [
   },
   { key: "name", label: "Name" },
   {
+    key: "role",
+    label: "Role",
+    render: (record) => formatRole(record.role),
+  },
+  {
     key: "isActive",
     label: "Active",
     render: (record) => <AdminBooleanBadge value={record.isActive} />,
@@ -38,6 +43,14 @@ const VendorList = () => (
     />
   </AdminList>
 );
+
+function formatRole(role) {
+  if (!role) return "-";
+  if (role === "Vendor") return "Supplier";
+  if (role === "Admin") return "Shop Admin";
+  if (role === "SuperAdmin") return "Super Admin";
+  return String(role);
+}
 
 function formatRelated(items) {
   if (!Array.isArray(items) || !items.length) return "-";

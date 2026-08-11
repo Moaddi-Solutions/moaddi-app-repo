@@ -1,4 +1,10 @@
-import { CreditCard as PaymentIcon, SlidersHorizontal as TuneIcon } from "lucide-react";
+import {
+  CreditCard as PaymentIcon,
+  Headset as SupportIcon,
+  SlidersHorizontal as TuneIcon,
+} from "lucide-react";
+import contactSupportEdit from "./ContactSupportEdit";
+import contactSupportShow from "./ContactSupportShow";
 import paymentProvidersList from "./PaymentProvidersList";
 import platformFeesEdit from "./PlatformFeesEdit";
 import platformFeesShow from "./PlatformFeesShow";
@@ -22,4 +28,13 @@ export const platformOptionsResource = {
 
 export const paymentProvidersActiveResource = {
   name: "paymentProviders",
+};
+
+export const supportRoutingResource = {
+  name: "supportRouting",
+  show: contactSupportShow,
+  edit: contactSupportEdit,
+  icon: SupportIcon,
+  recordRepresentation: () => "Contact support",
+  options: { label: "Contact Support" },
 };

@@ -2,8 +2,10 @@ import moment = require('moment');
 import type ModelTypes = require('../models/types');
 import { repoError } from '../../lib/errors';
 import * as money from '../../lib/money';
+import { ADMIN_ROLES } from '../../lib/roles';
 
 const Options = require('../models/options') as import('mongoose').Model<ModelTypes.IOptions>;
+const Users = require('../models/users') as import('mongoose').Model<ModelTypes.IUser>;
 const paymentRegistry = require('../../payment/registry') as {
   listKeys: () => string[];
 };
@@ -43,7 +45,18 @@ const getPlatformFeePercent = async (): Promise<number> => {
 interface UpdatePlatformProps {
   platformFeePercent?: number;
   currency?: string;
+  supportAdminIdCustomers?: string;
+  supportAdminIdVendors?: string;
 }
+
+const SUPPORT_ADMIN_FIELDS = ['supportAdminIdCustomers', 'supportAdminIdVendors'] as const;
+
+const assertIsAdmin = async (userId: string, field: string): Promise<void> => {
+  const user = await Users.findOne({ _id: userId }).lean();
+  if (!user || !ADMIN_ROLES.includes(user.role as (typeof ADMIN_ROLES)[number])) {
+    throw repoError(400, `${field} must be an existing Admin or SuperAdmin user.`);
+  }
+};
 
 const updatePlatform = async (
   properties: UpdatePlatformProps,
@@ -53,6 +66,11 @@ const updatePlatform = async (
     const v = Number(properties.platformFeePercent);
     if (!Number.isFinite(v) || v < 0 || v > 100) {
       throw repoError(400, 'platformFeePercent must be between 0 and 100.');
+    }
+  }
+  for (const field of SUPPORT_ADMIN_FIELDS) {
+    if (properties[field] != null) {
+      await assertIsAdmin(properties[field] as string, field);
     }
   }
   await getPlatform();
@@ -65,6 +83,11 @@ const updatePlatform = async (
   }
   if (properties.currency) {
     update.currency = properties.currency;
+  }
+  for (const field of SUPPORT_ADMIN_FIELDS) {
+    if (properties[field] != null) {
+      update[field] = properties[field];
+    }
   }
   await Options.updateOne({ _id: PLATFORM_ID }, { $set: update });
   return getPlatform();

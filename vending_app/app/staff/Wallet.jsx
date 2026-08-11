@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, IconButton, SectionHeader } from "~/components/moaddi";
 import { TopBar } from "~/components/moaddi/TopBar";
 import { ArrowLeft } from "lucide-react-native";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
 import { getRequest } from "~/services/httpClient";
 import { myTransactionsAPI, myWalletAPI } from "~/services/serverAddresses";
@@ -40,7 +41,10 @@ export default function Wallet() {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
 
-  const isVendor = String(user?.role ?? "").toLowerCase().trim() === "vendor";
+  // A wallet belongs to whoever may request payouts from it — suppliers.
+  // Derived from CASL so a custom supplier-like role works too.
+  const { capabilities } = useAbility();
+  const isVendor = capabilities.ownsWallet;
 
   const load = useCallback(async () => {
     if (!isVendor) {

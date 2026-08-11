@@ -1,14 +1,17 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { House, Mail, MessageSquare, Store, User } from "lucide-react-native";
+import { House, MessageSquare, Store, User } from "lucide-react-native";
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useOpenChatWith } from "~/components/chat/ContactChatButton";
 import { BottomNav, BottomNavItem } from "~/components/moaddi";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
 import { useChat } from "~/context/ChatContext";
+import { useUser } from "~/context/UserContext";
 import { colors, palette, radius, type as typo } from "~/theme/moaddi";
 
-/** Unread count pill anchored to the top-right of the Messages icon. */
+/** Unread count pill anchored to the top-right of the Chat icon. */
 function UnreadBadge({ count }: { count: number }) {
   if (!count) return null;
   return (
@@ -41,14 +44,11 @@ const TAB_ICONS: Record<string, (active: boolean) => ReactNode> = {
   shops: (active) => (
     <Store size={20} color={active ? palette.teal[500] : palette.ink[500]} />
   ),
-  messages: (active) => (
+  chat: (active) => (
     <MessageSquare
       size={20}
       color={active ? palette.teal[500] : palette.ink[500]}
     />
-  ),
-  contact: (active) => (
-    <Mail size={20} color={active ? palette.teal[500] : palette.ink[500]} />
   ),
   profile: (active) => (
     <User size={20} color={active ? palette.teal[500] : palette.ink[500]} />
@@ -63,11 +63,19 @@ export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { totalUnreadCount } = useChat();
+  const { user } = useUser();
+  // Home has no vendor/shop context, so — like the web dock's chat slot — the
+  // chat tab goes straight into the admin conversation instead of the inbox.
+  // Staff are support, so for them the tab keeps meaning "open my inbox".
+  const supportUserId = useSupportUserId();
+  const supportChat = useOpenChatWith(supportUserId);
+  const isStaff = ["admin", "vendor"].includes(
+    String(user?.role || "").toLowerCase(),
+  );
   const tabLabels: Record<string, string> = {
     index: t("home"),
     shops: t("shops"),
-    messages: t("messages"),
-    contact: t("contactUs"),
+    chat: t("chat"),
     profile: t("profile"),
   };
 
@@ -77,10 +85,10 @@ export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
       id: route.name,
       label: tabLabels[route.name],
       icon:
-        route.name === "messages"
+        route.name === "chat"
           ? (active: boolean) => (
               <View>
-                {TAB_ICONS.messages(active)}
+                {TAB_ICONS.chat(active)}
                 <UnreadBadge count={totalUnreadCount} />
               </View>
             )
@@ -92,6 +100,14 @@ export function MoaddiTabBar({ state, navigation }: BottomTabBarProps) {
   const onSelect = (id: string) => {
     const route = state.routes.find((r) => r.name === id);
     if (!route) return;
+
+    // From Home, chat means "talk to admin". Everywhere else the tab keeps its
+    // normal job of showing the inbox.
+    if (id === "chat" && activeId === "index" && !isStaff && !supportChat.isSelf) {
+      supportChat.open();
+      return;
+    }
+
     const event = navigation.emit({
       type: "tabPress",
       target: route.key,

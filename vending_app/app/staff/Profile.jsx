@@ -17,6 +17,7 @@ import { Text as UIText } from "~/components/ui/text";
 import { Avatar, Badge, Card, ListItem, listItemIconColor, Separator, SocialLinks } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { useMachine } from "~/context/MachineContext";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
 import { getItem } from "~/lib/utils";
 import { colors, space, type as typo } from "~/theme/moaddi";
@@ -28,7 +29,9 @@ function Profile() {
   const { t } = useTranslation();
   const [alertOpen, setAlertOpen] = useState(false);
 
-  const isVendor = String(user?.role ?? "").toLowerCase().trim() === "vendor";
+  // Only wallet owners (suppliers) have a wallet screen to open — an admin's
+  // money view is the review queue, reached from the dashboard.
+  const { capabilities } = useAbility();
 
   useEffect(() => {
     getItem("user").then((u) => {
@@ -68,7 +71,7 @@ function Profile() {
         </Card>
 
         <Card padded={false} style={{ paddingHorizontal: 12 }}>
-          {isVendor ? (
+          {capabilities.ownsWallet ? (
             <>
               <ListItem
                 icon={<Wallet size={18} color={listItemIconColor()} />}

@@ -3,6 +3,7 @@ import shortId = require('shortid');
 import type { Model } from 'mongoose';
 import type ModelTypes = require('../models/types');
 import { repoError } from '../../lib/errors';
+import { shopIdOfUser } from '../../lib/shopScope';
 import { convertFromUSD, convertToUSD } from '../../services/currency';
 import {
   flattenProductForPreferredCurrency as sharedFlattenProductForPreferredCurrency,
@@ -69,6 +70,11 @@ const create = async (
   product: Partial<ModelTypes.IProduct> & Record<string, unknown>,
   image: ImageInput
 ): Promise<ModelTypes.IProduct> => {
+  // The controller resolves who may own this product; persist that decision.
+  // (It used to be dropped here, leaving every product with a null vendorId,
+  // which made the supplier's ownership rule match nothing.)
+  const vendorId = (product.vendorId as string | undefined) ?? null;
+
   const payload: Partial<ModelTypes.IProduct> & Record<string, unknown> = {
     _id: 'product_' + shortId.generate(),
     name: product.name,
@@ -76,6 +82,8 @@ const create = async (
     currency: (product.currency as string) || process.env.BASE_CURRENCY || 'SAR',
     supportedMachines: product.supportedMachines,
     image: image?.path,
+    vendorId,
+    shopId: await shopIdOfUser(vendorId),
     isActive: (product.isActive as boolean | undefined) ?? true,
     isFeatured: product.isFeatured,
     isDeleted: false,
@@ -87,6 +95,18 @@ const create = async (
 
   const saved = await new Products(payload).save();
   return saved.toJSON() as ModelTypes.IProduct;
+};
+
+/**
+ * Re-stamps `shopId` on every product of a vendor. Called when a vendor is
+ * moved to a different shop, so the denormalized column stays truthful.
+ */
+const reshop = async (vendorId: string, shopId: string | null): Promise<number> => {
+  const result = await Products.updateMany(
+    { vendorId: String(vendorId) },
+    { $set: { shopId: shopId ? String(shopId) : null } }
+  );
+  return result.modifiedCount ?? 0;
 };
 
 type ProductListResult =
@@ -365,6 +385,7 @@ export = {
   getByVendorMachines,
   update,
   remove,
+  reshop,
   getVendorIdOf,
   formatSavedProductForClient,
   /** For callers outside this repo (e.g. machines QR) that have a full product doc + preferred currency. */

@@ -6,23 +6,18 @@ import MachineCard from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { Loader, SocialLinks } from "~/components/moaddi";
 import { useMachine } from "~/context/MachineContext";
-import { useUser } from "~/context/UserContext";
-import { useManyReferences } from "~/hook/useManyReferences";
+import { useShopMachines } from "~/hook/useShopMachines";
 import { colors, space } from "~/theme/moaddi";
 import { Text } from "react-native";
 
 const Machines = () => {
   const { shopId } = useLocalSearchParams();
-  const { user } = useUser();
   const { setInfo } = useMachine();
   const { t } = useTranslation();
   const router = useRouter();
 
-  const { isPending, items } = useManyReferences("machines", [
-    // Don't change the order of this array
-    { target: "shopId", id: shopId },
-    { target: "vendorId", id: user?._id },
-  ]);
+  // Admins get the whole floor, suppliers only the machines they stock.
+  const { isPending, items } = useShopMachines(shopId);
 
   useEffect(() => {
     if (isPending) return;

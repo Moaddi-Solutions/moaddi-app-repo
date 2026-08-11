@@ -6,9 +6,11 @@ import { Loader, SocialLinks } from "~/components/moaddi";
 import { machinesControlRoutes } from "~/components/staff/MachineCard";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { Text } from "~/components/ui/text";
+import { useAbility } from "~/context/AbilityContext";
 import { useMachine } from "~/context/MachineContext";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
+import { can } from "~/lib/ability";
 import { getRequest } from "~/services/httpClient";
 import { machineQRScan, productImageUrl } from "~/services/serverAddresses";
 import { colors, radius, space, type as typo } from "~/theme/moaddi";
@@ -104,6 +106,7 @@ export default function MachineProducts() {
   const { machineId, viewOnly } = useLocalSearchParams();
   const { setMachine } = useMachine();
   const { user } = useUser();
+  const { ability } = useAbility();
   const router = useRouter();
   const { t } = useTranslation();
   const [machine, setLocalMachine] = useState(null);
@@ -125,7 +128,8 @@ export default function MachineProducts() {
         const response = await getRequest(machineQRScan(machineId));
         if (cancelled) return;
 
-        const { statusCode, isActive, isConnected, vendorId, qrCode, type } = response;
+        const { statusCode, isActive, isConnected, vendorId, shopId, qrCode, type } =
+          response;
         if (statusCode) {
           alert("error", t("machineNotFound"));
           goBack();
@@ -145,7 +149,10 @@ export default function MachineProducts() {
           }
         }
 
-        if (!(vendorId == user._id || user.role === "Admin")) {
+        // Asked of this machine, not of the role. `role === "Admin"` used to
+        // wave through every shop's machines while turning a Super Admin away,
+        // and it knew nothing of dashboard-created staff roles.
+        if (!can(ability, "update", "Box", { vendorId, shopId })) {
           alert("error", t("notYourMachine"));
           goBack();
           return;
@@ -176,7 +183,7 @@ export default function MachineProducts() {
     return () => {
       cancelled = true;
     };
-  }, [machineId, isViewOnly, user?._id]);
+  }, [machineId, isViewOnly, user?._id, ability]);
 
   if (isViewOnly && machine) {
     return <StaffProductList machine={machine} onBack={goBack} />;

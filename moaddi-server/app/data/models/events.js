@@ -6,6 +6,8 @@ const EventsSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
     machineId: { type: String, required: true },
+    /** Denormalized from the machine so telemetry stays inside its own shop. */
+    shopId: { type: String, required: false, default: null },
     /** 'IR' | 'LOCKER' */
     type: { type: String, required: true },
     boxes: { type: Array, required: true },

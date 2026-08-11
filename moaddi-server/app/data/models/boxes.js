@@ -9,6 +9,11 @@ const BoxesSchema = new mongoose.Schema(
     cabinNumber: { type: Number, required: true },
     boxNumber: { type: Number, required: true },
     machineId: { type: String, required: true },
+    // Denormalized from the parent machine. A box has no owner of its own, so
+    // without these a supplier could service another supplier's boxes.
+    // `boxes.remachine` re-stamps them when a machine changes hands.
+    vendorId: { type: String, required: false, default: null },
+    shopId: { type: String, required: false, default: null },
     productId: { type: String, default: null },
     // Locker — true: open
     status: { type: Boolean, default: false },

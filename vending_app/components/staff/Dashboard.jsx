@@ -1,25 +1,104 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Receipt, ScanQrCode, Store, Wallet } from "lucide-react-native";
+import {
+  MessageCircle,
+  Package,
+  Receipt,
+  ReceiptText,
+  ScanQrCode,
+  Store,
+  Users,
+  Wallet,
+} from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { SectionHeader, ServiceTile, serviceTileIconColor, ShopCard, SocialLinks } from "~/components/moaddi";
 import { TopBar } from "~/components/moaddi/TopBar";
+import { useOpenChatWith } from "~/components/chat/ContactChatButton";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
-import { useManyReference } from "~/hook/useManyReference";
+import { useStaffShops } from "~/hook/useStaffShops";
 import { colors, gradients, palette, radius, shadow, space, type as typo } from "~/theme/moaddi";
 
 export function Dashboard() {
   const { user } = useUser();
   const router = useRouter();
   const { t } = useTranslation();
+  const { capabilities } = useAbility();
+  const supportUserId = useSupportUserId("vendors");
+  const { open: openAdminChat, busy: openingAdminChat, isSelf: isSupportSelf } =
+    useOpenChatWith(supportUserId);
 
-  const { items, isPending } = useManyReference("shops", {
-    target: "vendorId",
-    id: user?._id ?? "",
-  });
+  // Admins see the shops they administer, suppliers the shops they serve.
+  const { items, isPending } = useStaffShops();
 
   const activeShops = (items ?? []).filter(({ isActive }) => isActive);
+
+  // Only offer what this role can actually carry out — a supplier owns a
+  // wallet and requests payouts; a shop admin has no wallet of their own but
+  // reviews the payout queue for their shops.
+  const tiles = [
+    capabilities.servicesBoxes && {
+      id: "scan",
+      label: t("scan") || "Scan",
+      tone: "brand",
+      href: "/staff/MachineQRScan",
+      icon: ScanQrCode,
+    },
+    capabilities.servicesBoxes && {
+      id: "fill",
+      label: t("fill") || "Fill",
+      tone: "periwinkle",
+      href: "/staff/Fill",
+      icon: Store,
+    },
+    capabilities.managesStaff && {
+      id: "team",
+      label: t("staff") || "Staff",
+      tone: "neutral",
+      href: "/staff/Team",
+      icon: Users,
+    },
+    capabilities.readsOrders && {
+      id: "orders",
+      label: t("orders") || "Orders",
+      tone: "periwinkle",
+      href: "/staff/Orders",
+      icon: ReceiptText,
+    },
+    capabilities.managesProducts && {
+      id: "products",
+      label: t("products") || "Products",
+      tone: "brand",
+      href: "/staff/Products",
+      icon: Package,
+    },
+    capabilities.ownsWallet && {
+      id: "wallet",
+      label: t("wallet") || "Wallet",
+      tone: "gold",
+      href: "/staff/Wallet",
+      icon: Wallet,
+    },
+    (capabilities.ownsWallet || capabilities.reviewsWithdrawals) && {
+      id: "withdrawals",
+      label: capabilities.ownsWallet
+        ? t("withdrawals") || "Withdrawals"
+        : t("withdrawalRequests") || "Requests",
+      tone: "neutral",
+      href: "/staff/WithdrawalsList",
+      icon: Receipt,
+    },
+    supportUserId &&
+      !isSupportSelf && {
+        id: "contact-support",
+        label: t("chatContactSupport") || "Contact support",
+        tone: "brand",
+        onPress: openingAdminChat ? undefined : openAdminChat,
+        icon: MessageCircle,
+      },
+  ].filter(Boolean);
 
   return (
     <ScrollView
@@ -77,34 +156,21 @@ export function Dashboard() {
           paddingVertical: 16,
           paddingHorizontal: 8,
           flexDirection: "row",
+          flexWrap: "wrap",
+          rowGap: 16,
           justifyContent: "space-around",
           ...shadow.card,
         }}
       >
-        <ServiceTile
-          label={t("scan") || "Scan"}
-          tone="brand"
-          onPress={() => router.push("/staff/MachineQRScan")}
-          icon={<ScanQrCode size={22} color={serviceTileIconColor("brand")} />}
-        />
-        <ServiceTile
-          label={t("fill") || "Fill"}
-          tone="periwinkle"
-          onPress={() => router.push("/staff/Fill")}
-          icon={<Store size={22} color={serviceTileIconColor("periwinkle")} />}
-        />
-        <ServiceTile
-          label={t("wallet") || "Wallet"}
-          tone="gold"
-          onPress={() => router.push("/staff/Wallet")}
-          icon={<Wallet size={22} color={serviceTileIconColor("gold")} />}
-        />
-        <ServiceTile
-          label={t("withdrawals") || "Withdrawals"}
-          tone="neutral"
-          onPress={() => router.push("/staff/WithdrawalsList")}
-          icon={<Receipt size={22} color={serviceTileIconColor("neutral")} />}
-        />
+        {tiles.map(({ id, label, tone, href, onPress, icon: Icon }) => (
+          <ServiceTile
+            key={id}
+            label={label}
+            tone={tone}
+            onPress={onPress ?? (() => router.push(href))}
+            icon={<Icon size={22} color={serviceTileIconColor(tone)} />}
+          />
+        ))}
       </View>
 
       {/* Shops section */}

@@ -10,6 +10,17 @@ import Cookies from "js-cookie";
 /** Dispatched on admin logout so Socket and other listeners can tear down. */
 export const ADMIN_LOGOUT_EVENT = "moaddi:admin-logout";
 
+/**
+ * Dispatched once the session cookie has been written on login.
+ *
+ * Login stores the token in a cookie and on axios directly, without touching
+ * React state, so nothing above the dashboard SPA re-renders when it happens.
+ * Consumers that derive from the stored token (ChatProvider) have no other way
+ * to learn the session appeared, and would otherwise sit on a null token until
+ * a hard reload.
+ */
+export const AUTH_SESSION_EVENT = "moaddi:auth-session";
+
 /** Defer to next macrotask — avoids react-admin logout ↔ getPermissions race. */
 export function deferResolve(value) {
   return new Promise((resolve) => {
@@ -87,6 +98,14 @@ export function getStoredAuthToken() {
 export function notifyAdminLogout() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event(ADMIN_LOGOUT_EVENT));
+    window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
+  }
+}
+
+/** Announces that the stored session changed (login). See AUTH_SESSION_EVENT. */
+export function notifyAuthSessionChange() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
   }
 }
 

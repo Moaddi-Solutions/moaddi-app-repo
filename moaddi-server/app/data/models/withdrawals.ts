@@ -21,6 +21,8 @@ const WithdrawalsSchema = new mongoose.Schema<ModelTypes.IWithdrawal>(
   {
     _id: { type: String, required: true },
     vendorId: { type: String, required: true },
+    /** Denormalized from the vendor's shop — scopes the approve/reject/pay workflow to the vendor's own Shop Admin. */
+    shopId: { type: String, required: false, default: null },
     walletId: { type: String, required: true },
     amount: { type: mongoose.Schema.Types.Decimal128, required: true },
     currency: { type: String, required: true, default: 'USD' },

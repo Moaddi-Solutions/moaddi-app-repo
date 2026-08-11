@@ -12,6 +12,8 @@ const TransactionsSchema = new mongoose.Schema<ModelTypes.ITransaction>(
     _id: { type: String, required: true },
     walletId: { type: String, required: true },
     vendorId: { type: String, required: true },
+    /** Denormalized from the vendor's shop — scopes shop-level revenue reporting. */
+    shopId: { type: String, required: false, default: null },
     type: { type: String, required: true, enum: ['CREDIT', 'DEBIT'] },
     kind: { type: String, required: true, enum: ['purchase', 'withdrawal', 'adjustment'] },
     amount: { type: mongoose.Schema.Types.Decimal128, required: true },

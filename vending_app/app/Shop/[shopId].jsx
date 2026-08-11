@@ -13,6 +13,7 @@ import {
 } from "~/components/moaddi";
 import ContactChatButton from "~/components/chat/ContactChatButton";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
 import { useMachine } from "~/context/MachineContext";
 import { useManyReference } from "~/hook/useManyReference";
 import { Fit } from "~/services/dataProvider";
@@ -66,17 +67,17 @@ const ShopDetail = () => {
         .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
     : [];
 
-  const shop = items?.[0]?.shop?.[0];
+  // Shop pages route to support, not to the shop's owner: a shopper's question
+  // about a storefront is an admin matter, and the aggregation's "owner" is
+  // only ever the first machine's vendor, which is arbitrary for multi-vendor
+  // shops. Machine pages still contact that machine's own vendor.
+  const supportTargetId = useSupportUserId();
 
-  // The machines-by-shop aggregation attaches the shop's active owner, which is
-  // the only way this screen can learn a messageable user id — there is no
-  // user-lookup endpoint. Falls back to the machine's vendor.
-  const shopOwnerId =
-    shop?.shopOwner?._id ?? shop?.ownerId ?? items?.[0]?.vendorId ?? null;
+  const shop = items?.[0]?.shop?.[0];
 
   useEffect(() => {
     if (isPending || !items?.length) return;
-    setInfo((prev) => ({ ...prev, shopName: items[0]?.shop?.[0]?.name }));
+    setInfo((prev) => ({ ...prev, shopName: shop?.name }));
   }, [items]);
 
   return (
@@ -118,11 +119,11 @@ const ShopDetail = () => {
           }}
         >
           <View>
-            {/* Message the shop owner */}
+            {/* Contact support about this shop */}
             <View style={{ paddingHorizontal: space.gutter, marginBottom: 16 }}>
               <ContactChatButton
-                targetUserId={shopOwnerId}
-                kind="shop-owner"
+                targetUserId={supportTargetId}
+                kind="support"
                 fullWidth
               />
             </View>

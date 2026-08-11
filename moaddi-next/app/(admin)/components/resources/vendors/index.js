@@ -13,4 +13,5 @@ export default ({
   edit,
   icon: Handshake,
   recordRepresentation: "name",
+  options: { label: "Staff" },
 });

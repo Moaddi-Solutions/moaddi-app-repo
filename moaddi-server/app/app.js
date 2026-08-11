@@ -182,6 +182,10 @@ const bootstrap = async () => {
   // before any request is authorized; refresh periodically so multi-instance
   // deployments converge after a role change elsewhere.
   try {
+    // The three platform roles are reference data the admin panel reads, so
+    // ensure them here too — a deployment that never ran `npm run seed` still
+    // comes up with a populated Roles page.
+    await require("../db/seeds/roles.seed")({ quiet: true });
     const rolesRepo = require("./data/repos/roles");
     await rolesRepo.primeCustomRoles();
     setInterval(() => {

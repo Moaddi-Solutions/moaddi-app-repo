@@ -5,6 +5,7 @@ import type { Model } from 'mongoose';
 import type ModelTypes = require('../models/types');
 import { repoError } from '../../lib/errors';
 import * as money from '../../lib/money';
+import { shopIdOfUser } from '../../lib/shopScope';
 
 const Withdrawals = require('../models/withdrawals') as Model<ModelTypes.IWithdrawal>;
 const walletsRepo = require('./wallets') as typeof import('./wallets');
@@ -40,6 +41,7 @@ const create = async (
   const doc = new Withdrawals({
     _id: 'wd_' + shortId.generate(),
     vendorId,
+    shopId: wallet.shopId ?? (await shopIdOfUser(vendorId)),
     walletId: wallet._id,
     amount: money.fromNumber(input.amount),
     currency,

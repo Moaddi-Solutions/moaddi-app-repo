@@ -7,10 +7,10 @@ import { RefreshControl, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ConversationRow from "~/components/chat/ConversationRow";
 import { Button, Loader } from "~/components/moaddi";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
 import { useChat } from "~/context/ChatContext";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
-import { supportUserId } from "~/services/serverAddresses";
 import { colors, palette, space, type as typo } from "~/theme/moaddi";
 
 type ConversationsScreenProps = {
@@ -56,6 +56,7 @@ export function ConversationsScreen({
   } = useChat();
   const [openingSupport, setOpeningSupport] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const supportUserId = useSupportUserId();
 
   const header = (
     <View
@@ -118,10 +119,10 @@ export function ConversationsScreen({
   }
 
   const contactSupport = async () => {
-    if (openingSupport) return;
+    if (openingSupport || !supportUserId) return;
     setOpeningSupport(true);
     try {
-      const conversationId = await openConversation(supportUserId());
+      const conversationId = await openConversation(supportUserId);
       router.push(threadHref(conversationId));
     } catch (error: any) {
       console.warn("[chat] contact support failed:", error?.message);

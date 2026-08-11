@@ -3,12 +3,12 @@ import * as React from "react";
 import { useEffect } from "react";
 import HomeScreen from "~/app/new-design/HomeScreen";
 import StaffHomeScreen from "~/components/staff/Home";
-import { useUser } from "~/context/UserContext";
+import { useAbility } from "~/context/AbilityContext";
 import { getItem } from "~/lib/utils";
 
 export default function Screen() {
   const router = useRouter();
-  const { user } = useUser();
+  const { capabilities } = useAbility();
 
   useEffect(() => {
     getItem("otp").then((otp) => {
@@ -16,7 +16,9 @@ export default function Screen() {
     });
   }, [router]);
 
-  if (user?.role?.toLowerCase() === "admin") {
+  // Was role-name checks, which left Super Admin / custom admin-shaped roles
+  // on the shopper home.
+  if (capabilities.administers) {
     return <StaffHomeScreen />;
   }
 

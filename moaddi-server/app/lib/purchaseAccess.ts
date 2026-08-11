@@ -5,10 +5,14 @@
  */
 
 import type { IMachine, IPurchase } from '../data/models/types';
+import { defineAbilityFor, subject, type Action } from './ability';
 
 export interface AuthUser {
   _id: string;
   role: string;
+  /** Shop scope, present on `req.authenticatedUser` (passport loads the full user). */
+  shopId?: string | null;
+  ownedShopIds?: string[] | null;
 }
 
 export interface MachinesRepoForAccess {
@@ -50,6 +54,32 @@ const isCustomerRole = (role: string | undefined | null): boolean => {
 
 export const isVendorRole = (role: string | undefined | null): boolean =>
   normRole(role) === 'vendor';
+
+/**
+ * Does this staff user's CASL scope cover this particular order?
+ *
+ * A Shop Admin's grant is `manage Purchase {shopId: {$in: myShops}}`, so it only
+ * resolves against the order's denormalized `shopId` — being an admin is not by
+ * itself an answer. Super Admin (`manage all`) passes unconditionally, which is
+ * what makes this a safe replacement for the old `isStaffAdminRole` shortcut.
+ *
+ * Orders created before the shop-scope rollout carry no `shopId`; those stay
+ * Super-Admin-only until the backfill stamps them.
+ */
+export const staffScopeCoversPurchase = (
+  purchase: Pick<IPurchase, '_id' | 'customerId' | 'shopId' | 'vendorId'>,
+  u: AuthUser,
+  action: Action = 'read'
+): boolean =>
+  defineAbilityFor(u).can(
+    action,
+    subject('Purchase', {
+      _id: String(purchase._id ?? ''),
+      customerId: purchase.customerId ?? null,
+      shopId: purchase.shopId ?? null,
+      vendorId: purchase.vendorId ?? null,
+    })
+  );
 
 const sameCustomerId = (a: unknown, b: unknown): boolean =>
   String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
@@ -99,14 +129,22 @@ export const isAuthorizedOpener = (
 };
 
 /**
- * For GET/PUT/DELETE/invoice: Admin, the owning customer, or Vendor owning all involved machines.
+ * For GET/PUT/DELETE/invoice: a staff user whose shop scope covers the order,
+ * the owning customer, or a Vendor owning all involved machines.
+ *
+ * The vendor branch stays a live per-machine check rather than the order's
+ * denormalized `vendorId`: a purchase may span several machines, and a supplier
+ * must own every one of them to touch it.
  */
 export const canViewOrMutatePurchase = async (
   purchase: IPurchase,
   u: AuthUser,
-  machinesRepo: MachinesRepoForAccess
+  machinesRepo: MachinesRepoForAccess,
+  action: Action = 'read'
 ): Promise<boolean> => {
-  if (isStaffAdminRole(u.role)) return true;
+  if (isStaffAdminRole(u.role)) {
+    return staffScopeCoversPurchase(purchase, u, action);
+  }
   if (isCustomerRole(u.role) && sameCustomerId(purchase.customerId, u._id))
     return true;
   if (isVendorRole(u.role)) {
@@ -130,8 +168,9 @@ export const canViewPurchase = async (
 };
 
 /**
- * For POST /purchases/complete: Admin (any), Vendor (must own all machines), or
- * Customer (only the purchase owner — e.g. MyFatora redirect callback).
+ * For POST /purchases/complete: staff whose shop scope covers the order, Vendor
+ * (must own all machines), or Customer (only the purchase owner — e.g. MyFatora
+ * redirect callback).
  * Call after loading `purchase` from the DB. Throws with `err.statusCode` 401/403.
  */
 export const assertCanUseComplete = async (
@@ -143,7 +182,11 @@ export const assertCanUseComplete = async (
     throw needAuth();
   }
   if (isStaffAdminRole(auth.role)) {
-    return;
+    // Settling a payment changes the order, so this asks for `update`, not `read`.
+    if (staffScopeCoversPurchase(purchase, auth, 'update')) {
+      return;
+    }
+    throw forbidden();
   }
   if (isCustomerRole(auth.role)) {
     if (sameCustomerId(purchase.customerId, auth._id)) {

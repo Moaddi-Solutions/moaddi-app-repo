@@ -133,6 +133,30 @@ const Stacks = () => {
           }}
         />
         <Stack.Screen
+          name="Team/index"
+          options={{
+            title: t("staff"),
+          }}
+        />
+        <Stack.Screen
+          name="Orders/index"
+          options={{
+            title: t("orders"),
+          }}
+        />
+        <Stack.Screen
+          name="Products/index"
+          options={{
+            title: t("products"),
+          }}
+        />
+        <Stack.Screen
+          name="Products/[productId]"
+          options={{
+            title: t("product"),
+          }}
+        />
+        <Stack.Screen
           name="Bluetooth2Control"
           options={{
             title: t("bluetooth2Control"),

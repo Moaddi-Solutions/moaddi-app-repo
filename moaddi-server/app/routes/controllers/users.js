@@ -5,14 +5,25 @@ const users = require("../../data/repos/users");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
 const { subject, rulesFor } = require("../../lib/ability");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 
 /** True only for staff whose User rules carry no ownership condition (admins). */
 const canManageUsers = (req) => req.ability.can("create", "User");
 
-/** Own-or-admin check against a target user id. */
-const canTouchUser = (req, action, userId) =>
-  req.ability.can(action, subject("User", { _id: String(userId) }));
+/**
+ * Own-or-admin check against a target user. A Shop Admin's User rule is scoped
+ * to their own shops, so the target's `shopId` has to be part of the subject —
+ * checking only `_id` would deny every admin.
+ */
+const canTouchUser = async (req, action, userId) => {
+  const target = await users.checkUser(String(userId)).catch(() => null);
+  if (!target) return false;
+  return req.ability.can(
+    action,
+    subject("User", { _id: String(target._id), shopId: target.shopId ?? null })
+  );
+};
 
 /**
  * Shop Admins may only grant the basic roles; anything else — Admin,
@@ -118,6 +129,14 @@ module.exports = () => {
           .status(403)
           .json({ message: "Only a Super Admin can grant admin roles." });
       }
+      // …and only into a shop they administer, or the new account would land
+      // outside their scope (or inside someone else's).
+      const shopId = req.body?.shopId ?? null;
+      if (req.ability.cannot("create", subject("User", { shopId }))) {
+        return res
+          .status(403)
+          .json({ message: "You can only add staff to your own shop." });
+      }
       let results = await users.create(req.body);
       return res.status(201).json(results);
     } catch (err) {
@@ -131,7 +150,7 @@ module.exports = () => {
       if (!canManageUsers(req)) {
         return res.status(403).json({ message: "Forbidden." });
       }
-      let results = await users.get(req.query.offset, req.query.limit);
+      let results = await users.get(req.query.offset, req.query.limit, req.ability);
       return res.status(200).json(results);
     } catch (err) {
       next(err);
@@ -141,8 +160,11 @@ module.exports = () => {
   // Get user by userId.
   router.get("/users/:userId", authenticate(), authorize("read", "User"), async (req, res, next) => {
     try {
+      if (!(await canTouchUser(req, "read", req.params.userId))) {
+        return res.status(403).json({ message: "Forbidden." });
+      }
       const preferredCurrency = await getCurrencyOfUser(req);
-      
+
       let results = await users.getById(req.params.userId, preferredCurrency);
       return res.status(200).json(results);
     } catch (err) {
@@ -150,16 +172,22 @@ module.exports = () => {
     }
   });
 
-  // Get all users by role.
+  // Get all users by role (`Vendor`, `Customer`, …) or `staff` for the
+  // full non-customer roster (incl. inactive Admin / custom-role accounts).
   router.get("/users/role/:role", authenticate(), authorize("read", "User"), async (req, res, next) => {
     try {
-      let results = await users.getByRole(req.params.role);
+      const skip = parseInt(req.query.offset, 10) || 0;
+      const limit = parseInt(req.query.limit, 10) || 1000;
+      let results = await users.getByRole(req.params.role, skip, limit, req.ability);
       // Non-admin staff only resolve references to themselves (e.g. the
       // vendor column in their own machines list) — never the full roster.
+      // `getByRole` returns `{ data, total }`; keep that shape.
       if (!canManageUsers(req)) {
-        results = (results || []).filter(
-          (u) => String(u._id) === String(req.authenticatedUser._id)
+        const uid = String(req.authenticatedUser._id);
+        const data = (results?.data || []).filter(
+          (u) => String(u._id) === uid
         );
+        results = { data, total: data.length };
       }
       return res.status(200).json(results);
     } catch (err) {
@@ -174,7 +202,7 @@ module.exports = () => {
     authorize("update", "User"),
     async (req, res, next) => {
       try {
-        if (!canTouchUser(req, "update", req.params.userId)) {
+        if (!(await canTouchUser(req, "update", req.params.userId))) {
           return res.status(403).json({ message: "Forbidden." });
         }
         let results = await users.toggle(req.params.userId);
@@ -188,7 +216,7 @@ module.exports = () => {
   // Update user by userId.
   router.put("/users/:userId", authenticate(), authorize("update", "User"), async (req, res, next) => {
     try {
-      if (!canTouchUser(req, "update", req.params.userId)) {
+      if (!(await canTouchUser(req, "update", req.params.userId))) {
         return res.status(403).json({ message: "Forbidden." });
       }
       const properties = { ...(req.body || {}) };
@@ -209,12 +237,18 @@ module.exports = () => {
     }
   });
 
-  //get all vendors by shopId
+  // Staff working in one shop. Scoped to the caller: a Shop Admin sees the
+  // people in the shops they administer, everyone else only themselves.
   router.get(
     "/vendor/shop/:shopId",
-    /* authenticate(), */ async (req, res, next) => {
+    authenticate(),
+    authorize("read", "User"),
+    async (req, res, next) => {
       try {
-        let results = await users.getByShopId(req.params.shopId);
+        let results = await users.getByShopId(
+          req.params.shopId,
+          accessibleFilter(req.ability, "update", "User")
+        );
         return res.status(200).json(results);
       } catch (err) {
         next(err);
@@ -229,7 +263,7 @@ module.exports = () => {
     authorize("update", "User"),
     async (req, res, next) => {
       try {
-        if (!canTouchUser(req, "update", req.params.userId)) {
+        if (!(await canTouchUser(req, "update", req.params.userId))) {
           return res.status(403).json({ message: "Forbidden." });
         }
         let results = await users.updatePassword(req.params.userId, req.body);
@@ -283,7 +317,7 @@ module.exports = () => {
   // Delete user by userId.
   router.delete("/users/:userId", authenticate(), authorize("delete", "User"), async (req, res, next) => {
     try {
-      if (!canTouchUser(req, "delete", req.params.userId)) {
+      if (!(await canTouchUser(req, "delete", req.params.userId))) {
         return res.status(403).json({ message: "Forbidden." });
       }
       let results = await users.remove(req.params.userId);

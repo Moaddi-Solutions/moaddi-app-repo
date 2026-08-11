@@ -57,6 +57,7 @@ type EmitReactionInput = {
 
 type EmitConversationReadInput = {
   userId: string;
+  participantIds: string[];
   conversationId: string;
   unreadCount: number;
   lastReadSeq: number;
@@ -160,8 +161,20 @@ const emitNewChatMessage = ({
   }
 };
 
+/**
+ * Announces that `userId` has read up to `lastReadSeq`.
+ *
+ * Two audiences, two events, deliberately not merged:
+ *   - the reader gets `chat:conversation.read` with `unreadCount` — their badge.
+ *   - everyone else gets `chat:read.updated` WITHOUT `unreadCount`, so the
+ *     sender can mark their own messages seen. `unreadCount` belongs to the
+ *     reader alone; sending it onward would wrongly clear the peer's badge.
+ * Neither payload carries a user id: participant ids never go over the wire
+ * (same rule `chatMessageView.redactMessage` enforces for `senderId`).
+ */
 const emitConversationRead = ({
   userId,
+  participantIds,
   conversationId,
   unreadCount,
   lastReadSeq,
@@ -177,6 +190,15 @@ const emitConversationRead = ({
     unreadCount,
     lastReadSeq,
   });
+
+  for (const peerId of new Set(participantIds)) {
+    if (peerId === userId) continue;
+    chatNamespace.to(chatRoom(peerId)).emit("chat:read.updated", {
+      v: 1,
+      conversationId,
+      lastReadSeq,
+    });
+  }
 };
 
 /**

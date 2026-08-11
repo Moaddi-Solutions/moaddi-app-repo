@@ -9,7 +9,7 @@ const Boxes = require("../models/boxes");
 const Events = require("../models/events");
 const Purchases = require("../models/purchases");
 const MachineTypes = require("../../utilities/machineTypes");
-const Users = require("../models/users");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
 
 /**
  * Reject paymentProvider values that aren't in the currently-active set.
@@ -226,13 +226,15 @@ let create = async (machine) => {
 /*
  * Get all machines.
  */
-let get = async (skip = 0, limit = 1000, { role, _id }) => {
-  const filter = {
-    isDeleted: false,
-    ...(role == "Vendor" && {
-      vendorId: _id,
-    }),
-  };
+/**
+ * Staff machine directory — "machines I manage", so it is scoped by the
+ * *update* rule rather than the browse rule (every role may read the machine
+ * catalog). That covers suppliers (own machines), shop admins (machines in
+ * their shops) and custom roles with one code path.
+ */
+let get = async (skip = 0, limit = 1000, ability = null) => {
+  const scope = ability ? accessibleFilter(ability, "update", "Machine") : {};
+  const filter = { ...scope, isDeleted: false };
   const total = await Machines.countDocuments(filter);
   let machines = await Machines.find(filter)
     .sort({ created: -1 })
@@ -759,17 +761,27 @@ let getByGroupId = async (
   }
 };
 
+/**
+ * Machines in one shop supplied by one vendor.
+ *
+ * `scope` is the caller's CASL row filter. It used to derive the scope from the
+ * *path* `vendorId` instead — looking that user up and, if they were an Admin,
+ * dropping the vendor filter so the whole shop floor came back. On a route that
+ * did not require a session, that handed anyone who knew a shop id and any
+ * admin's id the shop's full inventory. The caller's own rules decide now, and
+ * a shop admin reaches the whole floor through the shop-only listing.
+ */
 let getByShopIdVendorId = async (
   shopId,
   vendorId,
   skip = 0,
   limit = 1000,
   preferredCurrency,
+  scope = {},
 ) => {
-  const filter = { shopId, vendorId, isDeleted: false };
-
-  const user = await Users.findOne({ _id: vendorId });
-  if (user?.role == "Admin") delete filter.vendorId;
+  const requested = { shopId, vendorId, isDeleted: false };
+  const filter =
+    scope && Object.keys(scope).length ? { $and: [scope, requested] } : requested;
 
   const total = await Machines.countDocuments(filter);
   try {
@@ -934,6 +946,11 @@ let update = async (machineId, properties) => {
 
   machine = await machine.save();
   machine = machine.toJSON();
+  // Boxes inherit their owner from the machine — keep them in step whenever
+  // the machine's vendor or shop is among the updated properties.
+  if ("vendorId" in properties || "shopId" in properties) {
+    await boxesRepo.remachine(machine._id);
+  }
   return machine;
 };
 
@@ -979,6 +996,7 @@ let assign = async (machineId, body) => {
 
   machine = await machine.save();
   machine = machine.toJSON();
+  await boxesRepo.remachine(machine._id);
   return machine;
 };
 
@@ -1013,6 +1031,7 @@ let unassign = async (machineId, body) => {
 
   machine = await machine.save();
   machine = machine.toJSON();
+  await boxesRepo.remachine(machine._id);
 
   return machine;
 };

@@ -11,14 +11,13 @@ const authenticateUser = (token) => {
   });
 };
 
-/** DB roles are lowercase (`customer`); repo keys are PascalCase (`controlCustomer`). */
-const resolveLockerControlHandler = (role) => {
-  if (!role || typeof role !== "string") return null;
-  const pascal = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
-  const key = "control" + pascal;
-  const fn = eventsRepo[key];
-  return typeof fn === "function" ? fn : null;
-};
+/*
+ * Locker control used to dispatch to a handler named after the role
+ * (`control` + PascalCase), which meant an account whose role had no
+ * matching function — SuperAdmin, or any role created from the dashboard —
+ * was told "not available for this account type". `controlLocker` answers for
+ * every account by checking the machine instead of the role name.
+ */
 
 const handleSocketConnection = async (socket) => {
   console.log("Socket Client connected");
@@ -32,15 +31,7 @@ const handleSocketConnection = async (socket) => {
     console.log("ControlRequest" + " data:", data);
     try {
       const user = await authenticateUser(socket.handshake.auth.token);
-      const handler = resolveLockerControlHandler(user.role);
-      if (!handler) {
-        console.error("ControlRequest: no handler for role", user.role);
-        socket.emit("error", {
-          message: "Locker control is not available for this account type.",
-        });
-        return;
-      }
-      return await handler(data, user);
+      return await eventsRepo.controlLocker(data, user);
     } catch (error) {
       console.error("ControlRequest failed", error);
       const isAuthError = error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError';

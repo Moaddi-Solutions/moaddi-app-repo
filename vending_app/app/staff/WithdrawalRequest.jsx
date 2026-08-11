@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollView, Text, View } from "react-native";
 import { Button, Card, Input } from "~/components/moaddi";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
 import { postRequest } from "~/services/httpClient";
@@ -23,7 +24,10 @@ export default function WithdrawalRequest() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  const isVendor = String(user?.role ?? "").toLowerCase().trim() === "vendor";
+  // A wallet belongs to whoever may request payouts from it — suppliers.
+  // Derived from CASL so a custom supplier-like role works too.
+  const { capabilities } = useAbility();
+  const isVendor = capabilities.ownsWallet;
 
   const fail = (message) => {
     setErr(message);
