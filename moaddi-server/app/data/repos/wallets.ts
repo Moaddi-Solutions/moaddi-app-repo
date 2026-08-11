@@ -4,6 +4,7 @@ import type { ClientSession, Model } from 'mongoose';
 import type ModelTypes = require('../models/types');
 import { repoError } from '../../lib/errors';
 import * as money from '../../lib/money';
+import { shopIdOfUser } from '../../lib/shopScope';
 
 const Wallets = require('../models/wallets') as Model<ModelTypes.IWallet>;
 const config: { timeDifference: number } = require('../../../config');
@@ -22,6 +23,7 @@ const getOrCreateForVendor = async (
   const wallet = new Wallets({
     _id: 'wallet_' + shortId.generate(),
     vendorId,
+    shopId: await shopIdOfUser(vendorId),
     currency,
     balance: money.fromNumber(0),
     isActive: true,

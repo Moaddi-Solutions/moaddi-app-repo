@@ -9,7 +9,8 @@ const authorize = require('../middlewares/authorize') as (
   action: string,
   subjectType: string
 ) => import('express').RequestHandler;
-import { subject } from '../../lib/ability';
+import { defineAbilityFor, subject } from '../../lib/ability';
+import { accessibleFilter } from '../../lib/accessibleFilter';
 import { getCurrencyOfUser } from '../../services/geo-currency';
 import { listSupportedCurrencies } from '../../services/currency';
 
@@ -74,11 +75,23 @@ const controller = (): import('express').Router => {
         return res.status(401).json({ message: 'Authentication required for native=true product listing.' });
       }
       const filter = parseJSON((req.query.filter as string) ?? '{}');
+      // `native=true` is the authenticated staff listing (the public storefront
+      // uses the shared-currency shape), so scope it to what the caller may
+      // manage: own products for a supplier, in-shop products for a shop admin.
+      // This route runs under optionalAuthenticate, which does not build an
+      // ability, so derive one here.
+      const scope = native
+        ? accessibleFilter(
+            defineAbilityFor(req.authenticatedUser!),
+            'update',
+            'Product'
+          )
+        : {};
       const preferredCurrency = await getCurrencyOfUser(req);
       const results = await products.get(
         (req.query.offset as string) ?? '0',
         (req.query.limit as string) ?? '1000',
-        filter,
+        { ...filter, ...scope },
         preferredCurrency,
         native ? { native: true, includeUsd: true } : undefined
       );

@@ -109,6 +109,9 @@ export interface IPurchase {
   /** ISO currency the customer checked out in (from profile or request). */
   preferredCurrency?: string;
   machineId?: string;
+  /** Shop / supplier the machine belonged to at purchase time (denormalized). */
+  shopId?: string | null;
+  vendorId?: string | null;
   items: IPurchaseItem[];
   price?: number;
   status?: PurchaseStatus | string;
@@ -157,6 +160,8 @@ export interface IProduct {
    * The underlying Mongo schema is strict:false, so these may also exist in stored rows.
    */
   vendorId?: string | null;
+  /** Denormalized from the vendor's shop; drives Shop Admin scoping. */
+  shopId?: string | null;
   isActive: boolean;
   isFeatured?: boolean;
   isDeleted: boolean;
@@ -257,6 +262,8 @@ export type Money = Types.Decimal128;
 export interface IWallet {
   _id: string;
   vendorId: string;
+  /** Denormalized from the vendor's shop; drives Shop Admin scoping. */
+  shopId?: string | null;
   currency: string;
   balance: Money;
   isActive: boolean;
@@ -289,6 +296,8 @@ export interface ITransaction {
   _id: string;
   walletId: string;
   vendorId: string;
+  /** Denormalized from the vendor's shop; drives Shop Admin scoping. */
+  shopId?: string | null;
   type: TransactionType;
   kind: TransactionKind;
   amount: Money;
@@ -314,6 +323,8 @@ export interface IBankDetails {
 export interface IWithdrawal {
   _id: string;
   vendorId: string;
+  /** Denormalized from the vendor's shop; drives Shop Admin scoping. */
+  shopId?: string | null;
   walletId: string;
   amount: Money;
   currency: string;

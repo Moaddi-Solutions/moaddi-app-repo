@@ -24,6 +24,8 @@ import type { ChatMediaType, ChatMessageType } from "../../lib/chatTypes";
 
 const authenticate =
   require("../middlewares/authenticate") as () => import("express").RequestHandler;
+const authorize =
+  require("../middlewares/authorize") as typeof import("../middlewares/authorize");
 
 const chatRepo =
   require("../../data/repos/chat") as typeof import("../../data/repos/chat");
@@ -177,6 +179,7 @@ const controller = (): import("express").Router => {
   router.post(
     "/chat/conversations",
     authenticate(),
+    authorize("create", "Conversation"),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const targetUserId = req.body?.targetUserId;
@@ -206,6 +209,7 @@ const controller = (): import("express").Router => {
   router.get(
     "/chat/conversations",
     authenticate(),
+    authorize("read", "Conversation"),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const conversations = await chatRepo.listConversations(
@@ -220,7 +224,7 @@ const controller = (): import("express").Router => {
   router.get(
     "/chat/conversations/:conversationId/messages",
     authenticate(),
-
+    authorize("read", "Message"),
     async (
       req: Request<ConversationParams>,
       res: Response,
@@ -256,6 +260,7 @@ const controller = (): import("express").Router => {
   router.post(
     "/chat/conversations/:conversationId/read",
     authenticate(),
+    authorize("update", "Conversation"),
     async (
       req: Request<ConversationParams>,
       res: Response,
@@ -275,6 +280,7 @@ const controller = (): import("express").Router => {
   router.post(
     "/chat/conversations/:conversationId/messages",
     authenticate(),
+    authorize("create", "Message"),
     sendMessageLimiter,
     async (
       req: Request<ConversationParams>,
@@ -311,6 +317,7 @@ const controller = (): import("express").Router => {
   router.post(
     "/chat/conversations/:conversationId/attachments",
     authenticate(),
+    authorize("create", "Message"),
     uploadAttachmentLimiter,
     requireMembership,
     uploadChatAttachment,
@@ -396,6 +403,7 @@ const controller = (): import("express").Router => {
   router.get(
     "/chat/conversations/:conversationId/messages/:messageId/media",
     authenticate(),
+    authorize("read", "Message"),
     async (req: Request<MessageParams>, res: Response, next: NextFunction) => {
       try {
         const { conversationId, messageId } = req.params;
@@ -448,6 +456,8 @@ const controller = (): import("express").Router => {
   router.put(
     "/chat/conversations/:conversationId/messages/:messageId/reaction",
     authenticate(),
+    // A reaction edits a message's reaction list — never removes the message.
+    authorize("update", "Message"),
     sendMessageLimiter,
     async (req: Request<MessageParams>, res: Response, next: NextFunction) => {
       try {
@@ -475,6 +485,8 @@ const controller = (): import("express").Router => {
   router.delete(
     "/chat/conversations/:conversationId/messages/:messageId/reaction",
     authenticate(),
+    // A reaction edits a message's reaction list — never removes the message.
+    authorize("update", "Message"),
     sendMessageLimiter,
     async (req: Request<MessageParams>, res: Response, next: NextFunction) => {
       try {

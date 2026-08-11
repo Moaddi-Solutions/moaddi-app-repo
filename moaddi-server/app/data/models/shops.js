@@ -8,6 +8,10 @@ const ShopsSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, required: true },
     image: { type: String, required: false },
+    // Staff user who created the shop. A Shop Admin's authorization scope is
+    // their assigned shop plus every shop they created, so this is both the
+    // audit trail and the source for backfilling `users.ownedShopIds`.
+    createdBy: { type: String, required: false, default: null },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     created: {

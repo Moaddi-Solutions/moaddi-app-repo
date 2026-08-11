@@ -168,6 +168,27 @@ const Api = {
     },
     delete: (id) => deleteRequest(productsAPI(id)),
   },
+  /**
+   * The staff listing: products the signed-in user may actually manage.
+   *
+   * `native=true` makes the server scope the catalog by the caller's CASL rules
+   * — own products for a supplier, in-shop products for a shop admin — instead
+   * of returning the public storefront catalog that plain `products` serves to
+   * shoppers and guests. Mutations still go through `products`, which already
+   * has create/update/delete against the same endpoints.
+   */
+  staffProducts: {
+    getList: (offset, limit, filter) =>
+      getRequest(
+        `${productAPI}?${new URLSearchParams({
+          offset,
+          limit,
+          filter: JSON.stringify(filter ?? {}),
+          native: "true",
+        })}`
+      ),
+    getOne: (id) => getRequest(productsAPI(id)),
+  },
   productsActive: {
     getList: (offset, limit, filter) =>
       getRequest(
@@ -219,6 +240,17 @@ const Api = {
       ),
   },
   purchases: {
+    // The server scopes this by the caller's CASL rules — a supplier's sales
+    // and own orders, a shop admin's shops' orders, the platform for a super
+    // admin — so there is no filter to pass here.
+    getList: (offset, limit, filter) =>
+      getRequest(
+        `${purchasesAPI}?${new URLSearchParams({
+          offset,
+          limit,
+          ...(filter?.status ? { status: String(filter.status) } : {}),
+        })}`
+      ),
     getOne: (id) => getRequest(purchaseAPI(id)),
     update: (id, data) => putRequest(purchaseAPI(id), data),
     getManyReference: {

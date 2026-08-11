@@ -5,11 +5,12 @@ import { Badge } from "@/../components/ui/badge";
 import { Button as ShadcnButton } from "@/../components/ui/button";
 import { Card, CardContent } from "@/../components/ui/card";
 import { Skeleton } from "@/../components/ui/skeleton";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { readDashboardUser } from "@/../lib/auth-session";
+import { canAccessResource } from "@/../lib/ability";
 import {
   isDashboardAdminRole,
   isDashboardRole,
-  isVendorRole,
   normalizeDashboardRole,
 } from "@/../lib/dashboard-role";
 import { formatMoneyValue } from "@/../lib/formatMoney";
@@ -271,14 +272,14 @@ const FleetPulse = ({ machines, loading, createPath }) => {
 
 // GET /purchases is Admin/SuperAdmin-only on the server, so never fire it for a
 // Vendor â€” an unauthorized 403 here surfaces as a dashboard-wide error on login.
-const RecentPayments = ({ createPath, isAdmin }) => {
+const RecentPayments = ({ createPath, enabled }) => {
   const { data = [], isPending } = useGetList(
     "payments",
     {
       pagination: { page: 1, perPage: 6 },
       sort: { field: "created", order: "DESC" },
     },
-    { enabled: isAdmin },
+    { enabled },
   );
 
   return (
@@ -358,7 +359,7 @@ const RecentPayments = ({ createPath, isAdmin }) => {
 /*  Pending actions                                                           */
 /* -------------------------------------------------------------------------- */
 
-const PendingActions = ({ createPath, isAdmin }) => {
+const PendingActions = ({ createPath, showsRequester }) => {
   const { data: withdrawals = [], isPending } = useGetList("withdrawals", {
     pagination: { page: 1, perPage: 5 },
     sort: { field: "requestedAt", order: "DESC" },
@@ -411,7 +412,7 @@ const PendingActions = ({ createPath, isAdmin }) => {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-foreground">
-                      {isAdmin ? w.vendorId ?? "Vendor" : "Withdrawal request"}
+                      {showsRequester ? w.vendorId ?? "Vendor" : "Withdrawal request"}
                     </p>
                     <p className="text-xs font-semibold text-muted-foreground">
                       {formatDate(w.requestedAt)}
@@ -452,9 +453,22 @@ const Dashboard = () => {
   const createPath = useCreatePath();
   const navigate = useNavigate();
   const user = readDashboardUser();
+  const ability = useAbility();
+  // Same question the sidebar asks, so a card never offers a section the menu
+  // hides (and never withholds one it shows). Keying this off the role name
+  // instead left custom roles on an almost empty dashboard, and gave a Shop
+  // Admin a Customers card that opens a section they cannot list.
+  const show = (resource) => canAccessResource(ability, resource, "list");
+  const showProducts = show("products");
+  const showCustomers = show("customers");
+  const showVendors = show("vendors");
+  const showPayments = show("payments");
+  // The reviewer's view of the withdrawal queue: whoever may act on someone
+  // else's request, rather than whoever holds a particular role name.
+  const reviewsWithdrawals = ability.can("approve", "Withdrawal");
+
   const role = normalizeDashboardRole(user.role);
   const isAdmin = isDashboardAdminRole(role);
-  const isVendor = isVendorRole(role);
   // Any staff role that isn't admin itself can message the admin directly
   // (vendor today, custom dashboard roles later).
   const canContactAdmin = isDashboardRole(role) && !isAdmin;
@@ -477,18 +491,18 @@ const Dashboard = () => {
   };
 
   const { data: machines = [], isPending: machinesLoading } =
-    useResourceSummary("machines");
+    useResourceSummary("machines", show("machines"));
   const { data: products = [], isPending: productsLoading } = useResourceSummary(
     "products",
-    isAdmin || isVendor,
+    showProducts,
   );
   const { data: customers = [], isPending: customersLoading } = useResourceSummary(
     "customers",
-    isAdmin,
+    showCustomers,
   );
   const { data: vendors = [], isPending: vendorsLoading } = useResourceSummary(
     "vendors",
-    isAdmin,
+    showVendors,
   );
 
   const activeMachines = useMemo(
@@ -513,16 +527,16 @@ const Dashboard = () => {
       loading: machinesLoading,
       to: createPath({ resource: "machines", type: "list" }),
     },
-    (isAdmin || isVendor) && {
+    showProducts && {
       icon: Package,
       label: "Products",
       value: nf(products.length),
-      sub: isAdmin ? `across ${vendors.length || "â€”"} vendors` : "in your catalog",
+      sub: showVendors ? `across ${vendors.length || "â€”"} vendors` : "in your catalog",
       series: trendSeries(products.length),
       loading: productsLoading,
       to: createPath({ resource: "products", type: "list" }),
     },
-    isAdmin && {
+    showCustomers && {
       icon: UsersRound,
       label: "Customers",
       value: nf(customers.length),
@@ -531,7 +545,7 @@ const Dashboard = () => {
       loading: customersLoading,
       to: createPath({ resource: "customers", type: "list" }),
     },
-    isAdmin && {
+    showVendors && {
       icon: Handshake,
       label: "Vendors",
       value: nf(vendors.length),
@@ -558,7 +572,7 @@ const Dashboard = () => {
               Your machines, payments and vendors â€” one calm view. Everything
               below is live.
             </p>
-            {(isAdmin || isVendor) && (
+            {ability.can("read", "Conversation") && (
               <div className="mt-5 flex flex-wrap gap-3">
                 <ShadcnButton
                   asChild
@@ -612,11 +626,18 @@ const Dashboard = () => {
       <section
         className={cn(
           "grid gap-4",
-          isAdmin && "lg:grid-cols-[1.5fr_1fr]",
+          showPayments && "lg:grid-cols-[1.5fr_1fr]",
         )}
       >
-        {isAdmin && <RecentPayments createPath={createPath} isAdmin={isAdmin} />}
-        <PendingActions createPath={createPath} isAdmin={isAdmin} />
+        {/* A supplier's own sales are payments too — this panel used to be
+            withheld from them even though the sidebar offered the section. */}
+        {showPayments && (
+          <RecentPayments createPath={createPath} enabled={showPayments} />
+        )}
+        <PendingActions
+          createPath={createPath}
+          showsRequester={reviewsWithdrawals}
+        />
       </section>
     </div>
   );

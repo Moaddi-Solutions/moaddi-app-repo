@@ -198,7 +198,7 @@ export const AppSidebar = () => {
             )}
             {show("vendors") && (
               <NavItem to={createPath({ resource: "vendors", type: "list" })} icon={Handshake}>
-                Vendors
+                Staff
               </NavItem>
             )}
             {show("roles") && (

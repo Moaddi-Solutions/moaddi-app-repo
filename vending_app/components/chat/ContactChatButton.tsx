@@ -2,6 +2,7 @@ import { useRouter, type Href } from "expo-router";
 import { MessageCircle } from "lucide-react-native";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAbility } from "~/context/AbilityContext";
 import { useChat } from "~/context/ChatContext";
 import { useUser } from "~/context/UserContext";
 import alert from "~/lib/alert";
@@ -28,6 +29,10 @@ export function useOpenChatWith(targetUserId?: string | null) {
   const router = useRouter();
   const { user, isGuest } = useUser();
   const { openConversation } = useChat();
+  // Decides which stack the thread opens in. Was a hardcoded
+  // ["admin","vendor"] list, which sent Super Admins and any custom staff role
+  // into the customer stack.
+  const { isStaff } = useAbility();
   const [busy, setBusy] = useState(false);
 
   const target = typeof targetUserId === "string" ? targetUserId.trim() : "";
@@ -44,9 +49,6 @@ export function useOpenChatWith(targetUserId?: string | null) {
     setBusy(true);
     try {
       const conversationId = await openConversation(target);
-      const isStaff = ["admin", "vendor"].includes(
-        String(user.role || "").toLowerCase(),
-      );
       // Cast: the destination is built at runtime from a server-issued id, so
       // it cannot match expo-router's generated literal-route union.
       router.push(

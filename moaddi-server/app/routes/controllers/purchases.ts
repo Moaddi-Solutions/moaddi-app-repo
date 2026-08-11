@@ -15,6 +15,7 @@ const {
   isStaffAdminRole,
   isVendorRole,
 } = require('../../lib/purchaseAccess') as typeof import('../../lib/purchaseAccess');
+const { accessibleFilter } = require('../../lib/accessibleFilter') as typeof import('../../lib/accessibleFilter');
 const {
   completePayment,
   myFatoraStrategy,
@@ -79,7 +80,8 @@ const controller = (): import('express').Router => {
         const results = await purchasesRepo.getPendingRequests(
           asPendingQueryNum(req.query.offset),
           asPendingQueryNum(req.query.limit),
-          req.authenticatedUser!
+          req.authenticatedUser!,
+          accessibleFilter(req.ability!, 'read', 'Purchase')
         );
         return res.status(200).json(results);
       } catch (err) {
@@ -94,10 +96,9 @@ const controller = (): import('express').Router => {
     authorize('read', 'Purchase'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        // Unscoped listing is an admin-only view.
-        if (!isStaffAdminRole(req.authenticatedUser!.role)) {
-          return res.status(403).json({ message: 'Forbidden.' });
-        }
+        // Every role that can read a purchase gets this list — the CASL scope
+        // decides what is in it. Super Admin sees the platform, a Shop Admin
+        // their shops' orders, a supplier their own sales and purchases.
         const results = await purchasesRepo.listAll(
           {
             status: req.query.status ? String(req.query.status) : undefined,
@@ -111,7 +112,8 @@ const controller = (): import('express').Router => {
               req.query.hasInvoice === '1' || req.query.hasInvoice === 'true',
           },
           asPendingQueryNum(req.query.offset),
-          asPendingQueryNum(req.query.limit)
+          asPendingQueryNum(req.query.limit),
+          accessibleFilter(req.ability!, 'read', 'Purchase')
         );
         return res.status(200).json(results);
       } catch (err) {
@@ -155,7 +157,7 @@ const controller = (): import('express').Router => {
         return res.status(400).json({ message: 'Body must include an `items` array.' });
       }
       const purchase = await purchasesRepo.getById(pathParam(req.params.purchaseId));
-      if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo))) {
+      if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo, 'update'))) {
         return res.status(403).json({ message: 'Forbidden.' });
       }
       const results = await purchasesRepo.update(pathParam(req.params.purchaseId), {
@@ -170,7 +172,7 @@ const controller = (): import('express').Router => {
   router.delete('/purchases/:purchaseId', authenticate(), authorize('delete', 'Purchase'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const purchase = await purchasesRepo.getById(pathParam(req.params.purchaseId));
-      if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo))) {
+      if (!(await canViewOrMutatePurchase(purchase, req.authenticatedUser!, machinesRepo, 'delete'))) {
         return res.status(403).json({ message: 'Forbidden.' });
       }
       const results = await purchasesRepo.remove(pathParam(req.params.purchaseId));
@@ -189,13 +191,18 @@ const controller = (): import('express').Router => {
         const u = req.authenticatedUser;
         if (!u) return res.status(401).json({ message: 'Unauthorized.' });
         const cid = pathParam(req.params.customerId);
-        if (!isStaffAdminRole(u.role) && u._id !== cid) {
+        const own = u._id === cid;
+        if (!isStaffAdminRole(u.role) && !own) {
           return res.status(403).json({ message: 'Forbidden.' });
         }
+        // Staff reading someone else's history see only the orders their own
+        // scope covers — a Shop Admin gets this buyer's orders in their shops,
+        // not the buyer's whole platform history.
         const results = await purchasesRepo.customerHistory(
           cid,
           asPendingQueryNum(req.query.offset || req.query.skip),
-          asPendingQueryNum(req.query.limit)
+          asPendingQueryNum(req.query.limit),
+          own ? {} : accessibleFilter(req.ability!, 'read', 'Purchase')
         );
         return res.status(200).json(results);
       } catch (err) {

@@ -11,6 +11,8 @@ const WalletsSchema = new mongoose.Schema<ModelTypes.IWallet>(
   {
     _id: { type: String, required: true },
     vendorId: { type: String, required: true },
+    /** Denormalized from the vendor's shop — lets a Shop Admin read the wallets of their own suppliers only. */
+    shopId: { type: String, required: false, default: null },
     currency: { type: String, required: true, default: 'USD' },
     balance: {
       type: mongoose.Schema.Types.Decimal128,

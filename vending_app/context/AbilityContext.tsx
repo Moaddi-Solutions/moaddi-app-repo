@@ -6,7 +6,13 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { buildAbility, isStaffAbility, type AppAbility } from "~/lib/ability";
+import {
+  buildAbility,
+  isStaffAbility,
+  staffCapabilities,
+  type AppAbility,
+  type StaffCapabilities,
+} from "~/lib/ability";
 import { getRequest } from "~/services/httpClient";
 import { myPermissionsAPI } from "~/services/serverAddresses";
 import { useUser } from "./UserContext";
@@ -15,6 +21,8 @@ type AbilityContextValue = {
   ability: AppAbility;
   /** Vendor (Supplier) or admin — allowed into the staff/ area. */
   isStaff: boolean;
+  /** What the staff UI branches on; see `staffCapabilities`. */
+  capabilities: StaffCapabilities;
 };
 
 const abilityContext = createContext<AbilityContextValue | null>(null);
@@ -48,7 +56,11 @@ const AbilityProvider = ({ children }: { children: ReactNode }) => {
   }, [user?._id, user?.token, user?.rules, setUser]);
 
   const value = useMemo(
-    () => ({ ability, isStaff: isStaffAbility(ability) }),
+    () => ({
+      ability,
+      isStaff: isStaffAbility(ability),
+      capabilities: staffCapabilities(ability),
+    }),
     [ability]
   );
 

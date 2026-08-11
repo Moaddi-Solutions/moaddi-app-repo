@@ -114,6 +114,18 @@ export const myTransactionsAPI = address + "transactions";
 export const myWithdrawalsAPI = address + "withdrawals";
 export const withdrawalCreateAPI = address + "withdrawals";
 
+/**
+ * Shop Admin review actions. The server scopes each one to the reviewer's own
+ * shops, so a request from another shop is refused with 403 even if the id is
+ * guessed — the UI gating below is convenience, not the control.
+ */
+export const withdrawalApproveAPI = (id) =>
+  address + "withdrawals/" + id + "/approve";
+export const withdrawalRejectAPI = (id) =>
+  address + "withdrawals/" + id + "/reject";
+export const withdrawalMarkPaidAPI = (id) =>
+  address + "withdrawals/" + id + "/markpaid";
+
 /** Media origin for /images and other static assets (defaults to API origin). */
 export const mediaBaseUrl = () => {
   const fromEnv = normalizeOrigin(process.env.EXPO_PUBLIC_STATIC);

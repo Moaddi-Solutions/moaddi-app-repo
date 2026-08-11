@@ -4,6 +4,7 @@ import type { ClientSession, Model } from 'mongoose';
 import type ModelTypes = require('../models/types');
 import { repoError } from '../../lib/errors';
 import * as money from '../../lib/money';
+import { shopIdOfUser } from '../../lib/shopScope';
 
 const Transactions = require('../models/transactions') as Model<ModelTypes.ITransaction>;
 const Purchases = require('../models/purchases') as Model<ModelTypes.IPurchase>;
@@ -24,6 +25,8 @@ const now = () => moment().utc().add(config.timeDifference, 'hours').toDate();
 interface CreateInput {
   walletId: string;
   vendorId: string;
+  /** Optional: pass through from an already-loaded wallet to skip the lookup. */
+  shopId?: string | null;
   type: ModelTypes.TransactionType;
   kind: ModelTypes.TransactionKind;
   amount: number;
@@ -48,6 +51,9 @@ const create = async (
     _id: 'txn_' + shortId.generate(),
     walletId: input.walletId,
     vendorId: input.vendorId,
+    // Callers on the purchase hot path pass this through from the wallet they
+    // already loaded; the lookup is only a fallback.
+    shopId: input.shopId ?? (await shopIdOfUser(input.vendorId)),
     type: input.type,
     kind: input.kind,
     amount: money.fromNumber(input.amount),

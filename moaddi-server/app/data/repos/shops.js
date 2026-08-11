@@ -6,6 +6,9 @@ const Users = require("../models/users");
 const {
   flattenProductForPreferredCurrency,
 } = require("./product-pricing");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
+const { shopScopeOf } = require("../../lib/ability");
+const { ROLES } = require("../../lib/roles");
 
 const activeShopOwnersLookup = () => ({
   $lookup: {
@@ -39,22 +42,37 @@ const attachPrimaryShopOwner = () => ({
 /*
  * Create new shop.
  */
-let create = async (shop, image) => {
+let create = async (shop, image, createdBy = null) => {
   shop = new Shops(shop);
   if (image) shop.image = image.path;
   shop._id = "shop_" + shortId.generate();
+  shop.createdBy = createdBy ? String(createdBy) : null;
   shop.created = moment().utc().add(config.timeDifference, "hours");
   shop.updated = moment().utc().add(config.timeDifference, "hours");
   shop = await shop.save();
+
+  // A shop is administered by whoever created it. Materializing that on the
+  // user keeps the CASL condition a static `$in` list — see `shopScopeOf`.
+  if (createdBy) {
+    await Users.updateOne(
+      { _id: String(createdBy) },
+      { $addToSet: { ownedShopIds: shop._id } }
+    );
+  }
+
   return shop;
 };
 
 /*
  * Get all shops.
  */
-let get = async (skip = 0, limit = 1000) => {
-  const total = await Shops.countDocuments({ isDeleted: false });
-  let shops = await Shops.find({ isDeleted: false })
+let get = async (skip = 0, limit = 1000, ability = null) => {
+  // Scoped by the *management* rule, not the browse rule: every staff role may
+  // read the shop catalog, but this directory is "shops I administer".
+  const scope = ability ? accessibleFilter(ability, "update", "Shop") : {};
+  const query = { ...scope, isDeleted: false };
+  const total = await Shops.countDocuments(query);
+  let shops = await Shops.find(query)
     .sort({ created: -1 })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
@@ -219,11 +237,27 @@ let getById = async (shopId, preferredCurrency) => {
 let getByVendor = async (vendorId) => {
   const user = await Users.findOne({ _id: vendorId });
   if (!user) return { error: 404, data: [] };
-  if (user.role == "Admin")
-    return {
-      data: await Shops.find({ isDeleted: false }),
-      total: 100,
-    };
+
+  // The Super Admin runs the whole platform, so every shop is theirs.
+  if (user.role === ROLES.SUPER_ADMIN) {
+    const data = await Shops.find({ isDeleted: false });
+    return { data, total: data.length };
+  }
+
+  // A shop admin has no machines, so the vendor pipeline below would return
+  // nothing for them. They get the shops they administer — which used to be
+  // every shop on the platform, handed out to anyone who passed an admin's id
+  // in the path.
+  if (user.role === ROLES.ADMIN) {
+    const scope = shopScopeOf({
+      _id: String(user._id),
+      role: user.role,
+      shopId: user.shopId ?? null,
+      ownedShopIds: user.ownedShopIds ?? null,
+    });
+    const data = await Shops.find({ _id: { $in: scope }, isDeleted: false });
+    return { data, total: data.length };
+  }
 
   try {
     const pipeline = [

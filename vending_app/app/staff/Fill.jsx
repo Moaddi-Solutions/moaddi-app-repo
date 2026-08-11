@@ -14,6 +14,7 @@ import MachineSummary from "~/components/staff/MachineSummary";
 import { useMachine } from "~/context/MachineContext";
 import { useGetOne } from "~/hook/useGetOne";
 import { useList } from "~/hook/useList";
+import { useMachineAccess } from "~/hook/useMachineAccess";
 import { putRequest } from "~/services/httpClient";
 import {
   boxUpdateAPI,
@@ -92,6 +93,7 @@ const ProductRow = ({
 
 const MachineDetails = () => {
   const { machine, setMachine } = useMachine();
+  const { canManageMachine } = useMachineAccess(machine);
   const [disabled, setDisabled] = useState(false);
   const handleToggle = () => {
     setDisabled(true);
@@ -131,8 +133,9 @@ const MachineDetails = () => {
 
       <View className={style.container}>
         <Text className={style.text}>Active</Text>
+        {/* Read-only for anyone who doesn't own or administer this machine. */}
         <Switch
-          disabled={disabled}
+          disabled={disabled || !canManageMachine}
           checked={!!machine.isActive}
           onCheckedChange={handleToggle}
         />
@@ -171,6 +174,7 @@ const MachineFill = ({
   setLoading,
 }) => {
   const { machine } = useMachine();
+  const { canFillBoxes } = useMachineAccess(machine);
   const productAssignAll = () => {
     setLoading(true);
     BoxApi.productAssign(
@@ -199,6 +203,10 @@ const MachineFill = ({
   // const productUnassignSelected = () => {
 
   // };
+  // Boxes belong to the machine's owner; anyone else gets a read-only view
+  // rather than buttons the server would refuse.
+  if (!canFillBoxes) return null;
+
   return (
     <View className="flex gap-6 mt-2">
       <View className="flex flex-1 items-center gap-2 border border-border rounded-md p-1 mt-2">
@@ -263,6 +271,7 @@ const BoxesList = ({
 }) => {
   const { t } = useTranslation();
   const { machine } = useMachine();
+  const { canFillBoxes } = useMachineAccess(machine);
 
   useEffect(() => {
     if (loading) return;
@@ -313,12 +322,12 @@ const BoxesList = ({
         ) : (
           <TouchableOpacity
             // disabled={!(readyToSet && status && selectedProduct)}
-            disabled={!(readyToSet && selectedProduct)}
+            disabled={!(canFillBoxes && readyToSet && selectedProduct)}
             onPress={(e) => productAssignOne(_id)}
             // size="large"
             // sx={{ my: 5.5, cursor: "pointer" }}
             className={`flex justify-center h-[180px] ${
-              readyToSet && selectedProduct ? "" : "opacity-30"
+              canFillBoxes && readyToSet && selectedProduct ? "" : "opacity-30"
             }`}
           >
             <Plus />
@@ -337,6 +346,7 @@ const Fill = (props) => {
   const { machine, setMachine } = useMachine();
   const readyToSet = !machine?.isActive;
   const [loading, setLoading] = useState(false);
+  const { canFillBoxes } = useMachineAccess(machine);
   // Owned here rather than in BoxesList so the list, the bulk-fill actions and
   // the summary all render off the same query — a useRef would not re-render
   // the counters when boxes change.
@@ -410,14 +420,17 @@ const Fill = (props) => {
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="mx-4">
       <MachineDetails />
-      {/* Outside the vendorId guard: the summary describes the machine's boxes,
-          which is worth showing even when no vendor is attached. */}
+      {/* Outside the access guard: the summary describes the machine's boxes,
+          which is worth showing even to someone who may not service them. */}
       <MachineSummary
         boxes={boxes}
         machine={machine}
         selectedCount={selectedBoxes.length}
       />
-      {!!machine.vendorId && (
+      {/* Was `machine.vendorId` — which hid the fill tools on an unassigned
+          machine even from the shop admin who is allowed to service it. The
+          box rules answer that properly for both roles. */}
+      {canFillBoxes && (
         <>
           <MachineFill {...machineFill} />
           <ProductRow {...productRow} />

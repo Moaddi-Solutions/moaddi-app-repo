@@ -30,6 +30,11 @@ const PurchasesSchema = new mongoose.Schema(
     _id: { type: String, required: true },
     customerId: { type: String, required: true },
     machineId: { type: String, required: false },
+    // Denormalized from the machine at purchase time. Historical on purpose —
+    // an order stays with the shop (and the supplier who made the sale) it
+    // happened in even if the machine is later moved or reassigned.
+    shopId: { type: String, required: false, default: null },
+    vendorId: { type: String, required: false, default: null },
     items: Items,
     price: { type: Number, required: false },
     /**

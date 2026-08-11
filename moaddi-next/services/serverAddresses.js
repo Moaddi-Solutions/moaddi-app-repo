@@ -45,6 +45,10 @@ export function roleAPI(id) {
 export function getVendorsAPI() {
   return `${address()}users/role/Vendor`;
 }
+/** Admin staff roster: Vendor + Admin + SuperAdmin + custom roles (not Customer/Guest). */
+export function getStaffUsersAPI() {
+  return `${address()}users/role/staff`;
+}
 export function getUsersByRoleAPI(role) {
   return `${address()}users/role/${enc(role)}`;
 }

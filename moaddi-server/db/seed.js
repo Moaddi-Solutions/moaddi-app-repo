@@ -7,6 +7,7 @@ const config = require("../config");
 const { getMongoConnectOptions } = require("../app/data/db/mongodb");
 const { updateExchangeRate } = require("../app/services/currency");
 
+const seedRoles = require("./seeds/roles.seed");
 const seedUsers = require("./seeds/users.seed");
 const seedOptions = require("./seeds/options.seed");
 const seedGroups = require("./seeds/groups.seed");
@@ -28,6 +29,8 @@ async function run() {
   await updateExchangeRate();
   console.log("Exchange rates loaded for currency validation");
 
+  // Roles first — users reference them.
+  await seedRoles();
   await seedUsers();
   await seedOptions();
   await seedGroups();

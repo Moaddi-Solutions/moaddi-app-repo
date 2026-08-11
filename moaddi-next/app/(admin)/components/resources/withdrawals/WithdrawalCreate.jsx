@@ -8,24 +8,29 @@ import {
   ReferenceInput,
   TextInput,
 } from "@/(admin)/components/kit/inputs/AdminInputs";
-import { normalizeDashboardRole } from "@/../lib/dashboard-role";
-import { getLocalStorageItem } from "@/../lib/utils";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
+import { canActForOthers } from "@/../lib/ability";
 import { minValue, required } from "ra-core";
 
 export default function WithdrawalCreate() {
-  const raw = JSON.parse(
-    typeof window !== "undefined"
-      ? (getLocalStorageItem("user") ?? "{}")
-      : "{}",
-  );
-  const role = normalizeDashboardRole(raw.role);
-  const isStaffAdmin = role === "Admin" || role === "SuperAdmin";
+  const ability = useAbility();
+  // Whose payout is this? A supplier only ever requests their own, so the
+  // server stamps the payee and the picker is noise. Anyone who can raise a
+  // request against another vendor's wallet has to say which one — asked of
+  // the ability so a custom finance role gets the field too, instead of a
+  // form it can fill in but never submit.
+  const picksVendor = canActForOthers(ability, "create", "Withdrawal");
 
   return (
     <AdminCreate title="Request withdrawal" redirect="show">
       <AdminSimpleForm>
-        {isStaffAdmin ? (
-          <ReferenceInput source="vendorId" reference="vendors" perPage={100}>
+        {picksVendor ? (
+          <ReferenceInput
+            source="vendorId"
+            reference="vendors"
+            perPage={100}
+            filter={{ role: "Vendor" }}
+          >
             <AutocompleteInput
               optionText="name"
               label="Vendor"

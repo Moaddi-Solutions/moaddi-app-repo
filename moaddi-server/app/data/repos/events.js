@@ -6,7 +6,39 @@ const machinesRepo = require("../repos/machines");
 const boxesRepo = require("../repos/boxes");
 const purchasesRepo = require("../repos/purchases");
 const { isAuthorizedOpener } = require("../../lib/purchaseAccess");
+const { defineAbilityFor, subject } = require("../../lib/ability");
 const { sendToBroker } = require("../../services/bluetooth.ipc");
+
+/**
+ * May this user service this machine — open its doors, reboot it?
+ *
+ * The socket hands us the JWT payload, which carries only `{_id, role}`, so the
+ * full account is reloaded to pick up the shop scope the rules resolve against.
+ * Asked as `update Box`, the same permission the Fill screen needs, because
+ * opening a door is servicing the boxes inside it.
+ *
+ * Replaces `user.role == "Admin"`, which said yes to a Shop Admin standing in
+ * front of any machine on the platform and no to a Super Admin.
+ */
+const canServiceMachine = async (user, machine) => {
+  if (!machine) return false;
+  const usersRepo = require("./users");
+  const full = await usersRepo.checkUser(String(user._id)).catch(() => null);
+  const ability = defineAbilityFor(full ?? user);
+  return ability.can(
+    "update",
+    subject("Box", {
+      vendorId: machine.vendorId ?? null,
+      shopId: machine.shopId ?? null,
+    })
+  );
+};
+
+/** A buyer (or gift recipient) opening a box they have paid for. */
+const isPaidOpener = (purchase, user) =>
+  Boolean(purchase) &&
+  isAuthorizedOpener(purchase, user._id) &&
+  ["PaymentDone", "Processing"].includes(purchase.status);
 
 /*
  * Create new event.
@@ -20,6 +52,9 @@ let create = async (event, machine = null) => {
   if (machine) {
     event = new Events(event);
     event._id = event.machineId + "_" + shortId.generate();
+    // Telemetry belongs to the machine's shop, so a Shop Admin sees only
+    // events from their own floor.
+    event.shopId = machine.shopId ?? null;
     event.created = moment().utc().add(config.timeDifference, "hours");
     event = await event.save();
 
@@ -130,44 +165,39 @@ const control = async (event) => {
   await mqttRepo.sendToDevice(topic_mqtt_send, event);
 };
 
-const controlAdmin = async (event) => {
+/**
+ * The single entry point for "open this locker".
+ *
+ * One handler for every role, because the two ways to earn the right are not
+ * role-shaped: staff service the machines their scope covers, and a shopper
+ * opens the box they paid for. The dispatcher used to pick a handler by role
+ * name (`controlVendor`, `controlAdmin`, …), which silently had no answer for a
+ * Super Admin or any dashboard-created role.
+ */
+const controlLocker = async (event, user) => {
   if (!event.machineId) return;
   const machine = await machinesRepo.getById(event.machineId, false, false);
-  if (machine) await control(event);
-};
+  if (!machine) return;
 
-const controlVendor = async (event, user) => {
-  if (!event.machineId) return;
-  const machine = await machinesRepo.getById(event.machineId, false, false);
-  if (machine && machine.vendorId == user._id) await control(event);
-};
-
-// Buyer OR a gift recipient (in gift.authorizedOpeners) may open the box.
-const controlBuyerOrGiftee = async (event, user) => {
-  if (!(event.machineId && event.purchaseId)) return;
-  const machine = await machinesRepo.getById(event.machineId, false, false);
-  const purchase = await purchasesRepo.getById(event.purchaseId);
-  if (
-    machine &&
-    purchase &&
-    isAuthorizedOpener(purchase, user._id) &&
-    ["PaymentDone", "Processing"].includes(purchase.status)
-  )
+  if (await canServiceMachine(user, machine)) {
     await control(event);
-};
+    return;
+  }
 
-const controlCustomer = controlBuyerOrGiftee;
-// Gift recipients claim a Guest session; the socket resolves this handler by role.
-const controlGuest = controlBuyerOrGiftee;
+  // Buyer OR a gift recipient (in gift.authorizedOpeners) may open the box.
+  if (!event.purchaseId) return;
+  const purchase = await purchasesRepo.getById(event.purchaseId);
+  if (isPaidOpener(purchase, user)) await control(event);
+};
 /* --------------------------------------------------------------- */
 /* ---------------------------0-Direct---------------------------- */
 /* --------------------------------------------------------------- */
-// Admin | Vendor
+// Staff servicing the machine — no buyer path here: rebooting a device and
+// writing direct telemetry are not things a shopper does.
 const controlDirectMachine = async (event, user) => {
   if (!event.machineId) return;
   const machine = await machinesRepo.getById(event.machineId, false, false);
-  if (!(machine && (user.role == "Admin" || machine.vendorId == user._id)))
-    return;
+  if (!(await canServiceMachine(user, machine))) return;
   if (event.command == "reboot")
     return sendToBroker("device.reboot", { deviceId: machine.mac });
   await create({ ...event, machineType: "direct" }, machine);
@@ -179,27 +209,23 @@ const controlDirectMachine = async (event, user) => {
 const controlBluetooth1Machine = async (event, user) => {
   if (!event.machineId) return;
   const machine = await machinesRepo.getById(event.machineId, false, false);
+  if (!machine) return;
   const purchase = event.purchaseId
     ? await purchasesRepo.getById(event.purchaseId)
     : null;
-  if (
-    machine &&
-    (user.role == "Admin" ||
-      machine.vendorId == user._id ||
-      (purchase &&
-        isAuthorizedOpener(purchase, user._id) &&
-        ["PaymentDone", "Processing"].includes(purchase.status)))
-  )
-    // sent to broker and wait for response to create event
-    sendToBroker("door.open", {
-      deviceId: machine.mac,
-      orderId:
-        event.purchaseId ||
-        ((user.role == "Admin" || machine.vendorId == user._id) &&
-          `admin-${new Date().getTime().toString().slice(-5)}`),
-      container: event.box[0],
-      lane: event.box[1],
-    });
+  const servicing = await canServiceMachine(user, machine);
+  if (!servicing && !isPaidOpener(purchase, user)) return;
+
+  // sent to broker and wait for response to create event
+  sendToBroker("door.open", {
+    deviceId: machine.mac,
+    // A service opening has no order behind it, so it gets a synthetic id.
+    orderId:
+      event.purchaseId ||
+      (servicing && `admin-${new Date().getTime().toString().slice(-5)}`),
+    container: event.box[0],
+    lane: event.box[1],
+  });
 };
 
 /**
@@ -278,10 +304,7 @@ let sendToApplication = async (event) => {
 
 module.exports = {
   create,
-  controlAdmin,
-  controlVendor,
-  controlCustomer,
-  controlGuest,
+  controlLocker,
   controlDirectMachine,
   updateConnection,
   controlBluetooth1Machine,

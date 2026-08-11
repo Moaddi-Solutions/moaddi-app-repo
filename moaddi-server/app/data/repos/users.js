@@ -4,7 +4,11 @@ const jwt = require("jsonwebtoken");
 const config = require("../../../config");
 const Users = require("../models/users");
 const { rulesFor, isCustomRole } = require("../../lib/ability");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
 const Purchases = require("../models/purchases");
+const Wallets = require("../models/wallets");
+const Withdrawals = require("../models/withdrawals");
+const Transactions = require("../models/transactions");
 const machinesRepo = require("../../data/repos/machines");
 const purchasesRepo = require("../../data/repos/purchases");
 const {
@@ -433,8 +437,11 @@ let signIn = async (credentials) => {
 /*
  * Get all users.
  */
-let get = async (skip = 0, limit = 1000) => {
-  let users = await Users.find({ isDeleted: false })
+let get = async (skip = 0, limit = 1000, ability = null) => {
+  // "Staff I administer" — scoped by the update rule, so a Shop Admin sees the
+  // roster of their own shops rather than the whole platform.
+  const scope = ability ? accessibleFilter(ability, "update", "User") : {};
+  let users = await Users.find({ ...scope, isDeleted: false })
     .sort({ created: -1 })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
@@ -446,9 +453,19 @@ let get = async (skip = 0, limit = 1000) => {
   return users;
 };
 
-let getByShopId = async (shopId) => {
-  const total = await Users.countDocuments({ shopId, isDeleted: false });
-  let vendors = await Users.find({ shopId, isDeleted: false });
+/**
+ * Staff working in one shop.
+ *
+ * `scope` is the caller's CASL row filter. Without it this route returned every
+ * staff record of any shop to anyone who asked — it ran with no session at all,
+ * so a shop id was the only thing needed to enumerate the people in it.
+ */
+let getByShopId = async (shopId, scope = {}) => {
+  const requested = { shopId, isDeleted: false };
+  const query =
+    scope && Object.keys(scope).length ? { $and: [scope, requested] } : requested;
+  const total = await Users.countDocuments(query);
+  let vendors = await Users.find(query);
 
   for (let i = 0; i < vendors.length; i++) {
     vendors[i] = vendors[i].toJSON();
@@ -718,16 +735,26 @@ let getById = async (userId, preferredCurrency) => {
   }
 };
 
+const CUSTOMER_LIKE_ROLES = ["Customer", "Guest", "customer", "guest"];
+
 /*
  * Get all users by role.
+ * Pass role `"staff"` to list every non-customer/guest account (Vendor,
+ * Admin, SuperAdmin, and dashboard-created custom roles) — used by the
+ * admin Vendors/Staff page, which can create any of those roles.
  */
-let getByRole = async (role, skip = 0, limit = 1000) => {
-  const total = await Users.countDocuments({ isDeleted: false, role: role });
+let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
+  const isStaffList = String(role || "").toLowerCase() === "staff";
+  const scope = ability ? accessibleFilter(ability, "update", "User") : {};
+  const match = isStaffList
+    ? { ...scope, isDeleted: false, role: { $nin: CUSTOMER_LIKE_ROLES } }
+    : { ...scope, isDeleted: false, role: role };
+  const total = await Users.countDocuments(match);
 
   try {
     const pipeline = [
       {
-        $match: { isDeleted: false, role: role },
+        $match: match,
       },
       {
         $sort: { created: -1 },
@@ -737,9 +764,6 @@ let getByRole = async (role, skip = 0, limit = 1000) => {
       },
       {
         $limit: parseInt(limit),
-      },
-      {
-        $addFields: { role: role },
       },
       {
         $lookup: {
@@ -844,14 +868,14 @@ let getByRole = async (role, skip = 0, limit = 1000) => {
     ];
 
     const users = await Users.aggregate(pipeline).exec();
-    if (role === "Vendor")
-      users.forEach((e) => {
-        if (!e.machines[0]._id) e.machines = [];
-      });
-    else
-      users.forEach((e) => {
-        if (!e.machines[0]._id) delete e.machines;
-      });
+    users.forEach((e) => {
+      const isVendor =
+        String(e.role ?? "").toLowerCase() === "vendor" || role === "Vendor";
+      if (!e.machines?.[0]?._id) {
+        if (isVendor || isStaffList) e.machines = [];
+        else delete e.machines;
+      }
+    });
     return { data: users, total };
     // return users
   } catch (error) {
@@ -900,6 +924,8 @@ let update = async (userId, properties) => {
     });
   }
 
+  const previousShopId = user.shopId ?? null;
+
   // Update all properties.
   for (let property in properties) {
     user[property] = properties[property];
@@ -911,7 +937,32 @@ let update = async (userId, properties) => {
   user = user.toJSON();
   delete user.password;
 
+  // Moving a vendor between shops has to carry their records with them, or
+  // the denormalized shopId columns that authorization reads go stale and the
+  // new Shop Admin sees nothing while the old one still does.
+  const nextShopId = user.shopId ?? null;
+  if (nextShopId !== previousShopId) {
+    await recascadeVendorShop(user._id, nextShopId);
+  }
+
   return user;
+};
+
+/**
+ * Re-stamps every record denormalized from a vendor's shop. Safe to call for
+ * non-vendors — they simply own none of these rows.
+ */
+let recascadeVendorShop = async (vendorId, shopId) => {
+  const productsRepo = require("./products");
+  const next = shopId ? String(shopId) : null;
+  const owned = { vendorId: String(vendorId) };
+
+  await Promise.all([
+    productsRepo.reshop(vendorId, next),
+    Wallets.updateMany(owned, { $set: { shopId: next } }),
+    Withdrawals.updateMany(owned, { $set: { shopId: next } }),
+    Transactions.updateMany(owned, { $set: { shopId: next } }),
+  ]);
 };
 
 /*
@@ -1085,6 +1136,7 @@ module.exports = {
   getById,
   getByRole,
   update,
+  recascadeVendorShop,
   updateMachines,
   updatePassword,
   // forgotPassword,

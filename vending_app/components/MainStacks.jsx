@@ -3,11 +3,13 @@ import React from "react";
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ONBOARDING_FLAG } from "~/lib/onboarding";
+import { useAbility } from "~/context/AbilityContext";
 import { useUser } from "~/context/UserContext";
 import Stacks from "./Stacks";
 
 function MainStacks() {
   const { user, isLoading } = useUser();
+  const { capabilities } = useAbility();
   const router = useRouter();
 
   // First launch only: show onboarding before the app shell.
@@ -30,11 +32,13 @@ function MainStacks() {
   }, [isLoading]);
 
   useEffect(() => {
-    // Keep in sync with the Stack.Protected guard in Stacks.jsx.
-    if (["admin", "vendor", "superadmin"].includes(user?.role?.toLowerCase() ?? "")) {
+    // Keep in sync with Stack.Protected — prefer CASL so Super Admin / custom
+    // admin-shaped roles reach staff. Wait for rules so a pre-CASL session
+    // isn't misrouted.
+    if (Array.isArray(user?.rules) && capabilities.administers) {
       router.replace("/staff");
     }
-  }, [user]);
+  }, [user, capabilities.administers]);
 
   // Render Stacks component which handles both (staff) and regular routes
   // Stacks component includes Stack.Protected for (staff) routes

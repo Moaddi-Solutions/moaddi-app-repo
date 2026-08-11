@@ -7,6 +7,20 @@ const { isVendorRole } = require("../../lib/purchaseAccess");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
 const { subject } = require("../../lib/ability");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
+
+/**
+ * Combine the caller's requested filters with their CASL row scope.
+ *
+ * `$and` rather than a merge: a scope can be `{shopId: {$in: […]}}` while the
+ * request carries its own `vendorId`, and merging would let either silently
+ * overwrite a key the other one set.
+ */
+const scopedMatch = (requested, scope) => {
+  if (!scope || Object.keys(scope).length === 0) return requested;
+  if (Object.keys(requested).length === 0) return scope;
+  return { $and: [scope, requested] };
+};
 
 module.exports = () => {
   const router = express.Router();
@@ -55,7 +69,14 @@ module.exports = () => {
       }
       if (req.query.currency) filter.currency = String(req.query.currency);
       if (req.query.isActive !== undefined) filter.isActive = String(req.query.isActive) === "true";
-      const result = await walletsRepo.list(filter, skip, limit);
+      // Anyone who is not a vendor used to fall through to an unfiltered list,
+      // so a Shop Admin — whose grant is `read Wallet {shopId: {$in: myShops}}`
+      // — was handed every supplier's balance on the platform.
+      const result = await walletsRepo.list(
+        scopedMatch(filter, accessibleFilter(req.ability, "read", "Wallet")),
+        skip,
+        limit
+      );
       return res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -80,7 +101,13 @@ module.exports = () => {
       if (req.query.type) filter.type = String(req.query.type);
       if (req.query.walletId) filter.walletId = String(req.query.walletId);
       if (req.query.purchaseId) filter.purchaseId = String(req.query.purchaseId);
-      const result = await transactionsRepo.list(filter, skip, limit);
+      // Same leak as the wallet listing above: without the CASL scope a shop
+      // admin read the platform's whole ledger instead of their shops'.
+      const result = await transactionsRepo.list(
+        scopedMatch(filter, accessibleFilter(req.ability, "read", "Transaction")),
+        skip,
+        limit
+      );
       const scopeVendorId = isVendorRole(u.role) ? String(u._id) : null;
       result.data = await transactionsRepo.enrichWithPurchaseSummaries(result.data, {
         scopeVendorId,

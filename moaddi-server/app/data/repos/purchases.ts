@@ -44,6 +44,22 @@ const { isStaffAdminRole, isVendorRole } = require("../../lib/purchaseAccess") a
 
 const now = () => moment().utc().add(config.timeDifference, "hours").toDate();
 
+/**
+ * Combine the caller's requested filters with the CASL row scope.
+ *
+ * `$and` rather than a merge: a scope may be `{$or: [...]}` (a supplier sees
+ * both their sales and their own orders) and a requested filter may carry the
+ * same keys, so merging would let one silently overwrite the other.
+ */
+const scopedMatch = (
+  requested: Record<string, unknown>,
+  scope: Record<string, unknown>,
+): Record<string, unknown> => {
+  if (Object.keys(scope).length === 0) return requested;
+  if (Object.keys(requested).length === 0) return scope;
+  return { $and: [scope, requested] };
+};
+
 const normCurrency = (c: unknown): string =>
   String(c ?? "")
     .trim()
@@ -173,6 +189,14 @@ const create = async (
   let dbMachine: ModelTypes.IMachine | null = null;
   if (purchase.machineId) {
     dbMachine = await machinesRepo.getById(String(purchase.machineId), false, false);
+    // Stamp the shop and supplier this order happened under. Historical on
+    // purpose — neither must follow the machine if it is later moved to another
+    // shop or reassigned. These two columns are what the CASL Purchase rules
+    // (`{shopId: {$in: myShops}}` / `{vendorId: me}`) resolve against, so an
+    // order with neither is visible to the Super Admin and its buyer only.
+    const owners = dbMachine as { shopId?: string | null; vendorId?: string | null } | null;
+    (purchase as unknown as Record<string, unknown>).shopId = owners?.shopId ?? null;
+    (purchase as unknown as Record<string, unknown>).vendorId = owners?.vendorId ?? null;
   }
   const bodyProvider = (
     purchaseInput as { paymentProvider?: string | null }
@@ -447,15 +471,20 @@ const getPendingRequests = async (
   skip: number = 0,
   limit: number = 1000,
   auth: AuthLike,
+  /** CASL row scope; keeps a Shop Admin's queue to orders placed in their shops. */
+  scope: Record<string, unknown> = {},
 ): Promise<{ data: unknown[]; total: number }> => {
   const { role, _id } = auth;
 
   if (isStaffAdminRole(role)) {
-    const filter = {
-      status: {
-        $in: [PURCHASE_STATUS.PAYMENT_DONE, PURCHASE_STATUS.PROCESSING],
+    const filter = scopedMatch(
+      {
+        status: {
+          $in: [PURCHASE_STATUS.PAYMENT_DONE, PURCHASE_STATUS.PROCESSING],
+        },
       },
-    };
+      scope,
+    );
     const pipeline = [
       { $match: filter },
       { $sort: { created: -1 } },
@@ -643,8 +672,10 @@ const customerHistory = async (
   customerId: string,
   skip: number = 0,
   limit: number = 100,
+  /** CASL-derived scope; `{}` for the Super Admin, the buyer's own history, etc. */
+  scope: Record<string, unknown> = {},
 ): Promise<{ data: unknown[]; total: number }> => {
-  const filter = { customerId };
+  const filter = scopedMatch({ customerId }, scope);
   const total = await Purchases.countDocuments(filter);
   const s = Math.max(0, parseInt(String(skip), 10) || 0);
   const lim = Math.min(1000, Math.max(1, parseInt(String(limit), 10) || 100));
@@ -681,14 +712,22 @@ const listAll = async (
   filter: ListAllFilter = {},
   skip: number = 0,
   limit: number = 50,
+  /**
+   * CASL-derived row scope from `accessibleFilter(ability, 'read', 'Purchase')`:
+   * `{}` for the Super Admin, `{shopId: {$in: myShops}}` for a Shop Admin,
+   * `{$or: [{vendorId: me}, {customerId: me}]}` for a supplier.
+   */
+  scope: Record<string, unknown> = {},
 ): Promise<{ data: unknown[]; total: number }> => {
-  const match: Record<string, unknown> = {};
-  if (filter.status) match.status = String(filter.status);
+  const requested: Record<string, unknown> = {};
+  if (filter.status) requested.status = String(filter.status);
   if (filter.paymentProvider)
-    match.paymentProvider = String(filter.paymentProvider);
-  if (filter.customerId) match.customerId = String(filter.customerId);
+    requested.paymentProvider = String(filter.paymentProvider);
+  if (filter.customerId) requested.customerId = String(filter.customerId);
   // Invoices view: only purchases that actually carry an invoiceId.
-  if (filter.hasInvoice) match.invoiceId = { $exists: true, $nin: [null, ""] };
+  if (filter.hasInvoice)
+    requested.invoiceId = { $exists: true, $nin: [null, ""] };
+  const match = scopedMatch(requested, scope);
 
   const total = await Purchases.countDocuments(match);
   const s = Math.max(0, parseInt(String(skip), 10) || 0);

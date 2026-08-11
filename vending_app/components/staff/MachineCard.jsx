@@ -1,7 +1,7 @@
 import { ActivityAction, startActivityAsync } from "expo-intent-launcher";
 import { useRouter } from "expo-router";
 import { Bluetooth, Package, QrCode, Wifi } from "lucide-react-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Linking, Platform, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +11,7 @@ import {
   connectivityColor,
 } from "~/components/moaddi";
 import { useMachine } from "~/context/MachineContext";
+import { useMachineAccess } from "~/hook/useMachineAccess";
 import { bleManager } from "~/services/bleManager";
 import { colors, space, type as typo } from "~/theme/moaddi";
 
@@ -26,11 +27,15 @@ export const machinesControlRoutes = {
   6: "/staff/Bluetooth5Control",
 };
 
-export default function MachineCard({ _id, name, qrCode, type, shop }) {
+export default function MachineCard({ _id, name, qrCode, type, shop, vendorId, shopId }) {
   const router = useRouter();
   const { info, setMachine } = useMachine();
   const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Servicing is checked against this machine, not the role: a supplier may
+  // only touch their own, an admin any machine standing in their shops.
+  const owners = useMemo(() => ({ _id, vendorId, shopId }), [_id, vendorId, shopId]);
+  const { canFillBoxes } = useMachineAccess(owners);
 
   const isBluetooth = bluetoothTypes.includes(type);
   const connectivity = isBluetooth ? "bluetooth" : "online";
@@ -112,31 +117,35 @@ export default function MachineCard({ _id, name, qrCode, type, shop }) {
             </Text>
           ) : null}
 
-          <Button
-            fullWidth
-            onPress={() => {
-              setSheetOpen(false);
-              setTimeout(navigateToControl, 300);
-            }}
-          >
-            {isBluetooth
-              ? t("connectAndOpen") || "Connect & Open"
-              : t("openMachine") || "Open Machine"}
-          </Button>
+          {canFillBoxes && (
+            <Button
+              fullWidth
+              onPress={() => {
+                setSheetOpen(false);
+                setTimeout(navigateToControl, 300);
+              }}
+            >
+              {isBluetooth
+                ? t("connectAndOpen") || "Connect & Open"
+                : t("openMachine") || "Open Machine"}
+            </Button>
+          )}
 
-          <Button
-            variant="secondary"
-            fullWidth
-            onPress={() => {
-              setSheetOpen(false);
-              // Fill reads the machine from context — set it before navigating.
-              const machine = info?.machines?.find(({ _id: id }) => _id == id);
-              if (machine) setMachine(machine);
-              router.push({ pathname: "/staff/Fill", params: { machineId: _id, qrCode } });
-            }}
-          >
-            {t("fillMachine") || "Fill Machine"}
-          </Button>
+          {canFillBoxes && (
+            <Button
+              variant="secondary"
+              fullWidth
+              onPress={() => {
+                setSheetOpen(false);
+                // Fill reads the machine from context — set it before navigating.
+                const machine = info?.machines?.find(({ _id: id }) => _id == id);
+                if (machine) setMachine(machine);
+                router.push({ pathname: "/staff/Fill", params: { machineId: _id, qrCode } });
+              }}
+            >
+              {t("fillMachine") || "Fill Machine"}
+            </Button>
+          )}
 
           <Button
             variant="secondary"

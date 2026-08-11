@@ -4,12 +4,26 @@ const config = require("../../../config");
 const Boxes = require("../models/boxes");
 const productssRepo = require("../../data/repos/products");
 const MachineTypes = require("../../utilities/machineTypes");
+const { ownersOfMachine } = require("../../lib/shopScope");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
+
+/**
+ * A box has no owner of its own — it is a slot inside a machine. Copy the
+ * machine's vendor and shop onto every row so authorization can match on the
+ * box document directly; `remachine` re-stamps them if the machine moves.
+ * One lookup per call, not per box.
+ */
+const stampOwners = async (machineId, rows) => {
+  const { vendorId, shopId } = await ownersOfMachine(machineId);
+  return rows.map((row) => ({ ...row, vendorId, shopId }));
+};
 
 /*
  * Create new box.
  */
 let create = async (box) => {
-  box = new Boxes(box);
+  const owners = await ownersOfMachine(box.machineId);
+  box = new Boxes({ ...box, vendorId: owners.vendorId, shopId: owners.shopId });
   box._id = "box_" + shortId.generate();
   box.created = moment().utc().add(config.timeDifference, "hours");
   box.updated = moment().utc().add(config.timeDifference, "hours");
@@ -38,7 +52,7 @@ let createBulkDirect = async (body) => {
 
   // console.log('boxes:', boxes);
   // Use the insertMany() method to perform bulk insert
-  boxes = await Boxes.insertMany(boxes);
+  boxes = await Boxes.insertMany(await stampOwners(body.machineId, boxes));
   return boxes;
 };
 
@@ -59,7 +73,7 @@ let createBulkBluetooth2 = async (body) => {
       created: moment().utc().add(config.timeDifference, "hours"),
       updated: moment().utc().add(config.timeDifference, "hours"),
     });
-  boxes = await Boxes.insertMany(boxes);
+  boxes = await Boxes.insertMany(await stampOwners(body.machineId, boxes));
   return boxes;
 };
 
@@ -89,7 +103,7 @@ let createBulk = async (body) => {
   }
   // console.log('boxes:', boxes);
   // Use the insertMany() method to perform bulk insert
-  boxes = await Boxes.insertMany(boxes);
+  boxes = await Boxes.insertMany(await stampOwners(body.machineId, boxes));
   return boxes;
 };
 /*
@@ -137,15 +151,18 @@ let createBulkByCabin = async (body) => {
   // console.log('boxes:', boxes);
 
   // Use the insertMany() method to perform bulk insert
-  boxes = await Boxes.insertMany(boxes);
+  boxes = await Boxes.insertMany(await stampOwners(body.machineId, boxes));
 
   return boxes;
 };
 /*
  * Get all boxes.
  */
-const get = async (skip = 0, limit = 1000) => {
-  let boxes = await Boxes.find({ isDeleted: false })
+const get = async (skip = 0, limit = 1000, ability = null) => {
+  // Scope the listing to what the caller may read — a supplier sees the boxes
+  // on their own machines, a shop admin those in their shops.
+  const scope = ability ? accessibleFilter(ability, "read", "Box") : {};
+  let boxes = await Boxes.find({ ...scope, isDeleted: false })
     .sort({ created: -1 })
     .skip(parseInt(skip))
     .limit(parseInt(limit));
@@ -652,8 +669,22 @@ let removeByMachine = async (machineId) => {
   return box;
 };
 
+/**
+ * Re-stamps the denormalized owner columns on every box of a machine. Called
+ * when a machine is assigned to a different vendor or moved to another shop.
+ */
+let remachine = async (machineId) => {
+  const { vendorId, shopId } = await ownersOfMachine(machineId);
+  const result = await Boxes.updateMany(
+    { machineId: String(machineId) },
+    { $set: { vendorId, shopId } }
+  );
+  return result.modifiedCount ?? 0;
+};
+
 module.exports = {
   create,
+  remachine,
   createBulk,
   toggle,
   get,

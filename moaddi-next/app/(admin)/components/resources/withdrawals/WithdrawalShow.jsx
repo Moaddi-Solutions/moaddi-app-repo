@@ -1,11 +1,8 @@
 "use client";
 
-import {
-  isDashboardAdminRole,
-  normalizeDashboardRole,
-} from "@/../lib/dashboard-role";
+import { subject } from "@/../lib/ability";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { formatMoneyValue } from "@/../lib/formatMoney";
-import { getLocalStorageItem } from "@/../lib/utils";
 import {
   withdrawalApproveAPI,
   withdrawalMarkPaidAPI,
@@ -61,12 +58,13 @@ const WithdrawalActions = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const stored = JSON.parse(getLocalStorageItem("user") ?? "{}");
-  const dashboardRole = normalizeDashboardRole(stored.role);
-  if (!isDashboardAdminRole(dashboardRole)) return null;
+  const ability = useAbility();
 
   const id = record?._id ?? record?.id;
   if (!id || !record) return null;
+  // Decided per record, not per role: a Shop Admin may only act on
+  // withdrawals from their own shops.
+  if (ability.cannot("approve", subject("Withdrawal", record))) return null;
 
   const doApprove = async (file) => {
     setBusy(true);

@@ -160,7 +160,10 @@ export default {
     if (response?.data?.message) throw new Error(response?.data?.message);
     return Promise.resolve();
   },
-  async canAccess({ resource, action }) {
+  // `record` arrives from per-row checks (the Edit button in a list); passing
+  // it through is what keeps a shop-scoped or vendor-scoped rule from lighting
+  // up actions on rows the role does not own.
+  async canAccess({ resource, action, record }) {
     const user = readDashboardUser();
     if (!isDashboardRole(user.role)) return false;
     let ability = abilityFor(user);
@@ -168,6 +171,6 @@ export default {
       const rules = await backfillRules(user);
       if (rules) ability = abilityFor({ ...user, rules });
     }
-    return canAccessResource(ability, resource, action);
+    return canAccessResource(ability, resource, action, record);
   },
 };

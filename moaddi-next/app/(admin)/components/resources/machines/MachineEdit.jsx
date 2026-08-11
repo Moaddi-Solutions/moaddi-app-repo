@@ -78,7 +78,11 @@ export const MachineEditItems = () => {
       </AdminFormSection>
 
       <AdminFormSection title="Assignment">
-        <ReferenceInput reference="vendors" source="vendorId" />
+        <ReferenceInput
+          reference="vendors"
+          source="vendorId"
+          filter={{ role: "Vendor" }}
+        />
         <ReferenceInput reference="shops" source="shopId" />
         <ReferenceInput reference="groups" source="groupId" />
       </AdminFormSection>

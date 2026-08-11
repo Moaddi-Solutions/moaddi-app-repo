@@ -63,7 +63,27 @@ export type AppAbility = MongoAbility;
 export interface AbilityUser {
   _id: string;
   role: string;
+  /** Shop the staff user was assigned to on creation. */
+  shopId?: string | null;
+  /** Shops this staff user created (appended by `shops.create`). */
+  ownedShopIds?: string[] | null;
 }
+
+/**
+ * Every shop a staff user administers: the one they were assigned plus the
+ * ones they created. Materialized on the user document rather than resolved
+ * by a join, because `rulesFor` serializes these conditions to the client —
+ * a rule has to be a static value, and passport already reloads the full user
+ * on every request, so this costs no extra query.
+ */
+export const shopScopeOf = (user: AbilityUser): string[] => {
+  const ids = new Set<string>();
+  if (user.shopId) ids.add(String(user.shopId));
+  for (const id of user.ownedShopIds ?? []) {
+    if (id) ids.add(String(id));
+  }
+  return [...ids];
+};
 
 /* ------------------------------------------------------------------ */
 /* Custom roles                                                        */
@@ -75,7 +95,7 @@ export interface AbilityUser {
 /* mutation.                                                           */
 /* ------------------------------------------------------------------ */
 
-export type RuleScope = 'all' | 'own-vendor' | 'own-customer' | 'self';
+export type RuleScope = 'all' | 'own-shop' | 'own-vendor' | 'own-customer' | 'self';
 
 export interface RuleRow {
   action: Action;
@@ -117,7 +137,13 @@ export const ASSIGNABLE_SUBJECTS: SubjectName[] = [
   'Role',
 ];
 
-export const RULE_SCOPES: RuleScope[] = ['all', 'own-vendor', 'own-customer', 'self'];
+export const RULE_SCOPES: RuleScope[] = [
+  'all',
+  'own-shop',
+  'own-vendor',
+  'own-customer',
+  'self',
+];
 
 /** Returns an error message, or null when the rows are valid. */
 export const validateRuleRows = (rows: unknown): string | null => {
@@ -140,12 +166,13 @@ export const validateRuleRows = (rows: unknown): string | null => {
 
 const SCOPE_CONDITIONS: Record<
   RuleScope,
-  ((uid: string) => Record<string, string>) | null
+  ((user: AbilityUser) => Record<string, unknown>) | null
 > = {
   all: null,
-  'own-vendor': (uid) => ({ vendorId: uid }),
-  'own-customer': (uid) => ({ customerId: uid }),
-  self: (uid) => ({ _id: uid }),
+  'own-shop': (user) => ({ shopId: { $in: shopScopeOf(user) } }),
+  'own-vendor': (user) => ({ vendorId: String(user._id) }),
+  'own-customer': (user) => ({ customerId: String(user._id) }),
+  self: (user) => ({ _id: String(user._id) }),
 };
 
 const customRoles = new Map<string, RuleRow[]>();
@@ -172,44 +199,52 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       can('manage', 'all');
       break;
 
-    case ROLES.ADMIN:
-      // Shop Admin: full business-object management. Wallets are read-only
-      // (money moves only through purchases/withdrawals), withdrawals get
-      // the explicit approval workflow verbs.
-      can('manage', [
-        'User',
-        'Shop',
-        'Product',
-        'Machine',
-        'Box',
-        'Group',
-        'Purchase',
-        'Option',
-        'Event',
-        'Gift',
-        'Conversation',
-        'Message',
-        'Content',
-        'Doc',
-        'PaymentProvider',
-      ]);
-      can('read', ['Wallet', 'Transaction', 'Withdrawal']);
-      can(['create', 'approve', 'reject', 'pay'], 'Withdrawal');
-      // Roles page is visible to admins; editing is Super Admin only.
-      can('read', 'Role');
+    case ROLES.ADMIN: {
+      // Shop Admin: full management of everything inside their own shops, and
+      // nothing outside them. Platform-wide configuration (CMS, docs, payment
+      // providers, platform options, roles) belongs to the Super Admin, so it
+      // is readable but not editable here.
+      const shopIds = shopScopeOf(user);
+      const inShop = { shopId: { $in: shopIds } };
+
+      // Browsing the catalog and the staff directory is unrestricted; acting
+      // on a record is not.
+      can('read', CATALOG_SUBJECTS);
+      can('read', ['Content', 'Doc', 'PaymentProvider', 'Option', 'Role']);
+      can(['read', 'create', 'update'], ['Conversation', 'Message']);
+      can(['read', 'update', 'delete'], 'User', { _id: uid });
+      // A new shop becomes theirs — `shops.create` appends it to ownedShopIds.
+      can('create', 'Shop');
+
+      // An admin with no shop administers nothing. Assign a shop (or let them
+      // create one) to give this account any authority at all.
+      if (shopIds.length === 0) break;
+
+      can('manage', 'Shop', { _id: { $in: shopIds } });
+      can('manage', ['User', 'Machine', 'Product', 'Box', 'Purchase'], inShop);
+      // Machine telemetry for their own floor. Gifts are a customer-to-customer
+      // artefact with no shop of their own, so no admin management verb.
+      can('manage', 'Event', inShop);
+      // Money is read-only (it moves only through purchases and withdrawals);
+      // withdrawals get the explicit approval workflow verbs.
+      can('read', ['Wallet', 'Transaction', 'Withdrawal'], inShop);
+      can(['create', 'approve', 'reject', 'pay'], 'Withdrawal', inShop);
       break;
+    }
 
     case ROLES.VENDOR:
-      // Supplier: manages own products/machines, sees own money, asks for
-      // withdrawals. Boxes/groups are managed via staff flows (machine
-      // ownership is enforced by the machine-scoped repos).
+      // Supplier: manages own products, services own machines and the boxes
+      // inside them, sees own money, asks for withdrawals.
       can('read', CATALOG_SUBJECTS);
       can('read', ['Doc', 'PaymentProvider']);
       can('create', 'Product');
       can(['update', 'delete'], 'Product', { vendorId: uid });
       // Machines are provisioned by admins; suppliers only service their own.
       can('update', 'Machine', { vendorId: uid });
-      can('manage', ['Box', 'Group']);
+      // Boxes are slots inside a machine and carry no owner of their own, so
+      // they are scoped by the vendorId denormalized from the parent machine.
+      // Groups are a platform-wide machine taxonomy — read-only here.
+      can('manage', 'Box', { vendorId: uid });
       can('read', ['Purchase', 'Wallet', 'Transaction'], { vendorId: uid });
       // Purchases on their machines can be adjusted by the supplier…
       can(['update', 'delete'], 'Purchase', { vendorId: uid });
@@ -223,6 +258,8 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
     case ROLES.CUSTOMER:
     case 'Guest':
       can('read', CATALOG_SUBJECTS);
+      // Checkout has to render the enabled payment methods.
+      can('read', ['Doc', 'PaymentProvider']);
       // Shoppers own their cart end-to-end (guests included).
       can(['create', 'read', 'update', 'delete'], 'Purchase', { customerId: uid });
       can(['create', 'read'], 'Gift');
@@ -237,7 +274,7 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
         for (const row of rows) {
           const condition = SCOPE_CONDITIONS[row.scope];
           if (condition) {
-            can(row.action, row.subject, condition(uid));
+            can(row.action, row.subject, condition(user));
           } else {
             can(row.action, row.subject);
           }

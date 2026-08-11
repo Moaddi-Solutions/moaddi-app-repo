@@ -4,11 +4,16 @@ const authenticate = require("../middlewares/authenticate");
 const optionalAuthenticate = require("../middlewares/optionalAuthenticate");
 const authorize = require("../middlewares/authorize");
 const { subject } = require("../../lib/ability");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
+const { ownersOfMachine } = require("../../lib/shopScope");
 
-/** 403 unless the caller may `action` this machine (vendors: own machines only). */
+/**
+ * 403 unless the caller may `action` this machine. Both owner columns are
+ * needed: a supplier's rule matches on `vendorId`, a shop admin's on `shopId`.
+ */
 const assertCanTouchMachine = async (req, res, action, machineId) => {
-  const vendorId = await machines.getVendorIdOf(machineId);
-  if (req.ability.cannot(action, subject("Machine", { vendorId }))) {
+  const owners = await ownersOfMachine(machineId);
+  if (req.ability.cannot(action, subject("Machine", owners))) {
     res.status(403).json({ message: "Forbidden." });
     return false;
   }
@@ -35,7 +40,7 @@ module.exports = () => {
       let results = await machines.get(
         req.query.offset,
         req.query.limit,
-        req.authenticatedUser,
+        req.ability,
       );
       return res.status(200).json(results);
     } catch (err) {
@@ -174,9 +179,12 @@ module.exports = () => {
   );
 
   //get all machines by shopId and vendorId
+  // Staff listing: the machines one supplier keeps in one shop. Scoped to the
+  // caller, not to the vendor named in the path.
   router.get(
     "/machine/shop/:shopId/vendor/:vendorId",
-    /* authenticate(), */ optionalAuthenticate(),
+    authenticate(),
+    authorize("read", "Machine"),
     async (req, res, next) => {
       try {
         const preferredCurrency = await getCurrencyOfUser(req);
@@ -186,6 +194,7 @@ module.exports = () => {
           req.query.offset,
           req.query.limit,
           preferredCurrency,
+          accessibleFilter(req.ability, "update", "Machine"),
         );
         return res.status(200).json(results);
       } catch (err) {

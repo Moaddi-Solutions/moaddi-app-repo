@@ -8,6 +8,14 @@ import {
   AdminDetailSection,
 } from "@/(admin)/components/AdminDetail";
 import { AdminShow } from "@/(admin)/components/kit/AdminForm";
+import { AdminDeleteButton } from "@/(admin)/components/kit/AdminUI";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/../components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,7 +26,15 @@ import {
 } from "@/../components/ui/table";
 import { formatMoneyValue } from "@/../lib/formatMoney";
 import { CreditCard, PackageOpen } from "lucide-react";
-import { ReferenceManyFieldBase, useRecordContext } from "ra-core";
+import {
+  ReferenceManyFieldBase,
+  useCanAccess,
+  useNotify,
+  useRecordContext,
+  useRefresh,
+  useResourceContext,
+  useUpdate,
+} from "ra-core";
 
 const customerName = (record) =>
   record?.customer?.[0]?.name ?? record?.customerId ?? "-";
@@ -108,6 +124,91 @@ const ItemsTable = () => {
   );
 };
 
+/**
+ * The statuses an order moves through. Kept to the values the server already
+ * writes, so a staff correction cannot invent a state the rest of the system
+ * has never seen.
+ */
+const ORDER_STATUSES = [
+  "Pending",
+  "PaymentDone",
+  "Processing",
+  "Completed",
+  "Failed",
+];
+
+/**
+ * Staff controls for one order.
+ *
+ * Both staff roles hold `update`/`delete` on Purchase — a Shop Admin over their
+ * shops' orders, a supplier over sales from their machines — but the dashboard
+ * only ever listed and displayed them, so neither could act on a stuck or
+ * mistaken order without going to the database. Gated per record rather than
+ * per role: the scope conditions only resolve against the row.
+ */
+const OrderActions = () => {
+  const record = useRecordContext();
+  const resource = useResourceContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [update, { isPending }] = useUpdate();
+  const { canAccess: canEdit } = useCanAccess({
+    resource,
+    action: "edit",
+    record,
+  });
+
+  if (!record) return null;
+  if (!canEdit) return <AdminDeleteButton redirect="list" />;
+
+  const setStatus = (status) => {
+    if (status === record.status) return;
+    update(
+      resource,
+      { id: record.id ?? record._id, data: { status }, previousData: record },
+      {
+        onSuccess: () => {
+          notify(`Order marked ${status}.`, { type: "info" });
+          refresh();
+        },
+        onError: (error) =>
+          notify(error?.message ?? "Could not update the order.", {
+            type: "warning",
+          }),
+      },
+    );
+  };
+
+  return (
+    <AdminDetailCard>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-[220px]">
+          <p className="mb-1.5 text-xs font-extrabold uppercase tracking-[0.1em] text-muted-foreground">
+            Order status
+          </p>
+          <Select
+            value={record.status ?? ""}
+            onValueChange={setStatus}
+            disabled={isPending}
+          >
+            <SelectTrigger className="h-9 w-[220px] rounded-xl text-sm font-bold">
+              <SelectValue placeholder="Set a status" />
+            </SelectTrigger>
+            <SelectContent>
+              {ORDER_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <AdminDeleteButton redirect="list" label="Delete order" />
+      </div>
+    </AdminDetailCard>
+  );
+};
+
 const PaymentSummary = () => {
   const record = useRecordContext();
   if (!record) return null;
@@ -150,6 +251,7 @@ const PaymentShow = () => (
   <AdminShow>
     <div className="flex flex-col gap-4 font-sans">
       <PaymentSummary />
+      <OrderActions />
       <AdminDetailSection title="Items">
         <ItemsTable />
       </AdminDetailSection>

@@ -64,11 +64,13 @@ module.exports = () => {
 
   // List every payment provider that has a registered strategy, with its
   // current isActive flag from the platform options doc.
-  // Readable by any authenticated user so vendors viewing machines can
-  // resolve provider labels via ReferenceField.
+  // Readable by every role that has a PaymentProvider read rule: vendors
+  // resolving provider labels via ReferenceField, and shoppers rendering the
+  // checkout payment methods.
   router.get(
     "/paymentProviders",
     authenticate(),
+    authorize("read", "PaymentProvider"),
     async (req, res, next) => {
       try {
         const result = await optionsRepo.listPaymentProviders();

@@ -5,7 +5,21 @@ const withdrawalsRepo = require("../../data/repos/withdrawals");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
 const { subject } = require("../../lib/ability");
+const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { files } = require("../middlewares/fileHandler");
+
+/**
+ * The approve/reject/pay verbs are scoped to the vendor's own shop, so the
+ * target withdrawal has to be checked, not just the role's class-level rule.
+ */
+const assertCanDecide = async (req, res, action, withdrawalId) => {
+  const w = await withdrawalsRepo.getById(withdrawalId);
+  if (req.ability.cannot(action, subject("Withdrawal", w))) {
+    res.status(403).json({ message: "Forbidden." });
+    return false;
+  }
+  return true;
+};
 
 const proofUpload = files().single("proofImage");
 
@@ -45,14 +59,13 @@ module.exports = () => {
       const u = req.authenticatedUser;
       const skip = parseInt(String(req.query.offset || req.query.skip || 0), 10) || 0;
       const limit = Math.min(parseInt(String(req.query.limit || 100), 10) || 100, 1000);
-      const filter = {};
-      if (u.role === "Vendor") {
-        filter.vendorId = u._id;
-        if (req.query.status) filter.status = String(req.query.status);
-      } else {
-        if (req.query.vendorId) filter.vendorId = String(req.query.vendorId);
-        if (req.query.status) filter.status = String(req.query.status);
+      // Start from what this role may read at all (vendor: own; shop admin:
+      // their shops; super admin: everything), then narrow by query params.
+      const filter = accessibleFilter(req.ability, "read", "Withdrawal");
+      if (u.role !== "Vendor" && req.query.vendorId) {
+        filter.vendorId = String(req.query.vendorId);
       }
+      if (req.query.status) filter.status = String(req.query.status);
       const result = await withdrawalsRepo.list(filter, skip, limit);
       return res.status(200).json(result);
     } catch (err) {
@@ -80,6 +93,7 @@ module.exports = () => {
     optionalProofUpload,
     async (req, res, next) => {
       try {
+        if (!(await assertCanDecide(req, res, "approve", req.params.withdrawalId))) return;
         const proofImage = req.file && req.file.filename ? req.file.filename : undefined;
         const w = await withdrawalsRepo.approve(
           req.params.withdrawalId,
@@ -100,6 +114,7 @@ module.exports = () => {
     optionalProofUpload,
     async (req, res, next) => {
       try {
+        if (!(await assertCanDecide(req, res, "reject", req.params.withdrawalId))) return;
         const reason =
           (req.body && req.body.reason) || (req.body && req.body.rejectionReason);
         const proofImage = req.file && req.file.filename ? req.file.filename : undefined;
@@ -123,6 +138,7 @@ module.exports = () => {
     optionalProofUpload,
     async (req, res, next) => {
       try {
+        if (!(await assertCanDecide(req, res, "pay", req.params.withdrawalId))) return;
         const proofImage = req.file && req.file.filename ? req.file.filename : undefined;
         const w = await withdrawalsRepo.markPaid(
           req.params.withdrawalId,
