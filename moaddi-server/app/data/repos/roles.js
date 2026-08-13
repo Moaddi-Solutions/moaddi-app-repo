@@ -20,6 +20,7 @@ const RESERVED_ROLE_NAMES = [
   ROLES.SUPER_ADMIN,
   ROLES.ADMIN,
   ROLES.VENDOR,
+  ROLES.SUPPLIER,
   ROLES.CUSTOMER,
   "Guest",
 ].map((r) => r.toLowerCase());

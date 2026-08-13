@@ -22,6 +22,15 @@ import type { AppAbility, Action, SubjectName } from './ability';
 /** A filter that matches nothing — Mongo has no literal "false". */
 export const DENY_ALL: Record<string, unknown> = { _id: { $in: [] } };
 
+export const isDenyAll = (filter: Record<string, unknown>): boolean =>
+  Boolean(
+    filter &&
+      filter._id &&
+      typeof filter._id === 'object' &&
+      Array.isArray((filter._id as { $in?: unknown }).$in) &&
+      (filter._id as { $in: unknown[] }).$in.length === 0
+  );
+
 export const accessibleFilter = (
   ability: AppAbility,
   action: Action,
@@ -43,4 +52,20 @@ export const accessibleFilter = (
   }
 
   return conditions.length === 1 ? conditions[0] : { $or: conditions };
+};
+
+/**
+ * Union of several accessible filters. An empty/`DENY_ALL` branch is dropped;
+ * any unrestricted `{}` branch wins. Used for staff machine directories where a
+ * Vendor matches `update Machine` while a Supplier matches `update Box` (same
+ * ownership columns live on both documents).
+ */
+export const accessibleFilterAny = (
+  ...filters: Record<string, unknown>[]
+): Record<string, unknown> => {
+  const usable = filters.filter((f) => f && !isDenyAll(f));
+  if (usable.length === 0) return DENY_ALL;
+  if (usable.some((f) => Object.keys(f).length === 0)) return {};
+  if (usable.length === 1) return usable[0];
+  return { $or: usable };
 };

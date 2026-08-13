@@ -4,9 +4,10 @@ const express = require("express");
 const users = require("../../data/repos/users");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
-const { subject, rulesFor } = require("../../lib/ability");
+const { subject, rulesFor, shopScopeOf } = require("../../lib/ability");
 const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
+const Machines = require("../../data/models/machines");
 
 /** True only for staff whose User rules carry no ownership condition (admins). */
 const canManageUsers = (req) => req.ability.can("create", "User");
@@ -15,14 +16,53 @@ const canManageUsers = (req) => req.ability.can("create", "User");
  * Own-or-admin check against a target user. A Shop Admin's User rule is scoped
  * to their own shops, so the target's `shopId` has to be part of the subject —
  * checking only `_id` would deny every admin.
+ *
+ * For `read` only, also allow name resolution for people linked on the same
+ * machines the caller already services:
+ *   - Shop Admin: target owns/refills a machine in one of the caller's shops
+ *     (vendors often have a null/stale `shopId` even when machines are stamped)
+ *   - Vendor / Supplier: target is the vendor or a co-supplier on a machine
+ *     the caller owns or refills (Fill / machine list ReferenceFields)
  */
 const canTouchUser = async (req, action, userId) => {
   const target = await users.checkUser(String(userId)).catch(() => null);
   if (!target) return false;
-  return req.ability.can(
-    action,
-    subject("User", { _id: String(target._id), shopId: target.shopId ?? null })
-  );
+  const uid = String(target._id);
+  if (
+    req.ability.can(
+      action,
+      subject("User", { _id: uid, shopId: target.shopId ?? null })
+    )
+  ) {
+    return true;
+  }
+  if (action !== "read") return false;
+
+  const callerId = String(req.authenticatedUser?._id || "");
+  if (!callerId) return false;
+
+  // Shop Admin: anyone linked to a machine in their shops.
+  if (canManageUsers(req)) {
+    const shopIds = shopScopeOf(req.authenticatedUser || {});
+    if (!shopIds.length) return false;
+    const linked = await Machines.exists({
+      shopId: { $in: shopIds },
+      isDeleted: { $ne: true },
+      $or: [{ vendorId: uid }, { supplierIds: uid }],
+    });
+    return Boolean(linked);
+  }
+
+  // Vendor / Supplier: only people on machines they already service — not a
+  // staff directory. Covers Fill resolving the machine's vendor name.
+  const shared = await Machines.exists({
+    isDeleted: { $ne: true },
+    $and: [
+      { $or: [{ vendorId: callerId }, { supplierIds: callerId }] },
+      { $or: [{ vendorId: uid }, { supplierIds: uid }] },
+    ],
+  });
+  return Boolean(shared);
 };
 
 /**
@@ -30,7 +70,7 @@ const canTouchUser = async (req, action, userId) => {
  * SuperAdmin, or a dashboard-created custom role (which can carry arbitrary
  * permissions) — requires a Super Admin (manage all).
  */
-const BASIC_ROLES = ["vendor", "customer"];
+const BASIC_ROLES = ["vendor", "supplier", "customer"];
 const canGrantRole = (req, role) =>
   role === undefined ||
   BASIC_ROLES.includes(String(role || "").toLowerCase()) ||

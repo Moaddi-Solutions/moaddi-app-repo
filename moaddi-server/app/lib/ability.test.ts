@@ -41,7 +41,8 @@ describe('Admin (Shop Admin)', () => {
   const elsewhere = () => ({ shopId: 'shop_z' });
 
   it('manages business objects inside its own shops', () => {
-    assert.ok(ability.can('delete', subject('Product', inA())));
+    assert.ok(ability.cannot('delete', subject('Product', inA())));
+    assert.ok(ability.cannot('update', subject('Product', inA())));
     assert.ok(ability.can('update', subject('Machine', inA())));
     assert.ok(ability.can('read', subject('Purchase', inA())));
     assert.ok(ability.can('create', subject('User', inA())));
@@ -56,7 +57,6 @@ describe('Admin (Shop Admin)', () => {
 
   it('cannot reach into another shop', () => {
     assert.ok(ability.cannot('update', subject('Shop', { _id: 'shop_z' })));
-    assert.ok(ability.cannot('update', subject('Product', elsewhere())));
     assert.ok(ability.cannot('update', subject('Machine', elsewhere())));
     assert.ok(ability.cannot('delete', subject('Box', elsewhere())));
     assert.ok(ability.cannot('read', subject('Purchase', elsewhere())));
@@ -66,7 +66,6 @@ describe('Admin (Shop Admin)', () => {
 
   it('cannot touch records that carry no shop at all', () => {
     // An unstamped row must not fall through into every admin's scope.
-    assert.ok(ability.cannot('update', subject('Product', { shopId: null })));
     assert.ok(ability.cannot('update', subject('Machine', {})));
   });
 
@@ -134,7 +133,7 @@ describe('Admin with no shop assigned', () => {
   });
 });
 
-describe('Vendor (Supplier)', () => {
+describe('Vendor', () => {
   const ability = defineAbilityFor(vendor);
 
   it('reads the catalog and creates products, but not machines', () => {
@@ -246,11 +245,24 @@ describe('servicing a machine (update Box on its owners)', () => {
     assert.ok(ability.cannot('update', subject('Box', otherShop())));
   });
 
-  it('lets a supplier service only their own machines', () => {
+  it('lets a Vendor service only their own machines', () => {
     const ability = defineAbilityFor(vendor);
     assert.ok(ability.can('update', subject('Box', mine())));
     assert.ok(ability.cannot('update', subject('Box', otherVendorSameShop())));
     assert.ok(ability.cannot('update', subject('Box', unassigned())));
+  });
+
+  it('lets a Supplier refill only machines they are assigned to', () => {
+    const ability = defineAbilityFor({ _id: 's1', role: 'Supplier' });
+    assert.ok(
+      ability.can('update', subject('Box', { supplierIds: ['s1'], vendorId: 'v1', shopId: 'shop_a' }))
+    );
+    assert.ok(
+      ability.cannot('update', subject('Box', { supplierIds: ['s2'], vendorId: 'v1', shopId: 'shop_a' }))
+    );
+    assert.ok(ability.cannot('update', subject('Machine', { supplierIds: ['s1'] })));
+    assert.ok(ability.cannot('create', 'Product'));
+    assert.ok(ability.cannot('create', 'Withdrawal'));
   });
 
   it('lets a shopper service nothing', () => {

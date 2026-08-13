@@ -329,6 +329,8 @@ let socialSignIn = async (profile, preferredCurrency) => {
  */
 let create = async (user) => {
   delete user.confirm_password;
+  const machineIds = Array.isArray(user.machines) ? user.machines : undefined;
+  delete user.machines;
   user = new Users(user);
 
   // Staff accounts only: built-in staff roles or a dashboard-created custom
@@ -337,6 +339,7 @@ let create = async (user) => {
   const role = String(user.role || "");
   const creatable =
     role === "Vendor" ||
+    role === "Supplier" ||
     role === "Admin" ||
     role === "SuperAdmin" ||
     isCustomRole(role);
@@ -355,15 +358,17 @@ let create = async (user) => {
     });
   }
 
-  // Check if create user is Vendor and also request with assign machine
-  if (role === "Vendor" && user.hasOwnProperty("machines")) {
-    if (user.machines.length)
-      await machinesRepo.assignBulk(user._id, user.machines);
-  }
-
   user.created = moment().utc().add(config.timeDifference, "hours");
   user.updated = moment().utc().add(config.timeDifference, "hours");
   user = await user.save();
+
+  if (machineIds !== undefined) {
+    if (role === "Vendor") {
+      await machinesRepo.syncVendorMachines(user._id, machineIds);
+    } else if (role === "Supplier") {
+      await machinesRepo.syncSupplierMachines(user._id, machineIds);
+    }
+  }
 
   user = user.toJSON();
   delete user.password;
@@ -719,6 +724,15 @@ let getById = async (userId, preferredCurrency) => {
     if (roleNorm === "vendor") {
       if (!user.machines?.[0]?._id) user.machines = [];
       shapeVendorMachineBoxProducts(user, preferredCurrency);
+    } else if (roleNorm === "supplier") {
+      const Machines = require("../models/machines");
+      const assigned = await Machines.find({
+        supplierIds: String(user._id),
+        isDeleted: false,
+      })
+        .select("_id name mac qrCode isConnected isAssigned isActive isDeleted created updated")
+        .lean();
+      user.machines = assigned ?? [];
     } else {
       delete user.machines;
       const purchase = await purchasesRepo.getByCustomerId(
@@ -768,8 +782,29 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
       {
         $lookup: {
           from: "machines",
-          localField: "_id",
-          foreignField: "vendorId",
+          let: { uid: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $ne: ["$isDeleted", true] },
+                    {
+                      $or: [
+                        { $eq: ["$vendorId", "$$uid"] },
+                        {
+                          $in: [
+                            "$$uid",
+                            { $ifNull: ["$supplierIds", []] },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
           as: "machines",
         },
       },
@@ -871,8 +906,9 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
     users.forEach((e) => {
       const isVendor =
         String(e.role ?? "").toLowerCase() === "vendor" || role === "Vendor";
+      const isSupplier = String(e.role ?? "").toLowerCase() === "supplier";
       if (!e.machines?.[0]?._id) {
-        if (isVendor || isStaffList) e.machines = [];
+        if (isVendor || isSupplier || isStaffList) e.machines = [];
         else delete e.machines;
       }
     });
@@ -925,10 +961,16 @@ let update = async (userId, properties) => {
   }
 
   const previousShopId = user.shopId ?? null;
+  const machineIds = Object.prototype.hasOwnProperty.call(properties, "machines")
+    ? properties.machines
+    : undefined;
+  const nextProps = { ...properties };
+  delete nextProps.machines;
+  delete nextProps.confirm_password;
 
   // Update all properties.
-  for (let property in properties) {
-    user[property] = properties[property];
+  for (let property in nextProps) {
+    user[property] = nextProps[property];
   }
 
   user.updated = moment().utc().add(config.timeDifference, "hours");
@@ -943,6 +985,15 @@ let update = async (userId, properties) => {
   const nextShopId = user.shopId ?? null;
   if (nextShopId !== previousShopId) {
     await recascadeVendorShop(user._id, nextShopId);
+  }
+
+  if (machineIds !== undefined) {
+    const role = String(user.role || "");
+    if (role === "Vendor") {
+      await machinesRepo.syncVendorMachines(user._id, machineIds);
+    } else if (role === "Supplier") {
+      await machinesRepo.syncSupplierMachines(user._id, machineIds);
+    }
   }
 
   return user;

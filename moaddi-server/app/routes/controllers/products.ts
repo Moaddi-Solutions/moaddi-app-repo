@@ -10,7 +10,8 @@ const authorize = require('../middlewares/authorize') as (
   subjectType: string
 ) => import('express').RequestHandler;
 import { defineAbilityFor, subject } from '../../lib/ability';
-import { accessibleFilter } from '../../lib/accessibleFilter';
+import { accessibleFilter, isDenyAll } from '../../lib/accessibleFilter';
+import { normalizeBuiltInRole, ROLES } from '../../lib/roles';
 import { getCurrencyOfUser } from '../../services/geo-currency';
 import { listSupportedCurrencies } from '../../services/currency';
 
@@ -76,17 +77,36 @@ const controller = (): import('express').Router => {
       }
       const filter = parseJSON((req.query.filter as string) ?? '{}');
       // `native=true` is the authenticated staff listing (the public storefront
-      // uses the shared-currency shape), so scope it to what the caller may
-      // manage: own products for a supplier, in-shop products for a shop admin.
+      // uses the shared-currency shape). Prefer products the caller may manage
+      // (Vendor: own catalog). Suppliers refill boxes but cannot update
+      // Product — for them fall back to catalog `read` so the Fill picker is
+      // not empty. Shop Admins keep the empty manage-scope (no product UI).
       // This route runs under optionalAuthenticate, which does not build an
       // ability, so derive one here.
-      const scope = native
-        ? accessibleFilter(
-            defineAbilityFor(req.authenticatedUser!),
-            'update',
-            'Product'
-          )
-        : {};
+      let scope: Record<string, unknown> = {};
+      if (native) {
+        const user = req.authenticatedUser!;
+        const ability = defineAbilityFor(user);
+        const role = normalizeBuiltInRole(user.role);
+        // Suppliers stock boxes from the catalog — they never `update Product`,
+        // so the manage-scope filter would always be empty for them.
+        if (role === ROLES.SUPPLIER) {
+          scope = accessibleFilter(ability, 'read', 'Product');
+          if (isDenyAll(scope)) scope = {};
+        } else {
+          scope = accessibleFilter(ability, 'update', 'Product');
+          // Custom refill roles: same fallback as Supplier.
+          if (
+            isDenyAll(scope) &&
+            ability.can('update', 'Box') &&
+            !ability.can('update', 'Shop') &&
+            ability.can('read', 'Product')
+          ) {
+            scope = accessibleFilter(ability, 'read', 'Product');
+            if (isDenyAll(scope)) scope = {};
+          }
+        }
+      }
       const preferredCurrency = await getCurrencyOfUser(req);
       const results = await products.get(
         (req.query.offset as string) ?? '0',

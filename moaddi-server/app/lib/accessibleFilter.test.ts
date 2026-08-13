@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { defineAbilityFor } from './ability';
-import { accessibleFilter, DENY_ALL } from './accessibleFilter';
+import { accessibleFilter, accessibleFilterAny, DENY_ALL } from './accessibleFilter';
 
 /**
  * These filters are what stop a list endpoint returning other shops' rows, so
@@ -68,7 +68,7 @@ describe('accessibleFilter', () => {
     assert.deepEqual(accessibleFilter(ability, 'read', 'Transaction'), DENY_ALL);
   });
 
-  it('narrows a Supplier to their own records', () => {
+  it('narrows a Vendor to their own records', () => {
     const ability = defineAbilityFor({ _id: 'v1', role: 'Vendor' });
     assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), {
       vendorId: 'v1',
@@ -76,6 +76,21 @@ describe('accessibleFilter', () => {
     assert.deepEqual(accessibleFilter(ability, 'update', 'Box'), {
       vendorId: 'v1',
     });
+  });
+
+  it('narrows a Supplier to assigned machines/boxes', () => {
+    const ability = defineAbilityFor({ _id: 's1', role: 'Supplier' });
+    assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), DENY_ALL);
+    assert.deepEqual(accessibleFilter(ability, 'update', 'Box'), {
+      supplierIds: 's1',
+    });
+    assert.deepEqual(
+      accessibleFilterAny(
+        accessibleFilter(ability, 'update', 'Machine'),
+        accessibleFilter(ability, 'update', 'Box')
+      ),
+      { supplierIds: 's1' }
+    );
   });
 
   it('unions several conditional rules', () => {

@@ -65,6 +65,8 @@ export interface IMachine {
   type: MachineType | number;
   password?: string | null;
   vendorId?: string | null;
+  /** Refill staff (role Supplier) assigned to this machine. */
+  supplierIds?: string[];
   shopId?: string;
   groupId?: string;
   specialProducts?: Record<string, unknown>;

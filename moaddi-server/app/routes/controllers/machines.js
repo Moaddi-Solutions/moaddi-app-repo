@@ -8,8 +8,9 @@ const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { ownersOfMachine } = require("../../lib/shopScope");
 
 /**
- * 403 unless the caller may `action` this machine. Both owner columns are
- * needed: a supplier's rule matches on `vendorId`, a shop admin's on `shopId`.
+ * 403 unless the caller may `action` this machine. Owner columns are needed:
+ * a vendor's rule matches on `vendorId`, a supplier's on `supplierIds`, and a
+ * shop admin's on `shopId`.
  */
 const assertCanTouchMachine = async (req, res, action, machineId) => {
   const owners = await ownersOfMachine(machineId);

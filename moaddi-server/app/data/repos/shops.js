@@ -3,6 +3,7 @@ const shortId = require("shortid");
 const config = require("../../../config");
 const Shops = require("../models/shops");
 const Users = require("../models/users");
+const Machines = require("../models/machines");
 const {
   flattenProductForPreferredCurrency,
 } = require("./product-pricing");
@@ -259,36 +260,24 @@ let getByVendor = async (vendorId) => {
     return { data, total: data.length };
   }
 
+  // Shop Admin / Super Admin handled above. Vendors reach shops via machines
+  // they own; Suppliers via machines they are assigned to refill.
   try {
-    const pipeline = [
-      {
-        $match: { _id: user._id },
-      },
-      {
-        $lookup: {
-          from: "machines",
-          foreignField: "vendorId",
-          localField: "_id",
-          as: "machines",
-        },
-      },
-      {
-        $lookup: {
-          from: "shops",
-          foreignField: "_id",
-          localField: "machines.shopId",
-          as: "shops",
-          pipeline: [{ $match: { isDeleted: false } }],
-        },
-      },
-      {
-        $sort: { created: -1 },
-      },
-    ];
-    let vendor = await Users.aggregate(pipeline).exec();
-    let shops = vendor[0].shops;
+    const machineMatch =
+      user.role === ROLES.SUPPLIER
+        ? { supplierIds: String(user._id), isDeleted: false }
+        : { vendorId: String(user._id), isDeleted: false };
 
-    return { data: shops, total: 100 };
+    const machines = await Machines.find(machineMatch).select("shopId").lean();
+    const shopIds = [
+      ...new Set(
+        machines
+          .map((m) => (m.shopId ? String(m.shopId) : null))
+          .filter(Boolean)
+      ),
+    ];
+    const data = await Shops.find({ _id: { $in: shopIds }, isDeleted: false });
+    return { data, total: data.length };
   } catch (error) {
     console.error("Error fetching users:", error);
     throw error;
