@@ -27,7 +27,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "19",
+      "buildNumber": "18",
       "associatedDomains": [
         "applinks:server.moaddi-app.com",
         "applinks:moaddi-app.com",
@@ -176,18 +176,12 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d21a7b3f-c67d-4971-aa87-b828fc5bec6c"
+        "projectId": "047135ad-2d67-441c-a36c-f56ebce0a5fe"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/d21a7b3f-c67d-4971-aa87-b828fc5bec6c",
-      "enabled": true,
-      "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 0
-    },
-    "owner": "moaddiexpo"
+    "owner": "moaddi-solutions"
   }
 }
