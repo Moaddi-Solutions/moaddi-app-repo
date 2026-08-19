@@ -6,7 +6,7 @@ export function normalizeDashboardRole(role) {
   if (!role || typeof role !== "string") return role;
   const trimmed = role.trim();
   const lower = trimmed.toLowerCase();
-  if (lower === "admin") return "Admin";
+  if (lower === "shopowner") return "ShopOwner";
   if (lower === "vendor") return "Vendor";
   if (lower === "superadmin") return "SuperAdmin";
   return trimmed;
@@ -30,7 +30,7 @@ export function isShopperRole(role) {
 /** Full admin dashboard (machines, CMS, site options, etc.). */
 export function isDashboardAdminRole(role) {
   const normalized = normalizeDashboardRole(role);
-  return normalized === "Admin" || normalized === "SuperAdmin";
+  return normalized === "ShopOwner" || normalized === "SuperAdmin";
 }
 
 /** Vendor staff dashboard (scoped machines, wallets, withdrawals, etc.). */
@@ -43,7 +43,11 @@ export function isVendorRole(role) {
  *  what its holder can actually see/do is decided by their CASL rules. */
 export function isDashboardRole(role) {
   const normalized = normalizeDashboardRole(role);
-  if (normalized === "Admin" || normalized === "Vendor" || normalized === "SuperAdmin") {
+  if (
+    normalized === "ShopOwner" ||
+    normalized === "Vendor" ||
+    normalized === "SuperAdmin"
+  ) {
     return true;
   }
   const raw = String(role ?? "").trim();

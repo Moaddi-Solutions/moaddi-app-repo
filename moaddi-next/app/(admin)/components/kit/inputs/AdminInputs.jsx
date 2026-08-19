@@ -5,6 +5,7 @@
 // input components (TextInput, SelectInput, ReferenceInput, ...).
 
 import { Button } from "@/../components/ui/button";
+import { Checkbox } from "@/../components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -43,6 +44,7 @@ import {
 } from "ra-core";
 import { Check, ChevronsUpDown, GripVertical, ImagePlus, Plus, Trash2, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { fieldLabel, Spinner } from "../AdminUI";
 
 /* ------------------------------------------------------------------ */
@@ -229,6 +231,7 @@ const StaticSelectInput = ({
   isLoading,
   className,
   emptyText,
+  disabled,
 }) => {
   const placeholder = emptyText ?? `Select ${fieldLabel(source).toLowerCase()}`;
   const { id, field, fieldState, isRequired } = useInput({ source, defaultValue, validate });
@@ -254,7 +257,7 @@ const StaticSelectInput = ({
       helperText={helperText}
       className={className}
     >
-      <Select value={value} onValueChange={handleChange} disabled={isLoading}>
+      <Select value={value} onValueChange={handleChange} disabled={isLoading || disabled}>
         <SelectTrigger id={id} className={cn("h-9 w-full rounded-lg font-semibold data-placeholder:font-normal data-placeholder:text-muted-foreground/70", error && "border-destructive")}>
           <SelectValue placeholder={isLoading ? "Loadingâ€¦" : placeholder}>
             {(current) => {
@@ -542,6 +545,78 @@ const ReferenceArrayChoices = ({ label, source, className }) => {
           {!allChoices?.length ? <span className="text-xs text-muted-foreground">No options.</span> : null}
         </div>
       )}
+    </FieldShell>
+  );
+};
+
+/**
+ * Multi-select over static `choices`, bound to an array value.
+ *
+ * The chip picker above is the reference-backed twin: it reads its options
+ * from a ChoicesContext, so it cannot serve a fixed list. Checkboxes rather
+ * than chips because each option here carries a helper line explaining what
+ * ticking it does.
+ */
+export const CheckboxGroupInput = ({
+  source,
+  label,
+  helperText,
+  choices = [],
+  defaultValue = [],
+  className,
+}) => {
+  const { id, field } = useInput({ source, defaultValue });
+  // react-hook-form resolves an unset field to `""`, not `undefined` — `??`
+  // only catches nullish, so a plain array check is what actually guards
+  // `.map`/`.filter` against a fresh create form.
+  const values = Array.isArray(field.value) ? field.value : [];
+  const selected = new Set(values.map(String));
+  const { getValues } = useFormContext();
+
+  // Reads the live form value instead of the closed-over `values` from this
+  // render: two checkbox clicks fired before React re-renders would otherwise
+  // both compute `next` from the same stale array, and the second call would
+  // silently discard the first click's toggle.
+  const toggle = (choiceId) => {
+    const current = getValues(field.name);
+    const currentValues = Array.isArray(current) ? current : [];
+    const currentSelected = new Set(currentValues.map(String));
+    const next = currentSelected.has(String(choiceId))
+      ? currentValues.filter((v) => String(v) !== String(choiceId))
+      : [...currentValues, choiceId];
+    field.onChange(next);
+  };
+
+  return (
+    <FieldShell id={id} label={label} source={source} helperText={helperText} className={className}>
+      <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3">
+        {choices.map((choice) => (
+          // No htmlFor: the input is nested inside the label, which already
+          // associates them. Doing both makes the browser deliver the click to
+          // the input twice, so a click on the label text toggled and then
+          // untoggled — the edit looked ignored.
+          <label
+            key={String(choice.id)}
+            className="flex cursor-pointer items-start gap-2.5"
+          >
+            <Checkbox
+              id={`${id}-${choice.id}`}
+              checked={selected.has(String(choice.id))}
+              onCheckedChange={() => toggle(choice.id)}
+              className="mt-0.5"
+            />
+            <span className="min-w-0">
+              <span className="block text-[0.8rem] font-bold text-foreground">{choice.name}</span>
+              {choice.description ? (
+                <span className="block text-xs font-medium text-muted-foreground">
+                  {choice.description}
+                </span>
+              ) : null}
+            </span>
+          </label>
+        ))}
+        {!choices.length ? <span className="text-xs text-muted-foreground">No options.</span> : null}
+      </div>
     </FieldShell>
   );
 };

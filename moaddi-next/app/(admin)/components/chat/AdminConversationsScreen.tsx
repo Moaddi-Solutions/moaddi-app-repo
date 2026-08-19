@@ -1108,7 +1108,6 @@ function roleLabel(
   if (normalized === "admin" || normalized === "super-admin") return t("roles.support");
   if (normalized === "vendor") return t("roles.vendor");
   if (normalized === "customer") return t("roles.customer");
-  if (normalized === "supplier") return t("roles.supplier");
   if (normalized === "guest") return t("roles.guest");
   return t("roles.contact");
 }

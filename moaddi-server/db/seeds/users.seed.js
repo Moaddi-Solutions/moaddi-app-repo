@@ -12,7 +12,7 @@ module.exports = async function seedUsers() {
       _id: ids.users.admin,
       password,
       name: "Admin User",
-      role: "Admin",
+      role: "ShopOwner",
       preferredCurrency: "SAR",
       isActive: true,
       isDeleted: false,

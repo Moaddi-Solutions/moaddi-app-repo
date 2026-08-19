@@ -18,8 +18,6 @@ const MachinesSchema = new mongoose.Schema<ModelTypes.IMachine>(
     type: { type: Number, default: 0 },
     password: { type: String, default: null, required: false },
     vendorId: { type: String, default: null },
-    /** Users with role Supplier assigned to service/refill this machine. */
-    supplierIds: { type: [String], default: [] },
     shopId: { type: String, required: false },
     groupId: { type: String, required: false },
     specialProducts: { type: Object, required: false },

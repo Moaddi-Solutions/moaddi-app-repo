@@ -22,8 +22,11 @@ import {
   paymentProvidersActiveResource,
   paymentProvidersResource,
   platformOptionsResource,
-  supportRoutingResource,
 } from "@/(admin)/components/resources/siteOptions";
+import shopOwners from "@/(admin)/components/resources/shopOwners";
+import staff from "@/(admin)/components/resources/staff";
+import supportTeam from "@/(admin)/components/resources/supportTeam";
+import team from "@/(admin)/components/resources/team";
 import vendors from "@/(admin)/components/resources/vendors";
 import wallets from "@/(admin)/components/resources/wallets";
 import withdrawals from "@/(admin)/components/resources/withdrawals";
@@ -66,6 +69,10 @@ const AdminApp = () => {
         const resources = [
           allowed("machines") && <Resource {...machines} key="machines" />,
           allowed("vendors") && <Resource {...vendors} key="vendors" />,
+          allowed("shopOwners") && <Resource {...shopOwners} key="shopOwners" />,
+          allowed("staff") && <Resource {...staff} key="staff" />,
+          allowed("supportTeam") && <Resource {...supportTeam} key="supportTeam" />,
+          allowed("team") && <Resource {...team} key="team" />,
           allowed("roles") && <Resource {...roles} key="roles" />,
           allowed("customers") && <Resource {...customers} key="customers" />,
           allowed("products") && <Resource {...products} key="products" />,
@@ -91,9 +98,6 @@ const AdminApp = () => {
           ),
           allowed("platformOptions") && (
             <Resource {...platformOptionsResource} key="platformOptionsResource" />
-          ),
-          allowed("supportRouting") && (
-            <Resource {...supportRoutingResource} key="supportRoutingResource" />
           ),
           allowed("paymentProvidersAll") && (
             <Resource {...paymentProvidersActiveResource} key="paymentProvidersActiveResource" />

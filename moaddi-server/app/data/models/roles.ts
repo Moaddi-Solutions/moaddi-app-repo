@@ -16,9 +16,9 @@ interface IRole {
 }
 
 /**
- * Reference data for the platform roles (Vendor / Supplier / Shop Admin /
- * Super Admin). Permission RULES live in code (`app/lib/ability.ts`) — this
- * collection only records which roles exist, for admin UI and auditing.
+ * Reference data for the platform roles (Vendor / Shop Owner / Super Admin).
+ * Permission RULES live in code (`app/lib/ability.ts`) — this collection
+ * only records which roles exist, for admin UI and auditing.
  */
 const RolesSchema = new mongoose.Schema<IRole>(
   {

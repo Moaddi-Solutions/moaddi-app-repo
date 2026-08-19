@@ -462,7 +462,9 @@ const Dashboard = () => {
   const showProducts = show("products");
   const showCustomers = show("customers");
   const showVendors = show("vendors");
+  const showMachines = show("machines");
   const showPayments = show("payments");
+  const showWithdrawals = show("withdrawals");
   // The reviewer's view of the withdrawal queue: whoever may act on someone
   // else's request, rather than whoever holds a particular role name.
   const reviewsWithdrawals = ability.can("approve", "Withdrawal");
@@ -491,7 +493,7 @@ const Dashboard = () => {
   };
 
   const { data: machines = [], isPending: machinesLoading } =
-    useResourceSummary("machines", show("machines"));
+    useResourceSummary("machines", showMachines);
   const { data: products = [], isPending: productsLoading } = useResourceSummary(
     "products",
     showProducts,
@@ -500,9 +502,12 @@ const Dashboard = () => {
     "customers",
     showCustomers,
   );
+  // Filtered to the role, or this counts the whole staff roster and disagrees
+  // with the Vendors page it links to.
   const { data: vendors = [], isPending: vendorsLoading } = useResourceSummary(
     "vendors",
     showVendors,
+    { filter: { role: "Vendor" } },
   );
 
   const activeMachines = useMemo(
@@ -518,7 +523,9 @@ const Dashboard = () => {
   const firstName = (user.name ?? "").split(" ")[0];
 
   const stats = [
-    {
+    // Gated like its siblings: the fetch is already disabled without the
+    // grant, so an ungated card reports a confident "0" it never looked up.
+    showMachines && {
       icon: Refrigerator,
       label: "Machines",
       value: nf(machines.length),
@@ -602,11 +609,17 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-          <FleetPulse
-            machines={machines}
-            loading={machinesLoading}
-            createPath={createPath}
-          />
+          {/* Gated like every other machine-backed panel on this page — the
+              fetch above is already disabled without the grant, so an
+              ungated hero here offered "View machines" / "+ Add machine"
+              buttons that 403'd for any role without Machine access. */}
+          {showMachines && (
+            <FleetPulse
+              machines={machines}
+              loading={machinesLoading}
+              createPath={createPath}
+            />
+          )}
         </div>
       </section>
 
@@ -626,18 +639,23 @@ const Dashboard = () => {
       <section
         className={cn(
           "grid gap-4",
-          showPayments && "lg:grid-cols-[1.5fr_1fr]",
+          showPayments && showWithdrawals && "lg:grid-cols-[1.5fr_1fr]",
         )}
       >
-        {/* A supplier's own sales are payments too — this panel used to be
+        {/* A vendor's own sales are payments too — this panel used to be
             withheld from them even though the sidebar offered the section. */}
         {showPayments && (
           <RecentPayments createPath={createPath} enabled={showPayments} />
         )}
-        <PendingActions
-          createPath={createPath}
-          showsRequester={reviewsWithdrawals}
-        />
+        {/* Gated like every other panel: it fetches withdrawals on mount, so a
+            role without that grant (a support agent) got a 403 on the landing
+            page for a card it could never act on. */}
+        {showWithdrawals && (
+          <PendingActions
+            createPath={createPath}
+            showsRequester={reviewsWithdrawals}
+          />
+        )}
       </section>
     </div>
   );

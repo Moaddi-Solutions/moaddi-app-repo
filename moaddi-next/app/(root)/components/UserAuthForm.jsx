@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Icons } from "@/(root)/components/Icons";
-import { PhoneInput } from "@/(root)/components/PhoneInput";
+import { PhoneInput, SUPPORTED_COUNTRIES } from "@/(root)/components/PhoneInput";
 import { SocialAuthButtons } from "@/(root)/components/SocialAuthButtons";
 import { useCart } from "@/(root)/context/cart-provider";
 import { Button } from "@/../components/ui/button";
@@ -579,11 +579,10 @@ const Inputs = ({
           ref={input}
           name="phone"
           defaultCountry="SA"
-          countries={
-            process.env.NODE_ENV == "development"
-              ? ["SA", "EG", "AE"]
-              : undefined
-          }
+          // The platform operates in KSA and Egypt, so the picker offers only
+          // those two rather than the full ITU list — a country nobody can
+          // sign up from is a wrong turn, not a choice.
+          countries={SUPPORTED_COUNTRIES}
           id="phone"
           placeholder={t("Auth.phone")}
           autoComplete="phone"

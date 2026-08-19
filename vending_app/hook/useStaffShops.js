@@ -9,8 +9,8 @@ import dataProvider from "~/services/dataProvider";
  *   Shop Admin — the shops they administer. `GET /shops` is scoped server-side
  *                to their assigned shop plus any they created, so the plain
  *                list is already the right answer.
- *   Supplier   — the shops their machines stand in, which is a reference
- *                lookup by vendorId, not an administered set. A supplier has
+ *   Vendor     — the shops their machines stand in, which is a reference
+ *                lookup by vendorId, not an administered set. A vendor has
  *                no `update Shop` rule, so the scoped list would be empty.
  *
  * Keying the query on both branches keeps the two caches apart.

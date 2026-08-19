@@ -7,7 +7,7 @@ const { ownersOfMachine } = require('../../lib/shopScope');
 
 /**
  * `authorize()` only decides whether the role has any rule for the action —
- * conditional rules (supplier: own boxes; shop admin: boxes in their shops)
+ * conditional rules (vendor: own boxes; shop admin: boxes in their shops)
  * pass that check and have to be asserted against the actual document here.
  * Boxes inherit `vendorId`/`shopId` from their machine, so both scopes match
  * on the box row directly.

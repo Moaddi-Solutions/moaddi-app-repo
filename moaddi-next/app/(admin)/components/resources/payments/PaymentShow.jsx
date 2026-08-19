@@ -141,7 +141,7 @@ const ORDER_STATUSES = [
  * Staff controls for one order.
  *
  * Both staff roles hold `update`/`delete` on Purchase — a Shop Admin over their
- * shops' orders, a supplier over sales from their machines — but the dashboard
+ * shops' orders, a vendor over sales from their machines — but the dashboard
  * only ever listed and displayed them, so neither could act on a stuck or
  * mistaken order without going to the database. Gated per record rather than
  * per role: the scope conditions only resolve against the row.

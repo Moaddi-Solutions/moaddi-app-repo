@@ -14,7 +14,6 @@ const BoxesSchema = new mongoose.Schema(
     // `boxes.remachine` re-stamps them when a machine changes hands.
     vendorId: { type: String, required: false, default: null },
     shopId: { type: String, required: false, default: null },
-    supplierIds: { type: [String], required: false, default: [] },
     productId: { type: String, default: null },
     // Locker — true: open
     status: { type: Boolean, default: false },
