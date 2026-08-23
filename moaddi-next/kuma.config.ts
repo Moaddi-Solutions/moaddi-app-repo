@@ -22,7 +22,7 @@ const theme = createTheme({
   spacings: {
     sm: "0.5rem",
     md: "1rem",
-  },
+  }, 
   breakpoints: {
     xs: "0px",
     sm: "480px",
