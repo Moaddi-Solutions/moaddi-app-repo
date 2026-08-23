@@ -147,8 +147,14 @@ const EditPageInner = ({ title, actions, children }) => {
   );
 };
 
-/** Drop-in for react-admin's <Edit>. */
-export const AdminEdit = ({ resource, id, title, redirect, transform, mutationMode, actions, children }) => (
+/**
+ * Drop-in for react-admin's <Edit>.
+ *
+ * Pessimistic by default: ra-core's `undoable` default delays the PUT by the
+ * undo window and replays it from its optimistic cache, which loses edits when
+ * a refetch lands inside that window.
+ */
+export const AdminEdit = ({ resource, id, title, redirect, transform, mutationMode = "pessimistic", actions, children }) => (
   <EditBase resource={resource} id={id} redirect={redirect} transform={transform} mutationMode={mutationMode}>
     <EditPageInner title={title} actions={actions}>{children}</EditPageInner>
   </EditBase>

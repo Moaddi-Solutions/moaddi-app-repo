@@ -38,6 +38,10 @@ const UsersSchema = new mongoose.Schema<UserDocument>(
     email: { type: String, required: false },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
+    // `Support` accounts only: which audiences this agent answers "contact
+    // support" for. Each audience is held by at most one agent — see
+    // assertSupportAudiences in the users repo.
+    supportAudiences: { type: [String], required: false },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },
     updated: { type: Date, required: false },
   },

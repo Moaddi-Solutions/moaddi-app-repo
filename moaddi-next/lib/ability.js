@@ -126,12 +126,24 @@ const RESOURCE_MAP = {
   // (the storefront browses them), so their dashboard sections key off
   // management too — otherwise a shopless admin lands on browse-only lists.
   machines: { subject: "Machine", listAction: MANAGE_ONLY },
-  // Staff carry a shopId, so a Shop Admin's scoped User rule reaches them.
-  vendors: { subject: "User", beyondSelf: true },
-  // Shoppers do not: they sign themselves up and belong to no shop, so only an
-  // unscoped rule can list them. A Shop Admin gets the buyer's name on the
-  // order instead of a customer directory that would always be empty.
-  customers: { subject: "User", platformWide: true },
+  // Staff carry a shopId, so a Shop Admin's scoped rule reaches them. Each
+  // roster has its own subject so it can be granted on its own — a support
+  // agent answering vendors gets Vendors and nothing beside it. Writes still
+  // go through `User` server-side; these gate the page.
+  vendors: { subject: "Vendor", beyondSelf: true },
+  shopOwners: { subject: "ShopOwner", beyondSelf: true },
+  staff: { subject: "Staff", beyondSelf: true },
+  // Support agents are the Super Admin's own hires, so only `manage all`
+  // reaches this page — a shop owner's shop-scoped rules never match it.
+  supportTeam: { subject: "Support", beyondSelf: true },
+  // SuperAdmin + Support + custom-role staff, for internal messaging.
+  // Deliberately excludes ShopOwner/Vendor — see the server-side "team"
+  // pseudo-role in users.js's getByRole.
+  team: { subject: "Team", beyondSelf: true },
+  // Shoppers carry no shop: they sign themselves up and belong to none, so
+  // only an unscoped rule can list them. A Shop Admin gets the buyer's name on
+  // the order instead of a customer directory that would always be empty.
+  customers: { subject: "Customer", platformWide: true },
   products: { subject: "Product", listAction: MANAGE_ONLY },
   // Reference data for pickers, not a section — plain read.
   currencies: { subject: "Product" },
@@ -150,7 +162,6 @@ const RESOURCE_MAP = {
   paymentProviders: { subject: "PaymentProvider", listAction: MANAGE_ONLY },
   paymentProvidersAll: { subject: "PaymentProvider", listAction: MANAGE_ONLY },
   platformOptions: { subject: "Option", listAction: MANAGE_ONLY },
-  supportRouting: { subject: "SupportRouting", listAction: "manage" },
   conversations: { subject: "Conversation" },
 };
 

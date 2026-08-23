@@ -6,7 +6,7 @@ const asList = (v) => (Array.isArray(v) ? v : [v]).filter(Boolean);
 
 const scopeLabel = (conditions) => {
   if (!conditions) return "All records";
-  if (conditions.vendorId) return "Own records (as supplier)";
+  if (conditions.vendorId) return "Own records (as vendor)";
   if (conditions.customerId) return "Own records (as shopper)";
   if (conditions._id) return "Own account";
   return "Restricted";

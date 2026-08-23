@@ -214,6 +214,7 @@ const controller = (): import("express").Router => {
       try {
         const conversations = await chatRepo.listConversations(
           req.authenticatedUser._id,
+          req.authenticatedUser.role,
         );
         return res.status(200).json(conversations);
       } catch (error) {

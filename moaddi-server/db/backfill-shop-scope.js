@@ -55,18 +55,23 @@ const vendorShopMap = async () => {
 };
 
 async function backfill() {
-  // 1. ownedShopIds — every shop already records who created it (null for
-  //    shops that predate the field, which stay Super-Admin-only until an
-  //    admin is assigned to them).
+  // 1. ownedShopIds — from the explicit owner where one is set, else from who
+  //    created the shop (null for shops that predate both fields, which stay
+  //    Super-Admin-only until an owner is assigned to them).
   await step("users.ownedShopIds", async (dry) => {
-    const shops = await Shops.find({ createdBy: { $nin: [null, ""] } })
-      .select("_id createdBy")
+    const shops = await Shops.find({
+      $or: [{ ownerId: { $nin: [null, ""] } }, { createdBy: { $nin: [null, ""] } }],
+    })
+      .select("_id ownerId createdBy")
       .lean();
     if (dry) return shops.length;
     let n = 0;
     for (const shop of shops) {
+      // Explicit owner wins: replaying `createdBy` for a transferred shop would
+      // hand scope back to whoever used to own it.
+      const holder = shop.ownerId || shop.createdBy;
       const r = await Users.updateOne(
-        { _id: String(shop.createdBy) },
+        { _id: String(holder) },
         { $addToSet: { ownedShopIds: String(shop._id) } }
       );
       n += r.modifiedCount ?? 0;
@@ -163,10 +168,10 @@ async function backfill() {
     });
   }
 
-  // A parting warning: an Admin with no shop now administers nothing, which is
-  // the intended strict behaviour but easy to mistake for a broken deploy.
+  // A parting warning: a shop owner with no shop now administers nothing, which
+  // is the intended strict behaviour but easy to mistake for a broken deploy.
   const orphanAdmins = await Users.find({
-    role: "Admin",
+    role: { $in: ["Admin", "ShopOwner"] },
     isDeleted: { $ne: true },
     $or: [
       { shopId: { $in: [null, ""] } },

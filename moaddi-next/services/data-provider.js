@@ -92,6 +92,41 @@ export const Fit = {
     };
   },
 };
+/**
+ * CRUD for the user-backed resources (Vendors, Shop Owners, Staff). They share
+ * one implementation because they hit the same /users endpoints; what differs
+ * is `filter.role`, which selects the roster:
+ *   a role name → /users/role/:role      ("Vendor", "ShopOwner", …)
+ *   "custom"    → /users/role/custom     (every dashboard-created role)
+ *   omitted     → /users/role/staff      (everyone non-customer)
+ */
+const userCrud = {
+  create: (data) => postRequest(addUserAPI(), data),
+  getList: (offset, limit, filter = {}) => {
+    const role = filter?.role;
+    const endpoint =
+      role && String(role).toLowerCase() !== "staff"
+        ? getUsersByRoleAPI(role)
+        : getStaffUsersAPI();
+    return getRequest(
+      `${endpoint}?${new URLSearchParams({
+        offset,
+        limit,
+      })}`,
+    );
+  },
+  getOne: (id) => getRequest(userAPI(id)),
+  getManyReference: {
+    shopId: (shopId) =>
+      getRequest(VendorsByShop(shopId)).then(({ data, total }) => ({
+        data: data.map(Fit._id),
+        total,
+      })),
+  },
+  update: (id, data) => putRequest(userAPI(id), data),
+  delete: (id) => deleteRequest(userAPI(id)),
+};
+
 const Api = {
   machinesActive: {
     getList: (offset, limit) =>
@@ -147,35 +182,10 @@ const Api = {
     update: (id, data) => putRequest(roleAPI(id), data),
     delete: (id) => deleteRequest(roleAPI(id)),
   },
-  vendors: {
-    create: (data) => postRequest(addUserAPI(), data),
-    // List page shows the full staff roster (any role creatable here).
-    // ReferenceInputs pass `filter.role = "Vendor"` so machine/shop pickers
-    // stay limited to suppliers only.
-    getList: (offset, limit, filter = {}) => {
-      const role = filter?.role;
-      const endpoint =
-        role && String(role).toLowerCase() !== "staff"
-          ? getUsersByRoleAPI(role)
-          : getStaffUsersAPI();
-      return getRequest(
-        `${endpoint}?${new URLSearchParams({
-          offset,
-          limit,
-        })}`,
-      );
-    },
-    getOne: (id) => getRequest(userAPI(id)),
-    getManyReference: {
-      shopId: (shopId) =>
-        getRequest(VendorsByShop(shopId)).then(({ data, total }) => ({
-          data: data.map(Fit._id),
-          total,
-        })),
-    },
-    update: (id, data) => putRequest(userAPI(id), data),
-    delete: (id) => deleteRequest(userAPI(id)),
-  },
+  // `vendors`, `shopOwners` and `staff` are three views over the same /users
+  // CRUD — the caller's `filter.role` picks which roster comes back, so one bag
+  // of methods serves all three (aliased below the Api literal).
+  vendors: userCrud,
   customers: {
     getList: (offset, limit) =>
       getRequest(
@@ -188,18 +198,15 @@ const Api = {
     update: (id, data) => putRequest(userAPI(id), data),
     delete: (id) => deleteRequest(userAPI(id)),
   },
-  admins: {
-    // Merges Admin + SuperAdmin rosters for the "support admin" picker.
-    getList: () =>
-      Promise.all(
-        ["Admin", "SuperAdmin"].map((role) =>
-          getRequest(getUsersByRoleAPI(role)),
-        ),
-      ).then((results) => ({
-        data: results.flatMap(({ data }) => data),
-        total: results.reduce((sum, { total }) => sum + total, 0),
-      })),
-    getOne: (id) => getRequest(userAPI(id)),
+  // Read-only: the Team directory has no create/edit/delete route.
+  team: {
+    getList: (offset, limit) =>
+      getRequest(
+        `${getUsersByRoleAPI("team")}?${new URLSearchParams({
+          offset,
+          limit,
+        })}`,
+      ),
   },
   products: {
     create: ({ image, ...data }) => {
@@ -320,20 +327,6 @@ const Api = {
         putRequest(platformOptionsAPI(), data).then(normalize),
     };
   })(),
-  // Same underlying platform-options doc as `platformOptions`, scoped to
-  // just the two support-contact fields for the "Contact Support" screen.
-  supportRouting: {
-    getOne: () =>
-      getRequest(platformOptionsAPI()).then((data) => ({
-        ...data,
-        id: "platform",
-      })),
-    update: (_id, { supportAdminIdCustomers, supportAdminIdVendors }) =>
-      putRequest(platformOptionsAPI(), {
-        supportAdminIdCustomers,
-        supportAdminIdVendors,
-      }).then((data) => ({ ...data, id: "platform" })),
-  },
   groups: {
     create: (data) => postRequest(groupsAPI(), data),
     getList: (offset, limit) =>
@@ -839,6 +832,14 @@ const Api = {
     },
   },
 };
+
+// Same /users CRUD as `vendors`; the resource's own `filter.role` decides which
+// roster each page shows. Aliased rather than duplicated so all four stay in
+// step. Resource names must match the react-admin resource (and URL) exactly.
+Api.shopOwners = userCrud;
+Api.staff = userCrud;
+Api.supportTeam = userCrud;
+
 const contentArray = [
   "content",
   "websites",

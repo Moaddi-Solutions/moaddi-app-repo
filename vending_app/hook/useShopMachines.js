@@ -6,14 +6,14 @@ import dataProvider from "~/services/dataProvider";
 /**
  * The machines a staff user works on inside one shop.
  *
- *   Shop Admin — every machine on the shop floor, whoever supplies it. Their
+ *   Shop Admin — every machine on the shop floor, whoever owns it. Their
  *                grant is `manage Machine {shopId: {$in: myShops}}`, so the
- *                supplier is irrelevant to what they may service.
- *   Supplier   — only their own machines in that shop, since their grant is
+ *                vendor is irrelevant to what they may service.
+ *   Vendor     — only their own machines in that shop, since their grant is
  *                `update Machine {vendorId: me}`.
  *
  * The distinction matters: the shop-and-vendor endpoint returns nothing at all
- * for an admin, because no machine is assigned to an admin as its supplier.
+ * for an admin, because no machine is assigned to an admin as its vendor.
  */
 export const useShopMachines = (shopId) => {
   const { user } = useUser();

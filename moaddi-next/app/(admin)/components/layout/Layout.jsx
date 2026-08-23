@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { PhoneInput } from "@/(root)/components/PhoneInput";
+import { PhoneInput, SUPPORTED_COUNTRIES } from "@/(root)/components/PhoneInput";
 import { useChat } from "@/(root)/context/chat-context";
 import { useSupportUserId } from "@/(root)/context/contact-target-context";
 import { SocketContextProvider } from "@/(root)/context/Socket";
@@ -42,10 +42,7 @@ import {
   SidebarTrigger,
 } from "@/../components/ui/sidebar";
 import { readDashboardUser } from "@/../lib/auth-session";
-import {
-  isDashboardRole,
-  normalizeDashboardRole,
-} from "@/../lib/dashboard-role";
+import { normalizeDashboardRole } from "@/../lib/dashboard-role";
 import { canAccessResource } from "@/../lib/ability";
 import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { useTheme } from "@/../lib/use-theme";
@@ -80,6 +77,7 @@ import {
   FileText,
   NotebookText,
   UserRound,
+  Users,
   UsersRound,
   Wallet,
 } from "lucide-react";
@@ -198,7 +196,27 @@ export const AppSidebar = () => {
             )}
             {show("vendors") && (
               <NavItem to={createPath({ resource: "vendors", type: "list" })} icon={Handshake}>
+                Vendors
+              </NavItem>
+            )}
+            {show("shopOwners") && (
+              <NavItem to={createPath({ resource: "shopOwners", type: "list" })} icon={Store}>
+                Shop Owners
+              </NavItem>
+            )}
+            {show("staff") && (
+              <NavItem to={createPath({ resource: "staff", type: "list" })} icon={UsersRound}>
                 Staff
+              </NavItem>
+            )}
+            {show("supportTeam") && (
+              <NavItem to={createPath({ resource: "supportTeam", type: "list" })} icon={Headset}>
+                Support Team
+              </NavItem>
+            )}
+            {show("team") && (
+              <NavItem to={createPath({ resource: "team", type: "list" })} icon={Users}>
+                Team
               </NavItem>
             )}
             {show("roles") && (
@@ -299,14 +317,6 @@ export const AppSidebar = () => {
                 <NavItem to={createPath({ resource: "docs", type: "list" })} icon={NotebookText}>
                   Docs
                 </NavItem>
-                {show("supportRouting") && (
-                  <NavItem
-                    to={createPath({ resource: "supportRouting", type: "show", id: "platform" })}
-                    icon={Headset}
-                  >
-                    Contact Support
-                  </NavItem>
-                )}
                 <li>
                   <NavGroup title="English" icon={Languages}>
                     <SubNavItem
@@ -549,14 +559,18 @@ const ThemeToggleButton = () => {
 
 const AppHeader = () => {
   const user = readDashboardUser();
+  const ability = useAbility();
   const role = normalizeDashboardRole(user.role);
-  const canOpenConversations = isDashboardRole(role);
+  // Gated on the permission, not the role: chat is no longer something every
+  // dashboard role carries, so a role without it would otherwise get a button
+  // leading to a page that is not registered.
+  const canOpenConversations = ability.can("read", "Conversation");
   // Every dashboard role may reach SuperAdmin except SuperAdmin itself —
   // there's no one above them to contact, and it'd otherwise self-chat.
   const canContactAdmin = canOpenConversations && role !== "SuperAdmin";
   const { totalUnreadCount } = useChat();
-  // Dashboard staff (Admin/Vendor) are the "vendors" support audience —
-  // distinct from the shopper-facing "customers" contact-support target.
+  // The server resolves which support agent this is from the caller's own
+  // role, so the argument here is vestigial — it only keys the client cache.
   const supportUserId = useSupportUserId("vendors");
 
   return (
@@ -683,6 +697,7 @@ export const Login = () => {
                 autoComplete="tel"
                 autoFocus
                 className={adminAuthPhoneInputClassName}
+                countries={SUPPORTED_COUNTRIES}
                 countryCallingCodeEditable={false}
                 defaultCountry="SA"
                 disabled={isLoading}

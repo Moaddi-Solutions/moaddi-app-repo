@@ -4,6 +4,7 @@ const Roles = require("../models/roles");
 const Users = require("../models/users");
 const {
   rulesFor,
+  rulesSignature,
   setCustomRoles,
   validateRuleRows,
 } = require("../../lib/ability");
@@ -16,16 +17,52 @@ const { ROLES } = require("../../lib/roles");
  * (primeCustomRoles) and after every mutation.
  */
 
+/**
+ * Names a custom role may not take. Compared after stripping everything but
+ * letters and digits, so `Shop_Admin`, `shop-admin` and `SHOP ADMIN` all
+ * collapse onto the built-in and are refused.
+ *
+ * This catches the systematic cases, not near-misses: `Vender` is a genuinely
+ * different word and still gets through. Only fuzzy matching would stop that,
+ * and it would eventually reject a name someone legitimately wants.
+ */
+const canonicalRoleName = (value) =>
+  String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
 const RESERVED_ROLE_NAMES = [
   ROLES.SUPER_ADMIN,
-  ROLES.ADMIN,
+  ROLES.SHOP_OWNER,
   ROLES.VENDOR,
-  ROLES.SUPPLIER,
   ROLES.CUSTOMER,
+  ROLES.SUPPORT,
   "Guest",
-].map((r) => r.toLowerCase());
+].map(canonicalRoleName);
 
 const now = () => moment().utc().add(config.timeDifference, "hours");
+
+/**
+ * Reject a second role granting exactly what an existing one already grants —
+ * two names for one job is a maintenance trap. Exact match only, never overlap:
+ * "Accountant" and "Auditor" may legitimately be identical today and diverge
+ * later. Built-ins are skipped: their rules live in code, so every one of them
+ * has an empty `rules` array and they would all collide with each other.
+ */
+const assertNoRoleWithSameRules = async (ruleRows, excludeRoleId = null) => {
+  const signature = rulesSignature(ruleRows || []);
+  if (!signature) return;
+  const others = await Roles.find({ builtIn: false }).lean();
+  const clash = others.find(
+    (r) =>
+      String(r._id) !== String(excludeRoleId) &&
+      rulesSignature(r.rules || []) === signature
+  );
+  if (clash) {
+    return Promise.reject({
+      message: `A role with these exact permissions already exists (${clash.label || clash._id}).`,
+      statusCode: 409,
+    });
+  }
+};
 
 /** Each role is returned with a computed `rules` snapshot (CASL raw rules)
  *  for display, plus the editable `ruleRows` for custom roles. */
@@ -44,8 +81,13 @@ let primeCustomRoles = async () => {
   return custom.length;
 };
 
+/**
+ * Custom roles only. Built-in rules live in code and are not editable here, so
+ * listing them offered rows whose every action was refused. `getById` stays
+ * unfiltered so existing deep links to a built-in still resolve.
+ */
 let list = async () => {
-  const data = await Roles.find({}).sort({ builtIn: -1, _id: 1 }).lean();
+  const data = await Roles.find({ builtIn: false }).sort({ _id: 1 }).lean();
   return { data: data.map(shape), total: data.length };
 };
 
@@ -66,7 +108,7 @@ let create = async ({ name, label, description, ruleRows }) => {
       statusCode: 400,
     });
   }
-  if (RESERVED_ROLE_NAMES.includes(cleanName.toLowerCase())) {
+  if (RESERVED_ROLE_NAMES.includes(canonicalRoleName(cleanName))) {
     return Promise.reject({
       message: "This role name is reserved.",
       statusCode: 409,
@@ -80,6 +122,7 @@ let create = async ({ name, label, description, ruleRows }) => {
   if (rowsError) {
     return Promise.reject({ message: rowsError, statusCode: 400 });
   }
+  await assertNoRoleWithSameRules(ruleRows);
   let role = new Roles({
     _id: cleanName,
     name: cleanName,
@@ -110,6 +153,7 @@ let update = async (roleId, { label, description, ruleRows }) => {
     if (rowsError) {
       return Promise.reject({ message: rowsError, statusCode: 400 });
     }
+    await assertNoRoleWithSameRules(ruleRows, roleId);
     role.rules = ruleRows;
     role.markModified("rules");
   }

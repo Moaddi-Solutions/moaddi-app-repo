@@ -15,11 +15,11 @@ const CORE_ROLES = [
       "Full platform access: all vendors, all orders, all machines, all reports.",
   },
   {
-    _id: ROLES.ADMIN,
-    name: ROLES.ADMIN,
-    label: "Shop Admin",
+    _id: ROLES.SHOP_OWNER,
+    name: ROLES.SHOP_OWNER,
+    label: "Shop Owner",
     description:
-      "Manages shop settings, products, orders, machines, and shop-level analytics.",
+      "Owns shops: manages their settings, machines, staff, and orders. No access outside their own shops.",
   },
   {
     _id: ROLES.VENDOR,
@@ -29,18 +29,17 @@ const CORE_ROLES = [
       "Manages their own products and machines; views their own orders, sales, and wallet.",
   },
   {
-    _id: ROLES.SUPPLIER,
-    name: ROLES.SUPPLIER,
-    label: "Supplier",
+    _id: ROLES.SUPPORT,
+    name: ROLES.SUPPORT,
+    label: "Support",
     description:
-      "Refills products in boxes on machines they are assigned to; no catalog or wallet.",
+      "Answers contact-support chats for the audiences assigned to them; reads only those directories.",
   },
 ];
 
 /**
  * Upserts built-in roles and re-asserts label/description/name so renames
- * (Supplier → Vendor, plus the new Supplier role) stick on re-seed. `builtIn`
- * stays true so they remain undeletable.
+ * stick on re-seed. `builtIn` stays true so they remain undeletable.
  */
 async function seedRoles({ quiet = false } = {}) {
   for (const role of CORE_ROLES) {

@@ -149,9 +149,9 @@ export default function MachineProducts() {
           }
         }
 
-        // Asked of this machine, not of the role. `role === "Admin"` used to
-        // wave through every shop's machines while turning a Super Admin away,
-        // and it knew nothing of dashboard-created staff roles.
+        // Asked of this machine, not of the role. A raw role-string check used
+        // to wave through every shop's machines while turning a Super Admin
+        // away, and it knew nothing of dashboard-created staff roles.
         if (!can(ability, "update", "Box", { vendorId, shopId })) {
           alert("error", t("notYourMachine"));
           goBack();

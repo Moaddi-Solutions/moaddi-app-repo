@@ -12,6 +12,12 @@ const ShopsSchema = new mongoose.Schema(
     // their assigned shop plus every shop they created, so this is both the
     // audit trail and the source for backfilling `users.ownedShopIds`.
     createdBy: { type: String, required: false, default: null },
+    // Shop owner this shop belongs to, assigned by a Super Admin. Mirrored into
+    // `users.ownedShopIds` — the static id list CASL scopes on, see ability.ts
+    // `shopScopeOf`. `createdBy` stays the audit trail and is not ownership.
+    // NB: `shopOwner` is a *computed* field on shop reads (see the repo's
+    // `attachPrimaryShopOwner`), so this one has to be named `ownerId`.
+    ownerId: { type: String, required: false, default: null },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     created: {

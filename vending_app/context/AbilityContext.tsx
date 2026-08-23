@@ -19,7 +19,7 @@ import { useUser } from "./UserContext";
 
 type AbilityContextValue = {
   ability: AppAbility;
-  /** Vendor (Supplier) or admin — allowed into the staff/ area. */
+  /** Vendor or admin — allowed into the staff/ area. */
   isStaff: boolean;
   /** What the staff UI branches on; see `staffCapabilities`. */
   capabilities: StaffCapabilities;

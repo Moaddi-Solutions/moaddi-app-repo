@@ -5,6 +5,10 @@ const users = require("../../data/repos/users");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
 const { subject, rulesFor, shopScopeOf } = require("../../lib/ability");
+const {
+  directorySubjectForRoleParam,
+  directorySubjectForUserRole,
+} = require("../../lib/roles");
 const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 const Machines = require("../../data/models/machines");
@@ -13,26 +17,50 @@ const Machines = require("../../data/models/machines");
 const canManageUsers = (req) => req.ability.can("create", "User");
 
 /**
+ * Which CASL subject `/users/role/:role` is asking about. Each directory has
+ * its own subject so a role can be given one page without the others; the
+ * `staff` pseudo-role spans the whole roster and keeps `User`.
+ */
+const subjectForRoleParam = (req) =>
+  directorySubjectForRoleParam(req.params.role);
+
+/**
  * Own-or-admin check against a target user. A Shop Admin's User rule is scoped
  * to their own shops, so the target's `shopId` has to be part of the subject —
  * checking only `_id` would deny every admin.
  *
  * For `read` only, also allow name resolution for people linked on the same
  * machines the caller already services:
- *   - Shop Admin: target owns/refills a machine in one of the caller's shops
- *     (vendors often have a null/stale `shopId` even when machines are stamped)
- *   - Vendor / Supplier: target is the vendor or a co-supplier on a machine
- *     the caller owns or refills (Fill / machine list ReferenceFields)
+ *   - Shop Admin: target owns a machine in one of the caller's shops (vendors
+ *     often have a null/stale `shopId` even when machines are stamped)
  */
 const canTouchUser = async (req, action, userId) => {
   const target = await users.checkUser(String(userId)).catch(() => null);
   if (!target) return false;
   const uid = String(target._id);
+  // A fresh object per `subject()` call: CASL tags the object it is given, in
+  // place, and throws if the same object is re-tagged under a different type
+  // — reusing one object across the `User` and directory checks below crashed
+  // for exactly the role that matters most here, one holding a directory rule
+  // but no `User` rule at all.
+  const asRecord = () => ({ _id: uid, shopId: target.shopId ?? null });
+  if (req.ability.can(action, subject("User", asRecord()))) {
+    return true;
+  }
+  // Directory subjects carry exactly the action they were granted — a role
+  // holding only `update:Staff` may act on Staff rows and nothing else.
+  //
+  // This has to run for every action, not just `read`: the role builder grants
+  // create/update/delete per directory (ticking "Staff: Update" writes
+  // `update:Staff`, not `update:User`), so a write here is how "manage the
+  // Staff page" stays scoped to Staff rows instead of silently reaching every
+  // account on the platform, the SuperAdmin included. Checking only `read`
+  // closed the read side but left every write routed through the unconditioned
+  // `User` subject — which is exactly the privilege escalation this guards.
+  const directory = directorySubjectForUserRole(target.role);
   if (
-    req.ability.can(
-      action,
-      subject("User", { _id: uid, shopId: target.shopId ?? null })
-    )
+    directory !== "User" &&
+    req.ability.can(action, subject(directory, asRecord()))
   ) {
     return true;
   }
@@ -48,21 +76,12 @@ const canTouchUser = async (req, action, userId) => {
     const linked = await Machines.exists({
       shopId: { $in: shopIds },
       isDeleted: { $ne: true },
-      $or: [{ vendorId: uid }, { supplierIds: uid }],
+      vendorId: uid,
     });
     return Boolean(linked);
   }
 
-  // Vendor / Supplier: only people on machines they already service — not a
-  // staff directory. Covers Fill resolving the machine's vendor name.
-  const shared = await Machines.exists({
-    isDeleted: { $ne: true },
-    $and: [
-      { $or: [{ vendorId: callerId }, { supplierIds: callerId }] },
-      { $or: [{ vendorId: uid }, { supplierIds: uid }] },
-    ],
-  });
-  return Boolean(shared);
+  return false;
 };
 
 /**
@@ -70,11 +89,18 @@ const canTouchUser = async (req, action, userId) => {
  * SuperAdmin, or a dashboard-created custom role (which can carry arbitrary
  * permissions) — requires a Super Admin (manage all).
  */
-const BASIC_ROLES = ["vendor", "supplier", "customer"];
+const BASIC_ROLES = ["vendor", "customer"];
 const canGrantRole = (req, role) =>
   role === undefined ||
   BASIC_ROLES.includes(String(role || "").toLowerCase()) ||
   req.ability.can("manage", "all");
+
+/**
+ * Support audiences decide who reaches whom platform-wide, so only a Super
+ * Admin may set them — otherwise a shop owner could make themselves the target
+ * every customer contacts.
+ */
+const canAssignSupportAudiences = (req) => req.ability.can("manage", "all");
 const { verifySocialToken } = require("../../services/social-auth");
 
 
@@ -162,20 +188,33 @@ module.exports = () => {
   });
 
   // Create new sub-users.
-  router.post("/users/create", authenticate(), authorize("create", "User"), async (req, res, next) => {
+  //
+  // No fixed `authorize` subject: which one legitimizes the create depends on
+  // the role being assigned (`req.body.role`), same reasoning as the write
+  // routes below. `User` still admits Shop Admin's shop-scoped grant; the
+  // directory subject is what lets a role holding only `create:Staff` create a
+  // Staff account without also reaching Customers, Vendors, or the platform's
+  // own accounts.
+  router.post("/users/create", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
+      const shopId = req.body?.shopId ?? null;
+      const directory = directorySubjectForUserRole(req.body?.role);
+      const viaDirectory =
+        directory !== "User" && req.ability.can("create", directory);
+      if (!viaDirectory && req.ability.cannot("create", subject("User", { shopId }))) {
+        return res
+          .status(403)
+          .json({ message: "You can only add staff to your own shop." });
+      }
       if (req.body && !canGrantRole(req, req.body.role)) {
         return res
           .status(403)
           .json({ message: "Only a Super Admin can grant admin roles." });
       }
-      // …and only into a shop they administer, or the new account would land
-      // outside their scope (or inside someone else's).
-      const shopId = req.body?.shopId ?? null;
-      if (req.ability.cannot("create", subject("User", { shopId }))) {
+      if (req.body?.supportAudiences != null && !canAssignSupportAudiences(req)) {
         return res
           .status(403)
-          .json({ message: "You can only add staff to your own shop." });
+          .json({ message: "Only a Super Admin can assign support audiences." });
       }
       let results = await users.create(req.body);
       return res.status(201).json(results);
@@ -198,7 +237,12 @@ module.exports = () => {
   });
 
   // Get user by userId.
-  router.get("/users/:userId", authenticate(), authorize("read", "User"), async (req, res, next) => {
+  //
+  // No fixed `authorize` subject: which one legitimizes this read depends on
+  // the target's own role (Customer / Vendor / ShopOwner / Staff / Support),
+  // and that is not known until the row is fetched. `withAbility` just builds
+  // `req.ability`; `canTouchUser` below is the actual authorization check.
+  router.get("/users/:userId", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
       if (!(await canTouchUser(req, "read", req.params.userId))) {
         return res.status(403).json({ message: "Forbidden." });
@@ -214,15 +258,25 @@ module.exports = () => {
 
   // Get all users by role (`Vendor`, `Customer`, …) or `staff` for the
   // full non-customer roster (incl. inactive Admin / custom-role accounts).
-  router.get("/users/role/:role", authenticate(), authorize("read", "User"), async (req, res, next) => {
+  //
+  // Gated on the subject the requested roster maps to, not a blanket `User`,
+  // so one directory can be granted without the others.
+  router.get("/users/role/:role", authenticate(), authorize("read", subjectForRoleParam), async (req, res, next) => {
     try {
       const skip = parseInt(req.query.offset, 10) || 0;
       const limit = parseInt(req.query.limit, 10) || 1000;
       let results = await users.getByRole(req.params.role, skip, limit, req.ability);
-      // Non-admin staff only resolve references to themselves (e.g. the
-      // vendor column in their own machines list) — never the full roster.
-      // `getByRole` returns `{ data, total }`; keep that shape.
-      if (!canManageUsers(req)) {
+      // The `staff` pseudo-role spans the whole roster, so no directory subject
+      // narrows it and `authorize` above admits anyone holding a `User` read —
+      // including a vendor resolving their own name on a machine list. Collapse
+      // it to self for them.
+      //
+      // Every other roster is gated on its own subject and filtered by
+      // `getByRole`, which is what lets a read-only role (a support agent) see
+      // the directory it answers for. Collapsing those too would hand it back
+      // an empty page.
+      const spansWholeRoster = subjectForRoleParam(req) === "User";
+      if (spansWholeRoster && !canManageUsers(req)) {
         const uid = String(req.authenticatedUser._id);
         const data = (results?.data || []).filter(
           (u) => String(u._id) === uid
@@ -236,10 +290,16 @@ module.exports = () => {
   });
 
   // Toggle user by userId.
+  //
+  // No fixed `authorize` subject on this or the write routes below it: which
+  // subject legitimizes the write depends on the target's own directory
+  // (Customer / Vendor / ShopOwner / Staff / Support), not known until the row
+  // is fetched. `withAbility` only builds `req.ability`; `canTouchUser` is the
+  // real check, same as `GET /users/:userId` above.
   router.put(
     "/users/:userId/toggle",
     authenticate(),
-    authorize("update", "User"),
+    authorize.withAbility(),
     async (req, res, next) => {
       try {
         if (!(await canTouchUser(req, "update", req.params.userId))) {
@@ -254,7 +314,7 @@ module.exports = () => {
   );
 
   // Update user by userId.
-  router.put("/users/:userId", authenticate(), authorize("update", "User"), async (req, res, next) => {
+  router.put("/users/:userId", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
       if (!(await canTouchUser(req, "update", req.params.userId))) {
         return res.status(403).json({ message: "Forbidden." });
@@ -264,6 +324,21 @@ module.exports = () => {
       if (!canManageUsers(req)) {
         delete properties.role;
         delete properties.shopId;
+      }
+      // Rejected rather than dropped: silently stripping answered 200 with
+      // the unchanged record, so the dashboard reported a successful save and
+      // then re-rendered the old audiences. Compared against the stored value
+      // so a staff manager editing only a name — the form submits the whole
+      // record — is not blocked by a field they never touched.
+      if (properties.supportAudiences !== undefined && !canAssignSupportAudiences(req)) {
+        const target = await users.checkUser(String(req.params.userId)).catch(() => null);
+        const key = (v) => (Array.isArray(v) ? [...v].map(String).sort().join(",") : null);
+        if (key(properties.supportAudiences) !== key(target?.supportAudiences ?? [])) {
+          return res
+            .status(403)
+            .json({ message: "Only a Super Admin can assign support audiences." });
+        }
+        delete properties.supportAudiences;
       }
       if (!canGrantRole(req, properties.role)) {
         return res
@@ -300,7 +375,7 @@ module.exports = () => {
   router.put(
     "/users/:userId/updatepassword",
     authenticate(),
-    authorize("update", "User"),
+    authorize.withAbility(),
     async (req, res, next) => {
       try {
         if (!(await canTouchUser(req, "update", req.params.userId))) {
@@ -355,7 +430,7 @@ module.exports = () => {
   // // });
 
   // Delete user by userId.
-  router.delete("/users/:userId", authenticate(), authorize("delete", "User"), async (req, res, next) => {
+  router.delete("/users/:userId", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
       if (!(await canTouchUser(req, "delete", req.params.userId))) {
         return res.status(403).json({ message: "Forbidden." });

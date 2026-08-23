@@ -17,6 +17,14 @@ module.exports = {
   giftClaimBaseUrl:
     process.env.GIFT_CLAIM_BASE_URL || process.env.APP_WEB_URL || "",
 
+  /**
+   * What a support agent is called in the chat header. Agents answer as the
+   * platform, so their own name and phone number stay private and reassigning
+   * an audience is invisible to the customer. Configurable because the string
+   * is user-facing and this deployment is Arabic-first.
+   */
+  supportDisplayName: process.env.SUPPORT_DISPLAY_NAME || "Moaddi Support",
+
   mqtt: {
     host: process.env.MQTT_HOST,
     port: parseInt(process.env.MQTT_PORT),
