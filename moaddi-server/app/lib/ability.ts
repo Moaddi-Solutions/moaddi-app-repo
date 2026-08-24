@@ -5,7 +5,12 @@ import {
   type MongoAbility,
   type RawRuleOf,
 } from '@casl/ability';
-import { normalizeBuiltInRole, ROLES } from './roles';
+import {
+  isSupportAudience,
+  normalizeBuiltInRole,
+  ROLES,
+  SUPPORT_AUDIENCE_SUBJECT,
+} from './roles';
 
 /**
  * Central CASL permission definitions — the single source of truth for
@@ -14,9 +19,8 @@ import { normalizeBuiltInRole, ROLES } from './roles';
  * `req.ability.can(action, subject('Product', doc))`.
  *
  * Role vocabulary (product ↔ code):
- *   Vendor      = Vendor   (owns products/machines/wallet)
- *   Supplier    = Supplier (refill boxes on assigned machines only)
- *   Shop Admin  = Admin
+ *   Vendor      = Vendor      (owns products/machines/wallet)
+ *   Shop Owner  = ShopOwner
  *   Super Admin = SuperAdmin
  */
 
@@ -31,7 +35,25 @@ export type Action =
   | 'pay';
 
 export type SubjectName =
+  // Every *write* to a user account, whatever their role. Reads of a specific
+  // directory go through the per-role subjects below.
   | 'User'
+  // One subject per staff/shopper directory, because the dashboard has a page
+  // each and they must be grantable one at a time — a single `User` subject
+  // would open Customers, Vendors, Shop Owners and Staff together. They gate
+  // *reads* only; `User` still gates every write.
+  | 'Customer'
+  | 'Vendor'
+  | 'ShopOwner'
+  | 'Staff'
+  | 'Support'
+  // The SuperAdmin's internal roster — SuperAdmin, Support agents, and
+  // custom-role Staff — for the Team directory. Deliberately excludes
+  // ShopOwner/Vendor, who run their own separate shop-level operations.
+  // Read-only, and granted unconditionally in code (not assignable via a
+  // custom role's own rule rows) — see the `Conversation`/`Message` grants
+  // this mirrors.
+  | 'Team'
   | 'Shop'
   | 'Product'
   | 'Machine'
@@ -53,10 +75,6 @@ export type SubjectName =
   | 'PaymentProvider'
   // Platform role reference data (label/description); rules stay in code.
   | 'Role'
-  // Who receives "Contact support" chats from customers/vendors. Deliberately
-  // not in ASSIGNABLE_SUBJECTS — only SuperAdmin's `manage all` grants it, so
-  // custom roles can never be given it either.
-  | 'SupportRouting'
   | 'all';
 
 export type AppAbility = MongoAbility;
@@ -68,6 +86,11 @@ export interface AbilityUser {
   shopId?: string | null;
   /** Shops this staff user created (appended by `shops.create`). */
   ownedShopIds?: string[] | null;
+  /**
+   * The audiences this agent answers "contact support" for — a `Support`
+   * account or a custom-role Staff member holding one or more audiences.
+   */
+  supportAudiences?: string[] | null;
 }
 
 /**
@@ -89,8 +112,8 @@ export const shopScopeOf = (user: AbilityUser): string[] => {
 /* ------------------------------------------------------------------ */
 /* Custom roles                                                        */
 /*                                                                     */
-/* Built-in roles (SuperAdmin / Admin / Vendor / Supplier / Customer / */
-/* Guest) are defined in code below. Custom roles are created from the */
+/* Built-in roles (SuperAdmin / ShopOwner / Vendor / Customer / Guest) are   */
+/* defined in code below. Custom roles are created from the                 */
 /* dashboard and stored in the `roles` collection as simple rule rows; */
 /* the repo loads them into this in-process registry at boot and after */
 /* every mutation.                                                     */
@@ -100,7 +123,6 @@ export type RuleScope =
   | 'all'
   | 'own-shop'
   | 'own-vendor'
-  | 'own-supplier'
   | 'own-customer'
   | 'self';
 
@@ -124,6 +146,11 @@ export const ASSIGNABLE_ACTIONS: Action[] = [
 /** Grantable via custom roles — deliberately excludes 'all'. */
 export const ASSIGNABLE_SUBJECTS: SubjectName[] = [
   'User',
+  'Customer',
+  'Vendor',
+  'ShopOwner',
+  'Staff',
+  'Support',
   'Shop',
   'Product',
   'Machine',
@@ -148,14 +175,29 @@ export const RULE_SCOPES: RuleScope[] = [
   'all',
   'own-shop',
   'own-vendor',
-  'own-supplier',
   'own-customer',
   'self',
 ];
 
+/**
+ * Identity of a permission, ignoring scope: one action on one subject. Two rows
+ * differing only by scope still grant the same permission twice, and the
+ * dashboard builder writes every row as `all`, so the pair is the right key.
+ */
+export const permissionKey = (row: Pick<RuleRow, 'action' | 'subject'>): string =>
+  `${row.action}:${row.subject}`;
+
+/**
+ * Canonical, order-independent signature of a whole rule set — used to spot two
+ * roles that grant exactly the same thing under different names.
+ */
+export const rulesSignature = (rows: readonly RuleRow[]): string =>
+  [...new Set(rows.map(permissionKey))].sort().join('|');
+
 /** Returns an error message, or null when the rows are valid. */
 export const validateRuleRows = (rows: unknown): string | null => {
   if (!Array.isArray(rows)) return 'rules must be an array.';
+  const seen = new Set<string>();
   for (const row of rows) {
     const r = row as Partial<RuleRow> | null;
     if (!r || typeof r !== 'object') return 'Each rule must be an object.';
@@ -168,6 +210,11 @@ export const validateRuleRows = (rows: unknown): string | null => {
     if (!RULE_SCOPES.includes(r.scope as RuleScope)) {
       return `Unknown scope "${String(r.scope)}".`;
     }
+    const key = permissionKey(r as RuleRow);
+    if (seen.has(key)) {
+      return `Duplicate permission: ${r.action} on ${r.subject}.`;
+    }
+    seen.add(key);
   }
   return null;
 };
@@ -179,8 +226,6 @@ const SCOPE_CONDITIONS: Record<
   all: null,
   'own-shop': (user) => ({ shopId: { $in: shopScopeOf(user) } }),
   'own-vendor': (user) => ({ vendorId: String(user._id) }),
-  // Mongo + CASL both match array membership with equality on the element.
-  'own-supplier': (user) => ({ supplierIds: String(user._id) }),
   'own-customer': (user) => ({ customerId: String(user._id) }),
   self: (user) => ({ _id: String(user._id) }),
 };
@@ -200,6 +245,22 @@ export const isCustomRole = (role: string): boolean => customRoles.has(role);
 /** Subjects every signed-in (or guest) user may browse. */
 const CATALOG_SUBJECTS: SubjectName[] = ['Product', 'Shop', 'Machine', 'Group', 'Box', 'Event'];
 
+/**
+ * An audience opens exactly one directory: the agent has to see who they are
+ * talking to. Called only from the Support and custom-role branches below —
+ * never hoisted above the `switch` — so a Customer or Vendor carrying a stray
+ * `supportAudiences` value can never gain a staff directory from it.
+ */
+const grantSupportAudiences = (
+  can: AbilityBuilder<AppAbility>['can'],
+  user: AbilityUser,
+): void => {
+  for (const audience of user.supportAudiences ?? []) {
+    if (!isSupportAudience(audience)) continue;
+    can('read', SUPPORT_AUDIENCE_SUBJECT[audience] as SubjectName);
+  }
+};
+
 export const defineAbilityFor = (user: AbilityUser): AppAbility => {
   const { can, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
   const uid = String(user._id);
@@ -210,8 +271,8 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       can('manage', 'all');
       break;
 
-    case ROLES.ADMIN: {
-      // Shop Admin: full management of everything inside their own shops, and
+    case ROLES.SHOP_OWNER: {
+      // Shop owner: full management of everything inside their own shops, and
       // nothing outside them. Platform-wide configuration (CMS, docs, payment
       // providers, platform options, roles) belongs to the Super Admin, so it
       // is readable but not editable here.
@@ -235,6 +296,10 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       // Products belong to Vendors — Shop Admins run the floor (machines,
       // staff, orders) but do not own or edit the product catalog.
       can('manage', ['User', 'Machine', 'Box', 'Purchase'], inShop);
+      // The staff directories are read through their own subjects; `User`
+      // above still carries every write, so this only re-states the same reach
+      // in the vocabulary the dashboard pages gate on.
+      can('read', ['Vendor', 'ShopOwner', 'Staff'], inShop);
       // Machine telemetry for their own floor. Gifts are a customer-to-customer
       // artefact with no shop of their own, so no admin management verb.
       can('manage', 'Event', inShop);
@@ -268,17 +333,16 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       can(['read', 'update', 'delete'], 'User', { _id: uid });
       break;
 
-    case ROLES.SUPPLIER: {
-      // Refill-only: assigned machines via supplierIds (many-to-many). No
-      // product catalog, wallet, or machine configuration.
-      const assigned = { supplierIds: uid };
-      can('read', CATALOG_SUBJECTS);
-      can('read', ['Doc', 'PaymentProvider']);
-      can('read', 'Machine', assigned);
-      can(['read', 'update'], 'Box', assigned);
-      can(['create', 'read'], 'Purchase', { customerId: uid });
+    case ROLES.SUPPORT: {
+      // Answers "contact support" for the audiences on their account. The
+      // audience *is* the permission set: read that one directory so they know
+      // who they are talking to, and chat. No catalog, no money, no writes to
+      // anyone else's account — an agent who could edit the people they support
+      // is a support agent with an admin's blast radius.
       can(['read', 'create', 'update'], ['Conversation', 'Message']);
+      can('read', 'Team');
       can(['read', 'update', 'delete'], 'User', { _id: uid });
+      grantSupportAudiences(can, user);
       break;
     }
 
@@ -298,6 +362,19 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       // Custom role from the registry; unknown roles get no permissions.
       // Prefer the normalized name, then the raw string (dashboard-created roles
       // keep their exact casing).
+      //
+      // Every other role case grants some of this unconditionally that this
+      // one never did: self-management, and a way to reach the platform.
+      // Self-management and chat are self-scoped (own account, own
+      // conversations) so granting them universally carries no escalation
+      // risk — a role holding neither otherwise has no way to change its own
+      // password or ever contact the Super Admin, which is not a real
+      // permission, just a broken account. `Team` is read-only and lists only
+      // the internal roster (Super Admin, Support, other custom roles), not
+      // anyone this role couldn't already message once it can read them.
+      can(['read', 'update', 'delete'], 'User', { _id: uid });
+      can(['read', 'create', 'update'], ['Conversation', 'Message']);
+      can('read', 'Team');
       const rows = customRoles.get(role) ?? customRoles.get(user.role);
       if (rows) {
         for (const row of rows) {
@@ -309,6 +386,9 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
           }
         }
       }
+      // A custom-role staff member may also hold support audiences, on top of
+      // whatever their role's own rows grant — see `grantSupportAudiences`.
+      grantSupportAudiences(can, user);
       break;
     }
   }

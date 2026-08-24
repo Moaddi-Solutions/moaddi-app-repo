@@ -14,7 +14,7 @@ import { minValue, required } from "ra-core";
 
 export default function WithdrawalCreate() {
   const ability = useAbility();
-  // Whose payout is this? A supplier only ever requests their own, so the
+  // Whose payout is this? A vendor only ever requests their own, so the
   // server stamps the payee and the picker is noise. Anyone who can raise a
   // request against another vendor's wallet has to say which one — asked of
   // the ability so a custom finance role gets the field too, instead of a

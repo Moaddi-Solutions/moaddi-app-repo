@@ -12,6 +12,9 @@ import {
   inspectLatestMessageIntegrity,
   logChatIntegrityFailure,
 } from "../../lib/chatIntegrity";
+import { isInternalStaffRole, normalizeBuiltInRole, ROLES } from "../../lib/roles";
+
+const config: { supportDisplayName: string } = require("../../../config");
 
 const { buildPreview, isMediaType } = chatMessageTypes;
 
@@ -426,7 +429,10 @@ const listMessages = async (
   };
 };
 
-const listConversations = async (currentUserId: string) => {
+const listConversations = async (
+  currentUserId: string,
+  currentUserRole?: string,
+) => {
   //get all chats of current user
   const conversations = await chatConversations
     .find({
@@ -472,7 +478,7 @@ const listConversations = async (currentUserId: string) => {
       isActive: { $ne: false },
       isDeleted: { $ne: true },
     })
-    .select({ _id: 1, name: 1, role: 1 })
+    .select({ _id: 1, name: 1, role: 1, supportAudiences: 1 })
     .lean();
 
   const peersById = new Map(
@@ -483,6 +489,27 @@ const listConversations = async (currentUserId: string) => {
       // rather than blacklisting each prefix.
       const id = String(peer._id);
       const isRealAccount = /^\+?[1-9]\d{7,14}$/.test(id);
+
+      // Anyone holding a support audience answers on the platform's behalf —
+      // a dedicated `Support` account or a custom-role Staff member — so both
+      // show as the platform, not as themselves, to whoever they support:
+      // `_id` is the agent's personal phone number, which every customer,
+      // vendor, or shop owner who contacts support would otherwise get.
+      //
+      // Masked only for viewers *outside* the internal roster. A fellow staff
+      // member (or the Super Admin) sees the agent's real identity even in a
+      // conversation unrelated to the audience they hold — a custom-role
+      // agent has a day job beyond support, and this mask exists to hide
+      // their phone number from outsiders, not from their own colleagues.
+      const isSupportAgent =
+        normalizeBuiltInRole(peer.role) === ROLES.SUPPORT ||
+        (peer.supportAudiences?.length ?? 0) > 0;
+      if (isSupportAgent && !isInternalStaffRole(currentUserRole)) {
+        return [
+          peer._id,
+          { name: config.supportDisplayName, role: ROLES.SUPPORT, phone: null },
+        ];
+      }
 
       return [
         peer._id,

@@ -14,8 +14,8 @@ const { accessibleFilter } = require("../../lib/accessibleFilter");
  * One lookup per call, not per box.
  */
 const stampOwners = async (machineId, rows) => {
-  const { vendorId, shopId, supplierIds } = await ownersOfMachine(machineId);
-  return rows.map((row) => ({ ...row, vendorId, shopId, supplierIds }));
+  const { vendorId, shopId } = await ownersOfMachine(machineId);
+  return rows.map((row) => ({ ...row, vendorId, shopId }));
 };
 
 /*
@@ -27,7 +27,6 @@ let create = async (box) => {
     ...box,
     vendorId: owners.vendorId,
     shopId: owners.shopId,
-    supplierIds: owners.supplierIds,
   });
   box._id = "box_" + shortId.generate();
   box.created = moment().utc().add(config.timeDifference, "hours");
@@ -676,14 +675,13 @@ let removeByMachine = async (machineId) => {
 
 /**
  * Re-stamps the denormalized owner columns on every box of a machine. Called
- * when a machine is assigned to a different vendor, moved to another shop, or
- * has its supplier list changed.
+ * when a machine is assigned to a different vendor or moved to another shop.
  */
 let remachine = async (machineId) => {
-  const { vendorId, shopId, supplierIds } = await ownersOfMachine(machineId);
+  const { vendorId, shopId } = await ownersOfMachine(machineId);
   const result = await Boxes.updateMany(
     { machineId: String(machineId) },
-    { $set: { vendorId, shopId, supplierIds } }
+    { $set: { vendorId, shopId } }
   );
   return result.modifiedCount ?? 0;
 };

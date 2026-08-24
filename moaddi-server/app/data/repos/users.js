@@ -4,6 +4,13 @@ const jwt = require("jsonwebtoken");
 const config = require("../../../config");
 const Users = require("../models/users");
 const { rulesFor, isCustomRole } = require("../../lib/ability");
+const {
+  ROLES,
+  SUPPORT_AUDIENCES,
+  directorySubjectForRoleParam,
+  isSupportAudience,
+  isInternalStaffRole,
+} = require("../../lib/roles");
 const { accessibleFilter } = require("../../lib/accessibleFilter");
 const Purchases = require("../models/purchases");
 const Wallets = require("../models/wallets");
@@ -324,6 +331,69 @@ let socialSignIn = async (profile, preferredCurrency) => {
   };
 };
 
+/**
+ * Validates `supportAudiences` and enforces one agent per audience.
+ *
+ * Called from both `create` and `update` rather than from the controller,
+ * because every write path routes through here — a check in one controller
+ * would leave the other able to hand the same audience to two people, and the
+ * `/chat/support-target` lookup would then pick between them arbitrarily.
+ *
+ * `userId` is excluded from the conflict search so re-saving an agent keeps
+ * the audiences it already holds.
+ *
+ * `role` is the account's role *after* this write applies. Only the internal
+ * roster (SuperAdmin, Support, custom-role Staff) may hold an audience —
+ * `defineAbilityFor` only grants the matching directory read from the Support
+ * and custom-role branches, so a Customer, Vendor, or ShopOwner holding one
+ * would become a `/chat/support-target` routing destination with no way to
+ * read the people it's supposed to answer.
+ */
+let assertSupportAudiences = async (userId, audiences, role) => {
+  if (audiences == null) return undefined;
+  if (!Array.isArray(audiences)) {
+    return Promise.reject({
+      message: "supportAudiences must be an array.",
+      statusCode: 400,
+    });
+  }
+
+  const cleaned = [...new Set(audiences.map((a) => String(a)))];
+  const unknown = cleaned.find((a) => !isSupportAudience(a));
+  if (unknown) {
+    return Promise.reject({
+      message: `Unknown support audience "${unknown}". Expected one of: ${SUPPORT_AUDIENCES.join(", ")}.`,
+      statusCode: 400,
+    });
+  }
+  if (!cleaned.length) return [];
+
+  if (!isInternalStaffRole(role)) {
+    return Promise.reject({
+      message: "Only Super Admin, Support, or a custom-role staff account may hold support audiences.",
+      statusCode: 400,
+    });
+  }
+
+  const conflict = await Users.findOne({
+    _id: { $ne: String(userId).toLowerCase() },
+    isDeleted: false,
+    supportAudiences: { $in: cleaned },
+  }).lean();
+
+  if (conflict) {
+    const taken = cleaned.filter((a) =>
+      (conflict.supportAudiences || []).includes(a),
+    );
+    return Promise.reject({
+      message: `${conflict.name || conflict._id} already answers ${taken.join(", ")}. Remove it from them first.`,
+      statusCode: 409,
+    });
+  }
+
+  return cleaned;
+};
+
 /*
  * Create new user.
  */
@@ -339,13 +409,16 @@ let create = async (user) => {
   const role = String(user.role || "");
   const creatable =
     role === "Vendor" ||
-    role === "Supplier" ||
-    role === "Admin" ||
+    role === "ShopOwner" ||
     role === "SuperAdmin" ||
+    role === ROLES.SUPPORT ||
     isCustomRole(role);
   if (!creatable) return { message: "User role is not valid" };
 
   user._id = user._id.toLowerCase();
+
+  const audiences = await assertSupportAudiences(user._id, user.supportAudiences, role);
+  if (audiences !== undefined) user.supportAudiences = audiences;
 
   let User = await Users.findOne({ _id: user._id });
 
@@ -365,8 +438,6 @@ let create = async (user) => {
   if (machineIds !== undefined) {
     if (role === "Vendor") {
       await machinesRepo.syncVendorMachines(user._id, machineIds);
-    } else if (role === "Supplier") {
-      await machinesRepo.syncSupplierMachines(user._id, machineIds);
     }
   }
 
@@ -595,6 +666,7 @@ let getById = async (userId, preferredCurrency) => {
             preferredCurrency: "$preferredCurrency",
             isActive: "$isActive",
             isDeleted: "$isDeleted",
+            supportAudiences: "$supportAudiences",
             created: "$created",
             updated: "$updated",
             machineId: "$machines._id",
@@ -647,6 +719,7 @@ let getById = async (userId, preferredCurrency) => {
           preferredCurrency: { $first: "$_id.preferredCurrency" },
           isActive: { $first: "$_id.isActive" },
           isDeleted: { $first: "$_id.isDeleted" },
+          supportAudiences: { $first: "$_id.supportAudiences" },
           created: { $first: "$_id.created" },
           updated: { $first: "$_id.updated" },
           machines: {
@@ -675,6 +748,7 @@ let getById = async (userId, preferredCurrency) => {
           preferredCurrency: 1,
           isActive: 1,
           isDeleted: 1,
+          supportAudiences: 1,
           created: 1,
           updated: 1,
           machines: {
@@ -724,15 +798,6 @@ let getById = async (userId, preferredCurrency) => {
     if (roleNorm === "vendor") {
       if (!user.machines?.[0]?._id) user.machines = [];
       shapeVendorMachineBoxProducts(user, preferredCurrency);
-    } else if (roleNorm === "supplier") {
-      const Machines = require("../models/machines");
-      const assigned = await Machines.find({
-        supplierIds: String(user._id),
-        isDeleted: false,
-      })
-        .select("_id name mac qrCode isConnected isAssigned isActive isDeleted created updated")
-        .lean();
-      user.machines = assigned ?? [];
     } else {
       delete user.machines;
       const purchase = await purchasesRepo.getByCustomerId(
@@ -751,18 +816,54 @@ let getById = async (userId, preferredCurrency) => {
 
 const CUSTOMER_LIKE_ROLES = ["Customer", "Guest", "customer", "guest"];
 
+/**
+ * Every role defined in code. Both casings, because `users.role` is a free-form
+ * String and the stored casing has drifted historically.
+ */
+const BUILT_IN_ROLES = [...Object.values(ROLES), "Guest"].flatMap((r) => [
+  r,
+  r.toLowerCase(),
+]);
+
+/**
+ * Roles that run their own separate shop-level operation, so they sit outside
+ * the SuperAdmin's internal roster — see the `"team"` pseudo-role below.
+ */
+const SHOP_LEVEL_ROLES = [ROLES.SHOP_OWNER, ROLES.VENDOR].flatMap((r) => [
+  r,
+  r.toLowerCase(),
+]);
+
 /*
- * Get all users by role.
- * Pass role `"staff"` to list every non-customer/guest account (Vendor,
- * Admin, SuperAdmin, and dashboard-created custom roles) — used by the
- * admin Vendors/Staff page, which can create any of those roles.
+ * Get all users by role. Three pseudo-roles:
+ *   "staff"  — every non-customer/guest account (Vendor, ShopOwner, SuperAdmin
+ *              and dashboard-created custom roles).
+ *   "custom" — only dashboard-created custom roles (Support, Accountant, …),
+ *              i.e. everything that is not a built-in. Backs the Staff page.
+ *   "team"   — the SuperAdmin's internal roster: SuperAdmin, Support, and
+ *              custom roles, but not ShopOwner/Vendor (they run their own
+ *              shop, out of scope for internal staff-to-staff messaging).
+ *              Backs the Team directory.
  */
 let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
-  const isStaffList = String(role || "").toLowerCase() === "staff";
-  const scope = ability ? accessibleFilter(ability, "update", "User") : {};
+  const asked = String(role || "").toLowerCase();
+  const isStaffList = asked === "staff";
+  const isCustomList = asked === "custom";
+  const isTeamList = asked === "team";
+  // Filter on `read` against this directory's own subject. It used to be
+  // `update` on `User`, which stood in for "is a manager" — that quietly
+  // excluded any read-only role (a support agent matched only themselves), and
+  // `User` could not tell the four directories apart anyway.
+  const scope = ability
+    ? accessibleFilter(ability, "read", directorySubjectForRoleParam(role))
+    : {};
   const match = isStaffList
     ? { ...scope, isDeleted: false, role: { $nin: CUSTOMER_LIKE_ROLES } }
-    : { ...scope, isDeleted: false, role: role };
+    : isCustomList
+      ? { ...scope, isDeleted: false, role: { $nin: BUILT_IN_ROLES } }
+      : isTeamList
+        ? { ...scope, isDeleted: false, role: { $nin: [...CUSTOMER_LIKE_ROLES, ...SHOP_LEVEL_ROLES] } }
+        : { ...scope, isDeleted: false, role: role };
   const total = await Users.countDocuments(match);
 
   try {
@@ -789,17 +890,7 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
                 $expr: {
                   $and: [
                     { $ne: ["$isDeleted", true] },
-                    {
-                      $or: [
-                        { $eq: ["$vendorId", "$$uid"] },
-                        {
-                          $in: [
-                            "$$uid",
-                            { $ifNull: ["$supplierIds", []] },
-                          ],
-                        },
-                      ],
-                    },
+                    { $eq: ["$vendorId", "$$uid"] },
                   ],
                 },
               },
@@ -853,6 +944,7 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
             preferredCurrency: "$preferredCurrency",
             isActive: "$isActive",
             isDeleted: "$isDeleted",
+            supportAudiences: "$supportAudiences",
             created: "$created",
             updated: "$updated",
             machineId: "$machines._id",
@@ -872,6 +964,7 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
           preferredCurrency: { $first: "$_id.preferredCurrency" },
           isActive: { $first: "$_id.isActive" },
           isDeleted: { $first: "$_id.isDeleted" },
+          supportAudiences: { $first: "$_id.supportAudiences" },
           created: { $first: "$_id.created" },
           updated: { $first: "$_id.updated" },
           machines: {
@@ -892,6 +985,7 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
           preferredCurrency: 1,
           isActive: 1,
           isDeleted: 1,
+          supportAudiences: 1,
           created: 1,
           updated: 1,
           machines: 1,
@@ -906,9 +1000,8 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
     users.forEach((e) => {
       const isVendor =
         String(e.role ?? "").toLowerCase() === "vendor" || role === "Vendor";
-      const isSupplier = String(e.role ?? "").toLowerCase() === "supplier";
       if (!e.machines?.[0]?._id) {
-        if (isVendor || isSupplier || isStaffList) e.machines = [];
+        if (isVendor || isStaffList || isCustomList || isTeamList) e.machines = [];
         else delete e.machines;
       }
     });
@@ -968,6 +1061,18 @@ let update = async (userId, properties) => {
   delete nextProps.machines;
   delete nextProps.confirm_password;
 
+  if (Object.prototype.hasOwnProperty.call(nextProps, "supportAudiences")) {
+    // The role this write leaves the account with — a request may change role
+    // and supportAudiences in the same PUT, so the stored role alone is not
+    // always the right one to check against.
+    const effectiveRole = nextProps.role ?? user.role;
+    nextProps.supportAudiences = await assertSupportAudiences(
+      userId,
+      nextProps.supportAudiences,
+      effectiveRole,
+    );
+  }
+
   // Update all properties.
   for (let property in nextProps) {
     user[property] = nextProps[property];
@@ -991,8 +1096,6 @@ let update = async (userId, properties) => {
     const role = String(user.role || "");
     if (role === "Vendor") {
       await machinesRepo.syncVendorMachines(user._id, machineIds);
-    } else if (role === "Supplier") {
-      await machinesRepo.syncSupplierMachines(user._id, machineIds);
     }
   }
 
@@ -1160,6 +1263,44 @@ let updatePassword = async (userId, properties) => {
 //     return user;
 // }
 
+/**
+ * The active support agent answering one audience, or null when nobody holds
+ * it (the caller then falls back to `findSuperAdmin` below).
+ *
+ * Not filtered by role: a support agent is either a `Support` account or a
+ * custom-role Staff member holding the audience — `assertSupportAudiences`
+ * already guarantees at most one active holder platform-wide, whatever role
+ * they carry.
+ *
+ * Inactive and deleted agents are skipped deliberately: they cannot sign in,
+ * so returning one would route customers into an inbox nobody reads.
+ */
+let findSupportAgent = async (audience) => {
+  if (!isSupportAudience(audience)) return null;
+  return Users.findOne({
+    supportAudiences: audience,
+    isActive: true,
+    isDeleted: false,
+  }).lean();
+};
+
+/**
+ * The platform's Super Admin — the ultimate fallback for "contact support"
+ * when no agent holds the caller's audience. The product only ever has one,
+ * so this is the id to use instead of a hardcoded/env-configured one; if that
+ * ever changes, `sort({created: 1})` picks the original account rather than
+ * an arbitrary one.
+ */
+let findSuperAdmin = async () => {
+  return Users.findOne({
+    role: ROLES.SUPER_ADMIN,
+    isActive: true,
+    isDeleted: false,
+  })
+    .sort({ created: 1 })
+    .lean();
+};
+
 /*
  * Delete user by id.
  */
@@ -1187,6 +1328,8 @@ module.exports = {
   getById,
   getByRole,
   update,
+  findSupportAgent,
+  findSuperAdmin,
   recascadeVendorShop,
   updateMachines,
   updatePassword,

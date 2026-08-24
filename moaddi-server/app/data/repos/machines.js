@@ -10,8 +10,6 @@ const Events = require("../models/events");
 const Purchases = require("../models/purchases");
 const MachineTypes = require("../../utilities/machineTypes");
 const { accessibleFilter, accessibleFilterAny } = require("../../lib/accessibleFilter");
-const Users = require("../models/users");
-const { ROLES } = require("../../lib/roles");
 
 /**
  * Reject paymentProvider values that aren't in the currently-active set.
@@ -26,35 +24,6 @@ const assertPaymentProviderAllowed = async (paymentProvider) => {
       statusCode: 400,
     });
   }
-};
-
-/** Normalize + validate `supplierIds` — every id must be a Supplier user. */
-const normalizeSupplierIds = async (raw) => {
-  if (raw == null) return [];
-  const ids = [
-    ...new Set(
-      (Array.isArray(raw) ? raw : [raw])
-        .map((id) => String(id || "").trim())
-        .filter(Boolean)
-    ),
-  ];
-  if (ids.length === 0) return [];
-  const users = await Users.find({
-    _id: { $in: ids },
-    role: ROLES.SUPPLIER,
-    isDeleted: { $ne: true },
-  })
-    .select("_id")
-    .lean();
-  const found = new Set(users.map((u) => String(u._id)));
-  const missing = ids.filter((id) => !found.has(id));
-  if (missing.length) {
-    return Promise.reject({
-      message: `supplierIds must be Supplier users. Unknown or wrong role: ${missing.join(", ")}`,
-      statusCode: 400,
-    });
-  }
-  return ids;
 };
 
 /**
@@ -186,12 +155,6 @@ const usdPrice = (product) => {
 let create = async (machine) => {
   await assertPaymentProviderAllowed(machine.paymentProvider);
 
-  if ("supplierIds" in machine) {
-    machine.supplierIds = await normalizeSupplierIds(machine.supplierIds);
-  } else {
-    machine.supplierIds = [];
-  }
-
   machine.qrCode = machine.mac;
   machine = new Machines(machine);
 
@@ -264,10 +227,9 @@ let create = async (machine) => {
  * Get all machines.
  */
 /**
- * Staff machine directory — "machines I manage or refill", so it is scoped by
- * the union of `update Machine` (Vendor / Shop Admin) and `update Box`
- * (Supplier refill assignments). Catalog `read Machine` is too wide (every
- * signed-in user may browse).
+ * Staff machine directory — "machines I manage", scoped by `update Machine`
+ * (Vendor / Shop Admin). Catalog `read Machine` is too wide (every signed-in
+ * user may browse).
  */
 let get = async (skip = 0, limit = 1000, ability = null) => {
   const scope = ability
@@ -945,10 +907,6 @@ let update = async (machineId, properties) => {
 
   // Update all properties.
   for (let property in properties) {
-    if (property === "supplierIds") {
-      machine.supplierIds = await normalizeSupplierIds(properties.supplierIds);
-      continue;
-    }
     if (property == "boxes") {
       console.log("old boxes:", machine[property]);
       console.log("new boxes:", properties[property]);
@@ -995,12 +953,8 @@ let update = async (machineId, properties) => {
   machine = await machine.save();
   machine = machine.toJSON();
   // Boxes inherit their owner from the machine — keep them in step whenever
-  // the machine's vendor, shop, or suppliers are among the updated properties.
-  if (
-    "vendorId" in properties ||
-    "shopId" in properties ||
-    "supplierIds" in properties
-  ) {
+  // the machine's vendor or shop are among the updated properties.
+  if ("vendorId" in properties || "shopId" in properties) {
     await boxesRepo.remachine(machine._id);
   }
   return machine;
@@ -1093,59 +1047,6 @@ let syncVendorMachines = async (vendorId, machineIds) => {
   return desired;
 };
 
-/**
- * Make `machineIds` the full set of machines this supplier may refill.
- */
-let syncSupplierMachines = async (supplierId, machineIds) => {
-  const uid = String(supplierId);
-  const desired = [
-    ...new Set(
-      (Array.isArray(machineIds) ? machineIds : [])
-        .map((id) => String(id || "").trim())
-        .filter(Boolean)
-    ),
-  ];
-  const current = await Machines.find({
-    supplierIds: uid,
-    isDeleted: false,
-  })
-    .select("_id")
-    .lean();
-  const currentIds = current.map((m) => String(m._id));
-  const desiredSet = new Set(desired);
-  const currentSet = new Set(currentIds);
-
-  for (const id of desired) {
-    if (currentSet.has(id)) continue;
-    const machine = await Machines.findOne({ _id: id, isDeleted: false });
-    if (!machine) {
-      return Promise.reject({
-        message: `Machine not found: ${id}`,
-        statusCode: 404,
-      });
-    }
-    const next = [
-      ...new Set([...(machine.supplierIds || []).map(String), uid]),
-    ];
-    machine.supplierIds = next;
-    machine.updated = moment().utc().add(config.timeDifference, "hours");
-    await machine.save();
-    await boxesRepo.remachine(machine._id);
-  }
-  for (const id of currentIds) {
-    if (desiredSet.has(id)) continue;
-    const machine = await Machines.findOne({ _id: id, isDeleted: false });
-    if (!machine) continue;
-    machine.supplierIds = (machine.supplierIds || [])
-      .map(String)
-      .filter((sid) => sid !== uid);
-    machine.updated = moment().utc().add(config.timeDifference, "hours");
-    await machine.save();
-    await boxesRepo.remachine(machine._id);
-  }
-  return desired;
-};
-
 /*
  * Assign machine to vendor.
  */
@@ -1209,7 +1110,6 @@ module.exports = {
   assign,
   assignBulk,
   syncVendorMachines,
-  syncSupplierMachines,
   unassign,
   remove,
   getVendorIdOf,

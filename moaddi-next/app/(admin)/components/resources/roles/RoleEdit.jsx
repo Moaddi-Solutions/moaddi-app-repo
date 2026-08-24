@@ -5,7 +5,7 @@ import {
 } from "@/(admin)/components/kit/AdminForm";
 import { TextInput } from "@/(admin)/components/kit/inputs/AdminInputs";
 import { useRecordContext } from "ra-core";
-import RuleRowsInput from "./RuleRowsInput";
+import PermissionMatrix from "./PermissionMatrix";
 import RulesTable from "./RulesTable";
 
 // Built-in roles: permissions live in server code, shown read-only.
@@ -26,9 +26,9 @@ const PermissionsSection = () => {
   return (
     <AdminFormSection
       title="Permissions"
-      description="Each row grants one action. Anything not granted here is denied."
+      description="Tick what this role can do. Anything not ticked is denied."
     >
-      <RuleRowsInput />
+      <PermissionMatrix />
     </AdminFormSection>
   );
 };

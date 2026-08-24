@@ -65,8 +65,6 @@ export interface IMachine {
   type: MachineType | number;
   password?: string | null;
   vendorId?: string | null;
-  /** Refill staff (role Supplier) assigned to this machine. */
-  supplierIds?: string[];
   shopId?: string;
   groupId?: string;
   specialProducts?: Record<string, unknown>;
@@ -228,6 +226,12 @@ export interface IUser {
   email?: string;
   isActive: boolean;
   isDeleted: boolean;
+  /**
+   * Which audiences this agent answers "contact support" for — a `Support`
+   * account or a custom-role Staff member. See `assertSupportAudiences` in
+   * the users repo.
+   */
+  supportAudiences?: string[];
   created: Date;
   updated?: Date;
 }
@@ -351,11 +355,9 @@ export interface IOptions {
   platformFeePercent: Money;
   currency: string;
   paymentProviders?: Record<string, IPaymentProviderState>;
-  supportAdminIdCustomers?: string;
-  supportAdminIdVendors?: string;
   updatedBy?: string;
   updated?: Date;
 }
 
-export type Role = 'SuperAdmin' | 'Admin' | 'Vendor' | 'Customer';
+export type Role = 'SuperAdmin' | 'ShopOwner' | 'Vendor' | 'Customer';
 

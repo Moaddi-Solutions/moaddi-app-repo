@@ -19,6 +19,13 @@ import { CheckIcon, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
+/**
+ * Countries the platform actually operates in. Pass as `countries` on any
+ * sign-in / sign-up phone field: offering the full ITU list invites numbers
+ * that can never receive an OTP or be reached by support.
+ */
+export const SUPPORTED_COUNTRIES: RPNInput.Country[] = ["SA", "EG"];
+
 type PhoneInputProps = Omit<
   React.ComponentProps<"input">,
   "onChange" | "value" | "ref"

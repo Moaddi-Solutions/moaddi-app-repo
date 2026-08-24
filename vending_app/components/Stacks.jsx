@@ -45,23 +45,19 @@ const Stacks = () => {
   if (isLoading) {
     return <Loader flex />;
   }
-  // if (user && user?.role === "Admin" && !isLoading) {
-  //   return <Redirect href={"/(staff)/rabie"} />;
-  // }
   return (
     <>
       <LanguageSelectorModal {...languageSelectorModal} />
       <Stack>
         <Stack.Protected
           guard={
-            user?.role === "Admin" ||
+            user?.role === "ShopOwner" ||
             user?.role === "Vendor" ||
             user?.role === "SuperAdmin"
           }
         >
           <Stack.Screen name="staff" options={{ headerShown: false }} />
         </Stack.Protected>
-        {/* <Stack.Protected guard={user?.role !== "Admin"}> */}
         {/* Primary app shell: bottom tabs (Home / Shops / Profile). */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="Onboarding" options={{ headerShown: false }} />

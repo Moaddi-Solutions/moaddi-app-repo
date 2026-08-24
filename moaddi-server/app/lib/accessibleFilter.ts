@@ -57,8 +57,8 @@ export const accessibleFilter = (
 /**
  * Union of several accessible filters. An empty/`DENY_ALL` branch is dropped;
  * any unrestricted `{}` branch wins. Used for staff machine directories where a
- * Vendor matches `update Machine` while a Supplier matches `update Box` (same
- * ownership columns live on both documents).
+ * Vendor matches `update Machine` while a custom refill role matches
+ * `update Box` (same ownership columns live on both documents).
  */
 export const accessibleFilterAny = (
   ...filters: Record<string, unknown>[]

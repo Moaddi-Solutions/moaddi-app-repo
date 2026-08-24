@@ -245,8 +245,14 @@ export const AdminContactUserButton = ({ targetUserId, label, className }) => {
   const notify = useNotify();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  // Gated on the caller's own ability, not just on there being a target: a
+  // custom role with Customer/User permissions but no Conversation grant
+  // (e.g. a Customers reviewer) would otherwise see a working-looking icon on
+  // every list row and get a 403 on click. "conversations" is the same
+  // RESOURCE_MAP entry the sidebar link and every Edit/Delete button use.
+  const { canAccess } = useCanAccess({ resource: "conversations", action: "create" });
 
-  if (!targetUserId) return null;
+  if (!targetUserId || !canAccess) return null;
 
   const handleClick = async (event) => {
     event.stopPropagation();

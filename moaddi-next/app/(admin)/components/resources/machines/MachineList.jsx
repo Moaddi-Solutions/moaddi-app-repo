@@ -41,7 +41,7 @@ const ActiveSwitch = ({ record }) => {
   );
 };
 
-/** Only for staff who manage other people's machines — a supplier has no one
+/** Only for staff who manage other people's machines — a vendor has no one
  *  to contact here, since every row in their list is their own. */
 const ContactVendorButton = ({ record }) => {
   const ability = useAbility();

@@ -11,6 +11,26 @@ export function clearAuthHeaders() {
 }
 
 /**
+ * Rethrow with the server's own message.
+ *
+ * Axios throws an error whose `.message` is "Request failed with status code
+ * 400" — the reason the API actually gave sits in `response.data.message`.
+ * react-admin notifies on `.message`, so without this every validation failure
+ * reaches the user as the same meaningless string.
+ *
+ * @param {any} error
+ * @returns {never}
+ */
+const withServerMessage = (error) => {
+  const serverMessage = error?.response?.data?.message;
+  if (!serverMessage) throw error;
+  const wrapped = new Error(serverMessage);
+  wrapped.status = error?.response?.status;
+  wrapped.cause = error;
+  throw wrapped;
+};
+
+/**
  * @param {string} url
  * @param {unknown} [body]
  * @param {import("axios").AxiosRequestConfig} [config] optional per-call config
@@ -28,17 +48,17 @@ export const postRequest = async (url, body = null, config = undefined) => {
       axios.defaults.headers["Authorization"] = "Bearer " + cookies.token;
     }
   }
-  // try {
-  let response;
-  if (body) {
-    response = config ? await axios.post(url, body, config) : await axios.post(url, body);
-  } else {
-    response = config ? await axios.post(url, undefined, config) : await axios.post(url);
+  try {
+    let response;
+    if (body) {
+      response = config ? await axios.post(url, body, config) : await axios.post(url, body);
+    } else {
+      response = config ? await axios.post(url, undefined, config) : await axios.post(url);
+    }
+    return response.data;
+  } catch (error) {
+    return withServerMessage(error);
   }
-  return response.data;
-  // } catch (error) {
-  //   return error.response.data;
-  // }
 };
 export const getRequest = async (url) => {
   let cookies = Cookies.get("user");
@@ -67,14 +87,14 @@ export const putRequest = async (url, body = {}, config = undefined) => {
     cookies = JSON.parse(cookies);
     axios.defaults.headers["Authorization"] = "Bearer " + cookies.token;
   }
-  // try {
-  const response = config
-    ? await axios.put(url, body, config)
-    : await axios.put(url, body);
-  return response?.data;
-  // } catch (error) {
-  //   return error?.response?.data;
-  // }
+  try {
+    const response = config
+      ? await axios.put(url, body, config)
+      : await axios.put(url, body);
+    return response?.data;
+  } catch (error) {
+    return withServerMessage(error);
+  }
 };
 
 export const deleteRequest = async (url, config = undefined) => {
