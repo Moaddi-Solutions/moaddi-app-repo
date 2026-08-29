@@ -4,15 +4,17 @@ import { Spinner } from "@/(admin)/components/kit/AdminUI";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { ShowBase, useRecordContext, useShowContext } from "ra-core";
-import { machineColumns } from "./MachineList";
+import { machineColumnsFor } from "./MachineList";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
 
 const MachineDetails = () => {
   const record = useRecordContext();
+  const ability = useAbility();
   if (!record) return null;
 
   const rows = [
     { key: "id", label: "ID", render: () => <span className="font-mono text-xs">{record._id}</span> },
-    ...machineColumns,
+    ...machineColumnsFor(ability),
     { key: "updated", label: "Updated", render: (r) => new Date(r.updated).toLocaleString() },
     { key: "created", label: "Created", render: (r) => new Date(r.created).toLocaleString() },
   ];

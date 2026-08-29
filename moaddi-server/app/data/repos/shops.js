@@ -100,6 +100,27 @@ const attachPrimaryShopOwner = () => ({
  * One query for the whole page rather than per row. A shop held by several
  * users is left blank: there is no single "the owner" to name.
  */
+/** Attaches each shop's machines, so the admin list can show a count/names
+ * instead of always reading empty (the plain `Shops.find` in `get` below,
+ * unlike `getActive`/`getById`, does no `$lookup` for them). */
+const attachMachines = async (shops) => {
+  const shopIds = shops.map((s) => String(s._id));
+  const machines = await Machines.find({ shopId: { $in: shopIds } })
+    .select("_id name shopId")
+    .lean();
+
+  const byShop = new Map();
+  for (const m of machines) {
+    const id = String(m.shopId);
+    if (!byShop.has(id)) byShop.set(id, []);
+    byShop.get(id).push(m);
+  }
+
+  for (const shop of shops) {
+    shop.machines = byShop.get(String(shop._id)) ?? [];
+  }
+};
+
 const attachEffectiveOwner = async (shops) => {
   const unowned = new Set(shops.filter((s) => !s.ownerId).map((s) => String(s._id)));
   if (!unowned.size) return;
@@ -173,6 +194,7 @@ let get = async (skip = 0, limit = 1000, ability = null) => {
   }
 
   await attachEffectiveOwner(shops);
+  await attachMachines(shops);
 
   return { data: shops, total };
   // return shops

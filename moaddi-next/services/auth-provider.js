@@ -150,14 +150,18 @@ export default {
   getPermissions,
   logout,
   checkError(error) {
+    // Only 401 means the session itself is invalid — a full logout belongs
+    // there. Everything else (403 included) is a routine CASL denial or
+    // request error scoped to one action; forcing a logout on those kicked
+    // people out of the dashboard just for hitting a field they can't browse
+    // (e.g. a Vendor's machine-edit form querying the Vendor directory for
+    // its reference dropdown).
     const status = error?.status ?? error?.response?.status;
-    const response = error?.response;
     if (status === 401) {
       return Promise.reject(
         Object.assign(new Error("Session expired"), { message: false }),
       );
     }
-    if (response?.data?.message) throw new Error(response?.data?.message);
     return Promise.resolve();
   },
   // `record` arrives from per-row checks (the Edit button in a list); passing

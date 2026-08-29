@@ -1,5 +1,6 @@
 import Footer from "@/(root)/components/Footer";
 import Header from "@/(root)/components/Header";
+import MobileHeader from "@/(root)/components/MobileHeader";
 import BottomNavigation from "@/(root)/components/BottomNavigation";
 import PurchaseStatusNotifier from "@/(root)/components/PurchaseStatusNotifier";
 import { CartProvider } from "@/(root)/context/cart-provider";
@@ -175,6 +176,7 @@ export default async function RootLayout({ children }) {
                           className="moaddi-storefront-shell flex min-h-screen flex-col"
                         >
                           <Header {...header} />
+                          <MobileHeader />
                           <div className="flex-1">{children}</div>
                           <Footer {...footer} />
                         </div>

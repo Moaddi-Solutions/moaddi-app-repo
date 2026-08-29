@@ -15,6 +15,8 @@ import {
   AdminSimpleForm,
 } from "@/(admin)/components/kit/AdminForm";
 import { AdminShowButton } from "@/(admin)/components/kit/AdminUI";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
+import { canActForOthers } from "@/../lib/ability";
 import { useRecordContext } from "ra-core";
 
 const GenaiInputs = () => {
@@ -58,6 +60,7 @@ export const MachineEditItems = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isGenai, setIsGenai] = useState(false);
   const record = useRecordContext();
+  const ability = useAbility();
   const onSelectChange = (event) => {
     setShowPassword(event.target.value == 2);
     setIsGenai(event.target.value == 6);
@@ -77,15 +80,23 @@ export const MachineEditItems = () => {
         {/* <BooleanInput source="status" /> */}
       </AdminFormSection>
 
-      <AdminFormSection title="Assignment">
-        <ReferenceInput
-          reference="vendors"
-          source="vendorId"
-          filter={{ role: "Vendor" }}
-        />
-        <ReferenceInput reference="shops" source="shopId" />
-        <ReferenceInput reference="groups" source="groupId" />
-      </AdminFormSection>
+      {/* Who a machine belongs to is a platform assignment, not something its
+          owner edits: a vendor-scoped rule can never move a machine to another
+          vendor (the server refuses — see `assertCanReassign` in
+          controllers/machines.js). Rendering these anyway asked the Vendors,
+          Shops and Groups directories for names the role may not read, so the
+          form 403'd on open for exactly the people who could not use it. */}
+      {canActForOthers(ability, "update", "Machine") ? (
+        <AdminFormSection title="Assignment">
+          <ReferenceInput
+            reference="vendors"
+            source="vendorId"
+            filter={{ role: "Vendor" }}
+          />
+          <ReferenceInput reference="shops" source="shopId" />
+          <ReferenceInput reference="groups" source="groupId" />
+        </AdminFormSection>
+      ) : null}
 
       <AdminFormSection title="Configuration">
         <SelectInput

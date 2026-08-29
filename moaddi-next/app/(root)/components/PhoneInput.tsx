@@ -23,8 +23,12 @@ import flags from "react-phone-number-input/flags";
  * Countries the platform actually operates in. Pass as `countries` on any
  * sign-in / sign-up phone field: offering the full ITU list invites numbers
  * that can never receive an OTP or be reached by support.
+ *
+ * Dev/staging stays restricted to SA/EG so test accounts can't wander into
+ * countries support doesn't cover; production allows every country.
  */
-export const SUPPORTED_COUNTRIES: RPNInput.Country[] = ["SA", "EG"];
+export const SUPPORTED_COUNTRIES: RPNInput.Country[] | undefined =
+  process.env.NODE_ENV === "production" ? undefined : ["SA", "EG"];
 
 type PhoneInputProps = Omit<
   React.ComponentProps<"input">,

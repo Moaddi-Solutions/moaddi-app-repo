@@ -49,9 +49,13 @@ const supportUserIdListeners: Record<SupportAudience, Set<() => void>> = {
   vendors: new Set(),
 };
 
+const notifySupportUserId = (audience: SupportAudience) => {
+  supportUserIdListeners[audience].forEach((listener) => listener());
+};
+
 const setCachedSupportUserId = (audience: SupportAudience, id: string) => {
   cachedSupportUserId[audience] = id;
-  supportUserIdListeners[audience].forEach((listener) => listener());
+  notifySupportUserId(audience);
 };
 
 /**
@@ -61,12 +65,14 @@ const setCachedSupportUserId = (audience: SupportAudience, id: string) => {
 const ensureSupportUserIdFetched = (audience: SupportAudience) => {
   if (fetchStarted[audience] || cachedSupportUserId[audience]) return;
   fetchStarted[audience] = true;
+  notifySupportUserId(audience);
   getRequest(chatSupportTargetAPI(audience))
     .then(({ targetUserId }: { targetUserId: string | null }) => {
       if (targetUserId) setCachedSupportUserId(audience, targetUserId);
     })
     .catch(() => {
       fetchStarted[audience] = false;
+      notifySupportUserId(audience);
     });
 };
 
@@ -91,6 +97,23 @@ export function useSupportUserId(audience: SupportAudience = "customers") {
   );
 }
 
+/** True while the support id for `audience` hasn't resolved yet (fetch in flight or not yet started). */
+export function useSupportUserIdPending(
+  audience: SupportAudience = "customers",
+) {
+  useEffect(() => {
+    ensureSupportUserIdFetched(audience);
+  }, [audience]);
+  return useSyncExternalStore(
+    (onChange) => {
+      supportUserIdListeners[audience].add(onChange);
+      return () => supportUserIdListeners[audience].delete(onChange);
+    },
+    () => fetchStarted[audience] && !cachedSupportUserId[audience],
+    () => true,
+  );
+}
+
 const ContactTargetContext = createContext<ContactTargetContextValue | null>(
   null,
 );
@@ -101,14 +124,21 @@ export function ContactTargetProvider({
   children: React.ReactNode;
 }) {
   const supportId = useSupportUserId();
+  const supportPending = useSupportUserIdPending();
   const [pageTarget, setPageTarget] = useState<ContactTarget | null>(null);
 
   const value = useMemo(
     () => ({
-      target: pageTarget ?? { ...DEFAULT_SUPPORT_TARGET, targetUserId: supportId },
+      target:
+        pageTarget ??
+        {
+          ...DEFAULT_SUPPORT_TARGET,
+          targetUserId: supportId,
+          isPending: supportPending,
+        },
       setPageTarget,
     }),
-    [pageTarget, supportId],
+    [pageTarget, supportId, supportPending],
   );
 
   return (

@@ -23,7 +23,16 @@ interface IRole {
 const RolesSchema = new mongoose.Schema<IRole>(
   {
     _id: { type: String, required: true },
-    name: { type: String, required: true, unique: true },
+    // The role's code, and always equal to `_id` — the repo writes both from
+    // the same value, and every lookup (the ability registry, `users.role`,
+    // the delete guard) keys off `_id`. Carried as its own field because it is
+    // what the create API and the dashboard form send.
+    //
+    // Deliberately NOT unique: `_id` already guarantees that, and the index
+    // here only ever fired on states the app cannot produce (two roles sharing
+    // a name under different ids) while permitting the one that matters
+    // (`_id` and `name` disagreeing). $indexStats recorded 0 uses of it.
+    name: { type: String, required: true },
     label: { type: String, required: true },
     description: { type: String, required: true },
     builtIn: { type: Boolean, default: true },

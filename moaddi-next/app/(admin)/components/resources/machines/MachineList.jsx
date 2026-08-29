@@ -64,7 +64,33 @@ const ConnectionBadge = ({ connected }) => (
   </Badge>
 );
 
-export const machineColumns = [
+/**
+ * Ownership columns (vendor / shop) resolve their names through the Vendors and
+ * Shops directories, which a vendor-scoped role cannot read — and has no reason
+ * to: every row in their list is already their own. Rendering them anyway fired
+ * a directory lookup per row and answered 403 on page load.
+ *
+ * Same predicate as `ContactVendorButton` below: "do I manage other people's
+ * machines", not "can I read Machine".
+ */
+const ownershipColumns = [
+  {
+    key: "vendorId",
+    label: "Vendor",
+    render: (record) => (
+      <AdminReferenceField record={record} source="vendorId" reference="vendors" />
+    ),
+  },
+  {
+    key: "shopId",
+    label: "Shop",
+    render: (record) => (
+      <AdminReferenceField record={record} source="shopId" reference="shops" />
+    ),
+  },
+];
+
+const baseColumns = [
   {
     key: "name",
     label: "Name",
@@ -91,33 +117,29 @@ export const machineColumns = [
     label: "Active",
     render: (record) => <ActiveSwitch record={record} />,
   },
-  {
-    key: "vendorId",
-    label: "Vendor",
-    render: (record) => (
-      <AdminReferenceField record={record} source="vendorId" reference="vendors" />
-    ),
-  },
-  {
-    key: "shopId",
-    label: "Shop",
-    render: (record) => (
-      <AdminReferenceField record={record} source="shopId" reference="shops" />
-    ),
-  },
-  {
-    key: "paymentProvider",
-    label: "Payment provider",
-    render: (record) => (
-      <AdminReferenceField record={record} source="paymentProvider" reference="paymentProvidersAll" />
-    ),
-  },
 ];
 
-const MachineList = () => (
+const paymentProviderColumn = {
+  key: "paymentProvider",
+  label: "Payment provider",
+  render: (record) => (
+    <AdminReferenceField record={record} source="paymentProvider" reference="paymentProvidersAll" />
+  ),
+};
+
+/** Columns for a caller, ownership ones included only if they may read them. */
+export const machineColumnsFor = (ability) => [
+  ...baseColumns,
+  ...(canActForOthers(ability, "update", "Machine") ? ownershipColumns : []),
+  paymentProviderColumn,
+];
+
+const MachineList = () => {
+  const ability = useAbility();
+  return (
   <AdminList sort={{ field: "name", order: "DESC" }} actions={<AdminCreateButton />}>
     <AdminShadcnTable
-      columns={machineColumns}
+      columns={machineColumnsFor(ability)}
       rowClick="show"
       actions={(record) => (
         <>
@@ -130,7 +152,8 @@ const MachineList = () => (
     />
     <RealTime />
   </AdminList>
-);
+  );
+};
 
 const RealTime = () => {
   const { machineStatus, liveEvents } = useSocket();
