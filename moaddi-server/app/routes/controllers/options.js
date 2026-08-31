@@ -1,9 +1,88 @@
 const express = require("express");
 const optionsRepo = require("../../data/repos/options");
 const usersRepo = require("../../data/repos/users");
+const Shops = require("../../data/models/shops");
+const Machines = require("../../data/models/machines");
 const { audienceForRole } = require("../../lib/roles");
+const { pickFromAssignments } = require("../../lib/supportTarget");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
+
+/**
+ * Prefer a tenant assignee (shop / machine support), then the shop owner or
+ * machine vendor, then the platform audience agent, then Super Admin.
+ * Kept server-side so a client cannot pick its own recipient.
+ *
+ * Order: machine specific → machine all → shop specific → shop all →
+ * machine vendorId → shop ownerId → platform agent → Super Admin.
+ */
+const resolveSupportTarget = async ({ callerId, shopId, machineId, role }) => {
+  const notSelf = (id) =>
+    id && String(id) !== String(callerId) ? String(id) : null;
+  const audience = audienceForRole(role);
+
+  let machine = null;
+  let shop = null;
+  let resolvedShopId = shopId ? String(shopId) : null;
+
+  if (machineId) {
+    machine = await Machines.findOne({
+      _id: String(machineId),
+      isDeleted: { $ne: true },
+    })
+      .select("supportUserId supportAssignments vendorId shopId")
+      .lean();
+    if (machine && !resolvedShopId && machine.shopId) {
+      resolvedShopId = String(machine.shopId);
+    }
+    if (machine) {
+      const assigned = notSelf(
+        pickFromAssignments(
+          machine.supportAssignments,
+          audience,
+          machine.supportUserId,
+        ),
+      );
+      if (assigned) return assigned;
+    }
+  }
+
+  if (resolvedShopId) {
+    shop = await Shops.findOne({
+      _id: String(resolvedShopId),
+      isDeleted: { $ne: true },
+    })
+      .select("supportUserId supportAssignments ownerId")
+      .lean();
+    if (shop) {
+      const assigned = notSelf(
+        pickFromAssignments(
+          shop.supportAssignments,
+          audience,
+          shop.supportUserId,
+        ),
+      );
+      if (assigned) return assigned;
+    }
+  }
+
+  if (machine) {
+    const vendor = notSelf(machine.vendorId);
+    if (vendor) return vendor;
+  }
+
+  if (shop) {
+    const owner = notSelf(shop.ownerId);
+    if (owner) return owner;
+  }
+
+  const agent = await usersRepo.findSupportAgent(audience);
+  const agentId = notSelf(agent?._id);
+  if (agentId) return agentId;
+
+  const superAdmin = await usersRepo.findSuperAdmin();
+  return notSelf(superAdmin?._id);
+};
 
 module.exports = () => {
   const router = express.Router();
@@ -44,31 +123,21 @@ module.exports = () => {
   // Who "Contact support" opens a chat with. Any authenticated user (guests
   // included) may read this — it only exposes an id.
   //
-  // The audience comes from the caller's own role, never from `?audience=`:
-  // clients still send that param and it stays accepted-and-ignored, but
-  // trusting it would let anyone ask for a different audience's agent. Keeping
-  // the `{ targetUserId }` shape is what lets the storefront, the dashboard and
-  // the mobile app pick this up with no release.
+  // Optional `shopId` / `machineId` prefer the tenant assignee, then the
+  // shop owner / machine vendor, then the existing audience → Super Admin
+  // chain. The caller's role still decides the audience fallback; clients
+  // may still send `?audience=` but it is ignored (never trusted).
   //
-  // Falls back to the platform's Super Admin when no agent holds the
-  // audience — looked up fresh rather than a hardcoded/env id, since the
-  // product only ever has one Super Admin account.
+  // Route path kept as `/chat/support-target` for existing clients.
   router.get("/chat/support-target", authenticate(), async (req, res, next) => {
     try {
       const caller = String(req.authenticatedUser?._id || "");
-      const agent = await usersRepo.findSupportAgent(
-        audienceForRole(req.authenticatedUser?.role),
-      );
-      // A support agent is themselves staff, so the `staff` audience would
-      // resolve to their own account and open a chat with themselves.
-      let targetUserId =
-        agent && String(agent._id) !== caller ? String(agent._id) : null;
-      if (!targetUserId) {
-        const superAdmin = await usersRepo.findSuperAdmin();
-        if (superAdmin && String(superAdmin._id) !== caller) {
-          targetUserId = String(superAdmin._id);
-        }
-      }
+      const targetUserId = await resolveSupportTarget({
+        callerId: caller,
+        shopId: req.query.shopId,
+        machineId: req.query.machineId,
+        role: req.authenticatedUser?.role,
+      });
       return res.status(200).json({ targetUserId });
     } catch (err) {
       next(err);

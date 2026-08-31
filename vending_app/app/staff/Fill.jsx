@@ -93,7 +93,7 @@ const ProductRow = ({
 
 const MachineDetails = () => {
   const { machine, setMachine } = useMachine();
-  const { canManageMachine } = useMachineAccess(machine);
+  const { canToggleMachine } = useMachineAccess(machine);
   const [disabled, setDisabled] = useState(false);
   const handleToggle = () => {
     setDisabled(true);
@@ -133,9 +133,8 @@ const MachineDetails = () => {
 
       <View className={style.container}>
         <Text className={style.text}>Active</Text>
-        {/* Read-only for anyone who doesn't own or administer this machine. */}
         <Switch
-          disabled={disabled || !canManageMachine}
+          disabled={disabled || !canToggleMachine}
           checked={!!machine.isActive}
           onCheckedChange={handleToggle}
         />

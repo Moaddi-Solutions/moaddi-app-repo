@@ -11,12 +11,13 @@ const {
   isSupportAudience,
   isInternalStaffRole,
 } = require("../../lib/roles");
-const { accessibleFilter } = require("../../lib/accessibleFilter");
+const { accessibleFilter, isDenyAll } = require("../../lib/accessibleFilter");
 const Purchases = require("../models/purchases");
 const Wallets = require("../models/wallets");
 const Withdrawals = require("../models/withdrawals");
 const Transactions = require("../models/transactions");
 const machinesRepo = require("../../data/repos/machines");
+const Machines = require("../models/machines");
 const purchasesRepo = require("../../data/repos/purchases");
 const {
   flattenProductForPreferredCurrency,
@@ -394,13 +395,46 @@ let assertSupportAudiences = async (userId, audiences, role) => {
   return cleaned;
 };
 
+/**
+ * Admin GET often returns `machines` as populated objects; PUT echoes them
+ * back. Sync helpers need bare ids — `[object Object]` would 404 as
+ * "Machine not found."
+ */
+const coerceIdList = (raw) => {
+  if (!Array.isArray(raw)) return [];
+  return [
+    ...new Set(
+      raw
+        .map((item) => {
+          if (item == null) return "";
+          if (typeof item === "string" || typeof item === "number") {
+            return String(item).trim();
+          }
+          if (typeof item === "object") {
+            return String(item._id ?? item.id ?? "").trim();
+          }
+          return "";
+        })
+        .filter(Boolean),
+    ),
+  ];
+};
+
 /*
  * Create new user.
  */
 let create = async (user) => {
   delete user.confirm_password;
-  const machineIds = Array.isArray(user.machines) ? user.machines : undefined;
+  const machineIds = Array.isArray(user.machines)
+    ? coerceIdList(user.machines)
+    : undefined;
   delete user.machines;
+  // Supplier assignment is separate from vendor ownership — never route
+  // through syncVendorMachines or it would steal the machine from its vendor.
+  const supplierMachineIds = Array.isArray(user.supplierMachineIds)
+    ? coerceIdList(user.supplierMachineIds)
+    : undefined;
+  delete user.supplierMachineIds;
   user = new Users(user);
 
   // Staff accounts only: built-in staff roles or a dashboard-created custom
@@ -413,7 +447,12 @@ let create = async (user) => {
     role === "SuperAdmin" ||
     role === ROLES.SUPPORT ||
     isCustomRole(role);
-  if (!creatable) return { message: "User role is not valid" };
+  if (!creatable) {
+    return Promise.reject({
+      message: "User role is not valid",
+      statusCode: 400,
+    });
+  }
 
   user._id = user._id.toLowerCase();
 
@@ -439,6 +478,9 @@ let create = async (user) => {
     if (role === "Vendor") {
       await machinesRepo.syncVendorMachines(user._id, machineIds);
     }
+  }
+  if (supplierMachineIds !== undefined) {
+    await machinesRepo.syncSupplierMachines(user._id, supplierMachineIds);
   }
 
   user = user.toJSON();
@@ -550,6 +592,146 @@ let getByShopId = async (shopId, scope = {}) => {
 
   // return vendors;
   return { data: vendors, total };
+};
+
+/**
+ * Pull shop ids out of a CASL → Mongo filter (`{ shopId: { $in } }` or `$or`).
+ */
+const shopIdsFromScope = (scope) => {
+  if (!scope || typeof scope !== "object") return null;
+  if (scope.shopId && Array.isArray(scope.shopId.$in)) {
+    return scope.shopId.$in.map(String).filter(Boolean);
+  }
+  if (typeof scope.shopId === "string" && scope.shopId) {
+    return [String(scope.shopId)];
+  }
+  if (Array.isArray(scope.$or)) {
+    const ids = [];
+    for (const branch of scope.$or) {
+      const nested = shopIdsFromScope(branch);
+      if (nested) ids.push(...nested);
+    }
+    return ids.length ? [...new Set(ids)] : null;
+  }
+  return null;
+};
+
+/**
+ * Vendors who own at least one (non-deleted) machine in the given shops.
+ * Shop Admins reach the Vendors directory this way — Vendor user docs do not
+ * store `shopId`.
+ */
+let listVendorsInShops = async (shopIds, skip = 0, limit = 1000) => {
+  const shops = (shopIds || []).map(String).filter(Boolean);
+  if (!shops.length) return { data: [], total: 0 };
+
+  const vendorIds = await Machines.distinct("vendorId", {
+    shopId: { $in: shops },
+    isDeleted: { $ne: true },
+    vendorId: { $nin: [null, ""] },
+  });
+  const ids = vendorIds.map(String).filter(Boolean);
+  if (!ids.length) return { data: [], total: 0 };
+
+  const match = {
+    _id: { $in: ids },
+    role: "Vendor",
+    isDeleted: false,
+  };
+  const total = await Users.countDocuments(match);
+
+  const pipeline = [
+    { $match: match },
+    { $sort: { created: -1 } },
+    { $skip: parseInt(skip, 10) || 0 },
+    { $limit: parseInt(limit, 10) || 1000 },
+    {
+      $lookup: {
+        from: "machines",
+        let: { uid: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $ne: ["$isDeleted", true] },
+                  { $eq: ["$vendorId", "$$uid"] },
+                  { $in: ["$shopId", shops] },
+                ],
+              },
+            },
+          },
+          { $project: { _id: 1, name: 1 } },
+        ],
+        as: "machines",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        role: 1,
+        preferredCurrency: 1,
+        isActive: 1,
+        isDeleted: 1,
+        supportAudiences: 1,
+        created: 1,
+        updated: 1,
+        machines: 1,
+      },
+    },
+  ];
+
+  const users = await Users.aggregate(pipeline).exec();
+  users.forEach((e) => {
+    if (!e.machines?.length) e.machines = [];
+  });
+  return { data: users, total };
+};
+
+/**
+ * Distinct customers who bought in the given shops. Shop Admins reach the
+ * Customers directory this way — Customer user docs do not store `shopId`.
+ */
+let listCustomersInShops = async (shopIds, skip = 0, limit = 1000) => {
+  const shops = (shopIds || []).map(String).filter(Boolean);
+  if (!shops.length) return { data: [], total: 0 };
+
+  const customerIds = await Purchases.distinct("customerId", {
+    shopId: { $in: shops },
+    customerId: { $nin: [null, ""] },
+  });
+  const ids = customerIds.map(String).filter(Boolean);
+  if (!ids.length) return { data: [], total: 0 };
+
+  const match = {
+    _id: { $in: ids },
+    role: { $in: ["Customer", "customer", "Guest", "guest"] },
+    isDeleted: false,
+  };
+  const total = await Users.countDocuments(match);
+
+  const pipeline = [
+    { $match: match },
+    { $sort: { created: -1 } },
+    { $skip: parseInt(skip, 10) || 0 },
+    { $limit: parseInt(limit, 10) || 1000 },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        role: 1,
+        preferredCurrency: 1,
+        isActive: 1,
+        isDeleted: 1,
+        created: 1,
+        updated: 1,
+      },
+    },
+  ];
+
+  const users = await Users.aggregate(pipeline).exec();
+  return { data: users, total };
 };
 
 /*
@@ -798,6 +980,8 @@ let getById = async (userId, preferredCurrency) => {
     if (roleNorm === "vendor") {
       if (!user.machines?.[0]?._id) user.machines = [];
       shapeVendorMachineBoxProducts(user, preferredCurrency);
+      // Vendors own machines via vendorId — not supplierIds. Omitting this
+      // field stops admin password/edit PUTs from calling syncSupplierMachines.
     } else {
       delete user.machines;
       const purchase = await purchasesRepo.getByCustomerId(
@@ -806,7 +990,16 @@ let getById = async (userId, preferredCurrency) => {
       );
       if (purchase) user.purchase = purchase;
       else delete user.purchase;
+
+      const assigned = await Machines.find({
+        supplierIds: String(user._id),
+        isDeleted: { $ne: true },
+      })
+        .select("_id")
+        .lean();
+      user.supplierMachineIds = assigned.map((m) => String(m._id));
     }
+
     return user;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -857,6 +1050,36 @@ let getByRole = async (role, skip = 0, limit = 1000, ability = null) => {
   const scope = ability
     ? accessibleFilter(ability, "read", directorySubjectForRoleParam(role))
     : {};
+
+  // Shop Admin Vendor directory: Vendor accounts have no shopId — resolve
+  // owners via machines installed in the caller's shops.
+  if (asked === "vendor") {
+    const shopIds = shopIdsFromScope(scope);
+    if (shopIds?.length) {
+      return listVendorsInShops(shopIds, skip, limit);
+    }
+  }
+
+  // Shop Admin Customers directory: Customer accounts have no shopId — resolve
+  // buyers via Purchases in the caller's shops. Triggered when Customer read is
+  // DENY_ALL, or when it is only shop-scoped (would match zero user docs).
+  if (asked === "customer" && ability) {
+    const customerScope = scope;
+    const shopFromCustomer = shopIdsFromScope(customerScope);
+    if (isDenyAll(customerScope) || shopFromCustomer?.length) {
+      let shopIds = shopFromCustomer;
+      if (!shopIds?.length) {
+        shopIds =
+          shopIdsFromScope(accessibleFilter(ability, "update", "Purchase")) ||
+          shopIdsFromScope(accessibleFilter(ability, "manage", "Purchase")) ||
+          shopIdsFromScope(accessibleFilter(ability, "read", "Purchase"));
+      }
+      if (shopIds?.length) {
+        return listCustomersInShops(shopIds, skip, limit);
+      }
+    }
+  }
+
   const match = isStaffList
     ? { ...scope, isDeleted: false, role: { $nin: CUSTOMER_LIKE_ROLES } }
     : isCustomList
@@ -1055,10 +1278,17 @@ let update = async (userId, properties) => {
 
   const previousShopId = user.shopId ?? null;
   const machineIds = Object.prototype.hasOwnProperty.call(properties, "machines")
-    ? properties.machines
+    ? coerceIdList(properties.machines)
+    : undefined;
+  const supplierMachineIds = Object.prototype.hasOwnProperty.call(
+    properties,
+    "supplierMachineIds",
+  )
+    ? coerceIdList(properties.supplierMachineIds)
     : undefined;
   const nextProps = { ...properties };
   delete nextProps.machines;
+  delete nextProps.supplierMachineIds;
   delete nextProps.confirm_password;
 
   if (Object.prototype.hasOwnProperty.call(nextProps, "supportAudiences")) {
@@ -1097,6 +1327,11 @@ let update = async (userId, properties) => {
     if (role === "Vendor") {
       await machinesRepo.syncVendorMachines(user._id, machineIds);
     }
+  }
+  // Only custom-role staff (tenantId set) get supplier machine sync. Built-in
+  // Vendor PUT may still echo an empty supplierMachineIds from older clients.
+  if (supplierMachineIds !== undefined && user.tenantId) {
+    await machinesRepo.syncSupplierMachines(user._id, supplierMachineIds);
   }
 
   return user;
@@ -1324,6 +1559,8 @@ module.exports = {
   toggle,
   get,
   getByShopId,
+  listVendorsInShops,
+  listCustomersInShops,
   checkUser,
   getById,
   getByRole,

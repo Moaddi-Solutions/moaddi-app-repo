@@ -29,56 +29,80 @@ type ContactTargetContextValue = {
 
 export type SupportAudience = 'customers' | 'vendors';
 
+type SupportCacheKey = string;
+
 const DEFAULT_SUPPORT_TARGET: ContactTarget = {
   kind: 'support',
   targetUserId: null,
 };
 
-const cachedSupportUserId: Record<SupportAudience, string | null> = {
-  customers: null,
-  vendors: null,
-};
-const fetchStarted: Record<SupportAudience, boolean> = {
-  customers: false,
-  vendors: false,
-};
-const supportUserIdListeners: Record<SupportAudience, Set<() => void>> = {
-  customers: new Set(),
-  vendors: new Set(),
+const cachedSupportUserId: Record<SupportCacheKey, string | null> = {};
+const fetchStarted: Record<SupportCacheKey, boolean> = {};
+const supportUserIdListeners: Record<SupportCacheKey, Set<() => void>> = {};
+
+const cacheKeyFor = (
+  audience: SupportAudience,
+  opts?: { shopId?: string | null; machineId?: string | null },
+): SupportCacheKey => {
+  if (opts?.machineId) return `${audience}:machine:${opts.machineId}`;
+  if (opts?.shopId) return `${audience}:shop:${opts.shopId}`;
+  return audience;
 };
 
-const setCachedSupportUserId = (audience: SupportAudience, id: string) => {
-  cachedSupportUserId[audience] = id;
-  supportUserIdListeners[audience].forEach((listener) => listener());
+const listenersFor = (key: SupportCacheKey) => {
+  if (!supportUserIdListeners[key]) supportUserIdListeners[key] = new Set();
+  return supportUserIdListeners[key];
 };
 
-const ensureSupportUserIdFetched = (audience: SupportAudience) => {
-  if (fetchStarted[audience] || cachedSupportUserId[audience]) return;
-  fetchStarted[audience] = true;
-  getRequest(chatSupportTargetAPI(audience))
+const setCachedSupportUserId = (key: SupportCacheKey, id: string) => {
+  cachedSupportUserId[key] = id;
+  listenersFor(key).forEach((listener) => listener());
+};
+
+/**
+ * Resolves the support admin id for one audience (optionally scoped to a
+ * shop or machine) from the server, once per page load per cache key.
+ */
+const ensureSupportUserIdFetched = (
+  audience: SupportAudience,
+  opts?: { shopId?: string | null; machineId?: string | null },
+) => {
+  const key = cacheKeyFor(audience, opts);
+  if (fetchStarted[key] || cachedSupportUserId[key]) return;
+  fetchStarted[key] = true;
+  getRequest(
+    chatSupportTargetAPI({
+      audience,
+      shopId: opts?.shopId || undefined,
+      machineId: opts?.machineId || undefined,
+    }),
+  )
     .then(({ targetUserId }: { targetUserId: string | null }) => {
-      if (targetUserId) setCachedSupportUserId(audience, targetUserId);
+      if (targetUserId) setCachedSupportUserId(key, targetUserId);
     })
     .catch(() => {
-      fetchStarted[audience] = false;
+      fetchStarted[key] = false;
     });
 };
 
 /**
- * The admin-configured "Contact support" target id for the given audience,
- * resolved from the server and cached for the session. Re-renders the
- * caller once resolved.
+ * The support account id for the given audience (and optional shop/machine),
+ * resolved from the server and cached for the session.
  */
-export function useSupportUserId(audience: SupportAudience = 'customers') {
+export function useSupportUserId(
+  audience: SupportAudience = 'customers',
+  opts?: { shopId?: string | null; machineId?: string | null },
+) {
+  const key = cacheKeyFor(audience, opts);
   useEffect(() => {
-    ensureSupportUserIdFetched(audience);
-  }, [audience]);
+    ensureSupportUserIdFetched(audience, opts);
+  }, [audience, opts?.shopId, opts?.machineId]);
   return useSyncExternalStore(
     (onChange) => {
-      supportUserIdListeners[audience].add(onChange);
-      return () => supportUserIdListeners[audience].delete(onChange);
+      listenersFor(key).add(onChange);
+      return () => listenersFor(key).delete(onChange);
     },
-    () => cachedSupportUserId[audience],
+    () => cachedSupportUserId[key] ?? null,
     () => null,
   );
 }

@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { signInAddress } from "./serverAddresses";
 
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 60_000;
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
 
 export function clearAuthHeaders() {

@@ -18,7 +18,9 @@ const assertCanTouchBox = async (req, res, action, boxId) => {
         res.status(404).json({ message: 'Box not found.' });
         return false;
     }
-    if (req.ability.cannot(action, subject('Box', box))) {
+    // Prefer live machine owners — box.supplierIds can lag until remachine.
+    const owners = await ownersOfMachine(box.machineId);
+    if (req.ability.cannot(action, subject('Box', { ...box, ...owners }))) {
         res.status(403).json({ message: 'Forbidden.' });
         return false;
     }
@@ -28,11 +30,22 @@ const assertCanTouchBox = async (req, res, action, boxId) => {
 /** Same check for the machine-wide box operations, using the machine's owners. */
 const assertCanTouchMachineBoxes = async (req, res, action, machineId) => {
     const owners = await ownersOfMachine(machineId);
-    if (req.ability.cannot(action, subject('Box', owners))) {
-        res.status(403).json({ message: 'Forbidden.' });
-        return false;
+    // Fresh object per cast — CASL refuses to re-type a previously cast subject.
+    const base = {
+        shopId: owners.shopId,
+        vendorId: owners.vendorId,
+        supplierIds: [...(owners.supplierIds || [])],
+    };
+    if (req.ability.can(action, subject('Box', { ...base }))) return true;
+    // Fill staff hold `update Box` only — allow loading boxes to refill them.
+    if (
+        action === 'read' &&
+        req.ability.can('update', subject('Box', { ...base }))
+    ) {
+        return true;
     }
-    return true;
+    res.status(403).json({ message: 'Forbidden.' });
+    return false;
 };
 
 module.exports = () => {
@@ -71,8 +84,8 @@ module.exports = () => {
         }
     });
 
-    //get all boxes by machineId
-    router.get('/boxes/machine/:machineId', authenticate(), authorize('read', 'Box'), async (req, res, next) => {
+    //get all boxes by machineId — fill staff have `update Box` not `read Box`
+    router.get('/boxes/machine/:machineId', authenticate(), authorize.withAbility(), async (req, res, next) => {
         try {
             if (!(await assertCanTouchMachineBoxes(req, res, 'read', req.params.machineId))) return;
             let results = await boxes.getByMachineId(req.params.machineId);

@@ -10,14 +10,15 @@ import {
   TableRow,
 } from "@/../components/ui/table";
 import { cn } from "@/../lib/utils";
-import { useInput } from "ra-core";
+import { useInput, usePermissions } from "ra-core";
 import { Fragment, useMemo } from "react";
 import {
   MATRIX_ACTIONS,
-  PERMISSION_GROUPS,
   REVIEW_ACTIONS,
+  permissionGroupsForRole,
 } from "./ruleChoices";
 import {
+  builderOptsForRole,
   carriedRows,
   describeMatrix,
   hasUneditableRows,
@@ -25,26 +26,42 @@ import {
   rowsToMatrix,
 } from "./ruleMatrix";
 
+/** Every `{pageKey, action}` the matrix can tick for pages in a group. */
+const groupEntries = (group) => {
+  const matrixIds = new Set(MATRIX_ACTIONS.map((a) => a.id));
+  const reviewIds = new Set(REVIEW_ACTIONS.map((a) => a.id));
+  const entries = [];
+  for (const page of group.pages) {
+    for (const action of page.actions) {
+      if (matrixIds.has(action) || reviewIds.has(action)) {
+        entries.push({ pageKey: page.key, action });
+      }
+    }
+  }
+  return entries;
+};
+
 /**
  * The permission grid: one row per dashboard page, one column per action.
  *
- * Bound as a single controlled field rather than a react-admin `ArrayInput` —
- * those address rows by array index for user-added items, while this is a fixed
- * list of pages whose state is a set of ticked boxes. Same shape as
- * `ReferenceArrayChoices` in AdminInputs.jsx: one `useInput`, local toggle,
- * `field.onChange` with the whole next array.
+ * Default scope and available pages depend on the signed-in role: Super Admin
+ * builds platform staff (`all`); Vendor / ShopOwner staff get tenant scopes
+ * and cannot tick platform subjects.
  */
 const PermissionMatrix = () => {
+  const { permissions } = usePermissions();
+  const role = permissions?.role;
+  const opts = useMemo(() => builderOptsForRole(role), [role]);
+  const groups = useMemo(() => permissionGroupsForRole(role), [role]);
+
   const { field } = useInput({ source: "ruleRows", defaultValue: [] });
   const rows = Array.isArray(field.value) ? field.value : [];
 
-  const matrix = useMemo(() => rowsToMatrix(rows), [rows]);
-  // Rows with a narrower scope predate this editor. Regenerating them would
-  // widen them to every record, so they ride along untouched instead.
-  const carried = useMemo(() => carriedRows(rows), [rows]);
-  const summary = useMemo(() => describeMatrix(matrix), [matrix]);
+  const matrix = useMemo(() => rowsToMatrix(rows, opts), [rows, opts]);
+  const carried = useMemo(() => carriedRows(rows, opts), [rows, opts]);
+  const summary = useMemo(() => describeMatrix(matrix, opts), [matrix, opts]);
 
-  const commit = (next) => field.onChange(matrixToRows(next, carried));
+  const commit = (next) => field.onChange(matrixToRows(next, carried, opts));
 
   const toggle = (pageKey, action, checked) => {
     const next = { ...matrix };
@@ -58,9 +75,38 @@ const PermissionMatrix = () => {
 
   const isOn = (pageKey, action) => Boolean(matrix[pageKey]?.has(action));
 
+  const groupSelectState = (group) => {
+    const entries = groupEntries(group);
+    if (!entries.length) return { checked: false, indeterminate: false };
+    const onCount = entries.filter((e) => isOn(e.pageKey, e.action)).length;
+    return {
+      checked: onCount === entries.length,
+      indeterminate: onCount > 0 && onCount < entries.length,
+    };
+  };
+
+  const toggleGroup = (group, checked) => {
+    const next = { ...matrix };
+    for (const { pageKey, action } of groupEntries(group)) {
+      const actions = new Set(next[pageKey] ?? []);
+      if (checked) actions.add(action);
+      else actions.delete(action);
+      if (actions.size) next[pageKey] = actions;
+      else delete next[pageKey];
+    }
+    commit(next);
+  };
+
   return (
     <div className="flex flex-col gap-3 sm:col-span-2">
-      {hasUneditableRows(rows) ? (
+      {opts.defaultScope !== "all" ? (
+        <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs font-semibold text-muted-foreground">
+          Grants are scoped to {opts.defaultScope.replace(/-/g, " ")} records
+          for your staff. Assignment-only permissions (fill / support) use
+          their own narrower scope.
+        </p>
+      ) : null}
+      {hasUneditableRows(rows, opts) ? (
         <p className="rounded-lg bg-[color:var(--admin-gold)]/12 px-3 py-2 text-xs font-semibold text-[color:var(--admin-gold-ink)]">
           This role holds permissions this editor cannot show — limited to
           specific records, or for a page that is no longer listed here. They
@@ -81,82 +127,96 @@ const PermissionMatrix = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {PERMISSION_GROUPS.map((group) => (
-              <Fragment key={group.title}>
-                <TableRow className="hover:bg-transparent">
-                  <TableCell
-                    colSpan={MATRIX_ACTIONS.length + 1}
-                    className="bg-muted/40 py-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-muted-foreground"
-                  >
-                    {group.title}
-                  </TableCell>
-                </TableRow>
+            {groups.map((group) => {
+              const selectState = groupSelectState(group);
+              return (
+                <Fragment key={group.title}>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={MATRIX_ACTIONS.length + 1}
+                      className="bg-muted/40 py-1.5 text-[0.68rem] font-extrabold uppercase tracking-[0.14em] text-muted-foreground"
+                    >
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span>{group.title}</span>
+                        <label className="flex cursor-pointer items-center gap-2 font-bold normal-case tracking-normal text-foreground">
+                          <Checkbox
+                            aria-label={`Select all in ${group.title}`}
+                            checked={
+                              selectState.indeterminate
+                                ? "indeterminate"
+                                : selectState.checked
+                            }
+                            onCheckedChange={(checked) =>
+                              toggleGroup(group, checked)
+                            }
+                          />
+                          Select all in this section
+                        </label>
+                      </div>
+                    </TableCell>
+                  </TableRow>
 
-                {group.pages.map((page) => (
-                  <Fragment key={page.key}>
-                    <TableRow>
-                      <TableCell className="font-bold">{page.label}</TableCell>
-                      {MATRIX_ACTIONS.map((action) => {
-                        const supported = page.actions.includes(action.id);
-                        return (
-                          <TableCell key={action.id} className="text-center">
-                            {supported ? (
-                              <Checkbox
-                                aria-label={`${action.name} ${page.label}`}
-                                checked={isOn(page.key, action.id)}
-                                onCheckedChange={(checked) =>
-                                  toggle(page.key, action.id, checked)
-                                }
-                              />
-                            ) : (
-                              // No checkbox at all: one that grants nothing is
-                              // the same silent no-op in a different costume.
-                              <span
-                                aria-hidden="true"
-                                className="text-muted-foreground/40"
-                              >
-                                —
-                              </span>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-
-                    {/* Review verbs, only for the pages that actually have
-                        them — Withdrawals has all three, Notifications
-                        approves or rejects a dispense request. */}
-                    {REVIEW_ACTIONS.some((a) => page.actions.includes(a.id)) ? (
-                      <TableRow className="hover:bg-transparent">
-                        <TableCell
-                          colSpan={MATRIX_ACTIONS.length + 1}
-                          className="py-2 ps-8"
-                        >
-                          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                            {REVIEW_ACTIONS.filter((a) =>
-                              page.actions.includes(a.id),
-                            ).map((action) => (
-                              <label
-                                key={action.id}
-                                className="flex cursor-pointer items-center gap-2 text-xs font-bold text-muted-foreground"
-                              >
+                  {group.pages.map((page) => (
+                    <Fragment key={page.key}>
+                      <TableRow>
+                        <TableCell className="font-bold">{page.label}</TableCell>
+                        {MATRIX_ACTIONS.map((action) => {
+                          const supported = page.actions.includes(action.id);
+                          return (
+                            <TableCell key={action.id} className="text-center">
+                              {supported ? (
                                 <Checkbox
+                                  aria-label={`${action.name} ${page.label}`}
                                   checked={isOn(page.key, action.id)}
                                   onCheckedChange={(checked) =>
                                     toggle(page.key, action.id, checked)
                                   }
                                 />
-                                {action.name}
-                              </label>
-                            ))}
-                          </div>
-                        </TableCell>
+                              ) : (
+                                <span
+                                  aria-hidden="true"
+                                  className="text-muted-foreground/40"
+                                >
+                                  —
+                                </span>
+                              )}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
-                    ) : null}
-                  </Fragment>
-                ))}
-              </Fragment>
-            ))}
+
+                      {REVIEW_ACTIONS.some((a) => page.actions.includes(a.id)) ? (
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell
+                            colSpan={MATRIX_ACTIONS.length + 1}
+                            className="py-2 ps-8"
+                          >
+                            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                              {REVIEW_ACTIONS.filter((a) =>
+                                page.actions.includes(a.id),
+                              ).map((action) => (
+                                <label
+                                  key={action.id}
+                                  className="flex cursor-pointer items-center gap-2 text-xs font-bold text-muted-foreground"
+                                >
+                                  <Checkbox
+                                    checked={isOn(page.key, action.id)}
+                                    onCheckedChange={(checked) =>
+                                      toggle(page.key, action.id, checked)
+                                    }
+                                  />
+                                  {action.name}
+                                </label>
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </Fragment>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

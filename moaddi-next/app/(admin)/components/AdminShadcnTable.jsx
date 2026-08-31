@@ -227,13 +227,14 @@ function readPath(record, path) {
 }
 
 function statusToneClass(value) {
-  if (["Completed", "PaymentDone", "Paid", "Approved"].includes(value)) {
+  const v = String(value ?? "");
+  if (["Completed", "PaymentDone", "Paid", "Approved", "approved"].includes(v)) {
     return "bg-[color:var(--success-soft)] text-[color:var(--success)]";
   }
-  if (["Pending", "PaymentDoneRequest", "Processing"].includes(value)) {
+  if (["Pending", "pending", "PaymentDoneRequest", "Processing"].includes(v)) {
     return "bg-[color:var(--admin-gold)]/18 text-[color:var(--admin-gold-ink)]";
   }
-  if (["Rejected", "PaymentRejected", "Failed"].includes(value)) {
+  if (["Rejected", "rejected", "PaymentRejected", "Failed"].includes(v)) {
     return "bg-destructive/14 text-destructive";
   }
   return "bg-muted text-muted-foreground";

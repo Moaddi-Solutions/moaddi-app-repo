@@ -22,7 +22,8 @@ export const normalizeBuiltInRole = (role: unknown): string => {
   if (!raw) return raw;
   const lower = raw.toLowerCase();
   if (lower === 'superadmin') return ROLES.SUPER_ADMIN;
-  if (lower === 'shopowner') return ROLES.SHOP_OWNER;
+  // Legacy: the old built-in `Admin` role was migrated into `ShopOwner`.
+  if (lower === 'shopowner' || lower === 'admin') return ROLES.SHOP_OWNER;
   if (lower === 'vendor') return ROLES.VENDOR;
   if (lower === 'customer') return ROLES.CUSTOMER;
   if (lower === 'support') return ROLES.SUPPORT;
@@ -50,6 +51,22 @@ export type SupportAudience = typeof SUPPORT_AUDIENCES[number];
 
 export const isSupportAudience = (value: unknown): value is SupportAudience =>
   SUPPORT_AUDIENCES.includes(value as SupportAudience);
+
+/**
+ * Who is calling Contact on a shop/machine. Same platform audiences plus
+ * `all` as a catch-all lane when no specific row matches.
+ */
+export const SUPPORT_ROUTE_AUDIENCES = [
+  ...SUPPORT_AUDIENCES,
+  'all',
+] as const;
+
+export type SupportRouteAudience = typeof SUPPORT_ROUTE_AUDIENCES[number];
+
+export const isSupportRouteAudience = (
+  value: unknown,
+): value is SupportRouteAudience =>
+  SUPPORT_ROUTE_AUDIENCES.includes(value as SupportRouteAudience);
 
 /**
  * The directory an agent may read for each audience it holds. These are the

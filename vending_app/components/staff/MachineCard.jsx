@@ -27,14 +27,27 @@ export const machinesControlRoutes = {
   6: "/staff/Bluetooth5Control",
 };
 
-export default function MachineCard({ _id, name, qrCode, type, shop, vendorId, shopId }) {
+export default function MachineCard({
+  _id,
+  name,
+  qrCode,
+  type,
+  shop,
+  vendorId,
+  shopId,
+  supplierIds,
+  supportUserId,
+}) {
   const router = useRouter();
   const { info, setMachine } = useMachine();
   const { t } = useTranslation();
   const [sheetOpen, setSheetOpen] = useState(false);
   // Servicing is checked against this machine, not the role: a supplier may
-  // only touch their own, an admin any machine standing in their shops.
-  const owners = useMemo(() => ({ _id, vendorId, shopId }), [_id, vendorId, shopId]);
+  // only touch machines they are assigned to, an admin any machine in their shops.
+  const owners = useMemo(
+    () => ({ _id, vendorId, shopId, supplierIds, supportUserId }),
+    [_id, vendorId, shopId, supplierIds, supportUserId],
+  );
   const { canFillBoxes } = useMachineAccess(owners);
 
   const isBluetooth = bluetoothTypes.includes(type);

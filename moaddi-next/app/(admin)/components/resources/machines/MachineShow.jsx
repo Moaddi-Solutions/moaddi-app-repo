@@ -3,16 +3,28 @@ import { useSocket } from "@/(root)/context/Socket";
 import { Spinner } from "@/(admin)/components/kit/AdminUI";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { ShowBase, useRecordContext, useShowContext } from "ra-core";
-import { machineColumns } from "./MachineList";
+import {
+  ShowBase,
+  usePermissions,
+  useRecordContext,
+  useRedirect,
+  useShowContext,
+} from "ra-core";
+import { machineColumnsFor } from "./MachineList";
+import { useAbility } from "@/(admin)/components/kit/useAbility";
+import { isVendorRole } from "@/../lib/dashboard-role";
 
 const MachineDetails = () => {
   const record = useRecordContext();
+  const ability = useAbility();
   if (!record) return null;
+  const fillOnly =
+    ability.can("update", "Box") && !ability.can("update", "Machine");
+  const columns = machineColumnsFor({ fillOnly });
 
   const rows = [
     { key: "id", label: "ID", render: () => <span className="font-mono text-xs">{record._id}</span> },
-    ...machineColumns,
+    ...columns,
     { key: "updated", label: "Updated", render: (r) => new Date(r.updated).toLocaleString() },
     { key: "created", label: "Created", render: (r) => new Date(r.created).toLocaleString() },
   ];
@@ -38,7 +50,31 @@ const MachineDetails = () => {
 
 const MachineShowInner = () => {
   const { record, isPending } = useShowContext();
-  if (isPending || !record) return <Spinner />;
+  const { permissions } = usePermissions();
+  const ability = useAbility();
+  const redirect = useRedirect();
+  const isVendor = isVendorRole(permissions?.role);
+  const canFill = ability.can("update", "Box");
+
+  useEffect(() => {
+    // Vendors manage suppliers on edit; fill UI is for staff with fill rights.
+    if (!isVendor || !record?._id) return;
+    redirect("edit", "machines", record._id);
+  }, [isVendor, record?._id, redirect]);
+
+  if (isPending || !record || isVendor) return <Spinner />;
+
+  // Fill / control UI only when the caller may update boxes. ShopOwner is
+  // floor read-only — details without MachineControl.
+  if (!canFill) {
+    return (
+      <div className="flex w-full flex-col gap-4">
+        <MachineDetails />
+        <RealTime />
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full flex-col gap-4">
       <MachineControl>

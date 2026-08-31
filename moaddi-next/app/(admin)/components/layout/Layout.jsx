@@ -62,6 +62,7 @@ import {
   MessageCircle,
   Moon,
   Package,
+  MapPinPlus,
   PanelBottom,
   PanelTop,
   ReceiptText,
@@ -82,7 +83,13 @@ import {
   Wallet,
 } from "lucide-react";
 import { useState } from "react";
-import { useCreatePath, useLogin, useLogout, useNotify } from "ra-core";
+import {
+  useCreatePath,
+  useLogin,
+  useLogout,
+  useNotify,
+  usePermissions,
+} from "ra-core";
 import { Link, useLocation } from "react-router-dom";
 import { AdminContactUserButton, AdminNotifications } from "@/(admin)/components/kit/AdminUI";
 
@@ -158,10 +165,17 @@ const NavGroup = ({ title, icon: Icon, children }) => (
 export const AppSidebar = () => {
   const createPath = useCreatePath();
   const ability = useAbility();
+  const { permissions } = usePermissions();
+  const role = normalizeDashboardRole(permissions?.role);
   // CASL drives what appears: each entry shows only when the logged-in
   // user's rules allow the underlying resource (works for custom roles too).
   const show = (resource) => canAccessResource(ability, resource, "list");
   const { totalUnreadCount } = useChat();
+  // Tenant Contact routing (not platform Support agents). Vendors + Shop Owners.
+  const showTenantSupportRouting =
+    !show("supportTeam") &&
+    (ability.can("update", "Shop") ||
+      (ability.can("update", "Machine") && ability.can("create", "Staff")));
 
   return (
     <Sidebar collapsible="icon">
@@ -199,11 +213,14 @@ export const AppSidebar = () => {
                 Vendors
               </NavItem>
             )}
-            {show("shopOwners") && (
+            {/* Platform directory only — shop owners should not manage peer accounts. */}
+            {show("shopOwners") && role !== "ShopOwner" && (
               <NavItem to={createPath({ resource: "shopOwners", type: "list" })} icon={Store}>
-                Shop Owners
+                Shop Admin
               </NavItem>
             )}
+            {/* Vendors manage fill staff under Staff / Roles + machine assignment;
+                keep `suppliers` resource registered for edit pickers, not as a tab. */}
             {show("staff") && (
               <NavItem to={createPath({ resource: "staff", type: "list" })} icon={UsersRound}>
                 Staff
@@ -211,6 +228,11 @@ export const AppSidebar = () => {
             )}
             {show("supportTeam") && (
               <NavItem to={createPath({ resource: "supportTeam", type: "list" })} icon={Headset}>
+                Support Team
+              </NavItem>
+            )}
+            {showTenantSupportRouting && (
+              <NavItem to="/support-routing" icon={Headset}>
                 Support Team
               </NavItem>
             )}
@@ -232,6 +254,14 @@ export const AppSidebar = () => {
             {show("shops") && (
               <NavItem to={createPath({ resource: "shops", type: "list" })} icon={Store}>
                 Shops
+              </NavItem>
+            )}
+            {show("placementRequests") && (
+              <NavItem
+                to={createPath({ resource: "placementRequests", type: "list" })}
+                icon={MapPinPlus}
+              >
+                Placement requests
               </NavItem>
             )}
             {show("groups") && (

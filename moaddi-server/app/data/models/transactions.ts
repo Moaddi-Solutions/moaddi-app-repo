@@ -15,7 +15,11 @@ const TransactionsSchema = new mongoose.Schema<ModelTypes.ITransaction>(
     /** Denormalized from the vendor's shop — scopes shop-level revenue reporting. */
     shopId: { type: String, required: false, default: null },
     type: { type: String, required: true, enum: ['CREDIT', 'DEBIT'] },
-    kind: { type: String, required: true, enum: ['purchase', 'withdrawal', 'adjustment'] },
+    kind: {
+      type: String,
+      required: true,
+      enum: ['purchase', 'withdrawal', 'adjustment', 'commission'],
+    },
     amount: { type: mongoose.Schema.Types.Decimal128, required: true },
     currency: { type: String, required: true, default: 'USD' },
     balanceAfter: { type: mongoose.Schema.Types.Decimal128, required: true },
@@ -44,6 +48,18 @@ TransactionsSchema.index(
   {
     unique: true,
     partialFilterExpression: { kind: 'purchase', purchaseId: { $type: 'string' } },
+  }
+);
+// Idempotency for shop-commission credits — at most one per (purchase, shop owner).
+// `vendorId` here is the wallet owner id (the Shop Owner), not a Vendor.
+TransactionsSchema.index(
+  { purchaseId: 1, vendorId: 1, kind: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      kind: 'commission',
+      purchaseId: { $type: 'string' },
+    },
   }
 );
 

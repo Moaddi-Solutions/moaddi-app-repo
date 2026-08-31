@@ -63,6 +63,8 @@ export type SubjectName =
   | 'Wallet'
   | 'Transaction'
   | 'Withdrawal'
+  /** Vendor asks Shop Admin to host a machine in their shop. */
+  | 'PlacementRequest'
   | 'Option'
   | 'Event'
   | 'Gift'
@@ -91,6 +93,10 @@ export interface AbilityUser {
    * account or a custom-role Staff member holding one or more audiences.
    */
   supportAudiences?: string[] | null;
+  /** Owning Vendor / ShopOwner id for tenant staff. */
+  tenantId?: string | null;
+  /** `Vendor` or `ShopOwner` when tenantId is set. */
+  tenantRole?: string | null;
 }
 
 /**
@@ -101,12 +107,28 @@ export interface AbilityUser {
  * on every request, so this costs no extra query.
  */
 export const shopScopeOf = (user: AbilityUser): string[] => {
+  // Tenant ShopOwner staff inherit the parent's shops via stamped
+  // `ownedShopIds` / `shopId` (copied at create). Conditions must stay
+  // static values because `rulesFor` serializes them to clients.
   const ids = new Set<string>();
   if (user.shopId) ids.add(String(user.shopId));
   for (const id of user.ownedShopIds ?? []) {
     if (id) ids.add(String(id));
   }
   return [...ids];
+};
+
+/**
+ * Vendor ids this user may act as. Built-in Vendors own themselves; tenant
+ * staff inherit their parent's vendor id via `tenantId`.
+ */
+export const vendorScopeOf = (user: AbilityUser): string[] => {
+  if (user.tenantRole === 'Vendor' && user.tenantId) {
+    return [String(user.tenantId)];
+  }
+  const role = normalizeBuiltInRole(user.role);
+  if (role === ROLES.VENDOR) return [String(user._id)];
+  return [];
 };
 
 /* ------------------------------------------------------------------ */
@@ -124,7 +146,9 @@ export type RuleScope =
   | 'own-shop'
   | 'own-vendor'
   | 'own-customer'
-  | 'self';
+  | 'self'
+  | 'assigned-machine'
+  | 'assigned-support';
 
 export interface RuleRow {
   action: Action;
@@ -160,6 +184,7 @@ export const ASSIGNABLE_SUBJECTS: SubjectName[] = [
   'Wallet',
   'Transaction',
   'Withdrawal',
+  'PlacementRequest',
   'Option',
   'Event',
   'Gift',
@@ -177,6 +202,8 @@ export const RULE_SCOPES: RuleScope[] = [
   'own-vendor',
   'own-customer',
   'self',
+  'assigned-machine',
+  'assigned-support',
 ];
 
 /**
@@ -184,8 +211,9 @@ export const RULE_SCOPES: RuleScope[] = [
  * differing only by scope still grant the same permission twice, and the
  * dashboard builder writes every row as `all`, so the pair is the right key.
  */
-export const permissionKey = (row: Pick<RuleRow, 'action' | 'subject'>): string =>
-  `${row.action}:${row.subject}`;
+export const permissionKey = (
+  row: Pick<RuleRow, 'action' | 'subject' | 'scope'>,
+): string => `${row.action}:${row.subject}:${row.scope}`;
 
 /**
  * Canonical, order-independent signature of a whole rule set — used to spot two
@@ -219,15 +247,65 @@ export const validateRuleRows = (rows: unknown): string | null => {
   return null;
 };
 
+/** Subjects a tenant-owned role must never grant. */
+export const PLATFORM_SUBJECTS: ReadonlySet<SubjectName> = new Set([
+  'Option',
+  'Content',
+  'PaymentProvider',
+  'Role',
+]);
+
+/** Scopes a tenant-owned role may use. */
+export const TENANT_RULE_SCOPES: readonly RuleScope[] = [
+  'own-shop',
+  'own-vendor',
+  'self',
+  'assigned-machine',
+  'assigned-support',
+];
+
+/**
+ * Extra checks when a Vendor / ShopOwner owns the role. UI hides platform
+ * subjects; this is the server-side clamp so the API cannot mint them.
+ */
+export const validateTenantRuleRows = (rows: unknown): string | null => {
+  const base = validateRuleRows(rows);
+  if (base) return base;
+  for (const row of rows as RuleRow[]) {
+    if (PLATFORM_SUBJECTS.has(row.subject)) {
+      return `Tenant roles cannot grant subject "${row.subject}".`;
+    }
+    if (!(TENANT_RULE_SCOPES as readonly string[]).includes(row.scope)) {
+      return `Tenant roles cannot use scope "${row.scope}".`;
+    }
+  }
+  return null;
+};
+
+
 const SCOPE_CONDITIONS: Record<
   RuleScope,
-  ((user: AbilityUser) => Record<string, unknown>) | null
+  | ((user: AbilityUser) => Record<string, unknown> | Record<string, unknown>[])
+  | null
 > = {
   all: null,
   'own-shop': (user) => ({ shopId: { $in: shopScopeOf(user) } }),
-  'own-vendor': (user) => ({ vendorId: String(user._id) }),
+  'own-vendor': (user) => {
+    const ids = vendorScopeOf(user);
+    return ids.length <= 1
+      ? { vendorId: ids[0] ?? String(user._id) }
+      : { vendorId: { $in: ids } };
+  },
   'own-customer': (user) => ({ customerId: String(user._id) }),
   self: (user) => ({ _id: String(user._id) }),
+  'assigned-machine': (user) => ({ supplierIds: String(user._id) }),
+  // Two rules (not `$or` in one condition): createMongoAbility's in-memory
+  // matcher does not honor `$or`, while accessibleFilter unions multiple
+  // conditional rules into `$or` for Mongo list queries.
+  'assigned-support': (user) => [
+    { supportUserId: String(user._id) },
+    { 'supportAssignments.userId': String(user._id) },
+  ],
 };
 
 const customRoles = new Map<string, RuleRow[]>();
@@ -272,16 +350,16 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       break;
 
     case ROLES.SHOP_OWNER: {
-      // Shop owner: full management of everything inside their own shops, and
-      // nothing outside them. Platform-wide configuration (CMS, docs, payment
-      // providers, platform options, roles) belongs to the Super Admin, so it
-      // is readable but not editable here.
+      // Shop owner: runs the shop (staff, orders, withdrawals) but the machine
+      // floor is read-only — view list and sales; Vendors / supplier staff
+      // edit, control, and fill. Platform config stays Super Admin–only.
       const shopIds = shopScopeOf(user);
       const inShop = { shopId: { $in: shopIds } };
 
-      // Browsing the catalog and the staff directory is unrestricted; acting
-      // on a record is not.
-      can('read', CATALOG_SUBJECTS);
+      // Catalog browse without Machine: staff lists / revenue use shop-scoped
+      // `read Machine`, and an unconditional catalog read would make
+      // accessibleFilter return {} (every machine on the platform).
+      can('read', ['Product', 'Shop', 'Group', 'Box', 'Event']);
       can('read', ['Content', 'Doc', 'PaymentProvider', 'Option', 'Role']);
       can(['read', 'create', 'update'], ['Conversation', 'Message']);
       can(['read', 'update', 'delete'], 'User', { _id: uid });
@@ -293,13 +371,18 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       if (shopIds.length === 0) break;
 
       can('manage', 'Shop', { _id: { $in: shopIds } });
-      // Products belong to Vendors — Shop Admins run the floor (machines,
-      // staff, orders) but do not own or edit the product catalog.
-      can('manage', ['User', 'Machine', 'Box', 'Purchase'], inShop);
-      // The staff directories are read through their own subjects; `User`
-      // above still carries every write, so this only re-states the same reach
-      // in the vocabulary the dashboard pages gate on.
+      // Products belong to Vendors. Shop Admins manage staff and orders in
+      // shop; machines are view-only (list + sales), not edit/control/fill.
+      can('manage', ['User', 'Purchase'], inShop);
+      can('read', 'Machine', inShop);
+      // Staff directories use their own subjects. Vendors are *listed* via machines
+      // in these shops (getByRole → listVendorsInShops) — Vendor user docs do
+      // not carry shopId. The shopId condition still gates class-level `can`.
       can('read', ['Vendor', 'ShopOwner', 'Staff'], inShop);
+      // Customers lack shopId; list comes from Purchases in these shops
+      // (getByRole → listCustomersInShops). Class-level `read Customer` opens
+      // the directory route; row access is purchase-checked in canTouchUser.
+      can('read', 'Customer', inShop);
       // Machine telemetry for their own floor. Gifts are a customer-to-customer
       // artefact with no shop of their own, so no admin management verb.
       can('manage', 'Event', inShop);
@@ -307,31 +390,57 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       // withdrawals get the explicit approval workflow verbs.
       can('read', ['Wallet', 'Transaction', 'Withdrawal'], inShop);
       can(['create', 'approve', 'reject', 'pay'], 'Withdrawal', inShop);
+      // Vendor → shop machine placement: review incoming requests for own shops.
+      can(['read', 'update'], 'PlacementRequest', inShop);
+      // Tenant roles + staff (scoped to this ShopOwner).
+      can('manage', 'Role', { ownerId: uid });
+      can('create', 'Role');
+      can('create', 'User', inShop);
+      can('create', 'Staff', inShop);
       break;
     }
 
-    case ROLES.VENDOR:
+    case ROLES.VENDOR: {
       // Vendor: manages own products, services own machines and the boxes
       // inside them, sees own money, asks for withdrawals.
-      can('read', CATALOG_SUBJECTS);
-      can('read', ['Doc', 'PaymentProvider']);
+      const vendorIds = vendorScopeOf(user);
+      const asVendor =
+        vendorIds.length <= 1
+          ? { vendorId: vendorIds[0] ?? uid }
+          : { vendorId: { $in: vendorIds } };
+      // Catalog browse for storefront pickers — but NOT Machine/Box: those
+      // must stay vendor-scoped or the admin Machines list returns every
+      // machine on the platform and ReferenceFields 403 on other vendors.
+      can('read', ['Product', 'Shop', 'Group', 'Event']);
+      can('read', ['Doc', 'PaymentProvider', 'Role']);
       can('create', 'Product');
-      can(['update', 'delete'], 'Product', { vendorId: uid });
-      // Machines are provisioned by admins; vendors only service their own.
-      can('update', 'Machine', { vendorId: uid });
-      // Boxes are slots inside a machine and carry no owner of their own, so
-      // they are scoped by the vendorId denormalized from the parent machine.
-      // Groups are a platform-wide machine taxonomy — read-only here.
-      can('manage', 'Box', { vendorId: uid });
-      can('read', ['Purchase', 'Wallet', 'Transaction'], { vendorId: uid });
+      can(['update', 'delete'], 'Product', asVendor);
+      // Machines are provisioned by admins; vendors only see/update their own.
+      // Filling boxes is for supplier staff (`assigned-machine`), not the Vendor.
+      can('read', 'Machine', asVendor);
+      can('update', 'Machine', asVendor);
+      can('read', ['Purchase', 'Wallet', 'Transaction'], asVendor);
       // Purchases on their machines can be adjusted by the vendor…
-      can(['update', 'delete'], 'Purchase', { vendorId: uid });
+      can(['update', 'delete'], 'Purchase', asVendor);
       // …and vendors can also buy from machines like any shopper.
       can(['create', 'read'], 'Purchase', { customerId: uid });
-      can(['read', 'create'], 'Withdrawal', { vendorId: uid });
+      can(['read', 'create'], 'Withdrawal', asVendor);
+      // Ask a Shop Admin to host one of this vendor's machines.
+      can(['create', 'read'], 'PlacementRequest', asVendor);
       can(['read', 'create', 'update'], ['Conversation', 'Message']);
       can(['read', 'update', 'delete'], 'User', { _id: uid });
+      // Resolve own name on machine list/edit ReferenceFields (vendorId → vendors).
+      can('read', 'Vendor', { _id: uid });
+      // Tenant roles + staff (scoped to this Vendor).
+      can('manage', 'Role', { ownerId: uid });
+      can('create', 'Role');
+      can('manage', 'User', { tenantId: uid });
+      can('create', 'User');
+      // Full staff CRUD under this vendor (suppliers, fillers, etc.).
+      can('manage', 'Staff', { tenantId: uid });
+      can('create', 'Staff');
       break;
+    }
 
     case ROLES.SUPPORT: {
       // Answers "contact support" for the audiences on their account. The
@@ -380,7 +489,12 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
         for (const row of rows) {
           const condition = SCOPE_CONDITIONS[row.scope];
           if (condition) {
-            can(row.action, row.subject, condition(user));
+            const cond = condition(user);
+            if (Array.isArray(cond)) {
+              for (const c of cond) can(row.action, row.subject, c);
+            } else {
+              can(row.action, row.subject, cond);
+            }
           } else {
             can(row.action, row.subject);
           }
@@ -394,6 +508,44 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
   }
 
   return build();
+};
+
+/**
+ * Tenant staff roles must stay within the creator's authority. Class-level
+ * `can(action, subject)` covers most grants. Vendors may still delegate fill
+ * (`update Box` / `read Machine` on assigned-machine) even though they do not
+ * fill themselves — that is explicit product authority, not a privilege
+ * escalation.
+ */
+export const validateRulesWithinOwnerAuthority = (
+  rows: unknown,
+  owner: AbilityUser,
+): string | null => {
+  if (!Array.isArray(rows)) return 'rules must be an array.';
+  const ability = defineAbilityFor(owner);
+  const ownerRole = normalizeBuiltInRole(owner.role);
+
+  for (const row of rows as RuleRow[]) {
+    const action = row.action as Action;
+    const subjectName = row.subject as SubjectName;
+    if (ability.can(action, subjectName)) continue;
+
+    const isVendorFillDelegate =
+      ownerRole === ROLES.VENDOR &&
+      row.scope === 'assigned-machine' &&
+      ((subjectName === 'Box' && action === 'update') ||
+        (subjectName === 'Machine' && (action === 'read' || action === 'update')));
+
+    const isSupportChatDelegate =
+      (ownerRole === ROLES.VENDOR || ownerRole === ROLES.SHOP_OWNER) &&
+      (subjectName === 'Conversation' || subjectName === 'Message') &&
+      (action === 'read' || action === 'create' || action === 'update');
+
+    if (isVendorFillDelegate || isSupportChatDelegate) continue;
+
+    return `Cannot grant ${action} on ${subjectName} (${row.scope}): beyond your authority.`;
+  }
+  return null;
 };
 
 /**

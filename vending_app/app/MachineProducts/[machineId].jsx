@@ -17,6 +17,7 @@ import { Text } from "~/components/ui/text";
 import { Badge, Button as MButton, Loader, SocialLinks, Stepper } from "~/components/moaddi";
 import GuestCheckoutModal from "~/components/GuestCheckoutModal";
 import ContactChatButton from "~/components/chat/ContactChatButton";
+import { useSupportUserId } from "~/app/(root)/context/ContactTargetContext";
 import { DetailHeader } from "~/components/navigation/DetailHeader";
 import { colors, radius, shadow, space, type as typo } from "~/theme/moaddi";
 import { useMachine } from "~/context/MachineContext";
@@ -52,6 +53,9 @@ function DefaultView({
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [qty, setQty] = useState({});
+  const supportTargetId = useSupportUserId("customers", {
+    machineId: machine?._id,
+  });
 
   // Keep the parent purchase map (`total`) in sync with local quantities.
   useEffect(() => {
@@ -106,11 +110,9 @@ function DefaultView({
           justifyContent: "space-between",
         }}
       >
-        {/* Message the machine's vendor. `vendorId` is the machine's own
-            persisted owner — the web client uses the same field, so both
-            platforms reach the same person. */}
+        {/* Contact via support-target (audience + machineId); vendor is fallback. */}
         <ContactChatButton
-          targetUserId={machine.vendorId}
+          targetUserId={supportTargetId || machine.vendorId}
           kind="machine-vendor"
           fullWidth
         />

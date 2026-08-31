@@ -152,7 +152,16 @@ export default function MachineProducts() {
         // Asked of this machine, not of the role. A raw role-string check used
         // to wave through every shop's machines while turning a Super Admin
         // away, and it knew nothing of dashboard-created staff roles.
-        if (!can(ability, "update", "Box", { vendorId, shopId })) {
+        // Include supplierIds — assigned fillers are scoped on that field,
+        // not vendorId/shopId (checking only those denied every supplier).
+        if (
+          !can(ability, "update", "Box", {
+            vendorId,
+            shopId,
+            supplierIds: response.supplierIds ?? [],
+            supportUserId: response.supportUserId ?? null,
+          })
+        ) {
           alert("error", t("notYourMachine"));
           goBack();
           return;

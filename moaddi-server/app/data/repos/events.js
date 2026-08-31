@@ -30,6 +30,7 @@ const canServiceMachine = async (user, machine) => {
     subject("Box", {
       vendorId: machine.vendorId ?? null,
       shopId: machine.shopId ?? null,
+      supplierIds: machine.supplierIds ?? [],
     })
   );
 };

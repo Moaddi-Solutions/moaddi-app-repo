@@ -1,0 +1,53 @@
+const BASIC_ROLES = ["vendor", "customer"];
+const FORBIDDEN_TENANT_GRANTS = new Set([
+  String(ROLES.SUPER_ADMIN).toLowerCase(),
+  String(ROLES.SHOP_OWNER).toLowerCase(),
+  String(ROLES.VENDOR).toLowerCase(),
+  String(ROLES.SUPPORT).toLowerCase(),
+  "admin",
+  "guest",
+]);
+
+const canGrantRole = async (req, role) => {
+  if (role === undefined) return true;
+  if (req.ability.can("manage", "all")) return true;
+  const roleStr = String(role || "");
+  if (BASIC_ROLES.includes(roleStr.toLowerCase())) return true;
+
+  const caller = req.authenticatedUser || req.user;
+  const builtIn = normalizeBuiltInRole(caller?.role);
+  if (builtIn !== ROLES.VENDOR && builtIn !== ROLES.SHOP_OWNER) {
+    return false;
+  }
+  if (FORBIDDEN_TENANT_GRANTS.has(roleStr.toLowerCase())) return false;
+  // Namespaced tenant roles look like `${ownerId}__${slug}`.
+  const owned = await rolesRepo.listOwnedRoleIds(String(caller._id));
+  return owned.includes(roleStr);
+};
+
+/**
+ * Stamp tenant fields server-side. Never trust client-supplied tenantId /
+ * tenantRole — a tenant could otherwise adopt another tenant's staff.
+ */
+const stampTenantOnCreate = (req, body) => {
+  const out = { ...(body || {}) };
+  delete out.tenantId;
+  delete out.tenantRole;
+  const caller = req.authenticatedUser || req.user;
+  if (!caller || req.ability.can("manage", "all")) return out;
+  const builtIn = normalizeBuiltInRole(caller.role);
+  if (builtIn === ROLES.VENDOR) {
+    out.tenantId = String(caller._id);
+    out.tenantRole = ROLES.VENDOR;
+  } else if (builtIn === ROLES.SHOP_OWNER) {
+    out.tenantId = String(caller._id);
+    out.tenantRole = ROLES.SHOP_OWNER;
+    if (!out.shopId && caller.shopId) out.shopId = caller.shopId;
+    if (!Array.isArray(out.ownedShopIds) || out.ownedShopIds.length === 0) {
+      const ids = shopScopeOf(caller);
+      if (ids.length) out.ownedShopIds = ids;
+    }
+  }
+  return out;
+};
+

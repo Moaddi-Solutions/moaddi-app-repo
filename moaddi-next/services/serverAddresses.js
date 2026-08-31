@@ -61,6 +61,10 @@ export function addUserAPI() {
 export function machinesAPI() {
   return `${address()}machines`;
 }
+export function machinesRevenueAPI(shopId) {
+  const base = `${machinesAPI()}/revenue`;
+  return shopId ? `${base}?shopId=${enc(shopId)}` : base;
+}
 export function shopsAPI() {
   return `${address()}shops`;
 }
@@ -95,8 +99,16 @@ export function chatConversationReadAPI(conversationId) {
 export function chatSocketAddress() {
   return `${baseUrl().replace(/\/$/, "")}/chat`;
 }
-export function chatSupportTargetAPI(audience = "customers") {
-  return `${address()}chat/support-target?${new URLSearchParams({ audience })}`;
+export function chatSupportTargetAPI(audienceOrOpts = "customers", maybeOpts) {
+  const opts =
+    typeof audienceOrOpts === "string"
+      ? { audience: audienceOrOpts, ...(maybeOpts || {}) }
+      : audienceOrOpts || {};
+  const { audience = "customers", shopId, machineId } = opts;
+  const params = new URLSearchParams({ audience });
+  if (shopId) params.set("shopId", String(shopId));
+  if (machineId) params.set("machineId", String(machineId));
+  return `${address()}chat/support-target?${params}`;
 }
 export function chatAttachmentsAPI(conversationId) {
   return `${chatConversationsAPI()}/${enc(conversationId)}/attachments`;
@@ -157,6 +169,8 @@ export const unassignMachineAPI = (id) =>
   `${address()}machines/${enc(id)}/unassign`;
 export const boxUpdateAPI = (id) =>
   `${address()}boxes/product/${enc(id)}/changeproduct`;
+export const boxesByMachineAPI = (id) =>
+  `${address()}boxes/machine/${enc(id)}`;
 export const unassignBoxAPI = (id) =>
   `${address()}boxes/machine/${enc(id)}/unassign`;
 export const productsAPI = (id) => `${address()}products/${enc(id)}`;
@@ -190,6 +204,11 @@ export function withdrawalsAPI() {
   return `${address()}withdrawals`;
 }
 export const withdrawalAPI = (id) => `${address()}withdrawals/${enc(id)}`;
+export function placementRequestsAPI() {
+  return `${address()}placement-requests`;
+}
+export const placementRequestAPI = (id) =>
+  `${address()}placement-requests/${enc(id)}`;
 export function transactionsAPI() {
   return `${address()}transactions`;
 }

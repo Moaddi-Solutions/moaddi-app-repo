@@ -55,11 +55,9 @@ const MachinesAndProducts = ({ id }) => {
     ? (rawData ?? []).filter(({ isActive }) => isActive)
     : [];
 
-  // Shop pages route to support, not to the shop's owner: a shopper's question
-  // about a storefront is an admin matter, and the aggregation's "owner" is
-  // only ever the first machine's vendor, which is arbitrary for multi-vendor
-  // shops. Machine pages still contact that machine's own vendor.
-  const supportUserId = useSupportUserId();
+  // Shop pages prefer the shop's assigned support (falling back to the shop
+  // owner, then the platform audience) — resolved server-side via shopId.
+  const supportUserId = useSupportUserId("customers", { shopId: id });
   useRegisterContactTarget({
     kind: "support",
     targetUserId: supportUserId,

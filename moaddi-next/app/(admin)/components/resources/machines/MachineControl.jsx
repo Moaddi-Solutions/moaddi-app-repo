@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/../components/ui/tooltip";
-import { putRequest } from "@/../services/events";
+import { getRequest, putRequest } from "@/../services/events";
 import {
   boxesConvert,
   boxSerialDecoder,
@@ -15,11 +15,12 @@ import {
 } from "@/../services/functions";
 import {
   baseUrl,
+  boxesByMachineAPI,
   boxUpdateAPI,
   unassignBoxAPI,
 } from "@/../services/serverAddresses";
 import { cn } from "@/../lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CircleOff,
   Lightbulb,
@@ -32,11 +33,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ListBase,
   RecordContextProvider,
-  useGetOne,
   useListContext,
   useRecordContext,
 } from "ra-core";
 import QRCode from "react-qr-code";
+
+/** Machine docs store `boxes` as a capacity Number; slot rows are a separate list. */
+const asBoxList = (value) => (Array.isArray(value) ? value : []);
 
 const BoxApi = {
   productAssign: (machineId, boxIds, product) =>
@@ -164,24 +167,25 @@ const SummaryChip = ({ label, value, total, hint, className, alert }) => (
 const isBoxFilled = (box) => box.isFilled || !!box.productId;
 
 const MachineSummary = ({ boxes, machine, selectedCount }) => {
+  const slots = asBoxList(boxes);
   const counts = useMemo(
     () => ({
       // Spec: green "Open" = ready to open, which per the legend means the box
       // holds product and the lock reads closed.
-      open: boxes.filter((box) => isBoxFilled(box) && !box.status).length,
-      close: boxes.filter((box) => !box.status).length,
+      open: slots.filter((box) => isBoxFilled(box) && !box.status).length,
+      close: slots.filter((box) => !box.status).length,
       // Approximate: there is no per-lock health data (no heartbeat, and the
       // socket layer only carries LOCKER/IR), so this falls back to the
       // machine-level connection and is all-or-nothing. Per-box granularity
       // needs a lastSeen field plus a firmware heartbeat.
-      out: machine?.isConnected ? 0 : boxes.length,
-      fill: boxes.filter(isBoxFilled).length,
+      out: machine?.isConnected ? 0 : slots.length,
+      fill: slots.filter(isBoxFilled).length,
       selected: selectedCount,
     }),
-    [boxes, machine?.isConnected, selectedCount],
+    [slots, machine?.isConnected, selectedCount],
   );
 
-  const total = boxes.length;
+  const total = slots.length;
 
   return (
     <div className="mt-5 border-t border-border/60 pt-4">
@@ -419,48 +423,37 @@ const BoxGrid = ({
         </RecordContextProvider>
         );
       })}
-      <RealTime machine={machine} />
+      <RealTime machineId={machine?.id ?? machine?._id} />
     </div>
   );
 };
 
-const RealTime = ({ machine }) => {
+const RealTime = ({ machineId }) => {
   const { machineEvents } = useSocket();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!machineEvents) return;
+    if (!machineEvents || !machineId) return;
+    // Patch the boxes-by-machine cache used by Fill (not machines.getOne —
+    // that field is the capacity Number on list/show payloads).
     queryClient.setQueriesData(
-      {
-        queryKey: ["vendors", "getOne", { id: machine.vendorId }],
-      },
-      (prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          machines: prev.machines.map((item) => {
-            if (item._id !== machine._id) return item;
-            return {
-              ...item,
-              boxes: boxUpdateHandler(item.boxes, machineEvents, "status"),
-            };
-          }),
-        };
-      },
+      { queryKey: ["boxes", "byMachine", String(machineId)] },
+      (prev) => boxUpdateHandler(asBoxList(prev), machineEvents, "status"),
     );
-  }, [machineEvents, machine, queryClient]);
+  }, [machineEvents, machineId, queryClient]);
 
   return null;
 };
 
 const boxUpdateHandler = (boxes, machineEvents, statusName) => {
+  let next = asBoxList(boxes);
   machineEvents?.boxes?.map((box) => {
     if (box === "all") {
-      boxes = boxes.map((box) => {
-        if (machineEvents.type === "IR") box.isFilled = !!machineEvents.value;
+      next = next.map((slot) => {
+        if (machineEvents.type === "IR") slot.isFilled = !!machineEvents.value;
         else if (machineEvents.type === "LOCKER")
-          box[statusName] = !!machineEvents.value;
-        return box;
+          slot[statusName] = !!machineEvents.value;
+        return slot;
       });
     } else {
       boxSerialDecoder(
@@ -468,7 +461,7 @@ const boxUpdateHandler = (boxes, machineEvents, statusName) => {
         box,
         machineEvents.machineType,
       ).map((cBox) => {
-        boxes = boxes.map((oldBox) => {
+        next = next.map((oldBox) => {
           if (cBox === oldBox._id) {
             if (machineEvents.type === "IR")
               oldBox.isFilled = !!machineEvents.value;
@@ -480,7 +473,7 @@ const boxUpdateHandler = (boxes, machineEvents, statusName) => {
       });
     }
   });
-  return boxes;
+  return next;
 };
 
 const MachineControl = ({ children }) => {
@@ -490,22 +483,18 @@ const MachineControl = ({ children }) => {
   const { publishData, controlDirectMachine, controlBluetooth1Machine } =
     useSocket();
   const machine = useRecordContext();
-  // Owned here rather than in BoxGrid so that both the grid and the summary bar
-  // re-render off the same query — RealTime writes MQTT updates straight into
-  // this cache entry, which is what keeps the counters live.
-  const { data: vendor, isPending, refetch } = useGetOne(
-    "vendors",
-    { id: machine?.vendorId },
-    { enabled: !!machine?.vendorId },
-  );
+  const machineId = machine?.id ?? machine?._id;
+  // Slot rows come from GET /boxes/machine/:id — machine.boxes on the machine
+  // document is the capacity Number (list/show), not the slots array.
+  const { data: boxesPayload, isPending, refetch } = useQuery({
+    queryKey: ["boxes", "byMachine", String(machineId ?? "")],
+    queryFn: () => getRequest(boxesByMachineAPI(machineId)),
+    enabled: !!machineId,
+  });
   const boxes = useMemo(() => {
-    if (isPending || !vendor) return [];
-    const found = vendor.machines.find(({ _id }) => _id == machine?._id);
-    // The vendors lookup pulls every box for the machine without filtering
-    // isDeleted, so soft-deleted boxes arrive here and would otherwise be both
-    // rendered in the grid and counted in the summary.
-    return (found?.boxes ?? []).filter((box) => !box.isDeleted);
-  }, [vendor, isPending, machine?._id]);
+    if (isPending) return [];
+    return asBoxList(boxesPayload).filter((box) => !box.isDeleted);
+  }, [boxesPayload, isPending]);
   const readyToSet = !machine?.isActive && machine?.isConnected;
   const productRow = {
     selectedProduct,
@@ -693,6 +682,12 @@ const MachineControl = ({ children }) => {
                   resource="products"
                   sort={{ field: "name", order: "DESC" }}
                   perPage={100}
+                  filter={
+                    machine.vendorId ? { vendorId: machine.vendorId } : undefined
+                  }
+                  // Fill staff lack Product manage rights; requireAccess on
+                  // this nested list would send them to /access-denied.
+                  disableAuthentication
                 >
                   <ProductRow {...productRow} />
                 </ListBase>

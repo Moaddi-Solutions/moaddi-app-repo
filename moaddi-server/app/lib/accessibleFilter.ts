@@ -69,3 +69,18 @@ export const accessibleFilterAny = (
   if (usable.length === 1) return usable[0];
   return { $or: usable };
 };
+
+/**
+ * Like `accessibleFilter`, but treats an unconditional rule (`{}`) as deny.
+ * Staff machine directories must not open on catalog `read Machine` (every
+ * shopper has it) — only shop/vendor-scoped read qualifies.
+ */
+export const accessibleScopedFilter = (
+  ability: AppAbility,
+  action: Action,
+  subjectType: SubjectName
+): Record<string, unknown> => {
+  const filter = accessibleFilter(ability, action, subjectType);
+  if (isDenyAll(filter) || Object.keys(filter).length === 0) return DENY_ALL;
+  return filter;
+};

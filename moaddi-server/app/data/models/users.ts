@@ -42,6 +42,17 @@ const UsersSchema = new mongoose.Schema<UserDocument>(
     // support" for. Each audience is held by at most one agent — see
     // assertSupportAudiences in the users repo.
     supportAudiences: { type: [String], required: false },
+    /**
+     * Tenant staff: the Vendor or ShopOwner who owns this account.
+     * Stamped server-side on create — never trusted from the request body.
+     */
+    tenantId: { type: String, required: false, default: null },
+    /** `Vendor` or `ShopOwner` — which kind of tenant `tenantId` points at. */
+    tenantRole: { type: String, required: false, default: null },
+    /** Shop this staff user was assigned to (ShopOwner staff / floor staff). */
+    shopId: { type: String, required: false, default: null },
+    /** Shops this ShopOwner (or their staff, copied at create) administers. */
+    ownedShopIds: { type: [String], required: false, default: undefined },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },
     updated: { type: Date, required: false },
   },

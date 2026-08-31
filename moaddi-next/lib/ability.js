@@ -44,6 +44,7 @@ const SELF_KEYS = {
   // own machines on their id as the owner.
   Withdrawal: ["vendorId"],
   Machine: ["vendorId"],
+  PlacementRequest: ["vendorId"],
 };
 
 const DEFAULT_SELF_KEYS = ["_id"];
@@ -122,10 +123,15 @@ const hasUnscopedRule = (ability, action, subjectName) =>
 const MANAGE_ONLY = "update";
 
 const RESOURCE_MAP = {
-  // Machines and products are catalog subjects every signed-in user may read
-  // (the storefront browses them), so their dashboard sections key off
-  // management too — otherwise a shopless admin lands on browse-only lists.
-  machines: { subject: "Machine", listAction: MANAGE_ONLY },
+  // Machines: Vendors manage via `update Machine`; suppliers fill via
+  // `update Box` (assigned-machine). ShopOwner opens the tab via shop-scoped
+  // `read Machine` (see canAccessResource special-case). Catalog `read
+  // Machine` alone is not enough (storefront browses machines too).
+  machines: {
+    subject: "Machine",
+    listAction: MANAGE_ONLY,
+    orListSubject: "Box",
+  },
   // Staff carry a shopId, so a Shop Admin's scoped rule reaches them. Each
   // roster has its own subject so it can be granted on its own — a support
   // agent answering vendors gets Vendors and nothing beside it. Writes still
@@ -133,6 +139,8 @@ const RESOURCE_MAP = {
   vendors: { subject: "Vendor", beyondSelf: true },
   shopOwners: { subject: "ShopOwner", beyondSelf: true },
   staff: { subject: "Staff", beyondSelf: true },
+  // Vendor-facing alias of Staff (same CASL subject; clearer nav label).
+  suppliers: { subject: "Staff", beyondSelf: true },
   // Support agents are the Super Admin's own hires, so only `manage all`
   // reaches this page — a shop owner's shop-scoped rules never match it.
   supportTeam: { subject: "Support", beyondSelf: true },
@@ -141,8 +149,9 @@ const RESOURCE_MAP = {
   // pseudo-role in users.js's getByRole.
   team: { subject: "Team", beyondSelf: true },
   // Shoppers carry no shop: they sign themselves up and belong to none, so
-  // only an unscoped rule can list them. A Shop Admin gets the buyer's name on
-  // the order instead of a customer directory that would always be empty.
+  // only an unscoped rule can list them platform-wide. Shop Admins who manage
+  // Purchases in their shops also get the directory (buyers resolved server-
+  // side from Purchases, not from Customer.shopId).
   customers: { subject: "Customer", platformWide: true },
   products: { subject: "Product", listAction: MANAGE_ONLY },
   // Reference data for pickers, not a section — plain read.
@@ -154,6 +163,7 @@ const RESOURCE_MAP = {
   website: { subject: "Content", listAction: MANAGE_ONLY },
   websites: { subject: "Content", listAction: MANAGE_ONLY },
   withdrawals: { subject: "Withdrawal" },
+  placementRequests: { subject: "PlacementRequest" },
   wallets: { subject: "Wallet" },
   transactions: { subject: "Transaction" },
   payments: { subject: "Purchase", beyondSelf: true },
@@ -184,16 +194,77 @@ const withMongoId = (record) => ({
 export function canAccessResource(ability, resource, raAction, record) {
   const mapping = RESOURCE_MAP[resource] ?? DEFAULT_MAPPING;
   const isList = raAction === "list";
+  const isShow = raAction === "show";
   const action =
     (isList && mapping.listAction) || ACTION_MAP[raAction] || raAction;
+
+  // Supplier fill: `update Box` opens Machines list + Fill (show). Product
+  // picker on Fill also needs products list without Product management.
+  // `read Machine` alone can open show (assigned machines); still allow the
+  // nested products picker so Fill does not bounce to /access-denied.
+  const canFillBoxes = ability.can("update", "Box");
+  const canReadMachines = ability.can("read", "Machine");
+  // ShopOwner floor view: shop-scoped `read Machine` (beyondSelf), not
+  // unrestricted catalog browse — hasRuleBeyondSelf alone would also match
+  // unconditional catalog rules, so require a *conditional* beyond-self rule.
+  const canListMachinesViaShopRead =
+    isList &&
+    resource === "machines" &&
+    canReadMachines &&
+    ability.rulesFor("read", "Machine").some((rule) => {
+      if (rule.inverted || !rule.conditions) return false;
+      const selfKeys = SELF_KEYS.Machine ?? DEFAULT_SELF_KEYS;
+      return Object.keys(rule.conditions).some(
+        (key) => !selfKeys.includes(key),
+      );
+    });
+  if (canListMachinesViaShopRead) return true;
+
+  if (canFillBoxes || canReadMachines) {
+    if (resource === "machines" && (isList || isShow) && canFillBoxes) return true;
+    if (resource === "machines" && isShow && canReadMachines) return true;
+    if (resource === "products" && isList && (canFillBoxes || canReadMachines))
+      return true;
+  }
+
   if (record) {
-    return ability.can(action, subject(mapping.subject, withMongoId(record)));
+    const row = withMongoId(record);
+    if (ability.can(action, subject(mapping.subject, row))) return true;
+    // Per-row Fill: machine may be opened via Box rights on its supplierIds.
+    if (
+      resource === "machines" &&
+      isShow &&
+      canFillBoxes &&
+      ability.can("update", subject("Box", row))
+    ) {
+      return true;
+    }
+    return false;
   }
   if (isList && mapping.orCreatable && ability.can("create", mapping.subject)) {
     return true;
   }
+  // Supplier fill staff: Machines tab opens on `update Box` even without
+  // `update Machine` (same OR as the server machines list filter).
+  if (
+    isList &&
+    mapping.orListSubject &&
+    ability.can(action, mapping.orListSubject)
+  ) {
+    return true;
+  }
   if (mapping.platformWide) {
-    return hasUnscopedRule(ability, action, mapping.subject);
+    if (hasUnscopedRule(ability, action, mapping.subject)) return true;
+    // Shop Admin: customers who purchased at the shop (+ chat from list/show).
+    if (
+      resource === "customers" &&
+      (isList || isShow) &&
+      (hasRuleBeyondSelf(ability, "update", "Purchase") ||
+        hasRuleBeyondSelf(ability, "manage", "Purchase"))
+    ) {
+      return true;
+    }
+    return false;
   }
   if (mapping.beyondSelf) {
     return hasRuleBeyondSelf(ability, action, mapping.subject);

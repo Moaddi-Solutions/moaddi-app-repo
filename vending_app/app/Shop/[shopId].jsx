@@ -71,7 +71,7 @@ const ShopDetail = () => {
   // about a storefront is an admin matter, and the aggregation's "owner" is
   // only ever the first machine's vendor, which is arbitrary for multi-vendor
   // shops. Machine pages still contact that machine's own vendor.
-  const supportTargetId = useSupportUserId();
+  const supportTargetId = useSupportUserId("customers", { shopId });
 
   const shop = items?.[0]?.shop?.[0];
 
