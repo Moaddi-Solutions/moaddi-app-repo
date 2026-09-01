@@ -20,9 +20,7 @@ import { AdminShowButton } from "@/(admin)/components/kit/AdminUI";
 import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { isVendorRole } from "@/../lib/dashboard-role";
 import { usePermissions, useRecordContext } from "ra-core";
-import { useAbility } from "@/(admin)/components/kit/useAbility";
 import { canActForOthers } from "@/../lib/ability";
-import { useRecordContext } from "ra-core";
 
 const GenaiInputs = () => {
   return (
