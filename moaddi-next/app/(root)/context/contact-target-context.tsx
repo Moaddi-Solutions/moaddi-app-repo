@@ -119,14 +119,21 @@ export function ContactTargetProvider({
   children: React.ReactNode;
 }) {
   const supportId = useSupportUserId();
+  const supportPending = useSupportUserIdPending();
   const [pageTarget, setPageTarget] = useState<ContactTarget | null>(null);
 
   const value = useMemo(
     () => ({
-      target: pageTarget ?? { ...DEFAULT_SUPPORT_TARGET, targetUserId: supportId },
+      target:
+        pageTarget ??
+        {
+          ...DEFAULT_SUPPORT_TARGET,
+          targetUserId: supportId,
+          isPending: supportPending,
+        },
       setPageTarget,
     }),
-    [pageTarget, supportId],
+    [pageTarget, supportId, supportPending],
   );
 
   return (

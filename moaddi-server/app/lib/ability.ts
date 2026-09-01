@@ -471,7 +471,16 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       // Custom role from the registry; unknown roles get no permissions.
       // Prefer the normalized name, then the raw string (dashboard-created roles
       // keep their exact casing).
-      //
+      const rows = customRoles.get(role) ?? customRoles.get(user.role);
+
+      // Fail closed on a role nobody defined. The baseline grants below are for
+      // real custom roles; granting them before this check meant a user whose
+      // `role` matched nothing — a typo, a role deleted straight from Mongo, a
+      // half-finished import — still got a working account with self-management,
+      // chat and the internal roster. Mongo has no foreign key to stop that
+      // string existing, so this is the only place it can be caught.
+      if (!rows) break;
+
       // Every other role case grants some of this unconditionally that this
       // one never did: self-management, and a way to reach the platform.
       // Self-management and chat are self-scoped (own account, own

@@ -318,6 +318,40 @@
   }
 }
 
+/* Mobile/tablet header: language switcher, shown only where .moaddi-site-head is hidden */
+.moaddi-mobile-head {
+  display: none;
+}
+
+.moaddi-mobile-lang-btn {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  cursor: pointer;
+  place-items: center;
+  border: 1px solid var(--site-header-line);
+  border-radius: 50%;
+  background: var(--site-header-surface);
+  color: var(--site-header-ink);
+  padding: 0;
+}
+
+.moaddi-mobile-lang-btn:hover {
+  border-color: var(--primary);
+  color: var(--accent-foreground);
+}
+
+.moaddi-mobile-lang-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ring) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.moaddi-mobile-lang-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Mobile/tablet bottom navigation */
 .moaddi-bottom-nav {
   display: none;
@@ -455,6 +489,23 @@
 @media (max-width: 1023px) {
   .moaddi-site-head {
     display: none;
+  }
+
+  .moaddi-mobile-head {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* Icon stays on the physical right in both directions: `direction: ltr`
+       makes flex-end physical-right even inside an RTL document. */
+    display: flex;
+    direction: ltr;
+    align-items: center;
+    justify-content: flex-end;
+    border-bottom: 1px solid var(--site-header-line);
+    background: var(--site-header-bg);
+    backdrop-filter: blur(10px);
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px
+      max(12px, env(safe-area-inset-left));
   }
 
   .moaddi-bottom-nav {

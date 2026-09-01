@@ -1,6 +1,7 @@
 const express = require("express");
 const machines = require("../../data/repos/machines");
 const rolesRepo = require("../../data/repos/roles");
+const Machines = require("../../data/models/machines");
 const authenticate = require("../middlewares/authenticate");
 const optionalAuthenticate = require("../middlewares/optionalAuthenticate");
 const authorize = require("../middlewares/authorize");
@@ -113,6 +114,52 @@ const assertCanToggleMachine = async (req, res, machineId) => {
   return true;
 };
 
+
+/**
+ * Who a machine belongs to — not editable through a general update.
+ *
+ * Reassigning is a platform act: it moves a machine between vendors, shops or
+ * groups. `/assign` guards it by asking for rights over an *unassigned*
+ * machine, which vendor- and shop-scoped rules can never match. The general
+ * update route ran no such check, and `machines.update` copies the whole body
+ * — so a vendor editing their own machine could post a different `vendorId`
+ * and hand it to someone else, bypassing the very guard `/assign` exists for.
+ */
+const OWNERSHIP_FIELDS = ["vendorId", "shopId", "groupId"];
+
+/** Same predicate `/assign` uses: only an unscoped machine-update reassigns. */
+const canReassignMachine = (req) =>
+  req.ability.can("update", subject("Machine", { vendorId: null }));
+
+/**
+ * 403 when the body would change an ownership field and the caller may not
+ * reassign. Compared against the stored machine so a form that submits the
+ * whole record — the dashboard's does — is not blocked by fields it merely
+ * echoed back unchanged.
+ */
+const assertCanReassign = async (req, res, machineId) => {
+  const touched = OWNERSHIP_FIELDS.filter((f) =>
+    Object.prototype.hasOwnProperty.call(req.body || {}, f),
+  );
+  if (!touched.length || canReassignMachine(req)) return true;
+
+  // `getById` shapes and joins; this only needs the raw owner columns.
+  const current = await Machines.findOne({ _id: String(machineId) })
+    .select(OWNERSHIP_FIELDS.join(" "))
+    .lean();
+  const same = (a, b) => String(a ?? "") === String(b ?? "");
+  const changed = touched.filter((f) => !same(req.body[f], current?.[f]));
+  if (!changed.length) {
+    // Echoed unchanged — drop them so nothing downstream can rewrite them.
+    for (const f of touched) delete req.body[f];
+    return true;
+  }
+
+  res.status(403).json({
+    message: `Only an administrator can reassign a machine (${changed.join(", ")}).`,
+  });
+  return false;
+};
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 
 module.exports = () => {
@@ -345,6 +392,7 @@ module.exports = () => {
   router.put("/machines/:machineId", authenticate(), authorize("update", "Machine"), async (req, res, next) => {
     try {
       if (!(await assertCanTouchMachine(req, res, "update", req.params.machineId))) return;
+      if (!(await assertCanReassign(req, res, req.params.machineId))) return;
       let results = await machines.update(req.params.machineId, req.body);
       return res.status(200).json(results);
     } catch (err) {

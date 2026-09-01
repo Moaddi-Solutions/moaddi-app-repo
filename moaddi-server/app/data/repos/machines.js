@@ -952,6 +952,37 @@ let toggle = async (machineId) => {
 /*
  * Update machine by id.
  */
+/**
+ * Fields a general update may write.
+ *
+ * Everything absent from this list is owned by a route that does more than set
+ * the column, and writing it here skipped that work entirely:
+ *   isActive     -> toggle(), which also cascades to the machine's boxes
+ *   isConnected  -> updateConnection(), driven by device telemetry
+ *   isAssigned   -> assign()/unassign(), kept in step with vendorId
+ *   isDeleted    -> remove(), gated on `delete:Machine` — setting it here was a
+ *                   soft-delete for anyone holding only `update:Machine`
+ *   _id, qrCode  -> identity; qrCode is how a customer reaches this machine
+ *   created/updated -> stamped by the repo
+ *
+ * `vendorId`/`shopId`/`groupId` stay writable because /assign and the admin
+ * edit form legitimately set them; *who* may do so is enforced by
+ * `assertCanReassign` in the controller, where the caller's ability lives.
+ */
+const UPDATABLE_FIELDS = new Set([
+  "name",
+  "mac",
+  "location",
+  "boxes",
+  "type",
+  "password",
+  "specialProducts",
+  "paymentProvider",
+  "vendorId",
+  "shopId",
+  "groupId",
+]);
+
 let update = async (machineId, properties) => {
   let machine = await Machines.findOne({ _id: machineId });
 
@@ -962,6 +993,13 @@ let update = async (machineId, properties) => {
       statusCode: 404,
     });
   }
+
+  // Drop anything not writable here rather than rejecting: the dashboard form
+  // submits the whole record, so a payload carrying isActive/isConnected is
+  // normal traffic, not an attack. The fields simply stop being honoured.
+  properties = Object.fromEntries(
+    Object.entries(properties || {}).filter(([key]) => UPDATABLE_FIELDS.has(key)),
+  );
 
   if (Object.prototype.hasOwnProperty.call(properties, "paymentProvider")) {
     await assertPaymentProviderAllowed(properties.paymentProvider);
@@ -1039,7 +1077,6 @@ let update = async (machineId, properties) => {
       } else console.log("No need to update boxes");
     }
     machine[property] = properties[property];
-    machine.x = "y";
   }
   machine.updated = moment().utc().add(config.timeDifference, "hours");
 
