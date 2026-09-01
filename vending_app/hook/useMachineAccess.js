@@ -19,12 +19,26 @@ export const useMachineAccess = (machine) => {
 
   return useMemo(() => {
     const owners = machine
-      ? { vendorId: machine.vendorId ?? null, shopId: machine.shopId ?? null }
+      ? {
+          vendorId: machine.vendorId ?? null,
+          shopId: machine.shopId ?? null,
+          supplierIds: machine.supplierIds ?? [],
+          supportUserId: machine.supportUserId ?? null,
+        }
       : null;
 
     return {
-      /** Toggle the machine on/off, edit its settings. */
-      canManageMachine: Boolean(machine) && can(ability, "update", "Machine", owners),
+      /** Full machine settings (edit form, assign suppliers, etc.). */
+      canManageMachine:
+        Boolean(machine) && can(ability, "update", "Machine", owners),
+      /**
+       * Flip active/inactive. Owners manage the machine; assigned fill staff
+       * may toggle too — stocking requires the machine off.
+       */
+      canToggleMachine:
+        Boolean(machine) &&
+        (can(ability, "update", "Machine", owners) ||
+          can(ability, "update", "Box", owners)),
       /** Assign or clear products in its boxes. */
       canFillBoxes: Boolean(machine) && can(ability, "update", "Box", owners),
     };

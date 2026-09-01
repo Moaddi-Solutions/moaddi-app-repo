@@ -10,8 +10,13 @@ const { jsonMoneyField } = require('../../lib/serializeMoneyJson') as {
 const WalletsSchema = new mongoose.Schema<ModelTypes.IWallet>(
   {
     _id: { type: String, required: true },
+    /**
+     * Wallet owner id. Historically always a Vendor; also used for Shop Owner
+     * commission wallets (same collection, no separate model). Readers that
+     * assume "vendor" must filter by role/kind rather than this field alone.
+     */
     vendorId: { type: String, required: true },
-    /** Denormalized from the vendor's shop — lets a Shop Admin read the wallets of their own suppliers only. */
+    /** Denormalized shop scope — lets a Shop Admin read wallets in their shops. */
     shopId: { type: String, required: false, default: null },
     currency: { type: String, required: true, default: 'USD' },
     balance: {

@@ -162,6 +162,10 @@ export default {
         Object.assign(new Error("Session expired"), { message: false }),
       );
     }
+    // Never throw here. A thrown error becomes a Next.js Runtime Error overlay
+    // and looks like a broken login when something incidental 403s (e.g. a
+    // ReferenceField for a support agent the Vendor cannot read). Callers
+    // already surface failed requests via their own error UI.
     return Promise.resolve();
   },
   // `record` arrives from per-row checks (the Edit button in a list); passing

@@ -25,11 +25,14 @@ import {
 } from "@/(admin)/components/resources/siteOptions";
 import shopOwners from "@/(admin)/components/resources/shopOwners";
 import staff from "@/(admin)/components/resources/staff";
+import suppliers from "@/(admin)/components/resources/suppliers";
 import supportTeam from "@/(admin)/components/resources/supportTeam";
+import SupportRoutingPage from "@/(admin)/components/resources/supportRouting/SupportRoutingPage";
 import team from "@/(admin)/components/resources/team";
 import vendors from "@/(admin)/components/resources/vendors";
 import wallets from "@/(admin)/components/resources/wallets";
 import withdrawals from "@/(admin)/components/resources/withdrawals";
+import placementRequests from "@/(admin)/components/resources/placementRequests";
 import website from "@/(admin)/components/resources/website";
 import i18nProvider from "@/(admin)/components/kit/i18nProvider";
 import { buildAbility, canAccessResource } from "@/../lib/ability";
@@ -66,16 +69,48 @@ const AdminApp = () => {
         const ability = buildAbility(permissions.rules);
         const allowed = (resource) => canAccessResource(ability, resource, "list");
         const canChat = isDashboardRole(role) && ability.can("read", "Conversation");
+        // Tenant Contact routing hub (not platform Support agents).
+        const canTenantSupportRouting =
+          (role === "Vendor" && ability.can("update", "Machine")) ||
+          (role === "ShopOwner" && ability.can("update", "Shop"));
         const resources = [
-          allowed("machines") && <Resource {...machines} key="machines" />,
+          allowed("machines") && (
+            <Resource
+              {...machines}
+              key="machines"
+              // Vendors assign suppliers on edit; fill (show) is staff-only.
+              show={role === "Vendor" ? undefined : machines.show}
+            />
+          ),
           allowed("vendors") && <Resource {...vendors} key="vendors" />,
           allowed("shopOwners") && <Resource {...shopOwners} key="shopOwners" />,
+          // Vendors manage fill staff under Suppliers; platform Staff stays
+          // for Super Admin / Shop Owner. Staff resource still registers for
+          // Vendor so Machine → Suppliers ReferenceArrayInput keeps working.
+          allowed("suppliers") && role === "Vendor" && (
+            <Resource {...suppliers} key="suppliers" />
+          ),
           allowed("staff") && <Resource {...staff} key="staff" />,
           allowed("supportTeam") && <Resource {...supportTeam} key="supportTeam" />,
           allowed("team") && <Resource {...team} key="team" />,
           allowed("roles") && <Resource {...roles} key="roles" />,
           allowed("customers") && <Resource {...customers} key="customers" />,
-          allowed("products") && <Resource {...products} key="products" />,
+          // Full products CRUD for catalog managers; fill staff only need the
+          // resource registered so Machine Fill's product ListBase can load.
+          allowed("products") ? (
+            <Resource {...products} key="products" />
+          ) : (
+            ability.can("update", "Box") && (
+              <Resource
+                {...products}
+                key="products"
+                list={undefined}
+                create={undefined}
+                edit={undefined}
+                show={undefined}
+              />
+            )
+          ),
           allowed("shops") && <Resource {...shops} key="shops" />,
           allowed("groups") && <Resource {...groups} key="groups" />,
           allowed("website") && <Resource {...website} key="website" />,
@@ -105,12 +140,18 @@ const AdminApp = () => {
           allowed("payments") && <Resource {...payments} key="payments" />,
           allowed("invoices") && <Resource {...invoices} key="invoices" />,
           allowed("withdrawals") && <Resource {...withdrawals} key="withdrawals" />,
+          allowed("placementRequests") && (
+            <Resource {...placementRequests} key="placementRequests" />
+          ),
           allowed("wallets") && <Resource {...wallets} key="wallets" />,
           allowed("transactions") && <Resource name="transactions" key="transactions" />,
         ].filter(Boolean);
         return [
           <CustomRoutes key="custom-routes">
             <Route path="/home" element={<Dashboard />} />
+            {canTenantSupportRouting && (
+              <Route path="/support-routing" element={<SupportRoutingPage />} />
+            )}
             {canChat && (
               <Route path="/conversations" element={<AdminConversationsScreen />} />
             )}

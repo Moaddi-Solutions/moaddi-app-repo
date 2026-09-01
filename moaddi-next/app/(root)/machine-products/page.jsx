@@ -3,7 +3,10 @@
 import GuestCheckoutDialog from "@/(root)/components/GuestCheckoutDialog";
 import MachineProductCard from "@/(root)/components/MachineProductCard";
 import { useCart } from "@/(root)/context/cart-provider";
-import { useRegisterContactTarget } from "@/(root)/context/contact-target-context";
+import {
+  useRegisterContactTarget,
+  useSupportUserId,
+} from "@/(root)/context/contact-target-context";
 import { Badge } from "@/../components/ui/badge";
 import { Button } from "@/../components/ui/button";
 import { Container } from "@/../components/ui/container";
@@ -105,11 +108,14 @@ function MachineProductsContent() {
   } = useCart();
   const contactTargetPending = qrFromUrl ? qrLoading : isPending;
 
+  const supportUserId = useSupportUserId("customers", {
+    machineId: machine?._id,
+  });
   useRegisterContactTarget({
     kind: "machine-vendor",
-    targetUserId: machine?.vendorId,
+    targetUserId: supportUserId ?? machine?.vendorId,
     resourceId: machine?._id,
-    isPending: contactTargetPending,
+    isPending: contactTargetPending || (!!machine?._id && !supportUserId),
   });
 
   const persistMachineRef = useRef(persistMachineInCart);

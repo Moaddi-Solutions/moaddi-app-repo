@@ -40,23 +40,28 @@ describe('Admin (Shop Admin)', () => {
   const inB = () => ({ shopId: 'shop_b' });
   const elsewhere = () => ({ shopId: 'shop_z' });
 
-  it('manages business objects inside its own shops', () => {
+  it('reads machines and manages staff/orders inside its own shops', () => {
     assert.ok(ability.cannot('delete', subject('Product', inA())));
     assert.ok(ability.cannot('update', subject('Product', inA())));
-    assert.ok(ability.can('update', subject('Machine', inA())));
+    assert.ok(ability.can('read', subject('Machine', inA())));
+    assert.ok(ability.cannot('update', subject('Machine', inA())));
+    assert.ok(ability.cannot('manage', subject('Machine', inA())));
     assert.ok(ability.can('read', subject('Purchase', inA())));
     assert.ok(ability.can('create', subject('User', inA())));
-    assert.ok(ability.can('manage', subject('Box', inA())));
+    assert.ok(ability.cannot('manage', subject('Box', inA())));
+    assert.ok(ability.cannot('update', subject('Box', inA())));
   });
 
   it('covers the shop it created as well as the one it was assigned', () => {
     assert.ok(ability.can('update', subject('Shop', { _id: 'shop_a' })));
     assert.ok(ability.can('update', subject('Shop', { _id: 'shop_b' })));
-    assert.ok(ability.can('manage', subject('Machine', inB())));
+    assert.ok(ability.can('read', subject('Machine', inB())));
+    assert.ok(ability.cannot('update', subject('Machine', inB())));
   });
 
   it('cannot reach into another shop', () => {
     assert.ok(ability.cannot('update', subject('Shop', { _id: 'shop_z' })));
+    assert.ok(ability.cannot('read', subject('Machine', elsewhere())));
     assert.ok(ability.cannot('update', subject('Machine', elsewhere())));
     assert.ok(ability.cannot('delete', subject('Box', elsewhere())));
     assert.ok(ability.cannot('read', subject('Purchase', elsewhere())));
@@ -66,17 +71,20 @@ describe('Admin (Shop Admin)', () => {
 
   it('cannot touch records that carry no shop at all', () => {
     // An unstamped row must not fall through into every admin's scope.
+    assert.ok(ability.cannot('read', subject('Machine', {})));
     assert.ok(ability.cannot('update', subject('Machine', {})));
   });
 
-  it('provisions machines in its own shops (gates /broker/generatecerts)', () => {
-    assert.ok(ability.can('manage', subject('Machine', inA())));
+  it('cannot provision machines (certificate mint needs Machine manage)', () => {
+    assert.ok(ability.cannot('manage', subject('Machine', inA())));
     assert.ok(ability.cannot('manage', subject('Machine', elsewhere())));
   });
 
   it('reads platform config but cannot edit it (Super Admin only)', () => {
     assert.ok(ability.can('read', 'Role'));
-    assert.ok(ability.cannot('update', 'Role'));
+    // Shop owners manage their own tenant roles, not platform ones.
+    assert.ok(ability.can('update', subject('Role', { ownerId: 'ad1' })));
+    assert.ok(ability.cannot('update', subject('Role', { ownerId: 'someone-else' })));
     assert.ok(ability.can('read', 'Option'));
     assert.ok(ability.cannot('update', 'Option'));
     assert.ok(ability.can('read', 'Content'));
@@ -92,6 +100,14 @@ describe('Admin (Shop Admin)', () => {
     assert.ok(ability.cannot('pay', subject('Withdrawal', elsewhere())));
   });
 
+  it('reviews placement requests for its own shops only', () => {
+    assert.ok(ability.can('read', subject('PlacementRequest', inA())));
+    assert.ok(ability.can('update', subject('PlacementRequest', inA())));
+    assert.ok(ability.cannot('read', subject('PlacementRequest', elsewhere())));
+    assert.ok(ability.cannot('update', subject('PlacementRequest', elsewhere())));
+    assert.ok(ability.cannot('create', 'PlacementRequest'));
+  });
+
   it('reads money but never writes it directly', () => {
     assert.ok(ability.can('read', subject('Wallet', inA())));
     assert.ok(ability.cannot('update', subject('Wallet', inA())));
@@ -101,7 +117,10 @@ describe('Admin (Shop Admin)', () => {
   it('may still browse the catalog across shops', () => {
     assert.ok(ability.can('read', 'Product'));
     assert.ok(ability.can('read', 'Shop'));
+    // Machine is shop-scoped (not unrestricted catalog) so list filters stay tight.
     assert.ok(ability.can('read', 'Machine'));
+    assert.ok(ability.can('read', subject('Machine', inA())));
+    assert.ok(ability.cannot('read', subject('Machine', elsewhere())));
   });
 });
 
@@ -173,18 +192,21 @@ describe('Vendor', () => {
     assert.ok(ability.cannot('pay', 'Withdrawal'));
   });
 
+  it('creates placement requests for self but cannot approve', () => {
+    assert.ok(ability.can('create', 'PlacementRequest'));
+    assert.ok(ability.can('read', subject('PlacementRequest', { vendorId: 'v1' })));
+    assert.ok(ability.cannot('read', subject('PlacementRequest', { vendorId: 'v2' })));
+    assert.ok(ability.cannot('update', subject('PlacementRequest', { vendorId: 'v1' })));
+  });
+
   it('cannot mint machine certificates (needs unscoped Machine manage)', () => {
     assert.ok(ability.cannot('manage', 'Machine'));
   });
 
-  it('services boxes on own machines only', () => {
-    assert.ok(ability.can('update', subject('Box', { vendorId: 'v1' })));
-    assert.ok(ability.can('delete', subject('Box', { vendorId: 'v1' })));
-    // The bug this replaces: `can('manage','Box')` was unconditional, so a
-    // supplier could empty or delete boxes on a rival's machine.
-    assert.ok(ability.cannot('update', subject('Box', { vendorId: 'v2' })));
-    assert.ok(ability.cannot('delete', subject('Box', { vendorId: 'v2' })));
-    assert.ok(ability.cannot('update', subject('Box', { vendorId: null })));
+  it('cannot fill boxes — that is for supplier staff', () => {
+    assert.ok(ability.cannot('update', subject('Box', { vendorId: 'v1' })));
+    assert.ok(ability.cannot('delete', subject('Box', { vendorId: 'v1' })));
+    assert.ok(ability.cannot('manage', 'Box'));
   });
 
   it('reads the group taxonomy but cannot reshape it', () => {
@@ -200,8 +222,14 @@ describe('Vendor', () => {
 
   it('cannot touch admin-only surfaces', () => {
     assert.ok(ability.cannot('update', 'Option'));
-    assert.ok(ability.cannot('create', 'User'));
-    assert.ok(ability.cannot('read', 'Role'));
+    // Vendors may manage their own tenant staff; they still cannot mint shops
+    // or delete other users.
+    assert.ok(ability.can('create', 'User'));
+    assert.ok(ability.can('read', 'Role'));
+    assert.ok(ability.can('manage', subject('Staff', { tenantId: 'v1' })));
+    assert.ok(ability.cannot('manage', subject('Staff', { tenantId: 'v2' })));
+    assert.ok(ability.can('read', subject('Vendor', { _id: 'v1' })));
+    assert.ok(ability.cannot('read', subject('Vendor', { _id: 'v2' })));
     assert.ok(ability.can('delete', subject('User', { _id: 'v1' })), 'may delete own account');
     assert.ok(ability.cannot('delete', subject('User', { _id: 'c1' })));
     assert.ok(ability.cannot('update', 'Shop'));
@@ -236,24 +264,35 @@ describe('servicing a machine (update Box on its owners)', () => {
     assert.ok(ability.can('update', subject('Box', machine(null, null)())));
   });
 
-  it('lets a Shop Admin service their own floor, whoever supplies it', () => {
+  it('lets a Shop Admin view their floor but not fill or update boxes', () => {
     const ability = defineAbilityFor(admin);
-    assert.ok(ability.can('update', subject('Box', mine())));
-    assert.ok(ability.can('update', subject('Box', otherVendorSameShop())));
-    // Unassigned machines still stand in their shop — the admin services them.
-    assert.ok(ability.can('update', subject('Box', unassigned())));
-    assert.ok(ability.cannot('update', subject('Box', otherShop())));
+    assert.ok(ability.can('read', subject('Machine', mine())));
+    assert.ok(ability.can('read', subject('Machine', otherVendorSameShop())));
+    assert.ok(ability.can('read', subject('Machine', unassigned())));
+    assert.ok(ability.cannot('read', subject('Machine', otherShop())));
+    assert.ok(ability.cannot('update', subject('Box', mine())));
+    assert.ok(ability.cannot('update', subject('Box', otherVendorSameShop())));
+    assert.ok(ability.cannot('update', subject('Box', unassigned())));
+    assert.ok(ability.cannot('update', subject('Machine', mine())));
   });
 
-  it('lets a Vendor service only their own machines', () => {
+  it('lets a Vendor update only their own machines — not fill boxes', () => {
     const ability = defineAbilityFor(vendor);
-    assert.ok(ability.can('update', subject('Box', mine())));
+    assert.ok(ability.can('update', subject('Machine', mine())));
+    assert.ok(ability.cannot('update', subject('Machine', otherVendorSameShop())));
+    assert.ok(ability.cannot('update', subject('Box', mine())));
     assert.ok(ability.cannot('update', subject('Box', otherVendorSameShop())));
     assert.ok(ability.cannot('update', subject('Box', unassigned())));
   });
 
-  it('lets a Supplier refill only machines they are assigned to', () => {
-    const ability = defineAbilityFor({ _id: 's1', role: 'Supplier' });
+  it('lets a supplier custom role refill only machines they are assigned to', () => {
+    setCustomRoles([
+      {
+        name: 'Filler',
+        rules: [{ action: 'update', subject: 'Box', scope: 'assigned-machine' }],
+      },
+    ]);
+    const ability = defineAbilityFor({ _id: 's1', role: 'Filler' });
     assert.ok(
       ability.can('update', subject('Box', { supplierIds: ['s1'], vendorId: 'v1', shopId: 'shop_a' }))
     );
@@ -263,6 +302,7 @@ describe('servicing a machine (update Box on its owners)', () => {
     assert.ok(ability.cannot('update', subject('Machine', { supplierIds: ['s1'] })));
     assert.ok(ability.cannot('create', 'Product'));
     assert.ok(ability.cannot('create', 'Withdrawal'));
+    setCustomRoles([]);
   });
 
   it('lets a shopper service nothing', () => {
@@ -344,7 +384,8 @@ describe('Custom roles', () => {
   it('build abilities from registered rule rows with scoping', () => {
     setCustomRoles([
       {
-        name: 'Support',
+        // Must not collide with the built-in Support role.
+        name: 'Auditor',
         rules: [
           { action: 'read', subject: 'Purchase', scope: 'all' },
           { action: 'update', subject: 'Product', scope: 'own-vendor' },
@@ -352,7 +393,7 @@ describe('Custom roles', () => {
         ],
       },
     ]);
-    const ability = defineAbilityFor({ _id: 's1', role: 'Support' });
+    const ability = defineAbilityFor({ _id: 's1', role: 'Auditor' });
     assert.ok(ability.can('read', 'Purchase'));
     assert.ok(ability.can('read', subject('Purchase', { customerId: 'anyone' })));
     assert.ok(ability.can('update', subject('Product', { vendorId: 's1' })));
@@ -360,7 +401,7 @@ describe('Custom roles', () => {
     assert.ok(ability.cannot('delete', 'Purchase'));
     assert.ok(ability.cannot('manage', 'all'));
     setCustomRoles([]);
-    const gone = defineAbilityFor({ _id: 's1', role: 'Support' });
+    const gone = defineAbilityFor({ _id: 's1', role: 'Auditor' });
     assert.ok(gone.cannot('read', 'Purchase'), 'registry cleared');
   });
 
@@ -380,6 +421,91 @@ describe('Custom roles', () => {
     assert.ok(ability.can('read', subject('Purchase', { shopId: 'shop_a' })));
     assert.ok(ability.can('read', subject('Purchase', { shopId: 'shop_b' })));
     assert.ok(ability.cannot('read', subject('Purchase', { shopId: 'shop_z' })));
+    setCustomRoles([]);
+  });
+
+  it('supports assigned-machine and assigned-support scopes', () => {
+    setCustomRoles([
+      {
+        name: 'Filler',
+        rules: [{ action: 'update', subject: 'Box', scope: 'assigned-machine' }],
+      },
+      {
+        name: 'ShopHelp',
+        rules: [
+          { action: 'read', subject: 'Shop', scope: 'assigned-support' },
+          { action: 'read', subject: 'Machine', scope: 'assigned-support' },
+        ],
+      },
+    ]);
+    const filler = defineAbilityFor({ _id: 's1', role: 'Filler' });
+    assert.ok(
+      filler.can(
+        'update',
+        subject('Box', { supplierIds: 's1', vendorId: 'v1' }),
+      ),
+    );
+    assert.ok(
+      filler.cannot(
+        'update',
+        subject('Box', { supplierIds: 's2', vendorId: 'v1' }),
+      ),
+    );
+
+    const help = defineAbilityFor({ _id: 'h1', role: 'ShopHelp' });
+    assert.ok(help.can('read', subject('Shop', { supportUserId: 'h1' })));
+    assert.ok(help.cannot('read', subject('Shop', { supportUserId: 'h2' })));
+    assert.ok(help.can('read', subject('Machine', { supportUserId: 'h1' })));
+    assert.ok(
+      help.can(
+        'read',
+        subject('Shop', {
+          supportAssignments: [{ audience: 'all', userId: 'h1' }],
+        }),
+      ),
+    );
+    assert.ok(
+      help.cannot(
+        'read',
+        subject('Shop', {
+          supportAssignments: [{ audience: 'all', userId: 'h2' }],
+        }),
+      ),
+    );
+    setCustomRoles([]);
+  });
+
+  it('tenant staff inherit the parent vendor / shop owner scope', () => {
+    setCustomRoles([
+      {
+        name: 'VendorAide',
+        rules: [{ action: 'read', subject: 'Machine', scope: 'own-vendor' }],
+      },
+      {
+        name: 'ShopAide',
+        rules: [{ action: 'read', subject: 'Machine', scope: 'own-shop' }],
+      },
+    ]);
+    const vendorAide = defineAbilityFor({
+      _id: 'va1',
+      role: 'VendorAide',
+      tenantId: 'v1',
+      tenantRole: 'Vendor',
+    });
+    assert.ok(vendorAide.can('read', subject('Machine', { vendorId: 'v1' })));
+    assert.ok(vendorAide.cannot('read', subject('Machine', { vendorId: 'v2' })));
+
+    const shopAide = defineAbilityFor({
+      _id: 'sa1',
+      role: 'ShopAide',
+      tenantId: 'owner1',
+      tenantRole: 'ShopOwner',
+      shopId: 'shop_a',
+      ownedShopIds: ['shop_b'],
+    });
+    assert.ok(shopAide.can('read', subject('Machine', { shopId: 'shop_a' })));
+    assert.ok(shopAide.can('read', subject('Machine', { shopId: 'shop_b' })));
+    assert.ok(shopAide.cannot('read', subject('Machine', { shopId: 'shop_z' })));
     setCustomRoles([]);
   });
 

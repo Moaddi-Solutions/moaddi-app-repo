@@ -14,8 +14,13 @@ const { accessibleFilter } = require("../../lib/accessibleFilter");
  * One lookup per call, not per box.
  */
 const stampOwners = async (machineId, rows) => {
-  const { vendorId, shopId } = await ownersOfMachine(machineId);
-  return rows.map((row) => ({ ...row, vendorId, shopId }));
+  const { vendorId, shopId, supplierIds } = await ownersOfMachine(machineId);
+  return rows.map((row) => ({
+    ...row,
+    vendorId,
+    shopId,
+    supplierIds: supplierIds ?? [],
+  }));
 };
 
 /*
@@ -27,6 +32,7 @@ let create = async (box) => {
     ...box,
     vendorId: owners.vendorId,
     shopId: owners.shopId,
+    supplierIds: owners.supplierIds ?? [],
   });
   box._id = "box_" + shortId.generate();
   box.created = moment().utc().add(config.timeDifference, "hours");
@@ -678,10 +684,10 @@ let removeByMachine = async (machineId) => {
  * when a machine is assigned to a different vendor or moved to another shop.
  */
 let remachine = async (machineId) => {
-  const { vendorId, shopId } = await ownersOfMachine(machineId);
+  const { vendorId, shopId, supplierIds } = await ownersOfMachine(machineId);
   const result = await Boxes.updateMany(
     { machineId: String(machineId) },
-    { $set: { vendorId, shopId } }
+    { $set: { vendorId, shopId, supplierIds: supplierIds ?? [] } }
   );
   return result.modifiedCount ?? 0;
 };

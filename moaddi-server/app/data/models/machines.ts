@@ -19,6 +19,29 @@ const MachinesSchema = new mongoose.Schema<ModelTypes.IMachine>(
     password: { type: String, default: null, required: false },
     vendorId: { type: String, default: null },
     shopId: { type: String, required: false },
+    /**
+     * Shop Owner's cut of net sales on this machine (0–100). Null means
+     * inherit `shops.defaultCommissionPercent`. See `effectiveCommissionPercent`
+     * in `app/lib/shopScope.ts`.
+     */
+    commissionPercent: {
+      type: mongoose.Schema.Types.Decimal128,
+      required: false,
+      default: null,
+    },
+    /** Tenant supplier staff assigned to fill this machine (many-to-many). */
+    supplierIds: { type: [String], required: false, default: [] },
+    /** Tenant Support staff for this machine; null falls back to vendorId. */
+    supportUserId: { type: String, required: false, default: null },
+    supportAssignments: {
+      type: [
+        {
+          audience: { type: String, required: true },
+          userId: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
     groupId: { type: String, required: false },
     specialProducts: { type: Object, required: false },
     location: { type: String, required: false, default: '' },

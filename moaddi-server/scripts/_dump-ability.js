@@ -1,0 +1,14 @@
+const fs = require("fs");
+const src = fs.readFileSync("app/lib/ability.ts", "utf8");
+const iu = src.indexOf("export interface AbilityUser");
+console.log(src.slice(iu, iu + 700));
+console.log("\n--- shopScopeOf ---\n");
+const ss = src.indexOf("export const shopScopeOf");
+console.log(src.slice(ss, ss + 450));
+console.log("\n--- SCOPE_CONDITIONS ---\n");
+const sc = src.indexOf("const SCOPE_CONDITIONS");
+console.log(src.slice(sc, sc + 500));
+console.log("\n--- SHOP_OWNER tail ---\n");
+const so = src.indexOf("case ROLES.SHOP_OWNER");
+const ve = src.indexOf("case ROLES.VENDOR");
+console.log(src.slice(ve - 400, ve + 900));

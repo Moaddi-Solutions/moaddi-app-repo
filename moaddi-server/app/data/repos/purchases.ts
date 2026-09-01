@@ -1051,19 +1051,27 @@ const creditVendorsForPurchase = async (
   const transactionsRepo =
     require("./transactions") as typeof import("./transactions");
   const optionsRepo = require("./options") as typeof import("./options");
+  const Shops = require("../models/shops") as import("mongoose").Model<{
+    _id: string;
+    ownerId?: string | null;
+  }>;
+  const { effectiveCommissionPercent } = require("../../lib/shopScope") as {
+    effectiveCommissionPercent: (
+      machineId: string | null | undefined,
+    ) => Promise<number>;
+  };
 
   if (!purchase.items || purchase.items.length === 0) return [];
 
   await deactivateBoxesForPaidPurchase(purchase.items);
 
-  // Resolve productId → product, machineId → machine, then group by vendor.
   const productIds = Array.from(
-    new Set(purchase.items.map((i) => i.productId)),
+    new Set(purchase.items.map((item) => item.productId)),
   );
   const machineIds = Array.from(
     new Set(
       purchase.items
-        .map((i) => i.machineId || purchase.machineId)
+        .map((item) => item.machineId || purchase.machineId)
         .filter((id): id is string => !!id),
     ),
   );
@@ -1076,11 +1084,18 @@ const creditVendorsForPurchase = async (
   const machineById = new Map(machinesArr.map((m) => [String(m._id), m]));
 
   const checkoutCur = normCurrency(purchase.preferredCurrency) || "SAR";
-  const weightByVendor = new Map<string, number>();
+
+  type SliceKey = string;
+  const weightBySlice = new Map<SliceKey, number>();
+  const sliceMeta = new Map<
+    SliceKey,
+    { vendorId: string; machineId: string | null; shopId: string | null }
+  >();
+
   for (const item of purchase.items) {
     const product = productById.get(String(item.productId));
     if (!product) continue;
-    const machineId = item.machineId || purchase.machineId;
+    const machineId = item.machineId || purchase.machineId || null;
     const machine = machineId ? machineById.get(String(machineId)) : undefined;
     const vendorId = (machine?.vendorId ?? product.vendorId) || null;
     if (!vendorId) {
@@ -1089,19 +1104,23 @@ const creditVendorsForPurchase = async (
       );
       continue;
     }
+    const shopId = machine?.shopId ? String(machine.shopId) : null;
+    const key = `${vendorId}|${machineId ?? ""}`;
     const unit = unitPriceInCheckoutCurrency(product, checkoutCur);
-    weightByVendor.set(
-      vendorId,
-      (weightByVendor.get(vendorId) ?? 0) + unit,
-    );
+    weightBySlice.set(key, (weightBySlice.get(key) ?? 0) + unit);
+    if (!sliceMeta.has(key)) {
+      sliceMeta.set(key, {
+        vendorId: String(vendorId),
+        machineId: machineId ? String(machineId) : null,
+        shopId,
+      });
+    }
   }
 
-  const vendorEntries = [...weightByVendor.entries()].filter(
-    ([, w]) => w > 0,
-  );
-  if (vendorEntries.length === 0) return [];
+  const sliceEntries = [...weightBySlice.entries()].filter(([, w]) => w > 0);
+  if (sliceEntries.length === 0) return [];
 
-  const totalWeight = vendorEntries.reduce((s, [, w]) => s + w, 0);
+  const totalWeight = sliceEntries.reduce((sum, [, w]) => sum + w, 0);
   if (!(totalWeight > 0)) return [];
 
   const paidTotal = Number(purchase.price);
@@ -1113,49 +1132,156 @@ const creditVendorsForPurchase = async (
   }
 
   const feePercent = await optionsRepo.getPlatformFeePercent();
-  /** Must match checkout: `paidTotal` / splits are in this currency, not platform default (e.g. USD). */
   const walletCurrency = checkoutCur;
   const factor = Math.max(0, 1 - feePercent / 100);
   const netPool = Math.round(paidTotal * factor * 100) / 100;
   if (!(netPool > 0)) return [];
 
-  // Split net pool by checkout-time line weights; last vendor absorbs rounding remainder.
-  vendorEntries.sort((a, b) => b[1] - a[1]);
-  const vendorAmountById = new Map<string, number>();
+  // Split net pool across vendor|machine slices; last slice absorbs remainder.
+  sliceEntries.sort((a, b) => b[1] - a[1]);
+  const sliceAmountByKey = new Map<SliceKey, number>();
   let allocatedSum = 0;
-  for (let i = 0; i < vendorEntries.length; i++) {
-    const [vendorId, w] = vendorEntries[i];
-    const isLast = i === vendorEntries.length - 1;
+  for (let si = 0; si < sliceEntries.length; si++) {
+    const [key, w] = sliceEntries[si];
+    const isLast = si === sliceEntries.length - 1;
     if (isLast) {
-      vendorAmountById.set(
-        vendorId,
+      sliceAmountByKey.set(
+        key,
         Math.round((netPool - allocatedSum) * 100) / 100,
       );
     } else {
-      const part =
-        Math.round(((w / totalWeight) * netPool) * 100) / 100;
-      vendorAmountById.set(vendorId, part);
+      const part = Math.round(((w / totalWeight) * netPool) * 100) / 100;
+      sliceAmountByKey.set(key, part);
       allocatedSum = Math.round((allocatedSum + part) * 100) / 100;
+    }
+  }
+
+  const uniqueMachineIds = [
+    ...new Set(
+      [...sliceMeta.values()]
+        .map((m) => m.machineId)
+        .filter((id): id is string => !!id),
+    ),
+  ];
+  const rateByMachine = new Map<string, number>();
+  await Promise.all(
+    uniqueMachineIds.map(async (mid) => {
+      rateByMachine.set(mid, await effectiveCommissionPercent(mid));
+    }),
+  );
+
+  const uniqueShopIds = [
+    ...new Set(
+      [...sliceMeta.values()]
+        .map((m) => m.shopId)
+        .filter((id): id is string => !!id),
+    ),
+  ];
+  const shopsArr = uniqueShopIds.length
+    ? await Shops.find({ _id: { $in: uniqueShopIds } })
+        .select("_id ownerId")
+        .lean()
+    : [];
+  const ownerByShopId = new Map(
+    shopsArr.map((s) => [
+      String(s._id),
+      s.ownerId ? String(s.ownerId) : null,
+    ]),
+  );
+
+  const vendorAmountById = new Map<string, number>();
+  type CommissionAgg = {
+    ownerId: string;
+    shopId: string;
+    amount: number;
+    slices: {
+      machineId: string | null;
+      sourceVendorId: string;
+      commissionPercent: number;
+      sliceNet: number;
+      commissionAmount: number;
+    }[];
+  };
+  const commissionByOwner = new Map<string, CommissionAgg>();
+
+  for (const [key, sliceNet] of sliceAmountByKey) {
+    if (!(sliceNet > 0)) continue;
+    const meta = sliceMeta.get(key)!;
+    const rate = meta.machineId
+      ? (rateByMachine.get(meta.machineId) ?? 0)
+      : 0;
+    const ownerId = meta.shopId
+      ? (ownerByShopId.get(meta.shopId) ?? null)
+      : null;
+
+    let commissionAmount = 0;
+    if (ownerId && rate > 0) {
+      commissionAmount = Math.round(sliceNet * (rate / 100) * 100) / 100;
+      if (commissionAmount > sliceNet) commissionAmount = sliceNet;
+
+      const sliceRow = {
+        machineId: meta.machineId,
+        sourceVendorId: meta.vendorId,
+        commissionPercent: rate,
+        sliceNet,
+        commissionAmount,
+      };
+      const existing = commissionByOwner.get(ownerId);
+      if (existing) {
+        existing.amount =
+          Math.round((existing.amount + commissionAmount) * 100) / 100;
+        existing.slices.push(sliceRow);
+      } else if (commissionAmount > 0) {
+        commissionByOwner.set(ownerId, {
+          ownerId,
+          shopId: meta.shopId!,
+          amount: commissionAmount,
+          slices: [sliceRow],
+        });
+      }
+    }
+
+    const vendorAmount =
+      Math.round((sliceNet - commissionAmount) * 100) / 100;
+    if (vendorAmount > 0) {
+      vendorAmountById.set(
+        meta.vendorId,
+        Math.round(
+          ((vendorAmountById.get(meta.vendorId) ?? 0) + vendorAmount) * 100,
+        ) / 100,
+      );
     }
   }
 
   const summaries: CreditSummary[] = [];
 
-  for (const [vendorId, vendorAmount] of vendorAmountById) {
-    if (!(vendorAmount > 0)) continue;
-
+  const creditOne = async (
+    ownerId: string,
+    amount: number,
+    kind: "purchase" | "commission",
+    shopId: string | null,
+    metadata: Record<string, unknown>,
+    description: string,
+  ) => {
     const session = await mongoose.startSession();
     try {
       let summary: CreditSummary | null = null;
       const run = async (s?: ClientSession) => {
-        const existing = await transactionsRepo.findPurchaseVendorCredit(
-          purchase._id,
-          vendorId,
-          s,
-        );
+        const existing =
+          kind === "purchase"
+            ? await transactionsRepo.findPurchaseVendorCredit(
+                purchase._id,
+                ownerId,
+                s,
+              )
+            : await transactionsRepo.findCommissionCredit(
+                purchase._id,
+                ownerId,
+                s,
+              );
         if (existing) {
           summary = {
-            vendorId,
+            vendorId: ownerId,
             walletId: existing.walletId,
             amount: money.toNumber(existing.amount),
             currency: existing.currency,
@@ -1165,39 +1291,36 @@ const creditVendorsForPurchase = async (
         }
 
         const wallet = await walletsRepo.getOrCreateForVendor(
-          vendorId,
+          ownerId,
           walletCurrency,
           s,
+          shopId,
         );
         const credited = await walletsRepo.creditBalance(
           wallet._id,
-          vendorAmount,
+          amount,
           s,
         );
         const txn = await transactionsRepo.create(
           {
             walletId: wallet._id,
-            vendorId,
+            vendorId: ownerId,
+            shopId: shopId ?? wallet.shopId ?? null,
             type: "CREDIT",
-            kind: "purchase",
-            amount: vendorAmount,
+            kind,
+            amount,
             currency: wallet.currency,
             balanceAfter: money.toNumber(credited.balance),
             purchaseId: purchase._id,
-            description: `Purchase ${purchase._id}`,
-            metadata: {
-              feePercent,
-              checkoutCurrency: checkoutCur,
-              paidTotal,
-              netPool,
-            },
+            description,
+            metadata,
           },
           s,
         );
         summary = {
-          vendorId,
+          vendorId: ownerId,
           walletId: wallet._id,
-          amount: vendorAmount,
+          amount,
           currency: wallet.currency,
           transactionId: txn._id,
         };
@@ -1219,12 +1342,49 @@ const creditVendorsForPurchase = async (
     } finally {
       await session.endSession();
     }
+  };
+
+  for (const [vendorId, vendorAmount] of vendorAmountById) {
+    if (!(vendorAmount > 0)) continue;
+    await creditOne(
+      vendorId,
+      vendorAmount,
+      "purchase",
+      null,
+      {
+        feePercent,
+        checkoutCurrency: checkoutCur,
+        paidTotal,
+        netPool,
+      },
+      `Purchase ${purchase._id}`,
+    );
   }
 
-  // Best-effort socket fan-out.
+  for (const agg of commissionByOwner.values()) {
+    if (!(agg.amount > 0)) continue;
+    await creditOne(
+      agg.ownerId,
+      agg.amount,
+      "commission",
+      agg.shopId,
+      {
+        feePercent,
+        checkoutCurrency: checkoutCur,
+        paidTotal,
+        netPool,
+        slices: agg.slices,
+      },
+      `Shop commission for purchase ${purchase._id}`,
+    );
+  }
+
   try {
     const socketServer = require("../../services/socket") as {
-      socketPublish: (msg: { type: string; data: unknown }) => Promise<unknown>;
+      socketPublish: (msg: {
+        type: string;
+        data: unknown;
+      }) => Promise<unknown>;
     };
     for (const s of summaries) {
       await socketServer.socketPublish({ type: "WalletCredited", data: s });

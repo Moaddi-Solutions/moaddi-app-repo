@@ -435,12 +435,12 @@ const AutocompleteBody = ({ id, label, source, required, error, helperText, choi
   );
 };
 
-const ReferenceAutocompleteWrapper = ({ source, label, optionText, className }) => {
+const ReferenceAutocompleteWrapper = ({ source, label, optionText, className, validate }) => {
   const { allChoices, isPending, source: choiceSource } = useChoicesContext();
   // As a child of <ReferenceInput> the `source` comes from ChoicesContext,
-  // not props â€” fall back to it so AutocompleteBody's useInput has a source.
+  // not props — fall back to it so AutocompleteBody's useInput has a source.
   const resolvedSource = choiceSource ?? source;
-  const { id, fieldState, isRequired } = useInput({ source: resolvedSource });
+  const { id, fieldState, isRequired } = useInput({ source: resolvedSource, validate });
   return (
     <AutocompleteBody
       id={id}
@@ -480,7 +480,7 @@ export const AutocompleteInput = ({ source, label, choices, optionText, classNam
   choices ? (
     <StandaloneAutocomplete source={source} label={label} choices={choices} optionText={optionText} className={className} validate={validate} />
   ) : (
-    <ReferenceAutocompleteWrapper source={source} label={label} optionText={optionText} className={className} />
+    <ReferenceAutocompleteWrapper source={source} label={label} optionText={optionText} className={className} validate={validate} />
   );
 
 /* ------------------------------------------------------------------ */
@@ -509,12 +509,16 @@ export const DateInput = ({ source, label, helperText, defaultValue, validate, c
 const ReferenceArrayChoices = ({ label, source, className }) => {
   const { allChoices, isPending } = useChoicesContext();
   const { field } = useInput({ source });
-  const selected = new Set((field.value ?? []).map(String));
+  // Same guard as CheckboxGroupInput: react-hook-form resolves an unset array
+  // field to `""`, not `undefined`, so `?? []` is not enough and `.map` throws.
+  const values = Array.isArray(field.value) ? field.value : [];
+  const choices = Array.isArray(allChoices) ? allChoices : [];
+  const selected = new Set(values.map(String));
 
   const toggle = (id) => {
     const next = selected.has(String(id))
-      ? (field.value ?? []).filter((v) => String(v) !== String(id))
-      : [...(field.value ?? []), id];
+      ? values.filter((v) => String(v) !== String(id))
+      : [...values, id];
     field.onChange(next);
   };
 
@@ -524,7 +528,7 @@ const ReferenceArrayChoices = ({ label, source, className }) => {
         <Spinner />
       ) : (
         <div className="flex flex-wrap gap-1.5">
-          {(allChoices ?? []).map((choice) => {
+          {choices.map((choice) => {
             const active = selected.has(String(choice.id));
             return (
               <button
@@ -542,7 +546,7 @@ const ReferenceArrayChoices = ({ label, source, className }) => {
               </button>
             );
           })}
-          {!allChoices?.length ? <span className="text-xs text-muted-foreground">No options.</span> : null}
+          {!choices.length ? <span className="text-xs text-muted-foreground">No options.</span> : null}
         </div>
       )}
     </FieldShell>
@@ -621,8 +625,20 @@ export const CheckboxGroupInput = ({
   );
 };
 
-export const ReferenceArrayInput = ({ reference, source, label, perPage = 100, className }) => (
-  <ReferenceArrayInputBase reference={reference} source={source} perPage={perPage}>
+export const ReferenceArrayInput = ({
+  reference,
+  source,
+  label,
+  perPage = 100,
+  filter,
+  className,
+}) => (
+  <ReferenceArrayInputBase
+    reference={reference}
+    source={source}
+    perPage={perPage}
+    filter={filter}
+  >
     <ReferenceArrayChoices label={label} source={source} className={className} />
   </ReferenceArrayInputBase>
 );

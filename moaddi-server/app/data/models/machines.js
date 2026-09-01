@@ -17,6 +17,40 @@ const MachinesSchema = new mongoose.Schema(
     password: { type: String, default: null, required: false },
     vendorId: { type: String, default: null },
     shopId: { type: String, required: false },
+    /**
+     * Shop Owner's cut of net sales on this machine (0–100). Null means
+     * inherit `shops.defaultCommissionPercent`. See `effectiveCommissionPercent`
+     * in `app/lib/shopScope.ts`.
+     */
+    commissionPercent: {
+      type: mongoose.Schema.Types.Decimal128,
+      required: false,
+      default: null,
+    },
+    /**
+     * Tenant "supplier" staff assigned to fill this machine (many-to-many).
+     * Mirrored onto boxes via stampOwners so fill checks see the same ids.
+     */
+    supplierIds: { type: [String], required: false, default: [] },
+    /**
+     * Tenant Support staff assigned to this machine. Null falls back to
+     * `vendorId` at chat routing time. Prefer `supportAssignments`; this
+     * field is dual-read legacy synced from the `all` lane.
+     */
+    supportUserId: { type: String, required: false, default: null },
+    /**
+     * Who answers Contact for which caller type on this machine (overrides
+     * the shop). Unique `audience` per machine; `all` is the fallback lane.
+     */
+    supportAssignments: {
+      type: [
+        {
+          audience: { type: String, required: true },
+          userId: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
     groupId: { type: String, required: false },
     specialProducts: { type: Object, required: false },
     location: { type: String, required: false, default: "" },

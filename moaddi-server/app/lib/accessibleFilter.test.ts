@@ -23,7 +23,9 @@ describe('accessibleFilter', () => {
       shopId: 'shop_a',
       ownedShopIds: ['shop_b'],
     });
-    assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), {
+    // Floor is read-only — update Machine is denied; list/revenue use read.
+    assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), DENY_ALL);
+    assert.deepEqual(accessibleFilter(ability, 'read', 'Machine'), {
       shopId: { $in: ['shop_a', 'shop_b'] },
     });
     assert.deepEqual(accessibleFilter(ability, 'update', 'Shop'), {
@@ -73,13 +75,22 @@ describe('accessibleFilter', () => {
     assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), {
       vendorId: 'v1',
     });
-    assert.deepEqual(accessibleFilter(ability, 'update', 'Box'), {
+    // Filling boxes is for supplier staff, not the Vendor account.
+    assert.deepEqual(accessibleFilter(ability, 'update', 'Box'), DENY_ALL);
+    assert.deepEqual(accessibleFilter(ability, 'read', 'Machine'), {
       vendorId: 'v1',
     });
   });
 
-  it('narrows a Supplier to assigned machines/boxes', () => {
-    const ability = defineAbilityFor({ _id: 's1', role: 'Supplier' });
+  it('narrows a supplier custom role to assigned machines/boxes', () => {
+    const { setCustomRoles } = require('./ability');
+    setCustomRoles([
+      {
+        name: 'Filler',
+        rules: [{ action: 'update', subject: 'Box', scope: 'assigned-machine' }],
+      },
+    ]);
+    const ability = defineAbilityFor({ _id: 's1', role: 'Filler' });
     assert.deepEqual(accessibleFilter(ability, 'update', 'Machine'), DENY_ALL);
     assert.deepEqual(accessibleFilter(ability, 'update', 'Box'), {
       supplierIds: 's1',
@@ -91,6 +102,7 @@ describe('accessibleFilter', () => {
       ),
       { supplierIds: 's1' }
     );
+    setCustomRoles([]);
   });
 
   it('unions several conditional rules', () => {

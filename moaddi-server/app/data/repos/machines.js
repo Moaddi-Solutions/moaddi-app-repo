@@ -1,6 +1,7 @@
 const moment = require("moment");
 const config = require("../../../config");
 const Machines = require("../models/machines");
+const Users = require("../models/users");
 const boxesRepo = require("../../data/repos/boxes");
 const productssRepo = require("../../data/repos/products");
 const optionsRepo = require("../../data/repos/options");
@@ -9,7 +10,35 @@ const Boxes = require("../models/boxes");
 const Events = require("../models/events");
 const Purchases = require("../models/purchases");
 const MachineTypes = require("../../utilities/machineTypes");
-const { accessibleFilter, accessibleFilterAny } = require("../../lib/accessibleFilter");
+const { accessibleFilter, accessibleFilterAny, accessibleScopedFilter } = require("../../lib/accessibleFilter");
+const {
+  normalizeSupportUserId,
+  normalizeSupplierIds,
+  sanitizeSupplierIdsForRead,
+  normalizeSupportAssignments,
+} = require("../../lib/tenantAssignment");
+
+/**
+ * Sync supportAssignments ↔ legacy supportUserId (`all` lane).
+ */
+const applySupportFields = async (properties, tenantId) => {
+  if ("supportAssignments" in properties) {
+    properties.supportAssignments = await normalizeSupportAssignments(
+      properties.supportAssignments,
+      tenantId,
+    );
+    const all = properties.supportAssignments.find((r) => r.audience === "all");
+    properties.supportUserId = all?.userId ?? null;
+    return;
+  }
+  if ("supportUserId" in properties) {
+    const id = await normalizeSupportUserId(properties.supportUserId, tenantId);
+    properties.supportUserId = id;
+    properties.supportAssignments = id
+      ? [{ audience: "all", userId: id }]
+      : [];
+  }
+};
 
 /**
  * Reject paymentProvider values that aren't in the currently-active set.
@@ -168,6 +197,28 @@ let create = async (machine) => {
     });
   }
 
+  const supportProps = {};
+  if ("supportAssignments" in machine) {
+    supportProps.supportAssignments = machine.supportAssignments;
+  } else if ("supportUserId" in machine || machine.supportUserId != null) {
+    supportProps.supportUserId = machine.supportUserId;
+  }
+  if (Object.keys(supportProps).length) {
+    await applySupportFields(supportProps, machine.vendorId ?? null);
+    if ("supportAssignments" in supportProps) {
+      machine.supportAssignments = supportProps.supportAssignments;
+    }
+    if ("supportUserId" in supportProps) {
+      machine.supportUserId = supportProps.supportUserId;
+    }
+  }
+  if ("supplierIds" in machine || machine.supplierIds != null) {
+    machine.supplierIds = await normalizeSupplierIds(
+      machine.supplierIds,
+      machine.vendorId ?? null,
+    );
+  }
+
   machine._id = "machine_" + machine.mac;
   machine.created = moment().utc().add(config.timeDifference, "hours");
   machine.updated = moment().utc().add(config.timeDifference, "hours");
@@ -227,14 +278,15 @@ let create = async (machine) => {
  * Get all machines.
  */
 /**
- * Staff machine directory — "machines I manage", scoped by `update Machine`
- * (Vendor / Shop Admin). Catalog `read Machine` is too wide (every signed-in
- * user may browse).
+ * Staff machine directory — Vendor (`update Machine`), supplier fill
+ * (`update Box`), or ShopOwner shop-scoped `read Machine`. Catalog
+ * `read Machine` is too wide (every signed-in user may browse).
  */
 let get = async (skip = 0, limit = 1000, ability = null) => {
   const scope = ability
     ? accessibleFilterAny(
         accessibleFilter(ability, "update", "Machine"),
+        accessibleScopedFilter(ability, "read", "Machine"),
         accessibleFilter(ability, "update", "Box")
       )
     : {};
@@ -326,11 +378,21 @@ let getById = async (machineId, getBoxes = true, responseReturn = true) => {
     return machine;
   }
 
-  // Plain object first: schema `boxes` is the capacity Number. Assigning the
-  // slots array onto the Mongoose doc is cast away and the client only ever
-  // sees the number — Fill then renders zero slots.
+  // Schema `boxes` is capacity (Number). Slot rows live on Box documents —
+  // expose them as `boxSlots` so edit forms never round-trip an array into
+  // the capacity field (Cast to Number failed). Fill uses GET /boxes/machine/:id.
   machine = machine.toJSON();
-  if (getBoxes) machine.boxes = await boxesRepo.getByMachineId(machine._id);
+  if (getBoxes) {
+    machine.boxSlots = await boxesRepo.getByMachineId(machine._id);
+  }
+  // Drop deleted / foreign supplier ids so Machine edit does not keep ghost
+  // chips that fail validation on save.
+  if (machine.vendorId && Array.isArray(machine.supplierIds)) {
+    machine.supplierIds = await sanitizeSupplierIdsForRead(
+      machine.supplierIds,
+      machine.vendorId,
+    );
+  }
 
   return machine;
 };
@@ -943,6 +1005,37 @@ let update = async (machineId, properties) => {
     await assertPaymentProviderAllowed(properties.paymentProvider);
   }
 
+  if ("supportAssignments" in properties || "supportUserId" in properties) {
+    const tenantId = properties.vendorId ?? machine.vendorId ?? null;
+    await applySupportFields(properties, tenantId);
+  }
+  if ("supplierIds" in properties) {
+    const tenantId = properties.vendorId ?? machine.vendorId ?? null;
+    properties.supplierIds = await normalizeSupplierIds(
+      properties.supplierIds,
+      tenantId,
+    );
+  }
+
+  // Edit forms often POST the full getOne payload. `boxes` must stay a
+  // capacity Number — drop slot arrays / nested junk so save does not cast-fail.
+  if (Array.isArray(properties.boxes)) {
+    delete properties.boxes;
+  } else if (
+    properties.boxes != null &&
+    typeof properties.boxes !== "number" &&
+    !Number.isFinite(Number(properties.boxes))
+  ) {
+    delete properties.boxes;
+  } else if (properties.boxes != null && typeof properties.boxes !== "number") {
+    properties.boxes = Number(properties.boxes);
+  }
+  delete properties.boxSlots;
+  delete properties.product;
+  delete properties.products;
+  delete properties.shop;
+  delete properties.vendor;
+
   // Update all properties.
   for (let property in properties) {
     if (property == "boxes") {
@@ -990,8 +1083,12 @@ let update = async (machineId, properties) => {
   machine = await machine.save();
   machine = machine.toJSON();
   // Boxes inherit their owner from the machine — keep them in step whenever
-  // the machine's vendor or shop are among the updated properties.
-  if ("vendorId" in properties || "shopId" in properties) {
+  // the machine's vendor, shop, or suppliers are among the updated properties.
+  if (
+    "vendorId" in properties ||
+    "shopId" in properties ||
+    "supplierIds" in properties
+  ) {
     await boxesRepo.remachine(machine._id);
   }
   return machine;
@@ -1084,6 +1181,71 @@ let syncVendorMachines = async (vendorId, machineIds) => {
   return desired;
 };
 
+/**
+ * Sync many-to-many supplier assignments for one staff user.
+ * Writes `machines.supplierIds` only — never touches `vendorId` ownership.
+ */
+let syncSupplierMachines = async (supplierId, machineIds) => {
+  const uid = String(supplierId);
+  const desired = [
+    ...new Set(
+      (Array.isArray(machineIds) ? machineIds : [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean),
+    ),
+  ];
+  const desiredSet = new Set(desired);
+
+  // Resolve the supplier's vendor tenant. Never attach them to another
+  // vendor's machines (normalizeSupplierIds is bypassed on this path).
+  const supplier = await Users.findOne({ _id: uid }).select("tenantId role").lean();
+  const tenantVendorId =
+    (supplier && supplier.tenantId && String(supplier.tenantId)) || null;
+  if (!tenantVendorId) {
+    return Promise.reject({
+      message: "Cannot assign supplier machines without a vendor tenant.",
+      statusCode: 400,
+    });
+  }
+
+  const currentlyAssigned = await Machines.find({
+    supplierIds: uid,
+    isDeleted: { $ne: true },
+  })
+    .select("_id")
+    .lean();
+  const currentIds = currentlyAssigned.map((row) => String(row._id));
+  const currentSet = new Set(currentIds);
+
+  for (const id of desired) {
+    if (currentSet.has(id)) continue;
+    const result = await Machines.updateOne(
+      {
+        _id: id,
+        isDeleted: { $ne: true },
+        vendorId: tenantVendorId,
+      },
+      { $addToSet: { supplierIds: uid } },
+    );
+    if (result.matchedCount === 0) {
+      return Promise.reject({
+        message: `Machine ${id} is not in this supplier's vendor tenant.`,
+        statusCode: 400,
+      });
+    }
+    await boxesRepo.remachine(id);
+  }
+  for (const id of currentIds) {
+    if (desiredSet.has(id)) continue;
+    await Machines.updateOne(
+      { _id: id },
+      { $pull: { supplierIds: uid } },
+    );
+    await boxesRepo.remachine(id);
+  }
+  return desired;
+};
+
 /*
  * Assign machine to vendor.
  */
@@ -1147,6 +1309,7 @@ module.exports = {
   assign,
   assignBulk,
   syncVendorMachines,
+  syncSupplierMachines,
   unassign,
   remove,
   getVendorIdOf,

@@ -7,6 +7,6 @@ export default makeUserResource({
   name: "shopOwners",
   listRole: "ShopOwner",
   createRole: "ShopOwner",
-  label: "Shop Owners",
+  label: "Shop Admin",
   icon: Store,
 });

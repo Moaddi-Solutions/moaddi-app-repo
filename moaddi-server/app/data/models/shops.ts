@@ -10,6 +10,27 @@ const ShopsSchema = new mongoose.Schema<ModelTypes.IShop>(
     name: { type: String, required: true },
     description: { type: String, required: true },
     image: { type: String, required: false },
+    createdBy: { type: String, required: false, default: null },
+    ownerId: { type: String, required: false, default: null },
+    /**
+     * Default Shop Owner cut (0–100) for machines in this shop that do not
+     * set their own `commissionPercent`. See `effectiveCommissionPercent`.
+     */
+    defaultCommissionPercent: {
+      type: mongoose.Schema.Types.Decimal128,
+      required: false,
+      default: null,
+    },
+    supportUserId: { type: String, required: false, default: null },
+    supportAssignments: {
+      type: [
+        {
+          audience: { type: String, required: true },
+          userId: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },

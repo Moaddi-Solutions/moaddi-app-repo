@@ -25,6 +25,20 @@ export const ShopListItems = [
     render: (record) => <ShopOwnerName record={record} />,
   },
   {
+    key: "supportUserId",
+    label: "Support",
+    render: (record) =>
+      record.supportUserId ? (
+        <AdminReferenceField
+          record={record}
+          source="supportUserId"
+          reference="staff"
+        />
+      ) : (
+        <span className="text-muted-foreground">Owner (default)</span>
+      ),
+  },
+  {
     key: "machines",
     label: "Machines",
     render: (record) => formatRelated(record.machines),

@@ -2,16 +2,20 @@
 
 const express = require("express");
 const users = require("../../data/repos/users");
+const rolesRepo = require("../../data/repos/roles");
 const authenticate = require("../middlewares/authenticate");
 const authorize = require("../middlewares/authorize");
 const { subject, rulesFor, shopScopeOf } = require("../../lib/ability");
 const {
   directorySubjectForRoleParam,
   directorySubjectForUserRole,
+  ROLES,
+  normalizeBuiltInRole,
 } = require("../../lib/roles");
 const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { getCurrencyOfUser } = require("../../services/geo-currency");
 const Machines = require("../../data/models/machines");
+const Purchases = require("../../data/models/purchases");
 
 /** True only for staff whose User rules carry no ownership condition (admins). */
 const canManageUsers = (req) => req.ability.can("create", "User");
@@ -43,7 +47,11 @@ const canTouchUser = async (req, action, userId) => {
   // — reusing one object across the `User` and directory checks below crashed
   // for exactly the role that matters most here, one holding a directory rule
   // but no `User` rule at all.
-  const asRecord = () => ({ _id: uid, shopId: target.shopId ?? null });
+  const asRecord = () => ({
+    _id: uid,
+    shopId: target.shopId ?? null,
+    tenantId: target.tenantId ?? null,
+  });
   if (req.ability.can(action, subject("User", asRecord()))) {
     return true;
   }
@@ -69,6 +77,14 @@ const canTouchUser = async (req, action, userId) => {
   const callerId = String(req.authenticatedUser?._id || "");
   if (!callerId) return false;
 
+  // Any dashboard user may resolve platform support / Super Admin names
+  // (Contact admin, supportAssignments display). Those accounts are not in the
+  // caller's tenant, so the directory rules above never admit them.
+  const targetRole = normalizeBuiltInRole(target.role);
+  if (targetRole === ROLES.SUPER_ADMIN || targetRole === ROLES.SUPPORT) {
+    return true;
+  }
+
   // Shop Admin: anyone linked to a machine in their shops.
   if (canManageUsers(req)) {
     const shopIds = shopScopeOf(req.authenticatedUser || {});
@@ -78,22 +94,103 @@ const canTouchUser = async (req, action, userId) => {
       isDeleted: { $ne: true },
       vendorId: uid,
     });
-    return Boolean(linked);
+    if (linked) return true;
+
+    // Customers who purchased in these shops (Customer docs have no shopId).
+    if (directory === "Customer") {
+      const bought = await Purchases.exists({
+        customerId: uid,
+        shopId: { $in: shopIds },
+      });
+      return Boolean(bought);
+    }
   }
 
   return false;
 };
 
 /**
- * Shop Admins may only grant the basic roles; anything else — Admin,
- * SuperAdmin, or a dashboard-created custom role (which can carry arbitrary
- * permissions) — requires a Super Admin (manage all).
+ * Who may grant which role:
+ *  - Super Admin: anything
+ *  - Shop Owner (legacy): Vendor / Customer
+ *  - Vendor or ShopOwner: any custom role they own (and nothing else —
+ *    never SuperAdmin, ShopOwner, Vendor, or another tenant's role)
  */
-const BASIC_ROLES = ["vendor", "customer"];
-const canGrantRole = (req, role) =>
-  role === undefined ||
-  BASIC_ROLES.includes(String(role || "").toLowerCase()) ||
-  req.ability.can("manage", "all");
+const FORBIDDEN_TENANT_GRANTS = new Set([
+  String(ROLES.SUPER_ADMIN).toLowerCase(),
+  String(ROLES.SHOP_OWNER).toLowerCase(),
+  String(ROLES.VENDOR).toLowerCase(),
+  String(ROLES.CUSTOMER).toLowerCase(),
+  String(ROLES.SUPPORT).toLowerCase(),
+  "admin",
+  "guest",
+]);
+
+/**
+ * Who may grant which role:
+ *  - Super Admin: anything
+ *  - Vendor / ShopOwner: only custom roles they own (never built-ins)
+ */
+const canGrantRole = async (req, role) => {
+  if (role === undefined) return true;
+  if (req.ability.can("manage", "all")) return true;
+
+  const caller = req.authenticatedUser || req.user;
+  const builtIn = normalizeBuiltInRole(caller?.role);
+  if (builtIn !== ROLES.VENDOR && builtIn !== ROLES.SHOP_OWNER) {
+    return false;
+  }
+  const roleStr = String(role || "");
+  if (FORBIDDEN_TENANT_GRANTS.has(roleStr.toLowerCase())) return false;
+  // Namespaced tenant roles look like `${ownerId}__${slug}`.
+  const owned = await rolesRepo.listOwnedRoleIds(String(caller._id));
+  return owned.includes(roleStr);
+};
+
+/**
+ * Stamp tenant fields server-side. Never trust client-supplied tenantId /
+ * tenantRole — a tenant could otherwise adopt another tenant's staff.
+ */
+const stampTenantOnCreate = (req, body) => {
+  const out = { ...(body || {}) };
+  delete out.tenantId;
+  delete out.tenantRole;
+  const caller = req.authenticatedUser || req.user;
+  if (!caller || req.ability.can("manage", "all")) return out;
+  const builtIn = normalizeBuiltInRole(caller.role);
+  if (builtIn !== ROLES.VENDOR && builtIn !== ROLES.SHOP_OWNER) return out;
+
+  // Only stamp tenant staff (custom roles). Never attach tenantId to built-ins.
+  const granted = normalizeBuiltInRole(out.role);
+  const isBuiltInGrant =
+    granted === ROLES.SUPER_ADMIN ||
+    granted === ROLES.SHOP_OWNER ||
+    granted === ROLES.VENDOR ||
+    granted === ROLES.CUSTOMER ||
+    granted === ROLES.SUPPORT ||
+    granted === "Guest" ||
+    granted === "Admin";
+  if (isBuiltInGrant) return out;
+
+  if (builtIn === ROLES.VENDOR) {
+    out.tenantId = String(caller._id);
+    out.tenantRole = ROLES.VENDOR;
+  } else if (builtIn === ROLES.SHOP_OWNER) {
+    out.tenantId = String(caller._id);
+    out.tenantRole = ROLES.SHOP_OWNER;
+    // ShopOwner manage/list Staff is `{ shopId: { $in: shopScope } }`. Ownership
+    // often lives only on `ownedShopIds` (no users.shopId) — stamp both so the
+    // new staff row is visible and manage-able after create.
+    const ids = shopScopeOf(caller);
+    if (!Array.isArray(out.ownedShopIds) || out.ownedShopIds.length === 0) {
+      if (ids.length) out.ownedShopIds = ids;
+    }
+    if (!out.shopId) {
+      out.shopId = caller.shopId || ids[0] || null;
+    }
+  }
+  return out;
+};
 
 /**
  * Support audiences decide who reaches whom platform-wide, so only a Super
@@ -197,26 +294,35 @@ module.exports = () => {
   // own accounts.
   router.post("/users/create", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
-      const shopId = req.body?.shopId ?? null;
-      const directory = directorySubjectForUserRole(req.body?.role);
+      const body = stampTenantOnCreate(req, req.body);
+      const shopId = body?.shopId ?? null;
+      const directory = directorySubjectForUserRole(body?.role);
       const viaDirectory =
         directory !== "User" && req.ability.can("create", directory);
-      if (!viaDirectory && req.ability.cannot("create", subject("User", { shopId }))) {
+      const asUser = {
+        shopId,
+        tenantId: body.tenantId ?? null,
+      };
+      if (
+        !viaDirectory &&
+        req.ability.cannot("create", subject("User", asUser)) &&
+        req.ability.cannot("create", "User")
+      ) {
         return res
           .status(403)
           .json({ message: "You can only add staff to your own shop." });
       }
-      if (req.body && !canGrantRole(req, req.body.role)) {
+      if (!(await canGrantRole(req, body.role))) {
         return res
           .status(403)
-          .json({ message: "Only a Super Admin can grant admin roles." });
+          .json({ message: "You cannot grant that role." });
       }
-      if (req.body?.supportAudiences != null && !canAssignSupportAudiences(req)) {
+      if (body?.supportAudiences != null && !canAssignSupportAudiences(req)) {
         return res
           .status(403)
           .json({ message: "Only a Super Admin can assign support audiences." });
       }
-      let results = await users.create(req.body);
+      let results = await users.create(body);
       return res.status(201).json(results);
     } catch (err) {
       next(err);
@@ -320,6 +426,9 @@ module.exports = () => {
         return res.status(403).json({ message: "Forbidden." });
       }
       const properties = { ...(req.body || {}) };
+      // Tenant linkage is stamped at create — never rewrite from the client.
+      delete properties.tenantId;
+      delete properties.tenantRole;
       // Only admins may change roles or shop assignment — never self-service.
       if (!canManageUsers(req)) {
         delete properties.role;
@@ -340,10 +449,10 @@ module.exports = () => {
         }
         delete properties.supportAudiences;
       }
-      if (!canGrantRole(req, properties.role)) {
+      if (!(await canGrantRole(req, properties.role))) {
         return res
           .status(403)
-          .json({ message: "Only a Super Admin can grant admin roles." });
+          .json({ message: "You cannot grant that role." });
       }
       let results = await users.update(req.params.userId, properties);
       return res.status(200).json(results);
@@ -352,18 +461,25 @@ module.exports = () => {
     }
   });
 
-  // Staff working in one shop. Scoped to the caller: a Shop Admin sees the
-  // people in the shops they administer, everyone else only themselves.
+  // Vendors with machines in one shop. Shop Admins use this (and the Vendors
+  // directory) to see machine owners on their floor — Vendor accounts do not
+  // carry shopId themselves.
   router.get(
     "/vendor/shop/:shopId",
     authenticate(),
-    authorize("read", "User"),
+    authorize("read", "Vendor"),
     async (req, res, next) => {
       try {
-        let results = await users.getByShopId(
-          req.params.shopId,
-          accessibleFilter(req.ability, "update", "User")
-        );
+        const shopId = String(req.params.shopId || "");
+        const allowedShops = shopScopeOf(req.authenticatedUser || {});
+        const unrestricted = req.ability.can("manage", "all");
+        if (
+          !unrestricted &&
+          (!shopId || !allowedShops.map(String).includes(shopId))
+        ) {
+          return res.status(403).json({ message: "Forbidden." });
+        }
+        const results = await users.listVendorsInShops([shopId], 0, 1000);
         return res.status(200).json(results);
       } catch (err) {
         next(err);

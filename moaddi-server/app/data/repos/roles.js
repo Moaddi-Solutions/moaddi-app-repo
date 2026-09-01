@@ -7,6 +7,8 @@ const {
   rulesSignature,
   setCustomRoles,
   validateRuleRows,
+  validateTenantRuleRows,
+  validateRulesWithinOwnerAuthority,
 } = require("../../lib/ability");
 const { ROLES } = require("../../lib/roles");
 
@@ -15,19 +17,15 @@ const { ROLES } = require("../../lib/roles");
  * Built-in role rules live in code (app/lib/ability.ts); custom role rows
  * are loaded into the in-process ability registry here — at boot
  * (primeCustomRoles) and after every mutation.
+ *
+ * Tenant-owned custom roles (Vendor / ShopOwner staff) are namespaced as
+ * `${ownerId}__${slug}` so global `_id` uniqueness stays intact.
  */
 
-/**
- * Names a custom role may not take. Compared after stripping everything but
- * letters and digits, so `Shop_Admin`, `shop-admin` and `SHOP ADMIN` all
- * collapse onto the built-in and are refused.
- *
- * This catches the systematic cases, not near-misses: `Vender` is a genuinely
- * different word and still gets through. Only fuzzy matching would stop that,
- * and it would eventually reject a name someone legitimately wants.
- */
 const canonicalRoleName = (value) =>
-  String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 
 const RESERVED_ROLE_NAMES = [
   ROLES.SUPER_ADMIN,
@@ -41,20 +39,27 @@ const RESERVED_ROLE_NAMES = [
 const now = () => moment().utc().add(config.timeDifference, "hours");
 
 /**
- * Reject a second role granting exactly what an existing one already grants —
- * two names for one job is a maintenance trap. Exact match only, never overlap:
- * "Accountant" and "Auditor" may legitimately be identical today and diverge
- * later. Built-ins are skipped: their rules live in code, so every one of them
- * has an empty `rules` array and they would all collide with each other.
+ * Reject a second role granting exactly what an existing one already grants
+ * within the same tenant (or the platform-unowned pool). Exact match only.
  */
-const assertNoRoleWithSameRules = async (ruleRows, excludeRoleId = null) => {
+const assertNoRoleWithSameRules = async (
+  ruleRows,
+  excludeRoleId = null,
+  ownerId = null,
+) => {
   const signature = rulesSignature(ruleRows || []);
   if (!signature) return;
-  const others = await Roles.find({ builtIn: false }).lean();
+  const filter = { builtIn: false };
+  if (ownerId) {
+    filter.ownerId = String(ownerId);
+  } else {
+    filter.$or = [{ ownerId: null }, { ownerId: { $exists: false } }];
+  }
+  const others = await Roles.find(filter).lean();
   const clash = others.find(
     (r) =>
       String(r._id) !== String(excludeRoleId) &&
-      rulesSignature(r.rules || []) === signature
+      rulesSignature(r.rules || []) === signature,
   );
   if (clash) {
     return Promise.reject({
@@ -64,31 +69,54 @@ const assertNoRoleWithSameRules = async (ruleRows, excludeRoleId = null) => {
   }
 };
 
-/** Each role is returned with a computed `rules` snapshot (CASL raw rules)
- *  for display, plus the editable `ruleRows` for custom roles. */
 const shape = (role) => ({
   ...role,
   ruleRows: role.builtIn ? [] : role.rules || [],
   rules: rulesFor({ _id: "role-preview", role: role._id }),
 });
 
-/** Load all custom roles into the ability registry. */
 let primeCustomRoles = async () => {
-  const custom = await Roles.find({ builtIn: false }).lean();
+  // Prefer explicit `builtIn: false`, but also pick up tenant-owned rows that
+  // were saved without flipping the schema default (`builtIn` defaults true).
+  const custom = await Roles.find({
+    $or: [
+      { builtIn: false },
+      { ownerId: { $exists: true, $nin: [null, ""] } },
+    ],
+  }).lean();
   setCustomRoles(
-    custom.map((r) => ({ name: r._id, rules: r.rules || [] }))
+    custom.map((r) => ({ name: r._id, rules: r.rules || [] })),
   );
   return custom.length;
 };
 
 /**
- * Custom roles only. Built-in rules live in code and are not editable here, so
- * listing them offered rows whose every action was refused. `getById` stays
- * unfiltered so existing deep links to a built-in still resolve.
+ * @param {{ ownerId?: string|null, mineOnly?: boolean }} [opts]
+ *   - Super Admin listing platform roles: `{ ownerId: null }`
+ *   - Tenant listing own roles: `{ ownerId, mineOnly: true }`
  */
-let list = async () => {
-  const data = await Roles.find({ builtIn: false }).sort({ _id: 1 }).lean();
+let list = async (opts = {}) => {
+  const filter = { builtIn: false };
+  if (opts.mineOnly && opts.ownerId) {
+    filter.ownerId = String(opts.ownerId);
+  } else if (opts.ownerId === null) {
+    filter.$or = [{ ownerId: null }, { ownerId: { $exists: false } }];
+  } else if (opts.ownerId) {
+    filter.ownerId = String(opts.ownerId);
+  }
+  const data = await Roles.find(filter).sort({ _id: 1 }).lean();
   return { data: data.map(shape), total: data.length };
+};
+
+let listOwnedRoleIds = async (ownerId) => {
+  if (!ownerId) return [];
+  const rows = await Roles.find({
+    builtIn: false,
+    ownerId: String(ownerId),
+  })
+    .select("_id")
+    .lean();
+  return rows.map((r) => String(r._id));
 };
 
 let getById = async (roleId) => {
@@ -99,7 +127,10 @@ let getById = async (roleId) => {
   return shape(role);
 };
 
-let create = async ({ name, label, description, ruleRows }) => {
+let create = async (
+  { name, label, description, ruleRows, ownerId = null, ownerRole = null },
+  ownerUser = null,
+) => {
   const cleanName = String(name || "").trim();
   if (!/^[A-Za-z][A-Za-z0-9_-]{1,39}$/.test(cleanName)) {
     return Promise.reject({
@@ -114,22 +145,36 @@ let create = async ({ name, label, description, ruleRows }) => {
       statusCode: 409,
     });
   }
-  const existing = await Roles.findOne({ _id: cleanName });
+  const roleId = ownerId ? `${ownerId}__${cleanName}` : cleanName;
+  const existing = await Roles.findOne({ _id: roleId });
   if (existing) {
     return Promise.reject({ message: "Role already exists.", statusCode: 409 });
   }
-  const rowsError = validateRuleRows(ruleRows || []);
+  const rowsError = ownerId
+    ? validateTenantRuleRows(ruleRows || [])
+    : validateRuleRows(ruleRows || []);
   if (rowsError) {
     return Promise.reject({ message: rowsError, statusCode: 400 });
   }
-  await assertNoRoleWithSameRules(ruleRows);
+  if (ownerId && ownerUser) {
+    const authorityError = validateRulesWithinOwnerAuthority(
+      ruleRows || [],
+      ownerUser,
+    );
+    if (authorityError) {
+      return Promise.reject({ message: authorityError, statusCode: 400 });
+    }
+  }
+  await assertNoRoleWithSameRules(ruleRows, null, ownerId);
   let role = new Roles({
-    _id: cleanName,
-    name: cleanName,
+    _id: roleId,
+    name: roleId,
     label: String(label || cleanName).trim() || cleanName,
     description: String(description || "").trim() || cleanName,
     builtIn: false,
     rules: ruleRows || [],
+    ownerId: ownerId ? String(ownerId) : null,
+    ownerRole: ownerId ? String(ownerRole || "") : null,
     created: now(),
     updated: now(),
   });
@@ -138,22 +183,30 @@ let create = async ({ name, label, description, ruleRows }) => {
   return shape(role.toJSON());
 };
 
-/** Built-in roles: display fields only. Custom roles: rules too. */
-let update = async (roleId, { label, description, ruleRows }) => {
+let update = async (roleId, { label, description, ruleRows }, ownerUser = null) => {
   let role = await Roles.findOne({ _id: roleId });
   if (!role) {
     return Promise.reject({ message: "Role not found.", statusCode: 404 });
   }
   if (typeof label === "string" && label.trim()) role.label = label.trim();
   if (typeof description === "string") role.description = description;
-  // Built-in role permissions live in code — ignore submitted rows (edit
-  // forms send the full record, so they always include a ruleRows field).
   if (ruleRows !== undefined && !role.builtIn) {
-    const rowsError = validateRuleRows(ruleRows);
+    const rowsError = role.ownerId
+      ? validateTenantRuleRows(ruleRows)
+      : validateRuleRows(ruleRows);
     if (rowsError) {
       return Promise.reject({ message: rowsError, statusCode: 400 });
     }
-    await assertNoRoleWithSameRules(ruleRows, roleId);
+    if (role.ownerId && ownerUser) {
+      const authorityError = validateRulesWithinOwnerAuthority(
+        ruleRows,
+        ownerUser,
+      );
+      if (authorityError) {
+        return Promise.reject({ message: authorityError, statusCode: 400 });
+      }
+    }
+    await assertNoRoleWithSameRules(ruleRows, roleId, role.ownerId || null);
     role.rules = ruleRows;
     role.markModified("rules");
   }
@@ -174,7 +227,10 @@ let remove = async (roleId) => {
       statusCode: 400,
     });
   }
-  const assigned = await Users.countDocuments({ role: roleId, isDeleted: { $ne: true } });
+  const assigned = await Users.countDocuments({
+    role: roleId,
+    isDeleted: { $ne: true },
+  });
   if (assigned > 0) {
     return Promise.reject({
       message: `Cannot delete: ${assigned} user(s) still have this role.`,
@@ -188,6 +244,7 @@ let remove = async (roleId) => {
 
 module.exports = {
   list,
+  listOwnedRoleIds,
   getById,
   create,
   update,

@@ -1,11 +1,16 @@
 const express = require("express");
 const machines = require("../../data/repos/machines");
+const rolesRepo = require("../../data/repos/roles");
 const Machines = require("../../data/models/machines");
 const authenticate = require("../middlewares/authenticate");
 const optionalAuthenticate = require("../middlewares/optionalAuthenticate");
 const authorize = require("../middlewares/authorize");
-const { subject } = require("../../lib/ability");
-const { accessibleFilter } = require("../../lib/accessibleFilter");
+const { subject, defineAbilityFor } = require("../../lib/ability");
+const {
+  accessibleFilter,
+  accessibleScopedFilter,
+  isDenyAll,
+} = require("../../lib/accessibleFilter");
 const { ownersOfMachine } = require("../../lib/shopScope");
 
 /**
@@ -20,6 +25,95 @@ const assertCanTouchMachine = async (req, res, action, machineId) => {
   }
   return true;
 };
+
+/**
+ * Staff directory / fill view: manage the machine, fill its boxes
+ * (`update Box` + assigned-machine), or shop-scoped `read Machine`
+ * (ShopOwner floor view). Catalog `read Machine` alone is not enough
+ * (every shopper has it) — accessibleScopedFilter drops unrestricted `{}`.
+ */
+const canStaffListMachines = (ability) => {
+  if (ability.can("update", "Machine") || ability.can("update", "Box")) {
+    return true;
+  }
+  const readScope = accessibleScopedFilter(ability, "read", "Machine");
+  return !isDenyAll(readScope);
+};
+
+/**
+ * Custom-role rules live in an in-memory registry primed at boot. If that
+ * prime raced Mongo (or a role was created on another instance), a supplier
+ * can have `update Box` in their login payload while this process still
+ * builds an empty ability — and GET /machines 403s. Re-prime once, then
+ * rebuild `req.ability` before denying.
+ */
+const ensureStaffMachineAccess = async (req) => {
+  if (canStaffListMachines(req.ability)) return true;
+  try {
+    await rolesRepo.primeCustomRoles();
+  } catch (_) {
+    /* keep the ability we have */
+  }
+  const user = req.authenticatedUser || req.user;
+  if (user) req.ability = defineAbilityFor(user);
+  return canStaffListMachines(req.ability);
+};
+
+const assertCanViewMachine = async (req, res, machineId) => {
+  const owners = await ownersOfMachine(machineId);
+  // CASL's `subject()` casts the object in place — never reuse the same
+  // plain object as Machine and Box or it throws on the second cast.
+  const canSee = (ability) => {
+    const base = {
+      shopId: owners.shopId,
+      vendorId: owners.vendorId,
+      supplierIds: [...(owners.supplierIds || [])],
+    };
+    return (
+      ability.can("update", subject("Machine", { ...base })) ||
+      ability.can("read", subject("Machine", { ...base })) ||
+      ability.can("update", subject("Box", { ...base }))
+    );
+  };
+  if (!canSee(req.ability)) {
+    // Same registry race as the list gate — refresh once before denying.
+    try {
+      await rolesRepo.primeCustomRoles();
+    } catch (_) {
+      /* ignore */
+    }
+    const user = req.authenticatedUser || req.user;
+    if (user) req.ability = defineAbilityFor(user);
+    if (!canSee(req.ability)) {
+      res.status(403).json({ message: "Forbidden." });
+      return false;
+    }
+  }
+  return true;
+};
+
+/**
+ * Active/inactive toggle: owners (`update Machine`) or assigned fill staff
+ * (`update Box`). Fill requires the machine off — suppliers must be able to
+ * flip it without getting full machine edit.
+ */
+const assertCanToggleMachine = async (req, res, machineId) => {
+  const owners = await ownersOfMachine(machineId);
+  const base = {
+    shopId: owners.shopId,
+    vendorId: owners.vendorId,
+    supplierIds: [...(owners.supplierIds || [])],
+  };
+  const allowed =
+    req.ability.can("update", subject("Machine", { ...base })) ||
+    req.ability.can("update", subject("Box", { ...base }));
+  if (!allowed) {
+    res.status(403).json({ message: "Forbidden." });
+    return false;
+  }
+  return true;
+};
+
 
 /**
  * Who a machine belongs to — not editable through a general update.
@@ -81,9 +175,14 @@ module.exports = () => {
     }
   });
 
-  //get all machines
-  router.get("/machines", authenticate(), authorize("read", "Machine"), async (req, res, next) => {
+  // Staff machine directory — Vendor (`update Machine`), supplier fill
+  // (`update Box`), or ShopOwner shop-scoped `read Machine`. Not catalog
+  // `read Machine` (too wide).
+  router.get("/machines", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
+      if (!(await ensureStaffMachineAccess(req))) {
+        return res.status(403).json({ message: "Forbidden." });
+      }
       let results = await machines.get(
         req.query.offset,
         req.query.limit,
@@ -125,9 +224,31 @@ module.exports = () => {
     },
   );
 
-  //get machine by id
-  router.get("/machines/:machineId", authenticate(), authorize("read", "Machine"), async (req, res, next) => {
+  // Per-machine gross sales + shop commission (management-scoped).
+  // Authorize with `update Machine` — catalog `read` is unrestricted and would
+  // let any signed-in staff list every machine's revenue.
+  router.get(
+    "/machines/revenue",
+    authenticate(),
+    authorize("update", "Machine"),
+    async (req, res, next) => {
+      try {
+        const machineRevenue = require("../../data/repos/machineRevenue");
+        const results = await machineRevenue.getRevenueByMachine(req.ability, {
+          shopId: req.query.shopId || null,
+        });
+        return res.status(200).json(results);
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
+  // Machine detail (with boxes for Fill). Suppliers need this without
+  // `read Machine` — they hold `update Box` on assigned machines only.
+  router.get("/machines/:machineId", authenticate(), authorize.withAbility(), async (req, res, next) => {
     try {
+      if (!(await assertCanViewMachine(req, res, req.params.machineId))) return;
       const getBoxes = req.query.getBoxes !== "false";
       let results = await machines.getById(req.params.machineId, getBoxes);
       return res.status(200).json(results);
@@ -250,13 +371,15 @@ module.exports = () => {
     },
   );
   // Toggle machine by machineId.
+  // Vendors/admins: `update Machine`. Assigned suppliers: `update Box`
+  // (fill workflow needs the machine inactive).
   router.put(
     "/machines/:machineId/toggle",
     authenticate(),
-    authorize("update", "Machine"),
+    authorize.withAbility(),
     async (req, res, next) => {
       try {
-        if (!(await assertCanTouchMachine(req, res, "update", req.params.machineId))) return;
+        if (!(await assertCanToggleMachine(req, res, req.params.machineId))) return;
         let results = await machines.toggle(req.params.machineId);
         return res.status(200).json(results);
       } catch (err) {

@@ -36,6 +36,7 @@ import { useId, useMemo, useState } from "react";
 import { useCreatePath, useGetList } from "ra-core";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import MachinesRevenuePanel from "./MachinesRevenuePanel";
 
 /* -------------------------------------------------------------------------- */
 /*  Data hooks                                                                */
@@ -634,6 +635,11 @@ const Dashboard = () => {
           <StatCard key={stat.label} {...stat} />
         ))}
       </section>
+
+      {/* Shop Owner / Super Admin: machines in scope with sales + commission. */}
+      {showMachines && isAdmin && (
+        <MachinesRevenuePanel enabled={showMachines && isAdmin} />
+      )}
 
       {/* Activity + attention */}
       <section

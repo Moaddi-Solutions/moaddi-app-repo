@@ -70,11 +70,16 @@ const create = async (
     return doc.toJSON() as ModelTypes.ITransaction;
   } catch (err: unknown) {
     const e = err as { code?: number };
-    if (e && e.code === 11000 && input.kind === 'purchase' && input.purchaseId) {
+    if (
+      e &&
+      e.code === 11000 &&
+      input.purchaseId &&
+      (input.kind === 'purchase' || input.kind === 'commission')
+    ) {
       const existing = await Transactions.findOne({
         purchaseId: input.purchaseId,
         vendorId: input.vendorId,
-        kind: 'purchase',
+        kind: input.kind,
       }).session(session ?? null);
       if (existing) return existing.toJSON() as ModelTypes.ITransaction;
     }
@@ -249,6 +254,20 @@ const findPurchaseVendorCredit = async (
   return doc ? (doc.toJSON() as ModelTypes.ITransaction) : null;
 };
 
+/** Idempotent shop-commission credits (wallet owner id in `vendorId`). */
+const findCommissionCredit = async (
+  purchaseId: string,
+  ownerId: string,
+  session?: ClientSession
+): Promise<ModelTypes.ITransaction | null> => {
+  const doc = await Transactions.findOne({
+    purchaseId,
+    vendorId: ownerId,
+    kind: 'commission',
+  }).session(session ?? null);
+  return doc ? (doc.toJSON() as ModelTypes.ITransaction) : null;
+};
+
 export = {
   create,
   getById,
@@ -257,4 +276,5 @@ export = {
   getByPurchase,
   getByWithdrawal,
   findPurchaseVendorCredit,
+  findCommissionCredit,
 };

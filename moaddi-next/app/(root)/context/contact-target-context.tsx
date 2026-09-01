@@ -31,86 +31,81 @@ type ContactTargetContextValue = {
 
 export type SupportAudience = "customers" | "vendors";
 
+type SupportCacheKey = string;
+
 const DEFAULT_SUPPORT_TARGET: ContactTarget = {
   kind: "support",
   targetUserId: null,
 };
 
-const cachedSupportUserId: Record<SupportAudience, string | null> = {
-  customers: null,
-  vendors: null,
-};
-const fetchStarted: Record<SupportAudience, boolean> = {
-  customers: false,
-  vendors: false,
-};
-const supportUserIdListeners: Record<SupportAudience, Set<() => void>> = {
-  customers: new Set(),
-  vendors: new Set(),
+const cachedSupportUserId: Record<SupportCacheKey, string | null> = {};
+const fetchStarted: Record<SupportCacheKey, boolean> = {};
+const supportUserIdListeners: Record<SupportCacheKey, Set<() => void>> = {};
+
+const cacheKeyFor = (
+  audience: SupportAudience,
+  opts?: { shopId?: string | null; machineId?: string | null },
+): SupportCacheKey => {
+  if (opts?.machineId) return `${audience}:machine:${opts.machineId}`;
+  if (opts?.shopId) return `${audience}:shop:${opts.shopId}`;
+  return audience;
 };
 
-const notifySupportUserId = (audience: SupportAudience) => {
-  supportUserIdListeners[audience].forEach((listener) => listener());
+const listenersFor = (key: SupportCacheKey) => {
+  if (!supportUserIdListeners[key]) supportUserIdListeners[key] = new Set();
+  return supportUserIdListeners[key];
 };
 
-const setCachedSupportUserId = (audience: SupportAudience, id: string) => {
-  cachedSupportUserId[audience] = id;
-  notifySupportUserId(audience);
+const setCachedSupportUserId = (key: SupportCacheKey, id: string) => {
+  cachedSupportUserId[key] = id;
+  listenersFor(key).forEach((listener) => listener());
 };
 
 /**
- * Resolves the support admin id for one audience from the server, once per
- * page load regardless of how many components call `useSupportUserId()`.
+ * Resolves the support admin id for one audience (optionally scoped to a
+ * shop or machine) from the server, once per page load per cache key.
  */
-const ensureSupportUserIdFetched = (audience: SupportAudience) => {
-  if (fetchStarted[audience] || cachedSupportUserId[audience]) return;
-  fetchStarted[audience] = true;
-  notifySupportUserId(audience);
-  getRequest(chatSupportTargetAPI(audience))
+const ensureSupportUserIdFetched = (
+  audience: SupportAudience,
+  opts?: { shopId?: string | null; machineId?: string | null },
+) => {
+  const key = cacheKeyFor(audience, opts);
+  if (fetchStarted[key] || cachedSupportUserId[key]) return;
+  fetchStarted[key] = true;
+  getRequest(
+    chatSupportTargetAPI({
+      audience,
+      shopId: opts?.shopId || undefined,
+      machineId: opts?.machineId || undefined,
+    }),
+  )
     .then(({ targetUserId }: { targetUserId: string | null }) => {
-      if (targetUserId) setCachedSupportUserId(audience, targetUserId);
+      if (targetUserId) setCachedSupportUserId(key, targetUserId);
     })
     .catch(() => {
-      fetchStarted[audience] = false;
-      notifySupportUserId(audience);
+      fetchStarted[key] = false;
     });
 };
 
 /**
- * The support account id for the given audience, resolved from the server
- * and cached for the session; null until that first resolution completes.
- * Re-renders the caller once resolved. Triggers the resolving fetch itself,
- * so it works whether or not `ContactTargetProvider` is mounted (e.g. the
- * admin dashboard layout, which doesn't use it).
+ * The support account id for the given audience (and optional shop/machine),
+ * resolved from the server and cached for the session.
  */
-export function useSupportUserId(audience: SupportAudience = "customers") {
-  useEffect(() => {
-    ensureSupportUserIdFetched(audience);
-  }, [audience]);
-  return useSyncExternalStore(
-    (onChange) => {
-      supportUserIdListeners[audience].add(onChange);
-      return () => supportUserIdListeners[audience].delete(onChange);
-    },
-    () => cachedSupportUserId[audience],
-    () => null,
-  );
-}
-
-/** True while the support id for `audience` hasn't resolved yet (fetch in flight or not yet started). */
-export function useSupportUserIdPending(
+export function useSupportUserId(
   audience: SupportAudience = "customers",
+  opts?: { shopId?: string | null; machineId?: string | null },
 ) {
+  const key = cacheKeyFor(audience, opts);
   useEffect(() => {
-    ensureSupportUserIdFetched(audience);
-  }, [audience]);
+    ensureSupportUserIdFetched(audience, opts);
+  }, [audience, opts?.shopId, opts?.machineId]);
   return useSyncExternalStore(
     (onChange) => {
-      supportUserIdListeners[audience].add(onChange);
-      return () => supportUserIdListeners[audience].delete(onChange);
+      listenersFor(key).add(onChange);
+      return () => listenersFor(key).delete(onChange);
     },
-    () => fetchStarted[audience] && !cachedSupportUserId[audience],
-    () => true,
+    () => cachedSupportUserId[key] ?? null,
+    () => null,
   );
 }
 

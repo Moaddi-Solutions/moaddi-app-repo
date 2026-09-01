@@ -1,0 +1,38 @@
+let syncSupplierMachines = async (supplierId, machineIds) => {
+  const uid = String(supplierId);
+  const desired = [
+    ...new Set(
+      (Array.isArray(machineIds) ? machineIds : [])
+        .map((id) => String(id || "").trim())
+        .filter(Boolean),
+    ),
+  ];
+  const desiredSet = new Set(desired);
+
+  const currentlyAssigned = await Machines.find({
+    supplierIds: uid,
+    isDeleted: { $ne: true },
+  })
+    .select("_id")
+    .lean();
+  const currentIds = currentlyAssigned.map((m) => String(m._id));
+  const currentSet = new Set(currentIds);
+
+  for (const id of desired) {
+    if (currentSet.has(id)) continue;
+    await Machines.updateOne(
+      { _id: id, isDeleted: { $ne: true } },
+      { $addToSet: { supplierIds: uid } },
+    );
+    await boxesRepo.remachine(id);
+  }
+  for (const id of currentIds) {
+    if (desiredSet.has(id)) continue;
+    await Machines.updateOne(
+      { _id: id },
+      { $pull: { supplierIds: uid } },
+    );
+    await boxesRepo.remachine(id);
+  }
+  return desired;
+};

@@ -34,6 +34,8 @@ import {
   walletsMeAPI,
   withdrawalAPI,
   withdrawalsAPI,
+  placementRequestAPI,
+  placementRequestsAPI,
   currenciesAPI,
   ProductsByMachine,
   ProductsByVendor,
@@ -76,11 +78,13 @@ export const Fit = {
   data: (data) => ({
     data,
   }),
-  _id: ({ _id, ...rest } = {}) => ({
-    _id,
-    id: _id,
-    ...rest,
-  }),
+  // Prefer `_id`, fall back to `id`. Spread `rest` first so we never let an
+  // absent/undefined `id` on the payload wipe the mapped react-admin `id`.
+  _id: (record = {}) => {
+    const { _id, id: rawId, ...rest } = record;
+    const id = _id ?? rawId;
+    return { ...rest, _id: id, id };
+  },
   image: ({ image, ...rest } = {}) => {
     let src;
     if (image) {
@@ -146,10 +150,9 @@ const Api = {
           limit,
         })}`,
       ),
-    getOne: (id) =>
-      getRequest(
-        `${machineAPI(id)}?${new URLSearchParams({ getBoxes: "false" })}`,
-      ),
+    // Include boxes so Fill (and supplier staff without Vendor access) can
+    // stock slots from the machine show page without a vendors lookup.
+    getOne: (id) => getRequest(machineAPI(id)),
     getManyReference: {
       vendorId: (vendorId) =>
         getRequest(MachinesByVendor(vendorId)).then(({ data, total }) => ({
@@ -794,6 +797,34 @@ const Api = {
       return postRequest(withdrawalsAPI(), payload);
     },
   },
+  placementRequests: {
+    getList: (offset, limit, filter = {}) => {
+      const params = new URLSearchParams({
+        offset: String(offset),
+        limit: String(limit),
+      });
+      if (filter?.status) params.set("status", String(filter.status));
+      if (filter?.shopId) params.set("shopId", String(filter.shopId));
+      if (filter?.vendorId) params.set("vendorId", String(filter.vendorId));
+      return getRequest(`${placementRequestsAPI()}?${params}`);
+    },
+    getOne: (id) => getRequest(placementRequestAPI(id)),
+    create: (data) => {
+      const payload = {
+        shopId: String(data.shopId ?? "").trim(),
+        machineId: String(data.machineId ?? "").trim(),
+      };
+      const notes = String(data.notes ?? "").trim();
+      if (notes) payload.notes = notes;
+      if (data.machineName) payload.machineName = String(data.machineName).trim();
+      if (data.machineMac) payload.machineMac = String(data.machineMac).trim();
+      return postRequest(placementRequestsAPI(), payload);
+    },
+    update: (id, data) =>
+      putRequest(placementRequestAPI(id), {
+        status: String(data.status ?? "").trim(),
+      }),
+  },
   transactions: {
     getList: (offset, limit, filter = {}) => {
       const params = new URLSearchParams({
@@ -838,6 +869,14 @@ const Api = {
 // step. Resource names must match the react-admin resource (and URL) exactly.
 Api.shopOwners = userCrud;
 Api.staff = userCrud;
+// Vendor "Suppliers" directory + machine pickers: always the custom-role roster
+// (tenant-scoped on the server). Reference inputs that omit filter.role must
+// not fall through to `/users/role/staff` (platform-wide non-customers).
+Api.suppliers = {
+  ...userCrud,
+  getList: (offset, limit, filter = {}) =>
+    userCrud.getList(offset, limit, { ...filter, role: filter.role || "custom" }),
+};
 Api.supportTeam = userCrud;
 
 const contentArray = [
@@ -933,7 +972,30 @@ export const dataProviderGenerator = (serverEvents) => {
     create: (resource, { data, meta }) => {
       const response = Api[resource]
         .create(data)
+        .then((raw) => {
+          // Some older endpoints returned `{ message }` with HTTP 201 instead
+          // of throwing — react-admin then reports "missing id". Surface the
+          // server message instead.
+          if (
+            raw &&
+            raw.message &&
+            raw._id == null &&
+            raw.id == null &&
+            !Array.isArray(raw.data)
+          ) {
+            return Promise.reject(new Error(raw.message));
+          }
+          return raw;
+        })
         .then(Fit._id)
+        .then((record) => {
+          if (record?.id == null && record?._id == null) {
+            return Promise.reject(
+              new Error("Create succeeded but the server returned no id."),
+            );
+          }
+          return record;
+        })
         .then(Fit.image)
         .then(Fit.data);
       if (contentArray.includes(resource)) response.then(revalidateContent);

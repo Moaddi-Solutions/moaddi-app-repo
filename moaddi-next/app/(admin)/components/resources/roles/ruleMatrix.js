@@ -1,26 +1,23 @@
 // Extension included so node --test can load this directly; the bundler is
 // happy either way.
-import { ALL_PAGES } from "./ruleChoices.js";
+import {
+  ALL_PAGES,
+  defaultScopeForRole,
+  pagesForRole,
+} from "./ruleChoices.js";
 
 /**
- * Converts between the grid the Super Admin ticks and the flat
- * `{action, subject, scope}[]` the server stores. Nothing else — the whole
- * layer is group-by-page and flatten.
- *
- * ponytail: two functions is the entire abstraction. No generic matrix builder
- * until a second grid exists.
+ * Converts between the grid the admin ticks and the flat
+ * `{action, subject, scope}[]` the server stores.
  */
-
-/** Custom roles are the Super Admin's own staff: platform-wide, always. */
-const DEFAULT_SCOPE = "all";
 
 /** Every subject a page grants, including the extras some pages need. */
 const subjectsOf = (page) => [page.subject, ...(page.alsoSubjects ?? [])];
 
-/** Every `action:subject` any page in the grid is able to produce. */
-const generatablePermissions = () => {
+/** Every `action:subject` any page in the (possibly filtered) grid can produce. */
+const generatablePermissions = (pages = ALL_PAGES) => {
   const keys = new Set();
-  for (const page of ALL_PAGES) {
+  for (const page of pages) {
     for (const action of page.actions) {
       for (const subject of subjectsOf(page)) keys.add(`${action}:${subject}`);
     }
@@ -30,50 +27,54 @@ const generatablePermissions = () => {
 
 /**
  * Rows the grid cannot represent, kept so a save never silently discards them.
- * Two cases:
- *
- *   - A non-`all` scope. The builder no longer offers scope, so regenerating
- *     such a row would quietly widen it to every record — an escalation, not a
- *     simplification.
- *   - A permission no page can produce. Pages come and go (Conversations was
- *     removed once support agents took over chat; the staff pages moved off the
- *     `User` subject), and a stored row for a departed page is invisible to the
- *     grid — so `matrixToRows` would drop it with no warning and quietly revoke
- *     a permission nobody meant to touch.
  */
-export const carriedRows = (rows) => {
-  const generatable = generatablePermissions();
-  return (Array.isArray(rows) ? rows : []).filter(
-    (r) =>
-      r &&
-      ((r.scope && r.scope !== DEFAULT_SCOPE) ||
-        !generatable.has(`${r.action}:${r.subject}`))
-  );
+export const carriedRows = (rows, opts = {}) => {
+  const defaultScope = opts.defaultScope || "all";
+  const pages = opts.pages || ALL_PAGES;
+  const generatable = generatablePermissions(pages);
+  return (Array.isArray(rows) ? rows : []).filter((r) => {
+    if (!r) return false;
+    const page = pages.find(
+      (p) =>
+        p.subject === r.subject ||
+        (p.alsoSubjects || []).includes(r.subject),
+    );
+    const expectedScope = page?.fixedScope || defaultScope;
+    return (
+      (r.scope && r.scope !== expectedScope) ||
+      !generatable.has(`${r.action}:${r.subject}`)
+    );
+  });
 };
 
 /** True when a stored role holds rows this editor would rewrite. */
-export const hasUneditableRows = (rows) => carriedRows(rows).length > 0;
+export const hasUneditableRows = (rows, opts = {}) =>
+  carriedRows(rows, opts).length > 0;
 
 /**
  * `RuleRow[]` -> `{ [pageKey]: Set<action> }`.
- *
- * Several pages share one subject (Vendors, Shop Owners and Staff are all
- * `User`), so a stored row lights up every page that maps to it. That is
- * honest: the underlying grant genuinely covers all of them, and showing one
- * ticked while its siblings sit empty would misrepresent what the role does.
  */
-export function rowsToMatrix(rows) {
-  const granted = new Set(
-    (Array.isArray(rows) ? rows : [])
-      .filter((r) => r && r.scope === DEFAULT_SCOPE)
-      .map((r) => `${r.action}:${r.subject}`)
-  );
+export function rowsToMatrix(rows, opts = {}) {
+  const defaultScope = opts.defaultScope || "all";
+  const pages = opts.pages || ALL_PAGES;
+  const granted = new Set();
+  for (const r of Array.isArray(rows) ? rows : []) {
+    if (!r) continue;
+    const page = pages.find(
+      (p) =>
+        p.subject === r.subject ||
+        (p.alsoSubjects || []).includes(r.subject),
+    );
+    const expectedScope = page?.fixedScope || defaultScope;
+    if (r.scope === expectedScope) {
+      granted.add(`${r.action}:${r.subject}`);
+    }
+  }
 
   const matrix = {};
-  for (const page of ALL_PAGES) {
+  for (const page of pages) {
     const actions = page.actions.filter((action) =>
-      // Every subject the page needs must be granted, or the page half-works.
-      subjectsOf(page).every((s) => granted.has(`${action}:${s}`))
+      subjectsOf(page).every((s) => granted.has(`${action}:${s}`)),
     );
     if (actions.length) matrix[page.key] = new Set(actions);
   }
@@ -81,33 +82,31 @@ export function rowsToMatrix(rows) {
 }
 
 /**
- * `{ [pageKey]: Set<action> }` -> `RuleRow[]`, every row scoped `all`.
- *
- * Deduped by action+subject: pages sharing a subject would otherwise emit the
- * same row several times, which the server now rejects as a duplicate
- * permission.
+ * `{ [pageKey]: Set<action> }` -> `RuleRow[]`.
  */
-export function matrixToRows(matrix, carried = []) {
+export function matrixToRows(matrix, carried = [], opts = {}) {
+  const defaultScope = opts.defaultScope || "all";
+  const pages = opts.pages || ALL_PAGES;
   const seen = new Set();
   const rows = [];
 
-  for (const page of ALL_PAGES) {
+  for (const page of pages) {
     const actions = matrix[page.key];
     if (!actions) continue;
+    const scope = page.fixedScope || defaultScope;
     for (const action of page.actions) {
       if (!actions.has(action)) continue;
       for (const subject of subjectsOf(page)) {
-        const key = `${action}:${subject}`;
+        const key = `${action}:${subject}:${scope}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        rows.push({ action, subject, scope: DEFAULT_SCOPE });
+        rows.push({ action, subject, scope });
       }
     }
   }
 
-  // Carried rows keep their original scope and are never regenerated.
   for (const row of carried) {
-    const key = `${row.action}:${row.subject}`;
+    const key = `${row.action}:${row.subject}:${row.scope}`;
     if (seen.has(key)) continue;
     seen.add(key);
     rows.push(row);
@@ -117,9 +116,10 @@ export function matrixToRows(matrix, carried = []) {
 }
 
 /** "Read and update Customers" — one line per page, for the summary. */
-export function describeMatrix(matrix) {
+export function describeMatrix(matrix, opts = {}) {
+  const pages = opts.pages || ALL_PAGES;
   const label = (a) => (a === "pay" ? "mark paid" : a);
-  return ALL_PAGES.flatMap((page) => {
+  return pages.flatMap((page) => {
     const actions = page.actions.filter((a) => matrix[page.key]?.has(a));
     if (!actions.length) return [];
     const names = actions.map(label);
@@ -129,4 +129,12 @@ export function describeMatrix(matrix) {
         : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
     return [`${verbs.charAt(0).toUpperCase()}${verbs.slice(1)} ${page.label}`];
   });
+}
+
+/** Convenience: builder options for the signed-in role. */
+export function builderOptsForRole(role) {
+  return {
+    defaultScope: defaultScopeForRole(role),
+    pages: pagesForRole(role),
+  };
 }

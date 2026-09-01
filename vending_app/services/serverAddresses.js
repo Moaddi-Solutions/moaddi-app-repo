@@ -106,8 +106,17 @@ export const chatReactionAPI = (conversationId, messageId) =>
   `${chatMessagesAPI(conversationId)}/${messageId}/reaction`;
 
 /** Resolves the admin-configured "Contact support" target id from the server. */
-export const chatSupportTargetAPI = (audience = "customers") =>
-  `${address}chat/support-target?audience=${audience}`;
+export const chatSupportTargetAPI = (audienceOrOpts = "customers", maybeOpts) => {
+  const opts =
+    typeof audienceOrOpts === "string"
+      ? { audience: audienceOrOpts, ...(maybeOpts || {}) }
+      : audienceOrOpts || {};
+  const { audience = "customers", shopId, machineId } = opts;
+  const params = new URLSearchParams({ audience });
+  if (shopId) params.set("shopId", String(shopId));
+  if (machineId) params.set("machineId", String(machineId));
+  return `${address}chat/support-target?${params}`;
+};
 
 export const myWalletAPI = address + "wallets/me";
 export const myTransactionsAPI = address + "transactions";

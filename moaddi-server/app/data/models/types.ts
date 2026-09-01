@@ -66,6 +66,16 @@ export interface IMachine {
   password?: string | null;
   vendorId?: string | null;
   shopId?: string;
+  /**
+   * Shop Owner cut (0–100). Null inherits the shop's `defaultCommissionPercent`.
+   */
+  commissionPercent?: Money | number | null;
+  /** Staff users assigned to fill this machine (many-to-many). */
+  supplierIds?: string[];
+  /** Single Support user assigned to this machine (nullable). Legacy dual-read. */
+  supportUserId?: string | null;
+  /** Audience-keyed Contact assignees (unique audience; `all` = fallback). */
+  supportAssignments?: { audience: string; userId: string }[];
   groupId?: string;
   specialProducts?: Record<string, unknown>;
   location?: string;
@@ -178,6 +188,14 @@ export interface IShop {
   name: string;
   description: string;
   image?: string;
+  createdBy?: string | null;
+  ownerId?: string | null;
+  /** Default Shop Owner cut (0–100) when a machine has no override. */
+  defaultCommissionPercent?: Money | number | null;
+  /** Single Support user assigned to this shop (nullable). Legacy dual-read. */
+  supportUserId?: string | null;
+  /** Audience-keyed Contact assignees (unique audience; `all` = fallback). */
+  supportAssignments?: { audience: string; userId: string }[];
   isActive: boolean;
   isDeleted: boolean;
   created: Date;
@@ -232,6 +250,15 @@ export interface IUser {
    * the users repo.
    */
   supportAudiences?: string[];
+  /**
+   * Tenant staff: owning Vendor or ShopOwner `_id`. Stamped server-side on
+   * create — never accepted from the client body.
+   */
+  tenantId?: string | null;
+  /** `Vendor` or `ShopOwner`. */
+  tenantRole?: 'Vendor' | 'ShopOwner' | string | null;
+  shopId?: string | null;
+  ownedShopIds?: string[] | null;
   created: Date;
   updated?: Date;
 }
@@ -257,6 +284,30 @@ export interface IEvent {
 }
 
 // ---------------------------------------------------------------------------
+// Placement request (Vendor → Shop Admin machine placement)
+// ---------------------------------------------------------------------------
+
+export type PlacementRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface IPlacementRequest {
+  _id: string;
+  vendorId: string;
+  shopId: string;
+  /** Set when the vendor already has a machine to place; optional for intent-only. */
+  machineId?: string | null;
+  machineName?: string | null;
+  machineMac?: string | null;
+  /** Free-text notes / product type for the placement. */
+  notes?: string | null;
+  status: PlacementRequestStatus;
+  reviewedBy?: string | null;
+  reviewedAt?: Date | null;
+  created: Date;
+  updated?: Date | null;
+  isDeleted: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Wallet / Transaction / Withdrawal / Options
 // ---------------------------------------------------------------------------
 
@@ -279,7 +330,12 @@ export interface IWallet {
 }
 
 export type TransactionType = 'CREDIT' | 'DEBIT';
-export type TransactionKind = 'purchase' | 'withdrawal' | 'adjustment';
+export type TransactionKind =
+  | 'purchase'
+  | 'withdrawal'
+  | 'adjustment'
+  /** Shop Owner cut of a purchase (wallet owner id stored in `vendorId`). */
+  | 'commission';
 
 export interface ITransactionPurchaseSummaryItem {
   productId: string;

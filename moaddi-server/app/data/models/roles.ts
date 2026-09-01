@@ -11,6 +11,13 @@ interface IRole {
   builtIn: boolean;
   /** Custom roles only: rule rows ({action, subject, scope}) applied by the ability registry. */
   rules: unknown[];
+  /**
+   * Tenant ownership. Built-ins keep `ownerId: null`. Custom roles owned by a
+   * Vendor or ShopOwner are namespaced as `${ownerId}__${slug}`.
+   */
+  ownerId?: string | null;
+  /** `Vendor` | `ShopOwner` when `ownerId` is set. */
+  ownerRole?: string | null;
   created: Date;
   updated?: Date;
 }
@@ -37,6 +44,8 @@ const RolesSchema = new mongoose.Schema<IRole>(
     description: { type: String, required: true },
     builtIn: { type: Boolean, default: true },
     rules: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    ownerId: { type: String, required: false, default: null },
+    ownerRole: { type: String, required: false, default: null },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },
     updated: { type: Date, required: false },
   },

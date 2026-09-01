@@ -85,13 +85,14 @@ const controller = (): import('express').Router => {
         const user = req.authenticatedUser!;
         const ability = defineAbilityFor(user);
         scope = accessibleFilter(ability, 'update', 'Product');
-        // Custom refill roles (update Box, not Shop): fall back to catalog
-        // `read` so the Fill picker is not empty for them.
+        // Assigned fill staff (`update Box`) usually have no Product rules —
+        // `update Product` is deny-all and the Fill picker would be empty.
+        // Open the catalog for them (Fill UI filters by machine.vendorId).
+        // Exclude Shop Admins who manage shops but not a product catalog.
         if (
           isDenyAll(scope) &&
           ability.can('update', 'Box') &&
-          !ability.can('update', 'Shop') &&
-          ability.can('read', 'Product')
+          !ability.can('update', 'Shop')
         ) {
           scope = accessibleFilter(ability, 'read', 'Product');
           if (isDenyAll(scope)) scope = {};

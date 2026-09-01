@@ -10,6 +10,29 @@ const {
 const { accessibleFilter } = require("../../lib/accessibleFilter");
 const { shopScopeOf } = require("../../lib/ability");
 const { ROLES, ADMIN_ROLES, normalizeBuiltInRole } = require("../../lib/roles");
+const { normalizeSupportUserId, normalizeSupportAssignments } = require("../../lib/tenantAssignment");
+
+/**
+ * Sync supportAssignments ↔ legacy supportUserId (`all` lane).
+ */
+const applySupportFields = async (properties, tenantId) => {
+  if ("supportAssignments" in properties) {
+    properties.supportAssignments = await normalizeSupportAssignments(
+      properties.supportAssignments,
+      tenantId,
+    );
+    const all = properties.supportAssignments.find((r) => r.audience === "all");
+    properties.supportUserId = all?.userId ?? null;
+    return;
+  }
+  if ("supportUserId" in properties) {
+    const id = await normalizeSupportUserId(properties.supportUserId, tenantId);
+    properties.supportUserId = id;
+    properties.supportAssignments = id
+      ? [{ audience: "all", userId: id }]
+      : [];
+  }
+};
 
 /**
  * `ownerId` hands out authorization scope, so it is validated on the way in —
@@ -160,6 +183,21 @@ let create = async (shop, image, createdBy = null) => {
   shop._id = "shop_" + shortId.generate();
   shop.createdBy = createdBy ? String(createdBy) : null;
   shop.ownerId = ownerId;
+  const supportProps = {};
+  if ("supportAssignments" in shop) {
+    supportProps.supportAssignments = shop.supportAssignments;
+  } else if ("supportUserId" in shop || shop.supportUserId != null) {
+    supportProps.supportUserId = shop.supportUserId;
+  }
+  if (Object.keys(supportProps).length) {
+    await applySupportFields(supportProps, ownerId);
+    if ("supportAssignments" in supportProps) {
+      shop.supportAssignments = supportProps.supportAssignments;
+    }
+    if ("supportUserId" in supportProps) {
+      shop.supportUserId = supportProps.supportUserId;
+    }
+  }
   shop.created = moment().utc().add(config.timeDifference, "hours");
   shop.updated = moment().utc().add(config.timeDifference, "hours");
   shop = await shop.save();
@@ -416,6 +454,10 @@ let update = async (machineId, properties, image) => {
   const previousOwnerId = shop.ownerId ?? null;
   if ("ownerId" in properties) {
     properties.ownerId = await normalizeOwnerId(properties.ownerId);
+  }
+  const tenantId = properties.ownerId ?? shop.ownerId ?? null;
+  if ("supportAssignments" in properties || "supportUserId" in properties) {
+    await applySupportFields(properties, tenantId);
   }
 
   // Update all properties.

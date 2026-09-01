@@ -11,19 +11,35 @@ const config: { timeDifference: number } = require('../../../config');
 
 const now = () => moment().utc().add(config.timeDifference, 'hours').toDate();
 
+/**
+ * Get or create a wallet for a wallet-owner id.
+ *
+ * `vendorId` is the wallet owner — historically a Vendor, and also a Shop Owner
+ * when crediting commission (same collection; no separate wallet model).
+ * Pass `shopId` when the owner has no `users.shopId` (Shop Owners use
+ * `ownedShopIds`) so the denormalized shop column is still set.
+ */
 const getOrCreateForVendor = async (
   vendorId: string,
   currency: string = 'USD',
-  session?: ClientSession
+  session?: ClientSession,
+  shopId?: string | null
 ): Promise<ModelTypes.IWallet> => {
   if (!vendorId) throw repoError(400, 'vendorId is required.');
   const existing = await Wallets.findOne({ vendorId, currency }).session(session ?? null);
-  if (existing) return existing.toJSON() as ModelTypes.IWallet;
+  if (existing) {
+    // Backfill shopId when a caller knows it and the wallet was created without one.
+    if (shopId && !existing.shopId) {
+      existing.shopId = String(shopId);
+      await existing.save({ session });
+    }
+    return existing.toJSON() as ModelTypes.IWallet;
+  }
 
   const wallet = new Wallets({
     _id: 'wallet_' + shortId.generate(),
     vendorId,
-    shopId: await shopIdOfUser(vendorId),
+    shopId: shopId ?? (await shopIdOfUser(vendorId)),
     currency,
     balance: money.fromNumber(0),
     isActive: true,
