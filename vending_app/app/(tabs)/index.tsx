@@ -9,7 +9,7 @@ import { getItem } from "~/lib/utils";
 export default function Screen() {
   const router = useRouter();
   const { capabilities } = useAbility();
-
+ 
   useEffect(() => {
     getItem("otp").then((otp) => {
       if (otp) router.navigate("/OTP");

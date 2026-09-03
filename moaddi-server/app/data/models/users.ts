@@ -53,6 +53,12 @@ const UsersSchema = new mongoose.Schema<UserDocument>(
     shopId: { type: String, required: false, default: null },
     /** Shops this ShopOwner (or their staff, copied at create) administers. */
     ownedShopIds: { type: [String], required: false, default: undefined },
+    /**
+     * Expo push tokens for this account's devices — an array because one person
+     * may be signed in on a phone and a tablet at once, and both should be
+     * notified. Written only via `addPushToken`/`removePushToken` in the repo.
+     */
+    expoPushTokens: { type: [String], required: false, default: undefined },
     created: { type: Date, default: () => moment().utc().add(config.timeDifference, 'hours').toDate() },
     updated: { type: Date, required: false },
   },

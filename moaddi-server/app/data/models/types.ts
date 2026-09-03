@@ -259,6 +259,8 @@ export interface IUser {
   tenantRole?: 'Vendor' | 'ShopOwner' | string | null;
   shopId?: string | null;
   ownedShopIds?: string[] | null;
+  /** Expo push tokens, one per signed-in device. */
+  expoPushTokens?: string[] | null;
   created: Date;
   updated?: Date;
 }

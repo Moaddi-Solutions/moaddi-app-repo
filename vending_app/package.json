@@ -67,6 +67,7 @@
     "expo-localization": "~16.1.6",
     "expo-location": "~18.1.6",
     "expo-navigation-bar": "~4.2.8",
+    "expo-notifications": "~0.31.5",
     "expo-react-native-toastify": "^1.0.19",
     "expo-router": "~5.1.11",
     "expo-sharing": "~13.1.5",

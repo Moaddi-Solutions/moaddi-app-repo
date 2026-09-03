@@ -7,6 +7,7 @@ import { colors } from "~/theme/moaddi";
 import { HeroHeader } from "./home/HeroHeader";
 import { ProductsSection } from "./home/ProductsSection";
 import { ServiceGrid } from "./home/ServiceGrid";
+import { NotificationBanner } from "./home/NotificationBanner";
 import { ShopsList } from "./home/ShopsList";
 import { SpecialProducts } from "./home/SpecialProducts";
 
@@ -21,6 +22,7 @@ function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfacePage }}>
+      
       <LanguageSelectorModal
         isModalVisible={langModalVisible}
         setModalVisible={setLangModalVisible}
@@ -39,6 +41,7 @@ function HomeScreen() {
           onProducts={() => router.push("/Products" as never)}
           onOrders={() => router.push("/PurchaseHistory" as never)}
         />
+        <NotificationBanner />
         <ShopsList />
         <SpecialProducts />
         <ProductsSection />

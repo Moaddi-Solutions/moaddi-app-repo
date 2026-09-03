@@ -284,6 +284,56 @@ module.exports = () => {
     return res.status(200).json({ role: u.role, rules: rulesFor(u) });
   });
 
+  /*
+   * Push-token registration for this device.
+   *
+   * `authenticate()` only, no `authorize` — these act solely on
+   * `req.authenticatedUser._id` and never on a body- or param-supplied user id,
+   * so there is no other-user case to gate (same reasoning as
+   * /users/me/permissions above).
+   *
+   * The token travels in the path rather than a body because the app's
+   * `deleteRequest` helper sends no body; keeping both verbs symmetric avoids a
+   * second request shape for the same resource.
+   */
+  router.put(
+    "/users/me/push-token/:expoPushToken",
+    authenticate(),
+    async (req, res, next) => {
+      try {
+        const { expoPushToken } = req.params;
+        if (!expoPushToken) {
+          return res
+            .status(400)
+            .json({ message: "expoPushToken is required." });
+        }
+        await users.addPushToken(req.authenticatedUser._id, expoPushToken);
+        return res.status(200).json({ ok: true });
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
+  router.delete(
+    "/users/me/push-token/:expoPushToken",
+    authenticate(),
+    async (req, res, next) => {
+      try {
+        const { expoPushToken } = req.params;
+        if (!expoPushToken) {
+          return res
+            .status(400)
+            .json({ message: "expoPushToken is required." });
+        }
+        await users.removePushToken(req.authenticatedUser._id, expoPushToken);
+        return res.status(200).json({ ok: true });
+      } catch (err) {
+        next(err);
+      }
+    },
+  );
+
   // Create new sub-users.
   //
   // No fixed `authorize` subject: which one legitimizes the create depends on

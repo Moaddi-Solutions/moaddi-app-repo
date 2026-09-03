@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
 // Mirrors moaddi-next/app/(root)/context/contact-target-context.tsx so both
 // clients resolve "who does Contact talk to" the same way.
@@ -59,6 +60,8 @@ const setCachedSupportUserId = (key: SupportCacheKey, id: string) => {
   listenersFor(key).forEach((listener) => listener());
 };
 
+const cacheKeyParts: Record<SupportCacheKey, { audience: SupportAudience; shopId?: string | null; machineId?: string | null }> = {};
+
 /**
  * Resolves the support admin id for one audience (optionally scoped to a
  * shop or machine) from the server, once per page load per cache key.
@@ -68,6 +71,7 @@ const ensureSupportUserIdFetched = (
   opts?: { shopId?: string | null; machineId?: string | null },
 ) => {
   const key = cacheKeyFor(audience, opts);
+  cacheKeyParts[key] = { audience, ...opts };
   if (fetchStarted[key] || cachedSupportUserId[key]) return;
   fetchStarted[key] = true;
   getRequest(
@@ -84,6 +88,25 @@ const ensureSupportUserIdFetched = (
       fetchStarted[key] = false;
     });
 };
+
+/**
+ * Unlike web (which naturally busts this module cache on page reload), a
+ * mobile app session can stay warm for days — long enough for an admin to
+ * assign a support team member after we've already cached the Super Admin
+ * fallback. Refetch every previously-resolved key on foreground.
+ */
+const refreshSupportUserIdCache = () => {
+  for (const [key, parts] of Object.entries(cacheKeyParts)) {
+    delete cachedSupportUserId[key];
+    delete fetchStarted[key];
+    listenersFor(key).forEach((listener) => listener());
+    ensureSupportUserIdFetched(parts.audience, parts);
+  }
+};
+
+AppState.addEventListener('change', (state: AppStateStatus) => {
+  if (state === 'active') refreshSupportUserIdCache();
+});
 
 /**
  * The support account id for the given audience (and optional shop/machine),

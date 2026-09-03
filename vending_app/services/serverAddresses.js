@@ -47,6 +47,10 @@ export const allPendingRequests = address + "purchases/allpendingrequests";
 export const getCertificatesAPI = address + "broker/generatecerts";
 
 export const myPermissionsAPI = address + "users/me/permissions";
+/** Register (PUT) / unregister (DELETE) this device's Expo push token.
+ *  The token is path-encoded because `deleteRequest` sends no body. */
+export const pushTokenAPI = (expoPushToken) =>
+  address + "users/me/push-token/" + encodeURIComponent(expoPushToken);
 
 export const userAPI = (id) => address + "users/" + id;
 export const shopAPI = (id) => address + "shops/" + id;

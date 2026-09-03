@@ -569,7 +569,7 @@ const markConversationRead = async (
     throw historyUnavailable();
   }
 
-  const lastReadSeq = latestMessage?.seq ?? 0;
+  const lastReadSeq = (latestMessage?.seq as number | undefined) ?? 0;
   await setReadState(conversationId, currentUserId, lastReadSeq);
 
   return {

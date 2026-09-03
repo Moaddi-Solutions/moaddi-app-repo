@@ -493,7 +493,6 @@ export const defineAbilityFor = (user: AbilityUser): AppAbility => {
       can(['read', 'update', 'delete'], 'User', { _id: uid });
       can(['read', 'create', 'update'], ['Conversation', 'Message']);
       can('read', 'Team');
-      const rows = customRoles.get(role) ?? customRoles.get(user.role);
       if (rows) {
         for (const row of rows) {
           const condition = SCOPE_CONDITIONS[row.scope];

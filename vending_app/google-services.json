@@ -1,0 +1,126 @@
+{
+  "project_info": {
+    "project_number": "779636724237",
+    "project_id": "moaddi-2e568",
+    "storage_bucket": "moaddi-2e568.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779636724237:android:ec1120400813c9b1867b44",
+        "android_client_info": {
+          "package_name": "com.moaddi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIwB1j71a-kkMvuGrJjL7Y_zSrbbslwuY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "779636724237-bla2akg7olm9poib2g8hhjv6mmi9922l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.itechsoftsolutions.moaddicustomer"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779636724237:android:2ba3e4df3f3c9a84867b44",
+        "android_client_info": {
+          "package_name": "com.moaddi.moaddicustomer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIwB1j71a-kkMvuGrJjL7Y_zSrbbslwuY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "779636724237-bla2akg7olm9poib2g8hhjv6mmi9922l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.itechsoftsolutions.moaddicustomer"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:779636724237:android:b7c98edc71550ea5867b44",
+        "android_client_info": {
+          "package_name": "com.moaddi.moaddideliveryboy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "779636724237-9eus2i4s3i2ct4vh8j3ru3r2264a99lv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.moaddi.moaddideliveryboy",
+            "certificate_hash": "5c2fd64cb45a7c9b1227527568f745877371ed82"
+          }
+        },
+        {
+          "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIwB1j71a-kkMvuGrJjL7Y_zSrbbslwuY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "779636724237-rmn82totfau2so0bgh3j0b65irnkfa42.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "779636724237-bla2akg7olm9poib2g8hhjv6mmi9922l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.itechsoftsolutions.moaddicustomer"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

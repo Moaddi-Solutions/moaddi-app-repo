@@ -205,6 +205,32 @@ let updateGuestInfo = async (guestId, { phone, name, email }) => {
 };
 
 /*
+ * Register a device's Expo push token against this account.
+ *
+ * `$addToSet`, not `$push`: the app re-registers on every sign-in (the token
+ * belongs to the device, and who is signed in on it can change), so this has to
+ * be idempotent. `$push` would accumulate a duplicate per sign-in and Expo would
+ * then be sent the same notification once per copy.
+ */
+let addPushToken = async (userId, expoPushToken) => {
+  await Users.updateOne(
+    { _id: userId },
+    { $addToSet: { expoPushTokens: expoPushToken } },
+  );
+};
+
+/*
+ * Detach a device's push token — called on sign-out, so the next person to sign
+ * in on that phone does not keep receiving the previous account's chat pushes.
+ */
+let removePushToken = async (userId, expoPushToken) => {
+  await Users.updateOne(
+    { _id: userId },
+    { $pull: { expoPushTokens: expoPushToken } },
+  );
+};
+
+/*
  * Reassign guest purchases to a real account, then soft-delete the guest
  * records. Matched by phone: a real user's `_id` IS their phone number, and a
  * guest's `phone` is stored normalized to the same shape.
@@ -1553,6 +1579,8 @@ module.exports = {
   create,
   createGuest,
   updateGuestInfo,
+  addPushToken,
+  removePushToken,
   mergeGuestPurchases,
   signIn,
   socialSignIn,
