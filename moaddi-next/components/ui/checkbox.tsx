@@ -19,7 +19,7 @@ function Checkbox({
   onCheckedChange,
   onChange,
   ...props
-}: Omit<React.ComponentProps<"input">, "type"> & {
+}: Omit<React.ComponentProps<"input">, "type" | "checked"> & {
   checked?: boolean | "indeterminate"
   onCheckedChange?: (checked: boolean) => void
 }) {

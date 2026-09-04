@@ -109,6 +109,22 @@ export function useSupportUserId(
   );
 }
 
+/** True while `useSupportUserId`'s fetch for this key is in flight. */
+export function useSupportUserIdPending(
+  audience: SupportAudience = "customers",
+  opts?: { shopId?: string | null; machineId?: string | null },
+) {
+  const key = cacheKeyFor(audience, opts);
+  return useSyncExternalStore(
+    (onChange) => {
+      listenersFor(key).add(onChange);
+      return () => listenersFor(key).delete(onChange);
+    },
+    () => fetchStarted[key] === true && cachedSupportUserId[key] == null,
+    () => false,
+  );
+}
+
 const ContactTargetContext = createContext<ContactTargetContextValue | null>(
   null,
 );

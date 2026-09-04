@@ -99,6 +99,10 @@ export function chatConversationReadAPI(conversationId) {
 export function chatSocketAddress() {
   return `${baseUrl().replace(/\/$/, "")}/chat`;
 }
+/**
+ * @param {string | { audience?: string, shopId?: string, machineId?: string }} [audienceOrOpts]
+ * @param {{ shopId?: string, machineId?: string }} [maybeOpts]
+ */
 export function chatSupportTargetAPI(audienceOrOpts = "customers", maybeOpts) {
   const opts =
     typeof audienceOrOpts === "string"

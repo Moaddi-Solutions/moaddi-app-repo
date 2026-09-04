@@ -82,7 +82,6 @@ const ConnectionBadge = ({ connected }) => (
   </Badge>
 );
 
-const baseMachineColumns = [
 /**
  * Ownership columns (vendor / shop) resolve their names through the Vendors and
  * Shops directories, which a vendor-scoped role cannot read — and has no reason
@@ -92,24 +91,7 @@ const baseMachineColumns = [
  * Same predicate as `ContactVendorButton` below: "do I manage other people's
  * machines", not "can I read Machine".
  */
-const ownershipColumns = [
-  {
-    key: "vendorId",
-    label: "Vendor",
-    render: (record) => (
-      <AdminReferenceField record={record} source="vendorId" reference="vendors" />
-    ),
-  },
-  {
-    key: "shopId",
-    label: "Shop",
-    render: (record) => (
-      <AdminReferenceField record={record} source="shopId" reference="shops" />
-    ),
-  },
-];
-
-const baseColumns = [
+const baseMachineColumns = [
   {
     key: "name",
     label: "Name",
@@ -182,13 +164,6 @@ const paymentProviderColumn = {
   ),
 };
 
-/** Columns for a caller, ownership ones included only if they may read them. */
-export const machineColumnsFor = (ability) => [
-  ...baseColumns,
-  ...(canActForOthers(ability, "update", "Machine") ? ownershipColumns : []),
-  paymentProviderColumn,
-];
-
 /** Full columns for managers; fill-only staff get the base set (no ref lookups). */
 export const machineColumns = [...baseMachineColumns, ...managementMachineColumns];
 
@@ -238,26 +213,6 @@ const MachineList = () => {
       />
       <RealTime />
     </AdminList>
-  );
-};
-const MachineList = () => {
-  const ability = useAbility();
-  return (
-  <AdminList sort={{ field: "name", order: "DESC" }} actions={<AdminCreateButton />}>
-    <AdminShadcnTable
-      columns={machineColumnsFor(ability)}
-      rowClick="show"
-      actions={(record) => (
-        <>
-          <AdminShowButton record={record} label="Fill" />
-          <AdminEditButton record={record} />
-          <ContactVendorButton record={record} />
-          <AdminDeleteButton record={record} />
-        </>
-      )}
-    />
-    <RealTime />
-  </AdminList>
   );
 };
 
