@@ -92,6 +92,25 @@ const hasUnscopedRule = (ability, action, subjectName) =>
     .some((rule) => !rule.inverted && !rule.conditions);
 
 /**
+ * Does the role hold a rule for this subject conditioned on `shopId`?
+ *
+ * Narrower than `hasRuleBeyondSelf`, which any tenant scope satisfies. Used
+ * where the server resolves a section by joining on the caller's shops, so a
+ * vendor-scoped rule reaches none of it however far past "self" it goes.
+ */
+const hasShopScopedRule = (ability, actions, subjectName) =>
+  actions.some((action) =>
+    ability
+      .rulesFor(action, subjectName)
+      .some(
+        (rule) =>
+          !rule.inverted &&
+          rule.conditions &&
+          Object.hasOwn(rule.conditions, "shopId"),
+      ),
+  );
+
+/**
  * react-admin resource → CASL subject.
  *
  * `beyondSelf: true` — the section is a management view of other people's
@@ -256,11 +275,15 @@ export function canAccessResource(ability, resource, raAction, record) {
   if (mapping.platformWide) {
     if (hasUnscopedRule(ability, action, mapping.subject)) return true;
     // Shop Admin: customers who purchased at the shop (+ chat from list/show).
+    // Keyed on a *shop-scoped* Purchase rule, not merely a beyond-self one:
+    // the server resolves this directory by joining Purchases in the caller's
+    // shops, so a vendor-scoped `update Purchase {vendorId}` — which every
+    // Vendor holds — populates nothing. Matching it only registered a nav
+    // entry whose list request the server then 403s on `read Customer`.
     if (
       resource === "customers" &&
       (isList || isShow) &&
-      (hasRuleBeyondSelf(ability, "update", "Purchase") ||
-        hasRuleBeyondSelf(ability, "manage", "Purchase"))
+      hasShopScopedRule(ability, ["update", "manage"], "Purchase")
     ) {
       return true;
     }
